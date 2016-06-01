@@ -8,3 +8,5 @@ perf: Toolkit to run Python benchmarks.
 
 Install perf: ``python3 -m pip install perf``. It requires Python 2.7
 or Python 3.
+
+Documentation: see doc/ directory.

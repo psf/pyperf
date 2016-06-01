@@ -6,8 +6,32 @@ perf: Toolkit to run Python benchmarks.
   <https://pypi.python.org/pypi/perf>`_
 * License: MIT
 
-Install perf: ``python3 -m pip install perf``. It requires Python 2.7
-or Python 3.
+
+Install perf
+============
+
+Command to install::
+
+    python3 -m pip install perf
+
+It requires Python 2.7 or Python 3.
+
+
+Command line
+============
+
+Display collected metadata::
+
+    python3 -m perf.metadata
+
+Example::
+
+    $ python3 -m perf.metadata
+    cpu_count: 4
+    cpu_model_name: Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
+    date: 2016-06-01T17:00:48
+    platform: Linux-4.4.9-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    python_version: 3.4.3
 
 
 API
@@ -90,6 +114,12 @@ Result
 
 Metadata
 --------
+
+.. function:: metadata.collect_all_metadata(metadata)
+
+   Collect all metadata: date, python, system, etc.
+
+   *metadata* must be a dictionary.
 
 .. function:: metadata.collect_python_metadata(metadata)
 

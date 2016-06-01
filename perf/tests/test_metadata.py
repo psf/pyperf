@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import unittest
 
 import perf.metadata
@@ -10,14 +12,33 @@ class TestMetadata(unittest.TestCase):
         self.assertNotIn('\n', text, dbg_info)
         self.assertFalse(text.endswith(' '), dbg_info)
 
-    def test_metadata(self):
-        metadata = {}
-        perf.metadata.collect_python_metadata(metadata)
-        perf.metadata.collect_system_metadata(metadata)
+    def check_all_metadata(self, metadata):
+        for key in ('date', 'python_version', 'platform'):
+            self.assertIn(key, metadata)
         for key, value in metadata.items():
             dbg_info = 'key=%r value=%r' % (key, value)
             self.check_metadata(key, dbg_info)
             self.check_metadata(value, dbg_info)
+
+    def test_metadata(self):
+        metadata = {}
+        perf.metadata.collect_all_metadata(metadata)
+        self.check_all_metadata(metadata)
+
+    def test_cli(self):
+        args = [sys.executable, '-m', 'perf.metadata']
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True)
+        stdout = proc.communicate()[0]
+        self.assertEqual(proc.returncode, 0)
+
+        metadata = {}
+        for line in stdout.splitlines():
+            self.assertIn(': ', line)
+            key, value = line.split(': ', 1)
+            metadata[key] = value
+        self.check_all_metadata(metadata)
 
 
 if __name__ == "__main__":
