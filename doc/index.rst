@@ -200,3 +200,12 @@ Metadata functions
    Collect metadata about the system: CPU count, platform, etc.
 
    *metadata* must be a dictionary.
+
+
+Changelog
+=========
+
+* Version 0.1
+
+  - First public release
+
