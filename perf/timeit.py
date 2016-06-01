@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import itertools
 import subprocess
 import sys
 import timeit
@@ -6,7 +7,7 @@ import timeit
 import perf
 
 
-_MIN_TIME = 0.2
+_MIN_TIME = 0.1
 
 
 def _calibrate_timer(timer):
@@ -75,8 +76,10 @@ def _main_raw(args=None):
 
     result = perf.RunResult(loops=number)
     try:
+        print("loops=%s" % number)
         for i in range(repeat):
-            dt = timer.timeit(number) / number
+            it = itertools.repeat(None, number)
+            dt = timer.inner(it, timer.timer) / number
             result.values.append(dt)
             print(dt)
     except:
@@ -84,7 +87,6 @@ def _main_raw(args=None):
         return 1
 
     # FIXME: verbose mode
-    #print(result.metadata)
     #print(result)
     return None
 
@@ -104,12 +106,15 @@ def _run_subprocess(number):
     # FIXME: use context manager on Python 3
     stdout, stderr = proc.communicate()
     values = []
-    # FIXME: pass also metadata like loops
+    loops = None
     for line in stdout.splitlines():
+        if not values and line.startswith('loops='):
+            loops = int(line[6:])
+            continue
         # FIXME: nice error message on parsing error
         value = float(line)
         values.append(value)
-    return perf.RunResult(values, loops=number)
+    return perf.RunResult(values, loops=loops)
 
 
 def _main():
@@ -120,7 +125,7 @@ def _main():
         # FIXME: add command line option
         verbose = False
         # FIXME: don't hardcode the number of runs!
-        processes = 3
+        processes = 5
 
         timer, repeat, number = _main_common()
         result = perf.Results()
