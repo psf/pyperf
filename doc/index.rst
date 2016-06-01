@@ -30,7 +30,7 @@ Microbenchmark::
 Example::
 
     $ python3 -m perf.timeit 1+1
-    Average on 3 process x 3 runs (100000000 loops): 1.8316385942194353 +- 0.015524183699811928
+    Average: 3 runs x 3 samples x 10^8 loops: 17.3 ns +- 0.3 ns
 
 
 Metadata

@@ -46,6 +46,20 @@ class TestTools(unittest.TestCase):
         self.assertEqual(perf._format_timedelta(102e-3, 3e-3),
                          "102 ms +- 3 ms")
 
+    def test_format_number(self):
+        # plural
+        self.assertEqual(perf._format_number(0, 'unit'), '0 unit')
+        self.assertEqual(perf._format_number(1, 'unit'), '1 unit')
+        self.assertEqual(perf._format_number(2, 'unit'), '2 units')
+
+        # powers of 10
+        self.assertEqual(perf._format_number(10 ** 3, 'unit'),
+                         '1000 units')
+        self.assertEqual(perf._format_number(10 ** 4, 'unit'),
+                         '10^4 units')
+        self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
+                         '10001 units')
+
 
 class TestResult(unittest.TestCase):
     def test_run_result(self):

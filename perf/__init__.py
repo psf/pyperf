@@ -85,8 +85,20 @@ def _format_timedeltas(values):
 
 
 def _format_number(number, unit):
+    plural = (abs(number) > 1)
+    if number >= 10000:
+        pow10 = 0
+        x = number
+        while x >= 10:
+            x, digit = divmod(x, 10)
+            if digit != 0:
+                break
+            pow10 += 1
+        if x == 1 and digit == 0:
+            number = '10^%s' % pow10
+
     # FIXME: add min and max
-    if abs(number) > 1:
+    if plural:
         return '%s %ss' % (number, unit)
     else:
         return '%s %s' % (number, unit)
