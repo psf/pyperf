@@ -91,13 +91,13 @@ def _main_raw(args=None):
     return None
 
 
-def _run_subprocess(number):
+def _run_subprocess(number, timeit_args):
     args = [sys.executable,
             '-m', 'perf.timeit',
             '--raw',
             "-n", str(number)]
     # FIXME: don't pass duplicate -n
-    args.extend(sys.argv[1:])
+    args.extend(timeit_args)
 
     proc = subprocess.Popen(args,
                             stdout=subprocess.PIPE,
@@ -122,19 +122,27 @@ def _main():
         sys.argv.remove('--raw')
         _main_raw()
     else:
-        # FIXME: add command line option
-        verbose = False
+        # FIXME: better argument parsing
+        args = sys.argv[1:]
+        if '-v' in args:
+            verbose = True
+            args.remove('-v')
+        else:
+            verbose = False
+
         # FIXME: don't hardcode the number of runs!
         processes = 5
 
-        timer, repeat, number = _main_common()
+        timer, repeat, number = _main_common(args)
         result = perf.Results()
         for process in range(processes):
-            run = _run_subprocess(number)
-            if verbose:
-                print("[%s/%s] %s" % (1 + process, processes, run))
+            run = _run_subprocess(number, args)
             result.runs.append(run)
-        print("Average: %s" % result)
+            if verbose:
+                print("Run %s/%s: %s"
+                      % (1 + process, processes,
+                         ', '.join(perf._format_timedelta(run.values))))
+        print("Average: %s" % result.format(verbose))
 
 
 if __name__ == "__main__":

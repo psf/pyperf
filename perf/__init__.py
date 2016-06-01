@@ -51,14 +51,13 @@ except ImportError:
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
-def _format_timedelta(seconds, stdev=None):
-    if seconds < 0:
-        raise ValueError("seconds must be positive")
-    if stdev is not None and stdev < 0:
-        raise ValueError("stdev must be positive")
+def _format_timedelta(values):
+    if any(dt < 0 for dt in values):
+        raise ValueError("numbers must be positive")
 
+    ref_value = values[0]
     for i in range(2, -9, -1):
-        if seconds >= 10.0 ** i:
+        if ref_value >= 10.0 ** i:
             break
     else:
         i = -9
@@ -69,19 +68,30 @@ def _format_timedelta(seconds, stdev=None):
     unit = _TIMEDELTA_UNITS[k]
     fmt = "%%.%sf %s" % (precision, unit)
 
-    text = fmt % (seconds * factor,)
-    if stdev is not None:
-        text = "%s +- %s" % (text, fmt % (stdev * factor,))
-    return text
+    return tuple(fmt % (value * factor,) for value in values)
 
 
-def _format_timedeltas(values):
-    value = mean(values)
-    if len(values) >= 2:
-        dev = stdev(values)
+def _format_timedeltas(values, verbose):
+    numbers = [mean(values)]
+    with_stdev = (len(values) >= 2)
+    if with_stdev:
+        numbers.append(stdev(values))
+    if verbose:
+        numbers.append(min(values))
+        numbers.append(max(values))
+
+    numbers = _format_timedelta(numbers)
+    if verbose:
+        if with_stdev:
+            text = '%s +- %s (min: %s, max: %s)' % numbers
+        else:
+            text = '%s (min: %s, max: %s)' % numbers
     else:
-        dev = None
-    return _format_timedelta(value, dev)
+        if with_stdev:
+            text = '%s +- %s' % numbers
+        else:
+            text = numbers[0]
+    return text
 
 
 def _format_number(number, unit):
@@ -118,11 +128,11 @@ class Results:
         else:
             self.metadata = {}
         if formatter is not None:
-            self.formatter = formatter
+            self._formatter = formatter
         else:
-            self.formatter = _format_timedeltas
+            self._formatter = _format_timedeltas
 
-    def __str__(self):
+    def format(self, verbose=False):
         if self.runs:
             values = []
             first_run = self.runs[0]
@@ -145,7 +155,7 @@ class Results:
             if loops:
                 iterations.append(_format_number(loops, 'loop'))
 
-            text = self.formatter(values)
+            text = self._formatter(values, verbose)
             if iterations:
                 text = '%s: %s' % (' x '.join(iterations), text)
         else:
@@ -153,6 +163,9 @@ class Results:
         if self.name:
             text = '%s: %s' % (self.name, text)
         return text
+
+    def __str__(self):
+        return self.format()
 
 
 class RunResult:
@@ -162,10 +175,13 @@ class RunResult:
             self.values.extend(values)
         self.loops = loops
         if formatter is not None:
-            self.formatter = formatter
+            self._formatter = formatter
         else:
-            self.formatter = _format_timedeltas
+            self._formatter = _format_timedeltas
         # FIXME: skip warmup iterations
 
+    def format(self, verbose=False):
+        return self._formatter(self.values, verbose)
+
     def __str__(self):
-        return self.formatter(self.values)
+        return self.format()
