@@ -25,13 +25,27 @@ try:
         # Wrapper to hide the xbar parameter, to be portable with Python 2
         return _stdev(data)
 except ImportError:
+    import math
+
     def mean(data):
         if not data:
             raise ValueError("data must be non-empty")
         return float(sum(data)) / len(data)
+
     def stdev(data):
-        # FIXME: implement it for Python < 3.4!
-        return 'FIXME'
+        data = [float(value) for value in data]
+        n = len(data)
+        if n < 2:
+            raise ValueError('stdev requires at least two data points')
+
+        c = mean(data)
+
+        total = sum((x - c) ** 2 for x in data)
+        total2 = sum((x - c) for x in data)
+        ss = total - total2**2 / n
+        variance = ss / (n - 1)
+
+        return math.sqrt(variance)
 
 
 class Result:
