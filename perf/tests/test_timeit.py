@@ -1,3 +1,4 @@
+import re
 import subprocess
 import sys
 import unittest
@@ -22,7 +23,7 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(len(lines), 2)
         values = [float(line) for line in lines]
         for value in values:
-            self.assertTrue(0.09 <= value <= 0.20, repr(value))
+            self.assertTrue(0.090 <= value <= 0.150, repr(value))
 
     def test_cli(self):
         args = [sys.executable,
@@ -37,8 +38,14 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        text = 'Average on 3 process x 2 runs (1 loops): 100 ms +- 0 ms'
-        self.assertEqual(stdout.rstrip(), text, repr(stdout))
+        match = re.match(r'^Average on 3 process x 2 runs \(1 loops\): '
+                         r'([0-9]+) ms \+- ([0-9]+) ms$',
+                         stdout.rstrip())
+        self.assertIsNotNone(match, repr(stdout))
+        mean = int(match.group(1))
+        self.assertTrue(90 <= mean <= 100, mean)
+        stdev = int(match.group(2))
+        self.assertTrue(0 <= stdev <= 10, stdev)
 
 
 if __name__ == "__main__":
