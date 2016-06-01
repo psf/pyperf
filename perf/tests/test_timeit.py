@@ -20,8 +20,9 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         lines = stdout.splitlines()
-        self.assertEqual(len(lines), 2)
-        values = [float(line) for line in lines]
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(lines[0], 'loops=1')
+        values = [float(line) for line in lines[1:]]
         for value in values:
             self.assertTrue(0.090 <= value <= 0.150, repr(value))
 
@@ -38,7 +39,7 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(r'^Average: 3 runs x 2 samples x 1 loop: '
+        match = re.match(r'^Average: 5 runs x 2 samples x 1 loop: '
                          r'([0-9]+) ms \+- ([0-9]+) ms$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))

@@ -23,7 +23,7 @@ class TestMetadata(unittest.TestCase):
 
     def test_metadata(self):
         metadata = {}
-        perf.metadata.collect_all_metadata(metadata)
+        perf.metadata.collect_metadata(metadata)
         self.check_all_metadata(metadata)
 
     def test_cli(self):
