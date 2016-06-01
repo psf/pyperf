@@ -7,6 +7,18 @@ import sys
 PY3 = (sys.version_info >= (3,))
 
 
+# FIXME: collect metadata of pybench:
+# * using timer: time.perf_counter
+# * timer: resolution=1e-09, implementation=clock_gettime(CLOCK_MONOTONIC)
+# Processor:      x86_64
+#    Python:
+#       Implementation: CPython
+#       Compiler:       GCC 5.3.1 20160406 (Red Hat 5.3.1-6)
+#       Bits:           64bit
+#       Build:          May 26 2016 12:16:43 (#default:d3d8faaaaade)
+#       Unicode:        UCS4
+
+
 def _add(metadata, key, value):
     if value is None:
         return
@@ -24,7 +36,9 @@ def _add(metadata, key, value):
 
 def collect_python_metadata(metadata):
     ver = sys.version_info
+    # FIXME: use format '3.6.0a1+' as pybench
     metadata['python_version'] = '%s.%s.%s' % (ver.major, ver.minor, ver.micro)
+    _add(metadata, 'python_executable', sys.executable)
     if os.environ.get('PYTHONHASHSEED', ''):
         _add(metadata, 'python_hashseed', os.environ['PYTHONHASHSEED'])
 
