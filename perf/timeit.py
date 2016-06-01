@@ -5,6 +5,45 @@ import timeit
 
 import perf
 
+# FIXME: simplify this code
+_FORMAT_DELTA = (
+    # sec
+    (100.0,    1, "%.0f sec", "%.0f sec +- %.0f sec"),
+    (10.0,     1, "%.1f sec", "%.1f sec +- %.1f sec"),
+    (1.0,      1, "%.2f sec", "%.2f sec +- %.2f sec"),
+    # ms
+    (100e-3, 1e3, "%.0f ms", "%.0f ms +- %.0f ms"),
+    (10e-3,  1e3, "%.1f ms", "%.1f ms +- %.1f ms"),
+    (1e-3,   1e3, "%.2f ms", "%.2f ms +- %.2f ms"),
+    # us
+    (100e-6, 1e6, "%.0f us", "%.0f us +- %.0f us"),
+    (10e-6,  1e6, "%.1f us", "%.1f us +- %.1f us"),
+    (1e-6,   1e6, "%.2f us", "%.2f us +- %.2f us"),
+    # ns
+    (100e-9, 1e9, "%.0f ns", "%.0f ns +- %.0f ns"),
+    (10e-9,  1e9, "%.1f ns", "%.1f ns +- %.1f ns"),
+    (1e-9,   1e9, "%.2f ns", "%.2f ns +- %.2f ns"),
+)
+
+def _format_delta(dt, stdev=None):
+    for min_dt, factor, fmt, fmt_stdev in _FORMAT_DELTA:
+        if dt >= min_dt:
+            break
+
+    if stdev is not None:
+        return fmt_stdev % (dt * factor, stdev * factor)
+    else:
+        return fmt % (dt * factor,)
+
+
+class Result(perf.Result):
+    def _format(self):
+        if len(self.values) >= 2:
+            stdev = self.stdev()
+        else:
+            stdev = None
+        return _format_delta(self.mean(), stdev)
+
 
 _MIN_TIME = 0.2
 
@@ -73,7 +112,7 @@ def _main_common(args=None):
 def _main_raw(args=None):
     timer, repeat, number = _main_common()
 
-    result = perf.Result()
+    result = Result()
     result.metadata['loops'] = str(number)
     try:
         r = []
@@ -111,7 +150,7 @@ def _run_subprocess(number):
         # FIXME: nice error message on parsing error
         value = float(line)
         values.append(value)
-    return perf.Result(values)
+    return Result(values)
 
 
 def _main():
@@ -130,7 +169,7 @@ def _main():
             'runs': repeat,
             'loops': number,
         }
-        result = perf.Result(metadata=metadata)
+        result = Result(metadata=metadata)
         for process in range(processes):
             run = _run_subprocess(number)
             if verbose:

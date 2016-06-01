@@ -67,14 +67,14 @@ class Result:
     def stdev(self):
         return stdev(self.values)
 
-    def _format_value(self, value):
-        # FIXME: format as seconds by default?
-        return str(value)
+    def _format(self):
+        text = str(self.mean())
+        if len(self.values) >= 2:
+            text = "%s +- %s" % (text, self.stdev())
+        return text
 
     def __str__(self):
-        text = ('%s +- %s'
-                % (self._format_value(self.mean()),
-                   self._format_value(self.stdev())))
+        text = self._format()
         if self.name:
             text = '%s: %s' % (self.name, text)
         return text

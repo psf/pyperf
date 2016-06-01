@@ -37,8 +37,8 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        text = 'Average on 3 process x 2 runs (1 loops): 0.10'
-        self.assertTrue(stdout.startswith(text), repr(stdout))
+        text = 'Average on 3 process x 2 runs (1 loops): 100 ms +- 0 ms'
+        self.assertEqual(stdout.rstrip(), text, repr(stdout))
 
 
 if __name__ == "__main__":
