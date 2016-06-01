@@ -30,7 +30,7 @@ Microbenchmark::
 Example::
 
     $ python3 -m perf.timeit 1+1
-    Average: 3 runs x 3 samples x 10^8 loops: 17.3 ns +- 0.3 ns
+    Average: 5 runs x 3 samples x 10^7 loops: 17.8 ns +- 1.0 ns
 
 
 Metadata
@@ -44,9 +44,10 @@ Example::
 
     $ python3 -m perf.metadata
     cpu_count: 4
-    cpu_model_name: Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
-    date: 2016-06-01T17:00:48
-    platform: Linux-4.4.9-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    date: 2016-06-01T23:43:25
+    platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    python_executable: /usr/bin/python3
     python_version: 3.4.3
 
 
@@ -87,17 +88,6 @@ Statistics
 Clocks
 ------
 
-.. function:: monotonic_clock()
-
-   Return the value (in fractional seconds) of a monotonic clock, i.e. a clock
-   that cannot go backwards.  The clock is not affected by system clock updates.
-   The reference point of the returned value is undefined, so that only the
-   difference between the results of consecutive calls is valid.
-
-   On Python 3.3 and newer, it's :func:`time.monotonic`. On older versions,
-   it's :func:`time.time`. See the PEP 418 for more information on Python
-   clocks.
-
 .. function:: perf_counter()
 
    Return the value (in fractional seconds) of a performance counter, i.e. a
@@ -109,6 +99,17 @@ Clocks
    On Python 3.3 and newer, it's :func:`time.perf_counter`. On older versions,
    it's it's :func:`time.clock` on Windows and :func:`time.time` on other
    platforms. See the PEP 418 for more information on Python clocks.
+
+.. function:: monotonic_clock()
+
+   Return the value (in fractional seconds) of a monotonic clock, i.e. a clock
+   that cannot go backwards.  The clock is not affected by system clock updates.
+   The reference point of the returned value is undefined, so that only the
+   difference between the results of consecutive calls is valid.
+
+   On Python 3.3 and newer, it's :func:`time.monotonic`. On older versions,
+   it's :func:`time.time`. See the PEP 418 for more information on Python
+   clocks.
 
 
 RunResult
@@ -164,7 +165,6 @@ Metadata
 
   - ``python_version``: Python version, ex: ``2.7.11``
   - ``python_executable``: path to the Python binary program
-  - ``python_hashseed``: value of ``PYTHONHASHSEED`` environment variable
   - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
     only set on Pyhon 2.7, Python 3.2 and older
 
@@ -182,21 +182,9 @@ Metadata
 Metadata functions
 ------------------
 
-.. function:: metadata.collect_all_metadata(metadata)
+.. function:: metadata.collect_metadata(metadata)
 
-   Collect all metadata: date, python, system, etc.
-
-   *metadata* must be a dictionary.
-
-.. function:: metadata.collect_python_metadata(metadata)
-
-   Collect metadata about the running Python binary: version, etc.
-
-   *metadata* must be a dictionary.
-
-.. function:: metadata.collect_system_metadata(metadata)
-
-   Collect metadata about the system: CPU count, platform, etc.
+   Collect metadata: date, python, system, etc.
 
    *metadata* must be a dictionary.
 

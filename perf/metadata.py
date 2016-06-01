@@ -34,13 +34,11 @@ def _add(metadata, key, value):
         metadata[key] = value
 
 
-def collect_python_metadata(metadata):
+def _collect_python_metadata(metadata):
     ver = sys.version_info
     # FIXME: use format '3.6.0a1+' as pybench
     metadata['python_version'] = '%s.%s.%s' % (ver.major, ver.minor, ver.micro)
     _add(metadata, 'python_executable', sys.executable)
-    if os.environ.get('PYTHONHASHSEED', ''):
-        _add(metadata, 'python_hashseed', os.environ['PYTHONHASHSEED'])
 
     # Before PEP 393 (Python 3.3)
     if sys.version_info < (3, 3):
@@ -76,7 +74,7 @@ def _collect_linux_metadata(metadata):
         pass
 
 
-def collect_system_metadata(metadata):
+def _collect_system_metadata(metadata):
     metadata['platform'] = platform.platform(True, False)
     if sys.platform.startswith('linux'):
         _collect_linux_metadata(metadata)
@@ -100,15 +98,15 @@ def collect_system_metadata(metadata):
         metadata['cpu_count'] = str(cpu_count)
 
 
-def collect_all_metadata(metadata):
+def collect_metadata(metadata):
     date = datetime.datetime.now().isoformat()
     metadata['date'] = date.split('.', 1)[0]
-    collect_python_metadata(metadata)
-    collect_system_metadata(metadata)
+    _collect_python_metadata(metadata)
+    _collect_system_metadata(metadata)
 
 
 if __name__ == "__main__":
     metadata = {}
-    collect_all_metadata(metadata)
+    collect_metadata(metadata)
     for key, value in sorted(metadata.items()):
         print("%s: %s" % (key, value))
