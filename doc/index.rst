@@ -20,6 +20,22 @@ It requires Python 2.7 or Python 3.
 Command line
 ============
 
+timeit
+------
+
+Microbenchmark::
+
+    python3 -m perf.timeit [-n NUMBER] [-r REPEAT] [-s SETUP_STMT] STMT [STMT2 ...]
+
+Example::
+
+    $ python3 -m perf.timeit 1+1
+    Average on 3 process x 3 runs (100000000 loops): 1.8316385942194353 +- 0.015524183699811928
+
+
+Metadata
+--------
+
 Display collected metadata::
 
     python3 -m perf.metadata
