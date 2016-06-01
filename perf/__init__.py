@@ -64,3 +64,9 @@ class Result:
         if self.name:
             text = '%s: %s' % (self.name, text)
         return text
+
+    def merge_result(self, result):
+        self.values.extend(result.values)
+        if self.name is None:
+            self.name = result.name
+        self.metadata.update(result.metadata)

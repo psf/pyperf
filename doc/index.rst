@@ -108,6 +108,11 @@ Result
 
       See the :func:`mean` function.
 
+   .. method:: merge_result(result)
+
+      Merge *result* into this result: accumulate values, update metadata,
+      and copy :attr:`name` if it is not set yet.
+
    .. method:: stdev()
 
       Return the sample standard deviation of :attr:`values`.
