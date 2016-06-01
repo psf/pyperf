@@ -86,3 +86,19 @@ Result
 
       Raw dictionary of metadata: key=>value, where keys and values are strings
       (Python ``str``).
+
+
+Metadata
+--------
+
+.. function:: metadata.collect_python_metadata(metadata)
+
+   Collect metadata about the running Python binary: version, etc.
+
+   *metadata* must be a dictionary.
+
+.. function:: metadata.collect_system_metadata(metadata)
+
+   Collect metadata about the system: CPU count, platform, etc.
+
+   *metadata* must be a dictionary.
