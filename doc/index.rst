@@ -111,71 +111,54 @@ Clocks
    platforms. See the PEP 418 for more information on Python clocks.
 
 
-Functions
+RunResult
 ---------
 
-.. function:: format_timedelta(seconds, stdev=None)
-
-   Format a time delta with an optional standard deviation. *seconds* and
-   *stdev* are number of seconds (``float``).
-
-   Only format 3 digits.
-
-   Example::
-
-       >>> perf.format_timedelta(102e-3, 3e-3)
-       '102 ms +- 3 ms'
-
-
-Result
-------
-
-.. class:: Result
-
-   Methods:
-
-   .. method:: mean()
-
-      Return the sample arithmetic mean of :attr:`values`.
-
-      See the :func:`mean` function.
-
-   .. method:: merge_result(result)
-
-      Merge *result* into this result: accumulate values, update metadata,
-      and copy :attr:`name` if it is not set yet.
-
-   .. method:: stdev()
-
-      Return the sample standard deviation of :attr:`values`.
-
-      See the :func:`stdev` function.
+.. class:: RunResult(values=None, loops=None, formatter=None)
 
    Attributes:
 
-   .. attribute:: name
+   .. attribute:: formatter
 
-      Optional benchmark name (``str`` or ``None``).
+      Function to format a list of numbers.
 
-   .. attribute:: metadata
+   .. attribute:: loops
 
-      Raw dictionary of metadata (``dict``): key=>value, where keys and values
-      are strings.
+      Number of loops (``int`` or ``None``).
 
    .. attribute:: values
 
       List of numbers (``float``).
 
 
+Result
+------
+
+.. class:: Result(runs=None, name=None, metadata=None, formatter=None)
+
+   Attributes:
+
+   .. attribute:: formatter
+
+      Function to format a list of numbers.
+
+   .. attribute:: name
+
+      Benchmark name (``str`` or ``None``).
+
+   .. attribute:: metadata
+
+      Raw dictionary of metadata (``dict``): key=>value, where keys and values
+      are strings.
+
+   .. attribute:: runs
+
+      List of :class:`RunResult`.
+
+
 
 Metadata
 --------
-
-* Iterations:
-
-  - ``processes``: number of processes created to run the benchmark
-  - ``runs``: number of times the benchmark was run in a process
-  - ``loops``: number of inner-loops of the benchmark
 
 * Python metadata:
 

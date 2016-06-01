@@ -5,14 +5,6 @@ import timeit
 
 import perf
 
-class Result(perf.Result):
-    def _format(self):
-        if len(self.values) >= 2:
-            stdev = self.stdev()
-        else:
-            stdev = None
-        return perf.format_timedelta(self.mean(), stdev)
-
 
 _MIN_TIME = 0.2
 
@@ -81,10 +73,8 @@ def _main_common(args=None):
 def _main_raw(args=None):
     timer, repeat, number = _main_common()
 
-    result = Result()
-    result.metadata['loops'] = str(number)
+    result = perf.RunResult(loops=number)
     try:
-        r = []
         for i in range(repeat):
             dt = timer.timeit(number) / number
             result.values.append(dt)
@@ -119,7 +109,7 @@ def _run_subprocess(number):
         # FIXME: nice error message on parsing error
         value = float(line)
         values.append(value)
-    return Result(values)
+    return perf.RunResult(values, loops=number)
 
 
 def _main():
@@ -133,20 +123,13 @@ def _main():
         processes = 3
 
         timer, repeat, number = _main_common()
-        metadata = {
-            'processes': processes,
-            'runs': repeat,
-            'loops': number,
-        }
-        result = Result(metadata=metadata)
+        result = perf.Results()
         for process in range(processes):
             run = _run_subprocess(number)
             if verbose:
                 print("[%s/%s] %s" % (1 + process, processes, run))
-            result.merge_result(run)
-        print("Average on %s process x %s runs (%s loops): %s"
-              % (metadata['processes'], metadata['runs'], metadata['loops'],
-                 result))
+            result.runs.append(run)
+        print("Average: %s" % result)
 
 
 if __name__ == "__main__":
