@@ -8,6 +8,7 @@ import perf.metadata
 class TestMetadata(unittest.TestCase):
     def check_metadata(self, text, dbg_info):
         self.assertIsInstance(text, str)
+        self.assertNotEqual(len(text), 0)
         self.assertFalse(text.startswith(' '), dbg_info)
         self.assertNotIn('\n', text, dbg_info)
         self.assertFalse(text.endswith(' '), dbg_info)

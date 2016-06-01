@@ -35,7 +35,32 @@ except ImportError:
 
 
 class Result:
-    def __init__(self):
-        self.runtimes = []
-        # Raw key=>value metadata dictionary, keys and values are strings
-        self.metadata = {}
+    def __init__(self, values=None, name=None, metadata=None):
+        self.values = []
+        if values:
+            self.values.extend(values)
+        self.name = name
+        # Raw metadata dictionary, key=>value, keys and values are non-empty
+        # strings
+        if metadata is not None:
+            self.metadata = metadata
+        else:
+            self.metadata = {}
+
+    def mean(self):
+        return mean(self.values)
+
+    def stdev(self):
+        return stdev(self.values)
+
+    def _format_value(self, value):
+        # FIXME: format as seconds by default?
+        return str(value)
+
+    def __str__(self):
+        text = ('%s +- %s'
+                % (self._format_value(self.mean()),
+                   self._format_value(self.stdev())))
+        if self.name:
+            text = '%s: %s' % (self.name, text)
+        return text

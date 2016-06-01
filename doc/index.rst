@@ -58,7 +58,7 @@ Statistics
 .. function:: stdev(data)
 
    Return the sample standard deviation (the square root of the sample
-   variance).  See :func:`variance` for arguments and other details.
+   variance).
 
    ::
 
@@ -100,16 +100,35 @@ Result
 
 .. class:: Result
 
+   Methods:
+
+   .. method:: mean()
+
+      Return the sample arithmetic mean of :attr:`values`.
+
+      See the :func:`mean` function.
+
+   .. method:: stdev()
+
+      Return the sample standard deviation of :attr:`values`.
+
+      See the :func:`stdev` function.
+
    Attributes:
 
-   .. attribute:: runtimes
+   .. attribute:: name
 
-      List of run timings (seconds).
+      Optional benchmark name (``str`` or ``None``).
 
    .. attribute:: metadata
 
-      Raw dictionary of metadata: key=>value, where keys and values are strings
-      (Python ``str``).
+      Raw dictionary of metadata (``dict``): key=>value, where keys and values
+      are strings.
+
+   .. attribute:: values
+
+      List of numbers (``float``).
+
 
 
 Metadata
