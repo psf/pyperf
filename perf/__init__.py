@@ -48,6 +48,38 @@ except ImportError:
         return math.sqrt(variance)
 
 
+# FIXME: simplify this code
+_FORMAT_DELTA = (
+    # sec
+    (100.0,    1, "%.0f sec", "%.0f sec +- %.0f sec"),
+    (10.0,     1, "%.1f sec", "%.1f sec +- %.1f sec"),
+    (1.0,      1, "%.2f sec", "%.2f sec +- %.2f sec"),
+    # ms
+    (100e-3, 1e3, "%.0f ms", "%.0f ms +- %.0f ms"),
+    (10e-3,  1e3, "%.1f ms", "%.1f ms +- %.1f ms"),
+    (1e-3,   1e3, "%.2f ms", "%.2f ms +- %.2f ms"),
+    # us
+    (100e-6, 1e6, "%.0f us", "%.0f us +- %.0f us"),
+    (10e-6,  1e6, "%.1f us", "%.1f us +- %.1f us"),
+    (1e-6,   1e6, "%.2f us", "%.2f us +- %.2f us"),
+    # ns
+    (100e-9, 1e9, "%.0f ns", "%.0f ns +- %.0f ns"),
+    (10e-9,  1e9, "%.1f ns", "%.1f ns +- %.1f ns"),
+    (1e-9,   1e9, "%.2f ns", "%.2f ns +- %.2f ns"),
+)
+
+
+def format_timedelta(seconds, stdev=None):
+    for min_dt, factor, fmt, fmt_stdev in _FORMAT_DELTA:
+        if seconds >= min_dt:
+            break
+
+    if stdev is not None:
+        return fmt_stdev % (seconds * factor, stdev * factor)
+    else:
+        return fmt % (seconds * factor,)
+
+
 class Result:
     def __init__(self, values=None, name=None, metadata=None):
         self.values = []

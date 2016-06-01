@@ -111,6 +111,22 @@ Clocks
    platforms. See the PEP 418 for more information on Python clocks.
 
 
+Functions
+---------
+
+.. function:: format_timedelta(seconds, stdev=None)
+
+   Format a time delta with an optional standard deviation. *seconds* and
+   *stdev* are number of seconds (``float``).
+
+   Only format 3 digits.
+
+   Example::
+
+       >>> perf.format_timedelta(102e-3, 3e-3)
+       '102 ms +- 3 ms'
+
+
 Result
 ------
 
