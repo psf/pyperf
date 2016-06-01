@@ -155,6 +155,34 @@ Result
 Metadata
 --------
 
+* Iterations:
+
+  - ``processes``: number of processes created to run the benchmark
+  - ``runs``: number of times the benchmark was run in a process
+  - ``loops``: number of inner-loops of the benchmark
+
+* Python metadata:
+
+  - ``python_version``: Python version, ex: ``2.7.11``
+  - ``python_executable``: path to the Python binary program
+  - ``python_hashseed``: value of ``PYTHONHASHSEED`` environment variable
+  - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
+    only set on Pyhon 2.7, Python 3.2 and older
+
+* System metadata:
+
+  - ``platform``: short string describing the platform
+  - ``cpu_count``: number of CPUs
+  - ``cpu_model_name``: CPU model name (currently only supported on Linux)
+
+* Misc metadata:
+
+  - ``date``: date when the benchmark started, formatted as ISO 8601
+
+
+Metadata functions
+------------------
+
 .. function:: metadata.collect_all_metadata(metadata)
 
    Collect all metadata: date, python, system, etc.

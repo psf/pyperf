@@ -122,17 +122,23 @@ def _main():
         # FIXME: add command line option
         verbose = False
         # FIXME: don't hardcode the number of runs!
-        nprocesses = 3
+        processes = 3
 
         timer, repeat, number = _main_common()
-        result = perf.Result(metadata={'loops': number})
-        for process in range(nprocesses):
+        metadata = {
+            'processes': processes,
+            'runs': repeat,
+            'loops': number,
+        }
+        result = perf.Result(metadata=metadata)
+        for process in range(processes):
             run = _run_subprocess(number)
             if verbose:
-                print("[%s/%s] %s" % (1 + process, nprocesses, run))
+                print("[%s/%s] %s" % (1 + process, processes, run))
             result.merge_result(run)
         print("Average on %s process x %s runs (%s loops): %s"
-              % (nprocesses, repeat, number, result))
+              % (metadata['processes'], metadata['runs'], metadata['loops'],
+                 result))
 
 
 if __name__ == "__main__":
