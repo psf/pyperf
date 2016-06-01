@@ -69,3 +69,20 @@ Clocks
    On Python 3.3 and newer, it's :func:`time.perf_counter`. On older versions,
    it's it's :func:`time.clock` on Windows and :func:`time.time` on other
    platforms. See the PEP 418 for more information on Python clocks.
+
+
+Result
+------
+
+.. class:: Result
+
+   Attributes:
+
+   .. attribute:: runtimes
+
+      List of run timings (seconds).
+
+   .. attribute:: metadata
+
+      Raw dictionary of metadata: key=>value, where keys and values are strings
+      (Python ``str``).

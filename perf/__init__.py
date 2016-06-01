@@ -32,3 +32,10 @@ except ImportError:
     def stdev(data):
         # FIXME: implement it for Python < 3.4!
         return 'FIXME'
+
+
+class Result:
+    def __init__(self):
+        self.runtimes = []
+        # Raw key=>value metadata dictionary, keys and values are strings
+        self.metadata = {}
