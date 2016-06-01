@@ -194,7 +194,7 @@ Metadata functions
 Changelog
 =========
 
-* Version 0.1
+* Version 0.1 (2016-06-02)
 
   - First public release
 

@@ -1,6 +1,7 @@
 include COPYING
 include MANIFEST.in
 include README.rst
+include TODO.rst
 include tox.ini
 
 include doc/conf.py doc/make.bat doc/Makefile
