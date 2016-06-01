@@ -1,3 +1,6 @@
+import sys
+
+
 __version__ = '0.0'
 
 # Clocks
@@ -5,11 +8,14 @@ try:
     # Python 3.3+ (PEP 418)
     from time import monotonic as monotonic_clock, perf_counter
 except ImportError:
+    import time
+
     monotonic_clock = time.time
-    if os.name == 'win32':
+    if sys.platform == "win32":
         perf_counter = time.clock
     else:
         perf_counter = time.time
+
 
 # Statistics
 try:

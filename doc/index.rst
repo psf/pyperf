@@ -6,7 +6,8 @@ perf: Toolkit to run Python benchmarks.
   <https://pypi.python.org/pypi/perf>`_
 * License: MIT
 
-Install perf: ``python3 -m pip install perf``.
+Install perf: ``python3 -m pip install perf``. It requires Python 2.7
+or Python 3.
 
 
 API
