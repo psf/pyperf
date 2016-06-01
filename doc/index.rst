@@ -4,6 +4,7 @@ perf: Toolkit to run Python benchmarks.
   <https://github.com/haypo/perf>`_ (code, bugs)
 * `Download latest perf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/perf>`_
+* License: MIT
 
 Install perf: ``python3 -m pip install perf``.
 
