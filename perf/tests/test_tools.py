@@ -25,26 +25,29 @@ class TestStatistics(unittest.TestCase):
 
 class TestTools(unittest.TestCase):
     def test_timedelta(self):
-        self.assertEqual(perf._format_timedelta(555222), "555222 sec")
+        def fmt_delta(seconds):
+            return perf._format_timedelta((seconds,))[0]
 
-        self.assertEqual(perf._format_timedelta(1e0),  "1.00 sec")
-        self.assertEqual(perf._format_timedelta(1e-3), "1.00 ms")
-        self.assertEqual(perf._format_timedelta(1e-6), "1.00 us")
-        self.assertEqual(perf._format_timedelta(1e-9), "1.00 ns")
+        self.assertEqual(fmt_delta(555222), "555222 sec")
 
-        self.assertEqual(perf._format_timedelta(316e-3), "316 ms")
-        self.assertEqual(perf._format_timedelta(316e-4), "31.6 ms")
-        self.assertEqual(perf._format_timedelta(316e-5), "3.16 ms")
+        self.assertEqual(fmt_delta(1e0),  "1.00 sec")
+        self.assertEqual(fmt_delta(1e-3), "1.00 ms")
+        self.assertEqual(fmt_delta(1e-6), "1.00 us")
+        self.assertEqual(fmt_delta(1e-9), "1.00 ns")
 
-        self.assertEqual(perf._format_timedelta(1e-10), "0.10 ns")
+        self.assertEqual(fmt_delta(316e-3), "316 ms")
+        self.assertEqual(fmt_delta(316e-4), "31.6 ms")
+        self.assertEqual(fmt_delta(316e-5), "3.16 ms")
+
+        self.assertEqual(fmt_delta(1e-10), "0.10 ns")
 
     def test_timedelta_stdev(self):
-        self.assertEqual(perf._format_timedelta(58123, 192),
-                         "58123 sec +- 192 sec")
-        self.assertEqual(perf._format_timedelta(100e-3, 0),
-                         "100 ms +- 0 ms")
-        self.assertEqual(perf._format_timedelta(102e-3, 3e-3),
-                         "102 ms +- 3 ms")
+        def fmt_stdev(seconds, stdev):
+            return "%s +- %s" % perf._format_timedelta((seconds, stdev))
+
+        self.assertEqual(fmt_stdev(58123, 192), "58123 sec +- 192 sec")
+        self.assertEqual(fmt_stdev(100e-3, 0), "100 ms +- 0 ms")
+        self.assertEqual(fmt_stdev(102e-3, 3e-3), "102 ms +- 3 ms")
 
     def test_format_number(self):
         # plural

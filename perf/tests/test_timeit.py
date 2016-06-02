@@ -39,7 +39,7 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(r'^Average: 5 runs x 2 samples x 1 loop: '
+        match = re.match(r'^Average: 25 runs x 2 samples x 1 loop: '
                          r'([0-9]+) ms \+- ([0-9]+) ms$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
