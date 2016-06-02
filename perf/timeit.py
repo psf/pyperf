@@ -8,19 +8,31 @@ import perf
 
 
 _MIN_TIME = 0.1
+_MAX_TIME = 1.0
 
 
-def _calibrate_timer(timer):
-    # determine number so that _MIN_TIME <= total time
-    for i in range(1, 10):
-        number = 10**i
+def _calibrate_timer(timer, verbose=False):
+    min_dt = _MIN_TIME * 0.90
+    for i in range(0, 10):
+        number = 10 ** i
         dt = timer.timeit(number)
-        if dt >= _MIN_TIME:
+        text = perf._format_timedelta((dt,))[0]
+        if verbose:
+            print("10^%s iterations: %s" % (i, text))
+        if dt >= _MAX_TIME:
+            i = max(i - 1, 1)
+            number = 10 ** i
             break
+        if dt >= min_dt:
+            break
+    if verbose:
+        min_dt, max_dt = perf._format_timedelta((_MIN_TIME, _MAX_TIME))
+        print("=> use %s (min: %s, max: %s)"
+              % (perf._format_number(number, 'iteration'), min_dt, max_dt))
     return number
 
 
-def _main_common(args=None):
+def _main_common(args=None, verbose=False):
     # FIXME: use top level imports?
     # FIXME: get ride of getopt! use python 3 timeit main()
     import getopt
@@ -63,7 +75,7 @@ def _main_common(args=None):
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
     if number == 0:
         try:
-            number = _calibrate_timer(timer)
+            number = _calibrate_timer(timer, verbose)
         except:
             timer.print_exc()
             return 1
@@ -135,7 +147,7 @@ def _main():
     processes = 25
     warmup = 1
 
-    timer, repeat, number = _main_common(args)
+    timer, repeat, number = _main_common(args, verbose)
     result = perf.Results()
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)

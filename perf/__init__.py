@@ -107,7 +107,6 @@ def _format_number(number, unit):
         if x == 1 and digit == 0:
             number = '10^%s' % pow10
 
-    # FIXME: add min and max
     if plural:
         return '%s %ss' % (number, unit)
     else:
