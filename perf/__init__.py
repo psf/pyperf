@@ -152,35 +152,36 @@ class Results:
             samples = []
             first_run = self.runs[0]
             warmup = len(first_run.warmups)
-            nrun = len(first_run.samples)
+            nsample = len(first_run.samples)
             loops = first_run.loops
             for run in self.runs:
                 # FIXME: handle the case where samples is empty
                 samples.extend(run.samples)
                 if loops is not None and run.loops != loops:
                     loops = None
-                run_nrun = len(run.samples)
-                if nrun is not None and nrun != run_nrun:
-                    nrun = None
+                run_nsample = len(run.samples)
+                if nsample is not None and nsample != run_nsample:
+                    nsample = None
                 run_warmup = len(run.warmups)
                 if warmup is not None and warmup != run_warmup:
                     warmup = None
 
             iterations = []
-            nprocess = len(self.runs)
-            if nprocess > 1:
-                iterations.append(_format_number(nprocess, 'process', 'processes'))
-            if nrun:
-                text = _format_number(nrun, 'run')
-                if verbose and warmup:
-                    text = '%s (warmup: %s)' % (text, warmup)
+            nrun = len(self.runs)
+            if nrun > 1:
+                iterations.append(_format_number(nrun, 'run'))
+            if nsample:
+                text = _format_number(nsample, 'sample')
                 iterations.append(text)
             if loops:
                 iterations.append(_format_number(loops, 'loop'))
+            iterations = ' x '.join(iterations)
+            if verbose and warmup:
+                iterations += '; %s' % _format_number(warmup, 'warmup')
 
             text = self._formatter(samples, verbose)
             if iterations:
-                text = '%s: %s' % (' x '.join(iterations), text)
+                text = '%s (%s)' % (text, iterations)
         else:
             text = '<no run>'
         if self.name:

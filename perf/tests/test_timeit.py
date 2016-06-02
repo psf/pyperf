@@ -46,8 +46,9 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^\.\.\n'
-                         r'Average: 2 processes x 3 runs x 4 loops: '
-                         r'([0-9]+\.[0-9]+) ms \+- ([0-9]+\.[0-9]+) ms$',
+                         r'Average: ([0-9]+\.[0-9]+) ms'
+                             r' \+- ([0-9]+\.[0-9]+) ms'
+                         r' \(2 runs x 3 samples x 4 loops\)$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
         mean = float(match.group(1))
