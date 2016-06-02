@@ -5,6 +5,7 @@ import sys
 import timeit
 
 import perf
+from perf.result import Results, RunResult
 
 
 _DEFAULT_NPROCESS = 25
@@ -43,15 +44,20 @@ def _main_common(args=None):
         opts, args = getopt.getopt(args, "n:s:r:p:w:vh",
                                    ["number=", "setup=", "repeat=",
                                     "nprocess=", "warmup=",
-                                    "verbose", "raw", "help"])
+                                    "verbose", "raw", "json", "help"])
     except getopt.error as err:
         print(err)
         print("use -h/--help for command line help")
         sys.exit(2)
 
+    class Namespace:
+        pass
+
     stmt = "\n".join(args) or "pass"
-    raw = False
-    verbose = 0
+    ns = Namespace()
+    ns.raw = False
+    ns.json = False
+    ns.verbose = 0
     nprocess = _DEFAULT_NPROCESS
     warmup = _DEFAULT_WARMUP
     number = 0   # auto-determine
@@ -59,9 +65,11 @@ def _main_common(args=None):
     repeat = _DEFAULT_REPEAT
     for o, a in opts:
         if o in ("-v", "--verbose"):
-            verbose += 1
+            ns.verbose += 1
         if o == "--raw":
-            raw = True
+            ns.raw = True
+        if o == "--json":
+            ns.json = True
         if o in ("-p", "--nprocess"):
             nprocess = int(a)
         if o in ("-w", "--warmup"):
@@ -75,7 +83,7 @@ def _main_common(args=None):
             if repeat <= 0:
                 repeat = 1
         if o in ("-h", "--help"):
-            # FIXME: it's not the right CLI, --verbose doesn't exist
+            # FIXME: display perf.timeit usage, not timeit help!
             print(timeit.__doc__)
             sys.exit(0)
     setup = "\n".join(setup) or "pass"
@@ -89,37 +97,45 @@ def _main_common(args=None):
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
     if number == 0:
         try:
-            number = _calibrate_timer(timer, verbose)
+            number = _calibrate_timer(timer, ns.verbose)
         except:
             timer.print_exc()
             sys.exit(1)
 
-    return (timer, raw, verbose, nprocess, warmup, repeat, number)
+    return (timer, ns, nprocess, warmup, repeat, number)
 
 
-def _main_raw(timer, verbose, warmup, repeat, number):
-    result = perf.RunResult(loops=number, warmup=warmup)
+def _main_raw(timer, ns, verbose, warmup, repeat, number):
+    result = RunResult(loops=number, warmup=warmup)
 
     try:
-        print("loops=%s" % number)
+        if not ns.json:
+            print(perf._format_number(number, 'loop'))
         for i in range(warmup + repeat):
             it = itertools.repeat(None, number)
             dt = timer.inner(it, timer.timer) / number
             result.values.append(dt)
-            print(dt)
+
+            text = perf._format_timedelta(dt)
+            if i < warmup:
+                text = 'warmup %s: %s' % (1 + i, text)
+            else:
+                text = 'run %s: %s' % (1 + i - warmup, text)
+            if not ns.json:
+                print(text)
     except:
         timer.print_exc()
         return 1
 
-    # FIXME: verbose mode
-    #print(result)
+    if ns.json:
+        print(result.json())
     return None
 
 
 def _run_subprocess(number, timeit_args, warmup):
     args = [sys.executable,
             '-m', 'perf.timeit',
-            '--raw',
+            '--json',
             "-n", str(number)]
     # FIXME: don't pass duplicate -n
     args.extend(timeit_args)
@@ -128,32 +144,25 @@ def _run_subprocess(number, timeit_args, warmup):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
                             universal_newlines=True)
+
     # FIXME: use context manager on Python 3
     stdout, stderr = proc.communicate()
-    values = []
-    loops = None
-    for line in stdout.splitlines():
-        if not values and line.startswith('loops='):
-            loops = int(line[6:])
-            continue
-        # FIXME: nice error message on parsing error
-        value = float(line)
-        values.append(value)
-    return perf.RunResult(values, loops=loops, warmup=warmup)
+
+    return RunResult.from_json(stdout)
 
 
 def _main():
     args = sys.argv[1:]
-    timer, raw, verbose, processes, warmup, repeat, number = _main_common(args)
-    if raw:
-        _main_raw(timer, verbose, warmup, repeat, number)
+    timer, ns, processes, warmup, repeat, number = _main_common(args)
+    if ns.raw or ns.json:
+        _main_raw(timer, ns, ns.verbose, warmup, repeat, number)
         return
 
-    result = perf.Results()
+    result = Results()
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
-        if verbose > 1:
+        if ns.verbose > 1:
             if run.warmup:
                 values1 = run.values[:run.warmup]
                 values2 = run.values[run.warmup:]
@@ -167,16 +176,16 @@ def _main():
                 text = 'runs (%s): %s' % (len(run.values), text)
 
             print("Run %s/%s: %s" % (1 + process, processes, text))
-        elif verbose:
+        elif ns.verbose:
             mean = perf.mean(run.values[run.warmup:])
             print(perf._format_timedelta(mean), end=' ')
             sys.stdout.flush()
         else:
             print(".", end='')
             sys.stdout.flush()
-    if verbose <= 1:
+    if ns.verbose <= 1:
         print()
-    print("Average: %s" % result.format(verbose > 1))
+    print("Average: %s" % result.format(ns.verbose > 1))
 
 
 if __name__ == "__main__":

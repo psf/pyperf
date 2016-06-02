@@ -9,6 +9,7 @@ class TestTimeit(unittest.TestCase):
         args = [sys.executable,
                 '-m', 'perf.timeit',
                 '--raw',
+                '-w', '1',
                 '-r', '2',
                 '-n', '1',
                 '-s', 'import time',
@@ -19,12 +20,16 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        lines = stdout.splitlines()
-        self.assertEqual(len(lines), 4)
-        self.assertEqual(lines[0], 'loops=1')
-        values = [float(line) for line in lines[1:]]
+        match = re.match(r'^1 loop\n'
+                         r'warmup 1: ([0-9]+) ms\n'
+                         r'run 1: ([0-9]+) ms\n'
+                         r'run 2: ([0-9]+) ms$',
+                         stdout.rstrip())
+        self.assertIsNotNone(match, repr(stdout))
+
+        values = [float(match.group(i)) for i in range(1, 4)]
         for value in values:
-            self.assertTrue(0.090 <= value <= 0.150, repr(value))
+            self.assertTrue(90 <= value <= 150, repr(value))
 
     def test_cli(self):
         args = [sys.executable,

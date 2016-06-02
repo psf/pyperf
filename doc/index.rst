@@ -27,14 +27,25 @@ perf.timeit
 
 Microbenchmark::
 
-    python3 -m perf.timeit [-v][-v] [-p NPROCESS] [-r RUNS] [-w WARMUP] [-n LOOPS] [-s SETUP_STMT] STMT [STMT2 ...]
+    python3 -m perf.timeit
+        [-v][-v]
+        [-p NPROCESS] [-r RUNS] [-w WARMUP] [-n LOOPS]
+        [--raw] [--json]
+        [-s SETUP_STMT] STMT [STMT2 ...]
+
+Iterations:
 
 * ``NPROCESS``: number of processes used to run the benchmark (default: 25)
 * ``RUNS``: number of runs per process (default: 3)
 * ``WARMUP``: the number of skipped runs (default: 1)
 * ``LOOPS``: number of loops per run
 
-``-v`` enables verbose mode, ``-vv`` shows even more numbers.
+Options:
+
+* ``-v`` enables verbose mode
+* ``-vv`` enables very verbose mode
+* ``--raw`` runs a single process
+* ``--json`` runs a single process and write output as JSON
 
 Example::
 
@@ -244,6 +255,7 @@ Changelog
   - timeit has a better output format in verbose mode and now also supports a
     ``-vv`` (very verbose) mode. Minimum and maximum are not more shown in
     verbose module, only in very verbose mode.
+  - timeit now uses internally a JSON format to exchange run result
   - metadata: add ``python_implementation`` and ``aslr``
 
 * Version 0.1 (2016-06-02)
