@@ -7,6 +7,9 @@ import timeit
 import perf
 
 
+_PROCESSES = 25
+_WARMUP = 1
+_DEFAULT_REPEAT = _WARMUP + 2
 _MIN_TIME = 0.1
 _MAX_TIME = 1.0
 
@@ -50,7 +53,7 @@ def _main_common(args=None, verbose=False):
     stmt = "\n".join(args) or "pass"
     number = 0   # auto-determine
     setup = []
-    repeat = timeit.default_repeat
+    repeat = _DEFAULT_REPEAT
     for o, a in opts:
         if o in ("-n", "--number"):
             number = int(a)
@@ -144,8 +147,8 @@ def _main():
         verbose = False
 
     # FIXME: don't hardcode the number of runs!
-    processes = 25
-    warmup = 1
+    processes = _PROCESSES
+    warmup = _WARMUP
 
     timer, repeat, number = _main_common(args, verbose)
     result = perf.Results()
@@ -156,10 +159,11 @@ def _main():
             if run.warmup:
                 values1 = run.values[:run.warmup]
                 values2 = run.values[run.warmup:]
-                text = ('warmup (%s): %s; %s'
+                text = ('warmup (%s): %s; %s -> %s'
                         % (len(values1),
                            ', '.join(perf._format_timedelta(values1)),
-                           ', '.join(perf._format_timedelta(values2))))
+                           ', '.join(perf._format_timedelta(values2)),
+                           perf._format_timedeltas(values2, True)))
             else:
                 text = ', '.join(perf._format_timedelta(run.values))
 
