@@ -5,7 +5,6 @@ import sys
 import timeit
 
 import perf
-from perf.result import Results, RunResult
 
 
 _DEFAULT_NPROCESS = 25
@@ -106,7 +105,7 @@ def _main_common(args=None):
 
 
 def _main_raw(timer, ns, verbose, warmup, repeat, number):
-    result = RunResult(loops=number)
+    result = perf.RunResult(loops=number)
 
     try:
         if not ns.json:
@@ -151,7 +150,7 @@ def _run_subprocess(number, timeit_args, warmup):
     # FIXME: use context manager on Python 3
     stdout, stderr = proc.communicate()
 
-    return RunResult.from_json(stdout)
+    return perf.RunResult.from_json(stdout)
 
 
 def _main():
@@ -161,7 +160,7 @@ def _main():
         _main_raw(timer, ns, ns.verbose, warmup, repeat, number)
         return
 
-    result = Results()
+    result = perf.Results()
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
