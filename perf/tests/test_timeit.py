@@ -79,7 +79,7 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 1)
 
         self.assertIn('Traceback (most recent call last):', stderr)
-        self.assertIn("NameError: name 'x' is not defined", stderr)
+        self.assertIn("NameError", stderr)
 
 
 if __name__ == "__main__":
