@@ -12,7 +12,6 @@ PY3 = (sys.version_info >= (3,))
 # * timer: resolution=1e-09, implementation=clock_gettime(CLOCK_MONOTONIC)
 # Processor:      x86_64
 #    Python:
-#       Implementation: CPython
 #       Compiler:       GCC 5.3.1 20160406 (Red Hat 5.3.1-6)
 #       Bits:           64bit
 #       Build:          May 26 2016 12:16:43 (#default:d3d8faaaaade)
@@ -35,9 +34,16 @@ def _add(metadata, key, value):
 
 
 def _collect_python_metadata(metadata):
-    ver = sys.version_info
-    # FIXME: use format '3.6.0a1+' as pybench
-    metadata['python_version'] = '%s.%s.%s' % (ver.major, ver.minor, ver.micro)
+    # Implementation
+    if hasattr(sys, 'implementation'):
+        # PEP 421, Python 3.3
+        metadata['python_implementation'] = sys.implementation.name
+    else:
+        # Convert to lower case to use the same format than Python 3
+        _add(metadata, 'python_implementation',
+             platform.python_implementation().lower())
+
+    metadata['python_version'] = platform.python_version()
     _add(metadata, 'python_executable', sys.executable)
 
     # Before PEP 393 (Python 3.3)

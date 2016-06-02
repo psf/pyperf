@@ -5,6 +5,12 @@ import unittest
 import perf.metadata
 
 
+MANDATORY_METADATA = (
+    'date',
+    'python_implementation', 'python_version',
+    'platform')
+
+
 class TestMetadata(unittest.TestCase):
     def check_metadata(self, text, dbg_info):
         self.assertIsInstance(text, str)
@@ -14,7 +20,7 @@ class TestMetadata(unittest.TestCase):
         self.assertFalse(text.endswith(' '), dbg_info)
 
     def check_all_metadata(self, metadata):
-        for key in ('date', 'python_version', 'platform'):
+        for key in MANDATORY_METADATA:
             self.assertIn(key, metadata)
         for key, value in metadata.items():
             dbg_info = 'key=%r value=%r' % (key, value)

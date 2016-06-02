@@ -165,6 +165,8 @@ Metadata
 
 * Python metadata:
 
+  - ``python_implementation``: Python implementation. Examples: ``cpython``,
+    ``pypy``, etc.
   - ``python_version``: Python version, ex: ``2.7.11``
   - ``python_executable``: path to the Python binary program
   - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
