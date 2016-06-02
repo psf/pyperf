@@ -7,8 +7,8 @@ import timeit
 import perf
 
 
-_PROCESSES = 25
-_WARMUP = 1
+_DEFAULT_NPROCESS = 25
+_DEFAULT_WARMUP = 1
 _DEFAULT_REPEAT = 3
 _MIN_TIME = 0.1
 _MAX_TIME = 1.0
@@ -41,7 +41,9 @@ def _main_common(args=None):
 
     try:
         opts, args = getopt.getopt(args, "n:s:r:p:w:vh",
-                                   ["number=", "setup=", "repeat=", "process=", "warmup=", "verbose", "raw", "help"])
+                                   ["number=", "setup=", "repeat=",
+                                    "nprocess=", "warmup=",
+                                    "verbose", "raw", "help"])
     except getopt.error as err:
         print(err)
         print("use -h/--help for command line help")
@@ -50,8 +52,8 @@ def _main_common(args=None):
     stmt = "\n".join(args) or "pass"
     raw = False
     verbose = 0
-    process = _PROCESSES
-    warmup = _WARMUP
+    nprocess = _DEFAULT_NPROCESS
+    warmup = _DEFAULT_WARMUP
     number = 0   # auto-determine
     setup = []
     repeat = _DEFAULT_REPEAT
@@ -60,8 +62,8 @@ def _main_common(args=None):
             verbose += 1
         if o == "--raw":
             raw = True
-        if o in ("-p", "--process"):
-            process = int(a)
+        if o in ("-p", "--nprocess"):
+            nprocess = int(a)
         if o in ("-w", "--warmup"):
             warmup = int(a)
         if o in ("-n", "--number"):
@@ -92,7 +94,7 @@ def _main_common(args=None):
             timer.print_exc()
             sys.exit(1)
 
-    return (timer, raw, verbose, process, warmup, repeat, number)
+    return (timer, raw, verbose, nprocess, warmup, repeat, number)
 
 
 def _main_raw(timer, verbose, warmup, repeat, number):

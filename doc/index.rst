@@ -22,28 +22,28 @@ It requires Python 2.7 or Python 3.
 Command line
 ============
 
-timeit
-------
+perf.timeit
+-----------
 
 Microbenchmark::
 
     python3 -m perf.timeit [-v][-v] [-p NPROCESS] [-r RUNS] [-w WARMUP] [-n LOOPS] [-s SETUP_STMT] STMT [STMT2 ...]
 
-* NPROCESS: number of processes used to run the benchmark (default: 25)
-* RUNS: number of runs per process (default: 3)
-* WARMUP: the number of skipped runs (default: 1)
-* LOOPS: number of loops per run
+* ``NPROCESS``: number of processes used to run the benchmark (default: 25)
+* ``RUNS``: number of runs per process (default: 3)
+* ``WARMUP``: the number of skipped runs (default: 1)
+* ``LOOPS``: number of loops per run
 
 ``-v`` enables verbose mode, ``-vv`` shows even more numbers.
 
 Example::
 
     $ python3 -m perf.timeit 1+1
-    Average: 5 runs x 3 samples x 10^7 loops: 17.8 ns +- 1.0 ns
+    Average: 25 runs x 3 samples x 10^7 loops: 18.3 ns +- 0.2 ns
 
 
-Metadata
---------
+perf.metadata
+-------------
 
 Display collected metadata::
 
@@ -58,6 +58,36 @@ Example::
     platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
     python_executable: /usr/bin/python3
     python_version: 3.4.3
+
+
+timeit versus perf.timeit
+=========================
+
+The timeit module of the Python standard library has multiple issues:
+
+* It displays the minimum
+* It only runs the benchmark 3 times using a single process
+* It disables the garbage collector
+
+perf.timeit is more reliable and gives a result more representative of a real
+use case:
+
+* It displays the average and the standard deviation
+* It runs the benchmark in multiple processes
+* By default, it skips the first run in each process to "warmup" the benchmark
+* It does not disable the garbage collector
+
+If a benchmark is run using a single process, we get the performance for one
+specific case, whereas many parameters are random:
+
+* Since Python 3, the hash function is now randomized and so the number of
+  hash collision in dictionaries is different in each process
+* Linux uses address space layout randomization (ASLR) by default and so
+  the performance of memory accesses is different in each process
+
+The article `My journey to stable benchmark, part 3 (average)
+<https://haypo.github.io/journey-to-stable-benchmark-average.html>`_ explains
+in depth the multiple issues of being focused on the minimum.
 
 
 API
