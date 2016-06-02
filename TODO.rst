@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Fix perf.timeit --help; replace getopt with argparse
 * Integration with timeit: IN PROGRESS
 * Integration with pybench
 * Integration with perf.py

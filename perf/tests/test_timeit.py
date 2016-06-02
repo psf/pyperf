@@ -50,6 +50,32 @@ class TestTimeit(unittest.TestCase):
         stdev = float(match.group(2))
         self.assertTrue(0 <= stdev <= 0.10, stdev)
 
+    def test_cli_help(self):
+        args = [sys.executable,
+                '-m', 'perf.timeit', '--help']
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True)
+        stdout = proc.communicate()[0]
+        self.assertEqual(proc.returncode, 0)
+
+        self.assertIn('Tool for measuring execution time '
+                      'of small code snippets.',
+                      stdout)
+
+    def test_cli_snippet_error(self):
+        args = [sys.executable,
+                '-m', 'perf.timeit', 'x+1']
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True)
+        stdout, stderr = proc.communicate()
+        self.assertEqual(proc.returncode, 1)
+
+        self.assertIn('Traceback (most recent call last):', stderr)
+        self.assertIn("NameError: name 'x' is not defined", stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
