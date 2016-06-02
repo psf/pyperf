@@ -1,4 +1,6 @@
-perf: Toolkit to run Python benchmarks.
+++++++++++++++++++++++++++++++++++++++
+perf: Toolkit to run Python benchmarks
+++++++++++++++++++++++++++++++++++++++
 
 * `perf project homepage at GitHub
   <https://github.com/haypo/perf>`_ (code, bugs)
@@ -12,11 +14,15 @@ perf: Toolkit to run Python benchmarks.
 Install perf
 ============
 
-Command to install::
+Command to install perf on Python 3::
 
     python3 -m pip install perf
 
-It requires Python 2.7 or Python 3.
+Command to install perf on Python 2::
+
+    python2 -m pip install perf
+
+Python 2.7 or Python 3 are supported.
 
 
 Command line
@@ -37,8 +43,9 @@ Iterations:
 
 * ``RUNS``: number of processes used to run the benchmark (default: 25)
 * ``SAMPLES``: number of samples per process (default: 3)
-* ``WARMUP``: the number of skipped samples (default: 1)
-* ``LOOPS``: number of loops per sample
+* ``WARMUP``: the number of samples used to warmup to benchmark (default: 1)
+* ``LOOPS``: number of loops per sample. By default, the timer is calibrated
+  to get samples taking between 100 ms and 1 sec.
 
 Options:
 
@@ -52,6 +59,36 @@ Example::
     $ python3 -m perf.timeit 1+1
     .........................
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
+
+
+perf
+----
+
+``python3 -m perf`` reads JSON from stdin and displays the average. It expects
+one run result encoded to JSON per line.
+
+Example::
+
+    $ python3 -m perf.timeit --json 1+1 > run1
+    warmup 1: 18.2 ns
+    run 1: 18.2 ns
+    run 2: 18.2 ns
+    run 3: 18.2 ns
+
+    $ python3 -m perf.timeit --json 1+1 > run2
+    warmup 1: 18.2 ns
+    run 1: 18.2 ns
+    run 2: 18.2 ns
+    run 3: 18.2 ns
+
+    $ python3 -m perf < run1
+    Average: 18.2 ns +- 0.0 ns (3 samples x 10^7 loops)
+
+    $ python3 -m perf < run2
+    Average: 18.2 ns +- 0.0 ns (3 samples x 10^7 loops)
+
+    $ cat run1 run2 | python3 -m perf
+    Average: 18.2 ns +- 0.0 ns (2 runs x 3 samples x 10^7 loops)
 
 
 perf.metadata
@@ -86,7 +123,7 @@ use case:
 
 * It displays the average and the standard deviation
 * It runs the benchmark in multiple processes
-* By default, it skips the first run in each process to "warmup" the benchmark
+* By default, it uses a first sample in each process to "warmup" the benchmark
 * It does not disable the garbage collector
 
 If a benchmark is run using a single process, we get the performance for one
@@ -207,13 +244,13 @@ RunResult
 
    .. attribute:: samples
 
-      List of numbers (``float``). Usually, :attr:`samples` is a list of
-      timings, number of seconds.
+      List of numbers (``float``). Usually, :attr:`samples` is a list of number
+      of seconds.
 
    .. attribute:: warmups
 
-      Similar to :attr:`samples`, but these numbers are skipped when computing
-      the average and standard deviation.
+      Similar to :attr:`samples`: samples run to "warmup" the benchmark. These
+      numbers are ignored when computing the average and standard deviation.
 
 
 Result

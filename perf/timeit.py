@@ -125,6 +125,9 @@ def _main_raw(timer, ns, verbose, warmup, repeat, number):
                 text = 'run %s: %s' % (1 + i - warmup, text)
             if not ns.json:
                 print(text)
+            else:
+                print(text, file=sys.stderr)
+                sys.stderr.flush()
     except:
         timer.print_exc()
         return 1
