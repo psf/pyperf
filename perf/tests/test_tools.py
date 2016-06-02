@@ -80,14 +80,14 @@ class TestTools(unittest.TestCase):
 class TestResult(unittest.TestCase):
     def test_run_result(self):
         run = perf.RunResult([1.0, 1.5, 2.0], loops=1000)
-        self.assertEqual(run.values, [1.0, 1.5, 2.0])
+        self.assertEqual(run.samples, [1.0, 1.5, 2.0])
         self.assertEqual(run.loops, 1000)
         self.assertEqual(str(run), '1.50 sec +- 0.50 sec')
 
     def test_run_result_json(self):
         run = perf.RunResult([1.0, 1.5, 2.0], loops=1000, warmups=[5.0])
         run = perf.RunResult.from_json(run.json())
-        self.assertEqual(run.values, [1.0, 1.5, 2.0])
+        self.assertEqual(run.samples, [1.0, 1.5, 2.0])
         self.assertEqual(run.loops, 1000)
         self.assertEqual(run.warmups, [5.0])
 

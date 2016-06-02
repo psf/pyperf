@@ -116,7 +116,7 @@ def _main_raw(timer, ns, verbose, warmup, repeat, number):
             if i < warmup:
                 result.warmups.append(dt)
             else:
-                result.values.append(dt)
+                result.samples.append(dt)
 
             text = perf._format_timedelta(dt)
             if i < warmup:
@@ -165,8 +165,8 @@ def _main():
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
         if ns.verbose > 1:
-            text = ', '.join(perf._format_timedeltas(run.values))
-            text = 'runs (%s): %s' % (len(run.values), text)
+            text = ', '.join(perf._format_timedeltas(run.samples))
+            text = 'runs (%s): %s' % (len(run.samples), text)
             if run.warmups:
                 text = ('warmup (%s): %s; %s'
                         % (len(run.warmups),
@@ -175,7 +175,7 @@ def _main():
 
             print("Run %s/%s: %s" % (1 + process, processes, text))
         elif ns.verbose:
-            mean = perf.mean(run.values)
+            mean = perf.mean(run.samples)
             print(perf._format_timedelta(mean), end=' ')
             sys.stdout.flush()
         else:

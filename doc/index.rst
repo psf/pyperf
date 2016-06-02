@@ -190,7 +190,9 @@ Clocks
 RunResult
 ---------
 
-.. class:: RunResult(values=None, loops=None, formatter=None)
+.. class:: RunResult(samples=None, loops=None, formatter=None)
+
+   Result of a single benchmark run.
 
    Attributes:
 
@@ -202,9 +204,15 @@ RunResult
 
       Number of loops (``int`` or ``None``).
 
-   .. attribute:: values
+   .. attribute:: samples
 
-      List of numbers (``float``).
+      List of numbers (``float``). Usually, :attr:`samples` is a list of
+      timings, number of seconds.
+
+   .. attribute:: warmups
+
+      Similar to :attr:`samples`, but these numbers are skipped when computing
+      the average and standard deviation.
 
 
 Result

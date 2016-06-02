@@ -149,17 +149,17 @@ class Results:
 
     def format(self, verbose=False):
         if self.runs:
-            values = []
+            samples = []
             first_run = self.runs[0]
             warmup = len(first_run.warmups)
-            nrun = len(first_run.values)
+            nrun = len(first_run.samples)
             loops = first_run.loops
             for run in self.runs:
-                # FIXME: handle the case where values is empty
-                values.extend(run.values)
+                # FIXME: handle the case where samples is empty
+                samples.extend(run.samples)
                 if loops is not None and run.loops != loops:
                     loops = None
-                run_nrun = len(run.values)
+                run_nrun = len(run.samples)
                 if nrun is not None and nrun != run_nrun:
                     nrun = None
                 run_warmup = len(run.warmups)
@@ -178,7 +178,7 @@ class Results:
             if loops:
                 iterations.append(_format_number(loops, 'loop'))
 
-            text = self._formatter(values, verbose)
+            text = self._formatter(samples, verbose)
             if iterations:
                 text = '%s: %s' % (' x '.join(iterations), text)
         else:
@@ -192,21 +192,21 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, values=None, warmups=None, loops=None, formatter=None):
+    def __init__(self, samples=None, warmups=None, loops=None, formatter=None):
         if not(loops is None or (isinstance(loops, int) and loops >= 0)):
             raise TypeError("loops must be an int >= 0 or None")
-        if (values is not None
+        if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
-                for value in values)):
-            raise TypeError("values must be a list of float >= 0")
+                for value in samples)):
+            raise TypeError("samples must be a list of float >= 0")
         if (warmups is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in warmups)):
             raise TypeError("warmups must be a list of float >= 0")
 
-        self.values = []
-        if values is not None:
-            self.values.extend(values)
+        self.samples = []
+        if samples is not None:
+            self.samples.extend(samples)
         self.loops = loops
         self.warmups = []
         if warmups is not None:
@@ -217,7 +217,7 @@ class RunResult:
             self._formatter = _format_run_result
 
     def format(self, verbose=False):
-        return self._formatter(self.values, verbose)
+        return self._formatter(self.samples, verbose)
 
     def __str__(self):
         return self.format()
@@ -234,14 +234,16 @@ class RunResult:
         if version != 1:
             raise ValueError("version %r not supported" % version)
 
-        values = data['values']
+        samples = data['samples']
         warmups = data['warmups']
         loops = data.get('loops', None)
-        return cls(loops=loops, values=values, warmups=warmups)
+        return cls(loops=loops, samples=samples, warmups=warmups)
 
     def json(self):
         json = _import_json()
-        data = {'version': 1, 'values': self.values, 'warmups': self.warmups}
+        data = {'version': 1,
+                'samples': self.samples,
+                'warmups': self.warmups}
         if self.loops is not None:
             data['loops'] = self.loops
         # FIXME: export formatter
