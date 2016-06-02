@@ -52,7 +52,8 @@ Options:
 * ``-v`` enables verbose mode
 * ``-vv`` enables very verbose mode
 * ``--raw`` runs a single process
-* ``--json`` runs a single process and write output as JSON
+* ``--json`` writes result as JSON into stdout, and write other messages
+  into stderr
 
 Example::
 
@@ -61,34 +62,20 @@ Example::
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
 
-perf
-----
+perf CLI
+--------
 
 ``python3 -m perf`` reads JSON from stdin and displays the average. It expects
-one run result encoded to JSON per line.
+one result encoded to JSON per line.
 
 Example::
 
-    $ python3 -m perf.timeit --json 1+1 > run1
-    warmup 1: 18.2 ns
-    run 1: 18.2 ns
-    run 2: 18.2 ns
-    run 3: 18.2 ns
+    $ python3 -m perf.timeit --json 1+1 > run.json
+    .........................
+    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
-    $ python3 -m perf.timeit --json 1+1 > run2
-    warmup 1: 18.2 ns
-    run 1: 18.2 ns
-    run 2: 18.2 ns
-    run 3: 18.2 ns
-
-    $ python3 -m perf < run1
-    Average: 18.2 ns +- 0.0 ns (3 samples x 10^7 loops)
-
-    $ python3 -m perf < run2
-    Average: 18.2 ns +- 0.0 ns (3 samples x 10^7 loops)
-
-    $ cat run1 run2 | python3 -m perf
-    Average: 18.2 ns +- 0.0 ns (2 runs x 3 samples x 10^7 loops)
+    $ python3 -m perf < run.json
+    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
 
 perf.metadata

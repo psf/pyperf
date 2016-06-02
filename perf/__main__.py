@@ -1,3 +1,4 @@
+import json
 import sys
 
 import perf
@@ -8,16 +9,31 @@ if sys.stdin.isatty():
 
 stdout = sys.stdin.read()
 runs = []
+results = []
 for line in stdout.splitlines():
     line = line.strip()
     if not line:
         # ignore empty lines
         continue
-    run = perf.RunResult.from_json(line)
-    runs.append(run)
-if not runs:
-    print("ERROR: no run result JSON read from stdin")
+
+    data = json.loads(line)
+    if 'run_result' in data:
+        run = perf.RunResult._from_json(data['run_result'])
+        runs.append(run)
+    elif 'results' in data:
+        result = perf.Results._from_json(data['results'])
+        results.append(result)
+    else:
+        print("ERROR: invalid JSON")
+        sys.exit(1)
+
+if runs:
+    result = perf.Results(runs=runs)
+    results.append(result)
+
+if not results:
+    print("ERROR: no result JSON read from stdin")
     sys.exit(1)
 
-result = perf.Results(runs=runs)
-print("Average: %s" % result)
+for result in results:
+    print("Average: %s" % result)

@@ -14,13 +14,13 @@ _MIN_TIME = 0.1
 _MAX_TIME = 1.0
 
 
-def _calibrate_timer(timer, verbose=0):
+def _calibrate_timer(timer, verbose=0, stream=None):
     min_dt = _MIN_TIME * 0.90
     for i in range(0, 10):
         number = 10 ** i
         dt = timer.timeit(number)
         if verbose > 1:
-            print("10^%s loops: %s" % (i, perf._format_timedelta(dt)))
+            print("10^%s loops: %s" % (i, perf._format_timedelta(dt)), file=stream)
         if dt >= _MAX_TIME:
             i = max(i - 1, 1)
             number = 10 ** i
@@ -28,7 +28,7 @@ def _calibrate_timer(timer, verbose=0):
         if dt >= min_dt:
             break
     if verbose > 1:
-        print("calibration: use %s" % perf._format_number(number, 'loop'))
+        print("calibration: use %s" % perf._format_number(number, 'loop'), file=stream)
     return number
 
 
@@ -95,8 +95,9 @@ def _main_common(args=None):
 
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
     if number == 0:
+        stream = sys.stderr if ns.json else None
         try:
-            number = _calibrate_timer(timer, ns.verbose)
+            number = _calibrate_timer(timer, ns.verbose, stream=stream)
         except:
             timer.print_exc()
             sys.exit(1)
@@ -140,7 +141,7 @@ def _main_raw(timer, ns, verbose, warmup, repeat, number):
 def _run_subprocess(number, timeit_args, warmup):
     args = [sys.executable,
             '-m', 'perf.timeit',
-            '--json',
+            '--raw', '--json',
             "-n", str(number)]
     # FIXME: don't pass duplicate -n
     args.extend(timeit_args)
@@ -159,11 +160,16 @@ def _run_subprocess(number, timeit_args, warmup):
 def _main():
     args = sys.argv[1:]
     timer, ns, processes, warmup, repeat, number = _main_common(args)
-    if ns.raw or ns.json:
+    if ns.raw:
         _main_raw(timer, ns, ns.verbose, warmup, repeat, number)
         return
 
     result = perf.Results()
+    if not ns.json:
+        out = sys.stdout
+    else:
+        out = sys.stderr
+
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
@@ -176,17 +182,20 @@ def _main():
                            ', '.join(perf._format_timedeltas(run.warmups)),
                            text))
 
-            print("Run %s/%s: %s" % (1 + process, processes, text))
+            print("Run %s/%s: %s" % (1 + process, processes, text), file=out)
         elif ns.verbose:
             mean = perf.mean(run.samples)
-            print(perf._format_timedelta(mean), end=' ')
-            sys.stdout.flush()
+            print(perf._format_timedelta(mean), end=' ', file=out)
+            out.flush()
         else:
-            print(".", end='')
-            sys.stdout.flush()
+            print(".", end='', file=out)
+            out.flush()
     if ns.verbose <= 1:
-        print()
-    print("Average: %s" % result.format(ns.verbose > 1))
+        print(file=out)
+    print("Average: %s" % result.format(ns.verbose > 1), file=out)
+    if ns.json:
+        out.flush()
+        print(result.json())
 
 
 if __name__ == "__main__":
