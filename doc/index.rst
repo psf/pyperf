@@ -36,6 +36,7 @@ Microbenchmark::
     python3 -m perf.timeit
         [-v][-v]
         [-p RUNS] [-r SAMPLES] [-w WARMUP] [-n LOOPS]
+        [-m/--metadata]
         [--raw] [--json]
         [-s SETUP_STMT] STMT [STMT2 ...]
 
@@ -51,6 +52,7 @@ Options:
 
 * ``-v`` enables verbose mode
 * ``-vv`` enables very verbose mode
+* ``--metadata`` displays metadata
 * ``--raw`` runs a single process
 * ``--json`` writes result as JSON into stdout, and write other messages
   into stderr

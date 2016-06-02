@@ -36,4 +36,8 @@ if not results:
     sys.exit(1)
 
 for result in results:
+    if result.metadata:
+        print("Metadata:")
+        for key, value in sorted(result.metadata.items()):
+            print("- %s: %s" % (key, value))
     print("Average: %s" % result)

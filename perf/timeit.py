@@ -40,10 +40,11 @@ def _main_common(args=None):
         args = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(args, "n:s:r:p:w:vh",
+        opts, args = getopt.getopt(args, "n:s:r:p:w:vmh",
                                    ["number=", "setup=", "repeat=",
                                     "nprocess=", "warmup=",
-                                    "verbose", "raw", "json", "help"])
+                                    "verbose", "raw", "json", "metadata",
+                                    "help"])
     except getopt.error as err:
         print(err)
         print("use -h/--help for command line help")
@@ -56,6 +57,7 @@ def _main_common(args=None):
     ns = Namespace()
     ns.raw = False
     ns.json = False
+    ns.metadata = False
     ns.verbose = 0
     nprocess = _DEFAULT_NPROCESS
     warmup = _DEFAULT_WARMUP
@@ -71,6 +73,8 @@ def _main_common(args=None):
             ns.json = True
         if o in ("-p", "--nprocess"):
             nprocess = int(a)
+        if o in ("-m", "--metadata"):
+            ns.metadata = True
         if o in ("-w", "--warmup"):
             warmup = int(a)
         if o in ("-n", "--number"):
@@ -166,9 +170,18 @@ def _main():
 
     result = perf.Results()
     if not ns.json:
-        out = sys.stdout
+        stream = sys.stdout
     else:
-        out = sys.stderr
+        stream = sys.stderr
+
+    if ns.metadata:
+        from perf import metadata as perf_metadata
+
+        perf_metadata.collect_metadata(result.metadata)
+
+        print("Metadata:", file=stream)
+        for key, value in sorted(result.metadata.items()):
+            print("- %s: %s" % (key, value), file=stream)
 
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)
@@ -182,19 +195,20 @@ def _main():
                            ', '.join(perf._format_timedeltas(run.warmups)),
                            text))
 
-            print("Run %s/%s: %s" % (1 + process, processes, text), file=out)
+            print("Run %s/%s: %s" % (1 + process, processes, text), file=stream)
         elif ns.verbose:
             mean = perf.mean(run.samples)
-            print(perf._format_timedelta(mean), end=' ', file=out)
-            out.flush()
+            print(perf._format_timedelta(mean), end=' ', file=stream)
+            stream.flush()
         else:
-            print(".", end='', file=out)
-            out.flush()
+            print(".", end='', file=stream)
+            stream.flush()
     if ns.verbose <= 1:
-        print(file=out)
-    print("Average: %s" % result.format(ns.verbose > 1), file=out)
+        print(file=stream)
+    print("Average: %s" % result.format(ns.verbose > 1), file=stream)
+
     if ns.json:
-        out.flush()
+        stream.flush()
         print(result.json())
 
 
