@@ -57,21 +57,32 @@ def _collect_python_metadata(metadata):
     #    pass
 
 
-def _collect_linux_metadata(metadata):
-    # CPU model
+def _read_proc(path):
     try:
         if PY3:
-            fp = open("/proc/cpuinfo", encoding="utf-8")
+            fp = open(path, encoding="utf-8")
         else:
             fp = open("/proc/cpuinfo")
         with fp:
             for line in fp:
-                if line.startswith('model name'):
-                    model_name = line.split(':', 1)[1]
-                    _add(metadata, 'cpu_model_name', model_name)
-                    break
+                yield line.rstrip()
     except (OSError, IOError):
-        pass
+        return
+
+
+def _collect_linux_metadata(metadata):
+    # CPU model
+    for line in _read_proc("/proc/cpuinfo"):
+        if line.startswith('model name'):
+            model_name = line.split(':', 1)[1]
+            _add(metadata, 'cpu_model_name', model_name)
+            break
+
+    # ASLR
+    for line in _read_proc('/proc/sys/kernel/randomize_va_space'):
+        enabled = 'enabled' if line != '0' else 'disabled'
+        metadata['linux_aslr'] = enabled
+        break
 
 
 def _collect_system_metadata(metadata):
