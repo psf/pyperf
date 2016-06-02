@@ -98,7 +98,7 @@ def _format_run_result(values, verbose=0):
     return text
 
 
-def _format_number(number, unit):
+def _format_number(number, unit, units=None):
     plural = (abs(number) > 1)
     if number >= 10000:
         pow10 = 0
@@ -112,6 +112,8 @@ def _format_number(number, unit):
             number = '10^%s' % pow10
 
     if plural:
-        return '%s %ss' % (number, unit)
+        if not units:
+            units = unit + 's'
+        return '%s %s' % (number, units)
     else:
         return '%s %s' % (number, unit)

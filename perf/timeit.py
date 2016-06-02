@@ -106,7 +106,7 @@ def _main_common(args=None):
 
 
 def _main_raw(timer, ns, verbose, warmup, repeat, number):
-    result = RunResult(loops=number, warmup=warmup)
+    result = RunResult(loops=number)
 
     try:
         if not ns.json:
@@ -114,7 +114,10 @@ def _main_raw(timer, ns, verbose, warmup, repeat, number):
         for i in range(warmup + repeat):
             it = itertools.repeat(None, number)
             dt = timer.inner(it, timer.timer) / number
-            result.values.append(dt)
+            if i < warmup:
+                result.warmups.append(dt)
+            else:
+                result.values.append(dt)
 
             text = perf._format_timedelta(dt)
             if i < warmup:
@@ -163,21 +166,17 @@ def _main():
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
         if ns.verbose > 1:
-            if run.warmup:
-                values1 = run.values[:run.warmup]
-                values2 = run.values[run.warmup:]
-                text = ('warmup (%s): %s; runs (%s): %s'
-                        % (len(values1),
-                           ', '.join(perf._format_timedeltas(values1)),
-                           len(values2),
-                           ', '.join(perf._format_timedeltas(values2))))
-            else:
-                text = ', '.join(perf._format_timedeltas(run.values))
-                text = 'runs (%s): %s' % (len(run.values), text)
+            text = ', '.join(perf._format_timedeltas(run.values))
+            text = 'runs (%s): %s' % (len(run.values), text)
+            if run.warmups:
+                text = ('warmup (%s): %s; %s'
+                        % (len(run.warmups),
+                           ', '.join(perf._format_timedeltas(run.warmups)),
+                           text))
 
             print("Run %s/%s: %s" % (1 + process, processes, text))
         elif ns.verbose:
-            mean = perf.mean(run.values[run.warmup:])
+            mean = perf.mean(run.values)
             print(perf._format_timedelta(mean), end=' ')
             sys.stdout.flush()
         else:

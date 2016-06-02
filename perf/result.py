@@ -25,26 +25,27 @@ class Results:
         if self.runs:
             values = []
             first_run = self.runs[0]
-            warmup = first_run.warmup
-            samples = len(first_run.values) - warmup
+            warmup = len(first_run.warmups)
+            nrun = len(first_run.values)
             loops = first_run.loops
             for run in self.runs:
-                # FIXME: handle the case where final values is empty
-                values.extend(run.values[run.warmup:])
+                # FIXME: handle the case where values is empty
+                values.extend(run.values)
                 if loops is not None and run.loops != loops:
                     loops = None
-                run_samples = len(run.values) - run.warmup
-                if samples is not None and samples != run_samples:
-                    samples = None
-                if warmup is not None and warmup != run.warmup:
+                run_nrun = len(run.values)
+                if nrun is not None and nrun != run_nrun:
+                    nrun = None
+                run_warmup = len(run.warmups)
+                if warmup is not None and warmup != run_warmup:
                     warmup = None
 
             iterations = []
-            nrun = len(self.runs)
-            if nrun > 1:
-                iterations.append(perf._format_number(nrun, 'run'))
-            if samples:
-                text = perf._format_number(samples, 'sample')
+            nprocess = len(self.runs)
+            if nprocess > 1:
+                iterations.append(perf._format_number(nprocess, 'process', 'processes'))
+            if nrun:
+                text = perf._format_number(nrun, 'run')
                 if verbose and warmup:
                     text = '%s (warmup: %s)' % (text, warmup)
                 iterations.append(text)
@@ -65,29 +66,32 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, values=None, loops=None, warmup=0, formatter=None):
+    def __init__(self, values=None, warmups=None, loops=None, formatter=None):
+        if not(loops is None or (isinstance(loops, int) and loops >= 0)):
+            raise TypeError("loops must be an int >= 0 or None")
         if (values is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in values)):
             raise TypeError("values must be a list of float >= 0")
-        if not(loops is None or (isinstance(loops, int) and loops >= 0)):
-            raise TypeError("loops must be an int >= 0 or None")
-        if not(isinstance(warmup, int) or warmup >= 0):
-            raise TypeError("warmup must be an int >= 0")
+        if (warmups is not None
+        and any(not(isinstance(value, float) and value >= 0)
+                for value in warmups)):
+            raise TypeError("warmups must be a list of float >= 0")
 
         self.values = []
         if values is not None:
             self.values.extend(values)
         self.loops = loops
-        self.warmup = warmup
+        self.warmups = []
+        if warmups is not None:
+            self.warmups.extend(warmups)
         if formatter is not None:
             self._formatter = formatter
         else:
             self._formatter = perf._format_run_result
 
     def format(self, verbose=False):
-        values = self.values[self.warmup:]
-        return self._formatter(values, verbose)
+        return self._formatter(self.values, verbose)
 
     def __str__(self):
         return self.format()
@@ -104,12 +108,12 @@ class RunResult:
             raise ValueError("version %r not supported" % version)
 
         values = data['values']
-        warmup = data['warmup']
+        warmups = data['warmups']
         loops = data.get('loops', None)
-        return cls(values=values, loops=loops, warmup=warmup)
+        return cls(loops=loops, values=values, warmups=warmups)
 
     def json(self):
-        data = {'version': 1, 'values': self.values, 'warmup': self.warmup}
+        data = {'version': 1, 'values': self.values, 'warmups': self.warmups}
         if self.loops is not None:
             data['loops'] = self.loops
         # FIXME: export formatter
