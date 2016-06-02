@@ -127,7 +127,7 @@ def _main_raw(timer, ns, verbose, warmup, repeat, number):
             if i < warmup:
                 text = 'warmup %s: %s' % (1 + i, text)
             else:
-                text = 'run %s: %s' % (1 + i - warmup, text)
+                text = 'sample %s: %s' % (1 + i - warmup, text)
             if not ns.json:
                 print(text)
             else:
