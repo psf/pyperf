@@ -51,7 +51,7 @@ except ImportError:
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
-def _format_timedelta(values):
+def _format_timedeltas(values):
     if any(dt < 0 for dt in values):
         raise ValueError("numbers must be positive")
 
@@ -71,7 +71,11 @@ def _format_timedelta(values):
     return tuple(fmt % (value * factor,) for value in values)
 
 
-def _format_timedeltas(values, verbose):
+def _format_timedelta(value):
+    return _format_timedeltas((value,))[0]
+
+
+def _format_run_result(values, verbose=0):
     numbers = [mean(values)]
     with_stdev = (len(values) >= 2)
     if with_stdev:
@@ -80,7 +84,7 @@ def _format_timedeltas(values, verbose):
         numbers.append(min(values))
         numbers.append(max(values))
 
-    numbers = _format_timedelta(numbers)
+    numbers = _format_timedeltas(numbers)
     if verbose:
         if with_stdev:
             text = '%s +- %s (min: %s, max: %s)' % numbers
@@ -129,29 +133,35 @@ class Results:
         if formatter is not None:
             self._formatter = formatter
         else:
-            self._formatter = _format_timedeltas
+            self._formatter = _format_run_result
 
     def format(self, verbose=False):
         if self.runs:
             values = []
             first_run = self.runs[0]
-            samples = len(first_run.values)
+            warmup = first_run.warmup
+            samples = len(first_run.values) - warmup
             loops = first_run.loops
             for run in self.runs:
                 # FIXME: handle the case where final values is empty
                 values.extend(run.values[run.warmup:])
                 if loops is not None and run.loops != loops:
                     loops = None
-                run_samples = len(run.values)
+                run_samples = len(run.values) - run.warmup
                 if samples is not None and samples != run_samples:
                     samples = None
+                if warmup is not None and warmup != run.warmup:
+                    warmup = None
 
             iterations = []
             nrun = len(self.runs)
             if nrun > 1:
                 iterations.append(_format_number(nrun, 'run'))
             if samples:
-                iterations.append(_format_number(samples, 'sample'))
+                text = _format_number(samples, 'sample')
+                if verbose and warmup:
+                    text = '%s (warmup: %s)' % (text, warmup)
+                iterations.append(text)
             if loops:
                 iterations.append(_format_number(loops, 'loop'))
 
@@ -177,7 +187,7 @@ class RunResult:
         if formatter is not None:
             self._formatter = formatter
         else:
-            self._formatter = _format_timedeltas
+            self._formatter = _format_run_result
         self.warmup = warmup
 
     def format(self, verbose=False):

@@ -15,7 +15,6 @@ PY3 = (sys.version_info >= (3,))
 #       Compiler:       GCC 5.3.1 20160406 (Red Hat 5.3.1-6)
 #       Bits:           64bit
 #       Build:          May 26 2016 12:16:43 (#default:d3d8faaaaade)
-#       Unicode:        UCS4
 
 
 def _add(metadata, key, value):

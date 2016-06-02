@@ -26,7 +26,7 @@ class TestStatistics(unittest.TestCase):
 class TestTools(unittest.TestCase):
     def test_timedelta(self):
         def fmt_delta(seconds):
-            return perf._format_timedelta((seconds,))[0]
+            return perf._format_timedelta(seconds)
 
         self.assertEqual(fmt_delta(555222), "555222 sec")
 
@@ -43,11 +43,24 @@ class TestTools(unittest.TestCase):
 
     def test_timedelta_stdev(self):
         def fmt_stdev(seconds, stdev):
-            return "%s +- %s" % perf._format_timedelta((seconds, stdev))
+            return "%s +- %s" % perf._format_timedeltas((seconds, stdev))
 
         self.assertEqual(fmt_stdev(58123, 192), "58123 sec +- 192 sec")
         self.assertEqual(fmt_stdev(100e-3, 0), "100 ms +- 0 ms")
         self.assertEqual(fmt_stdev(102e-3, 3e-3), "102 ms +- 3 ms")
+
+    def test_format_run_result(self):
+        # 1 sample
+        self.assertEqual(perf._format_run_result([1.5], False),
+                         "1.50 sec")
+        self.assertEqual(perf._format_run_result([1.5], True),
+                         "1.50 sec (min: 1.50 sec, max: 1.50 sec)")
+
+        # multiple samples with std dev
+        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], False),
+                         "1.50 sec +- 0.50 sec")
+        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], True),
+                         "1.50 sec +- 0.50 sec (min: 1.00 sec, max: 2.00 sec)")
 
     def test_format_number(self):
         # plural

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import itertools
 import subprocess
 import sys
@@ -9,33 +9,30 @@ import perf
 
 _PROCESSES = 25
 _WARMUP = 1
-_DEFAULT_REPEAT = _WARMUP + 2
+_DEFAULT_REPEAT = 3
 _MIN_TIME = 0.1
 _MAX_TIME = 1.0
 
 
-def _calibrate_timer(timer, verbose=False):
+def _calibrate_timer(timer, verbose=0):
     min_dt = _MIN_TIME * 0.90
     for i in range(0, 10):
         number = 10 ** i
         dt = timer.timeit(number)
-        text = perf._format_timedelta((dt,))[0]
-        if verbose:
-            print("10^%s iterations: %s" % (i, text))
+        if verbose > 1:
+            print("10^%s loops: %s" % (i, perf._format_timedelta(dt)))
         if dt >= _MAX_TIME:
             i = max(i - 1, 1)
             number = 10 ** i
             break
         if dt >= min_dt:
             break
-    if verbose:
-        min_dt, max_dt = perf._format_timedelta((_MIN_TIME, _MAX_TIME))
-        print("=> use %s (min: %s, max: %s)"
-              % (perf._format_number(number, 'iteration'), min_dt, max_dt))
+    if verbose > 1:
+        print("calibration: use %s" % perf._format_number(number, 'loop'))
     return number
 
 
-def _main_common(args=None, verbose=False):
+def _main_common(args=None):
     # FIXME: use top level imports?
     # FIXME: get ride of getopt! use python 3 timeit main()
     import getopt
@@ -43,18 +40,30 @@ def _main_common(args=None, verbose=False):
         args = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(args, "n:s:r:h",
-                                   ["number=", "setup=", "repeat=", "help"])
+        opts, args = getopt.getopt(args, "n:s:r:p:w:vh",
+                                   ["number=", "setup=", "repeat=", "process=", "warmup=", "verbose", "raw", "help"])
     except getopt.error as err:
         print(err)
         print("use -h/--help for command line help")
-        return 2
+        sys.exit(2)
 
     stmt = "\n".join(args) or "pass"
+    raw = False
+    verbose = 0
+    process = _PROCESSES
+    warmup = _WARMUP
     number = 0   # auto-determine
     setup = []
     repeat = _DEFAULT_REPEAT
     for o, a in opts:
+        if o in ("-v", "--verbose"):
+            verbose += 1
+        if o == "--raw":
+            raw = True
+        if o in ("-p", "--process"):
+            process = int(a)
+        if o in ("-w", "--warmup"):
+            warmup = int(a)
         if o in ("-n", "--number"):
             number = int(a)
         if o in ("-s", "--setup"):
@@ -66,7 +75,7 @@ def _main_common(args=None, verbose=False):
         if o in ("-h", "--help"):
             # FIXME: it's not the right CLI, --verbose doesn't exist
             print(timeit.__doc__)
-            return 0
+            sys.exit(0)
     setup = "\n".join(setup) or "pass"
 
     # Include the current directory, so that local imports work (sys.path
@@ -81,18 +90,17 @@ def _main_common(args=None, verbose=False):
             number = _calibrate_timer(timer, verbose)
         except:
             timer.print_exc()
-            return 1
+            sys.exit(1)
 
-    return (timer, repeat, number)
+    return (timer, raw, verbose, process, warmup, repeat, number)
 
 
-def _main_raw(args=None):
-    timer, repeat, number = _main_common()
+def _main_raw(timer, verbose, warmup, repeat, number):
+    result = perf.RunResult(loops=number, warmup=warmup)
 
-    result = perf.RunResult(loops=number)
     try:
         print("loops=%s" % number)
-        for i in range(repeat):
+        for i in range(warmup + repeat):
             it = itertools.repeat(None, number)
             dt = timer.inner(it, timer.timer) / number
             result.values.append(dt)
@@ -133,42 +141,40 @@ def _run_subprocess(number, timeit_args, warmup):
 
 
 def _main():
-    if '--raw' in sys.argv:
-        sys.argv.remove('--raw')
-        _main_raw()
+    args = sys.argv[1:]
+    timer, raw, verbose, processes, warmup, repeat, number = _main_common(args)
+    if raw:
+        _main_raw(timer, verbose, warmup, repeat, number)
         return
 
-    # FIXME: better argument parsing
-    args = sys.argv[1:]
-    if '-v' in args:
-        verbose = True
-        args.remove('-v')
-    else:
-        verbose = False
-
-    # FIXME: don't hardcode the number of runs!
-    processes = _PROCESSES
-    warmup = _WARMUP
-
-    timer, repeat, number = _main_common(args, verbose)
     result = perf.Results()
     for process in range(processes):
         run = _run_subprocess(number, args, warmup)
         result.runs.append(run)
-        if verbose:
+        if verbose > 1:
             if run.warmup:
                 values1 = run.values[:run.warmup]
                 values2 = run.values[run.warmup:]
-                text = ('warmup (%s): %s; %s -> %s'
+                text = ('warmup (%s): %s; runs (%s): %s'
                         % (len(values1),
-                           ', '.join(perf._format_timedelta(values1)),
-                           ', '.join(perf._format_timedelta(values2)),
-                           perf._format_timedeltas(values2, True)))
+                           ', '.join(perf._format_timedeltas(values1)),
+                           len(values2),
+                           ', '.join(perf._format_timedeltas(values2))))
             else:
-                text = ', '.join(perf._format_timedelta(run.values))
+                text = ', '.join(perf._format_timedeltas(run.values))
+                text = 'runs (%s): %s' % (len(run.values), text)
 
             print("Run %s/%s: %s" % (1 + process, processes, text))
-    print("Average: %s" % result.format(verbose))
+        elif verbose:
+            mean = perf.mean(run.values[run.warmup:])
+            print(perf._format_timedelta(mean), end=' ')
+            sys.stdout.flush()
+        else:
+            print(".", end='')
+            sys.stdout.flush()
+    if verbose <= 1:
+        print()
+    print("Average: %s" % result.format(verbose > 1))
 
 
 if __name__ == "__main__":

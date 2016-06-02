@@ -5,7 +5,7 @@ TODO
 * Integration with pybench
 * Integration with perf.py
 * Add duration to Result (metadata?)
-* Error or warning if timing is too short:
+* Raise an error or warning if timings are too short/benchmakr is unstable:
 
     $ python3 -m perf.timeit -n 1 1+1
     Average: 5 runs x 3 samples x 1 loop: 420 ns +- 284 ns
