@@ -91,7 +91,7 @@ def _main_raw(args=None):
     return None
 
 
-def _run_subprocess(number, timeit_args):
+def _run_subprocess(number, timeit_args, warmup):
     args = [sys.executable,
             '-m', 'perf.timeit',
             '--raw',
@@ -114,35 +114,45 @@ def _run_subprocess(number, timeit_args):
         # FIXME: nice error message on parsing error
         value = float(line)
         values.append(value)
-    return perf.RunResult(values, loops=loops)
+    return perf.RunResult(values, loops=loops, warmup=warmup)
 
 
 def _main():
     if '--raw' in sys.argv:
         sys.argv.remove('--raw')
         _main_raw()
+        return
+
+    # FIXME: better argument parsing
+    args = sys.argv[1:]
+    if '-v' in args:
+        verbose = True
+        args.remove('-v')
     else:
-        # FIXME: better argument parsing
-        args = sys.argv[1:]
-        if '-v' in args:
-            verbose = True
-            args.remove('-v')
-        else:
-            verbose = False
+        verbose = False
 
-        # FIXME: don't hardcode the number of runs!
-        processes = 5
+    # FIXME: don't hardcode the number of runs!
+    processes = 25
+    warmup = 1
 
-        timer, repeat, number = _main_common(args)
-        result = perf.Results()
-        for process in range(processes):
-            run = _run_subprocess(number, args)
-            result.runs.append(run)
-            if verbose:
-                print("Run %s/%s: %s"
-                      % (1 + process, processes,
-                         ', '.join(perf._format_timedelta(run.values))))
-        print("Average: %s" % result.format(verbose))
+    timer, repeat, number = _main_common(args)
+    result = perf.Results()
+    for process in range(processes):
+        run = _run_subprocess(number, args, warmup)
+        result.runs.append(run)
+        if verbose:
+            if run.warmup:
+                values1 = run.values[:run.warmup]
+                values2 = run.values[run.warmup:]
+                text = ('warmup (%s): %s; %s'
+                        % (len(values1),
+                           ', '.join(perf._format_timedelta(values1)),
+                           ', '.join(perf._format_timedelta(values2))))
+            else:
+                text = ', '.join(perf._format_timedelta(run.values))
+
+            print("Run %s/%s: %s" % (1 + process, processes, text))
+    print("Average: %s" % result.format(verbose))
 
 
 if __name__ == "__main__":

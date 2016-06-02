@@ -139,7 +139,8 @@ class Results:
             samples = len(first_run.values)
             loops = first_run.loops
             for run in self.runs:
-                values.extend(run.values)
+                # FIXME: handle the case where final values is empty
+                values.extend(run.values[run.warmup:])
                 if loops is not None and run.loops != loops:
                     loops = None
                 run_samples = len(run.values)
@@ -169,7 +170,7 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, values=None, loops=None, formatter=None):
+    def __init__(self, values=None, loops=None, warmup=0, formatter=None):
         self.values = []
         if values:
             self.values.extend(values)
@@ -178,10 +179,11 @@ class RunResult:
             self._formatter = formatter
         else:
             self._formatter = _format_timedeltas
-        # FIXME: skip warmup iterations
+        self.warmup = warmup
 
     def format(self, verbose=False):
-        return self._formatter(self.values, verbose)
+        values = self.values[self.warmup:]
+        return self._formatter(values, verbose)
 
     def __str__(self):
         return self.format()
