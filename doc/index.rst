@@ -79,6 +79,34 @@ Example::
     $ python3 -m perf < run.json
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
+It is also possible to store a single run. Example::
+
+    $ python3 -m perf.timeit --raw --json 1+1 > run1.json
+    warmup 1: 18.3 ns
+    sample 1: 18.3 ns
+    sample 2: 18.3 ns
+    sample 3: 18.3 ns
+
+    $ python3 -m perf < run1.json
+    Average: 18.3 ns +- 0.0 ns (3 samples x 10^7 loops)
+
+Combine 3 runs::
+
+    $ python3 -m perf.timeit --raw --json 1+1 > run2.json
+    warmup 1: 18.2 ns
+    sample 1: 18.2 ns
+    sample 2: 18.2 ns
+    sample 3: 18.2 ns
+
+    $ python3 -m perf.timeit --raw --json 1+1 > run3.json
+    warmup 1: 18.2 ns
+    sample 1: 18.2 ns
+    sample 2: 18.2 ns
+    sample 3: 18.2 ns
+
+    $ cat run1.json run2.json run3.json | python3 -m perf
+    Average: 18.2 ns +- 0.0 ns (3 runs x 3 samples x 10^7 loops)
+
 
 perf.metadata CLI
 -----------------
