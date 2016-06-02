@@ -5,10 +5,12 @@ import unittest
 import perf.metadata
 
 
-MANDATORY_METADATA = (
+MANDATORY_METADATA = [
     'date',
     'python_implementation', 'python_version',
-    'platform')
+    'platform']
+if sys.platform.startswith('linux'):
+    MANDATORY_METADATA.extend(('aslr', 'cpu_model_name'))
 
 
 class TestMetadata(unittest.TestCase):

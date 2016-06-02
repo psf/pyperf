@@ -86,7 +86,7 @@ def _collect_linux_metadata(metadata):
     # ASLR
     for line in _read_proc('/proc/sys/kernel/randomize_va_space'):
         enabled = 'enabled' if line != '0' else 'disabled'
-        metadata['linux_aslr'] = enabled
+        metadata['aslr'] = enabled
         break
 
 

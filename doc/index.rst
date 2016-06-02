@@ -90,6 +90,31 @@ The article `My journey to stable benchmark, part 3 (average)
 in depth the multiple issues of being focused on the minimum.
 
 
+Metadata
+========
+
+* Python metadata:
+
+  - ``python_implementation``: Python implementation. Examples: ``cpython``,
+    ``pypy``, etc.
+  - ``python_version``: Python version, ex: ``2.7.11``
+  - ``python_executable``: path to the Python binary program
+  - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
+    only set on Pyhon 2.7, Python 3.2 and older
+
+* System metadata:
+
+  - ``platform``: short string describing the platform
+  - ``cpu_count``: number of CPUs
+  - ``cpu_model_name``: CPU model name (currently only supported on Linux)
+  - ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
+    ``disabled`` (currently only supported on Linux)
+
+* Misc metadata:
+
+  - ``date``: date when the benchmark started, formatted as ISO 8601
+
+
 API
 ===
 
@@ -197,29 +222,6 @@ Result
 
 
 
-Metadata
---------
-
-* Python metadata:
-
-  - ``python_implementation``: Python implementation. Examples: ``cpython``,
-    ``pypy``, etc.
-  - ``python_version``: Python version, ex: ``2.7.11``
-  - ``python_executable``: path to the Python binary program
-  - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
-    only set on Pyhon 2.7, Python 3.2 and older
-
-* System metadata:
-
-  - ``platform``: short string describing the platform
-  - ``cpu_count``: number of CPUs
-  - ``cpu_model_name``: CPU model name (currently only supported on Linux)
-
-* Misc metadata:
-
-  - ``date``: date when the benchmark started, formatted as ISO 8601
-
-
 Metadata functions
 ------------------
 
@@ -233,7 +235,17 @@ Metadata functions
 Changelog
 =========
 
+* Version 0.2
+
+  - timeit now uses 25 processes instead of 5 by default
+  - timeit timer calibration now limits the number of loops to limit the
+    maximum duration of a single run to 1 second
+  - timeit displays dots to show the progress
+  - timeit has a better output format in verbose mode and now also supports a
+    ``-vv`` (very verbose) mode. Minimum and maximum are not more shown in
+    verbose module, only in very verbose mode.
+  - metadata: add ``python_implementation`` and ``aslr``
+
 * Version 0.1 (2016-06-02)
 
   - First public release
-
