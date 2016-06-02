@@ -25,11 +25,11 @@ Command to install perf on Python 2::
 Python 2.7 or Python 3 are supported.
 
 
-Command line
-============
+Command line interface
+======================
 
-perf.timeit
------------
+perf.timeit CLI
+---------------
 
 Microbenchmark::
 
@@ -80,8 +80,8 @@ Example::
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
 
-perf.metadata
--------------
+perf.metadata CLI
+-----------------
 
 Display collected metadata::
 
@@ -264,7 +264,7 @@ Result
 
    .. attribute:: runs
 
-      List of :class:`RunResult`.
+      List of :class:`RunResult` instances.
 
 
 
@@ -283,6 +283,7 @@ Changelog
 
 * Version 0.2
 
+  - new ``python3 -m perf`` CLI
   - timeit now uses 25 processes instead of 5 by default
   - timeit timer calibration now limits the number of loops to limit the
     maximum duration of a single run to 1 second
