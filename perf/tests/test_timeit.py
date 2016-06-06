@@ -12,6 +12,7 @@ class TestTimeit(unittest.TestCase):
                 '-w', '1',
                 '-r', '2',
                 '-n', '1',
+                '-v',
                 '-s', 'import time',
                 'time.sleep(0.1)']
         proc = subprocess.Popen(args,
@@ -23,13 +24,23 @@ class TestTimeit(unittest.TestCase):
         match = re.match(r'^1 loop\n'
                          r'Warmup 1: ([0-9]+) ms\n'
                          r'Run 1: ([0-9]+) ms\n'
-                         r'Run 2: ([0-9]+) ms$',
+                         r'Run 2: ([0-9]+) ms\n'
+                         r'Average: ([0-9]+) ms \+- ([0-9]+) ms '
+                            r'\(min: ([0-9]+) ms, max: ([0-9]+) ms\)$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
 
         values = [float(match.group(i)) for i in range(1, 4)]
         for value in values:
             self.assertTrue(90 <= value <= 150, repr(value))
+
+        mean = float(match.group(4))
+        self.assertTrue(90 <= mean <= 150, mean)
+        stdev = float(match.group(5))
+        self.assertLessEqual(stdev, 10)
+
+        min_dt, max_dt = float(match.group(6)), float(match.group(7))
+        self.assertTrue(90 <= min_dt <= max_dt < 150, (min_dt, max_dt))
 
     def test_cli(self):
         args = [sys.executable,

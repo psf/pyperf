@@ -19,6 +19,7 @@ class TestTextRunner(unittest.TestCase):
 
         runner = perf.TextRunner(3)
         runner.timer = fake_timer
+        runner.verbose = True
         return runner
 
     def test_range(self):
@@ -40,7 +41,7 @@ class TestTextRunner(unittest.TestCase):
                          "Run 2: 1.00 sec\n"
                          "Run 3: 1.00 sec\n")
 
-    def test_done_json(self):
+    def test_display_result(self):
         runner = self.create_runner()
         runner.json = True
 
@@ -53,7 +54,11 @@ class TestTextRunner(unittest.TestCase):
                          "Run 3: 1.00 sec\n")
 
         with tests.capture_stdout() as stdout:
-            runner.done()
+            with tests.capture_stderr() as stderr:
+                runner.display_result()
+        self.assertEqual(stderr.getvalue(),
+                         'Average: 1.00 sec +- 0.00 sec '
+                         '(min: 1.00 sec, max: 1.00 sec)\n')
         self.assertEqual(stdout.getvalue(),
                          runner.result.json()+'\n')
 

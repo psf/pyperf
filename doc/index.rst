@@ -326,9 +326,14 @@ TextRunner
 
       Benchmark the function ``func(*args)``.
 
-   .. method:: done()
+   .. method:: display_headers()
 
-      If :attr:`json` is true, write the result as JSON into ``sys.stdout``.
+      Display the number of loops of :attr:`result` if set.
+
+   .. method:: display_result()
+
+      Display the result (average). If :attr:`json` is true, write also the
+      result as JSON into ``sys.stdout``.
 
    Attributes:
 
@@ -349,10 +354,14 @@ TextRunner
 
       Number of warmup samples (``int``).
 
+   .. attribute:: verbose
+
+      Verbose mode (``bool``), default: ``False``.
+
    .. attribute:: timer
 
-      Timer function used to measure time elapsed by benchmarks. Use
-      :func:`perf_counter` by default.
+      Timer function used to measure time elapsed by benchmarks, default:
+      :func:`perf_counter`.
 
 
 

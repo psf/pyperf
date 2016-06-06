@@ -111,12 +111,13 @@ def _main_common(args=None):
 
 def _main_raw(timer, ns, verbose, warmups, repeat, number):
     runner = perf.TextRunner(repeat, warmups=warmups)
+    runner.verbose = verbose
     runner.result.loops = number
     runner.json = ns.json
 
     try:
-        if not ns.json:
-            print(perf._format_number(number, 'loop'))
+        runner.display_headers()
+
         for is_warmup, run in runner.range():
             it = itertools.repeat(None, number)
             dt = timer.inner(it, timer.timer) / number
@@ -126,7 +127,7 @@ def _main_raw(timer, ns, verbose, warmups, repeat, number):
         timer.print_exc()
         return 1
 
-    runner.done()
+    runner.display_result()
     return None
 
 

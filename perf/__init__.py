@@ -306,6 +306,7 @@ class TextRunner:
         self.runs = runs
         self.json = False
         self.timer = perf_counter
+        self.verbose = False
 
     def _stream(self):
         return sys.stderr if self.json else None
@@ -323,26 +324,32 @@ class TextRunner:
         else:
             self.result.samples.append(sample)
 
-        text = self.result._format_sample(sample)
-        if is_warmup:
-            text = "Warmup %s: %s" % (1 + run, text)
-        else:
-            text = "Run %s: %s" % (1 + run, text)
-        print(text, file=self._stream())
+        if self.verbose:
+            text = self.result._format_sample(sample)
+            if is_warmup:
+                text = "Warmup %s: %s" % (1 + run, text)
+            else:
+                text = "Run %s: %s" % (1 + run, text)
+            print(text, file=self._stream())
 
-    def bench_func(self, func, *args):
-        # FIXME: use functools.partial() to not use the slow "func(*args)"
-        # unpacking at each iteration?
-        if self.result.loops is not None:
+    def display_headers(self):
+        if self.result.loops is not None and self.verbose:
             print(_format_number(self.result.loops, 'loop'),
                   file=self._stream())
+
+    def bench_func(self, func, *args):
         for is_warmup, run in self.range():
             t1 = self.timer()
+            # FIXME: use functools.partial() to not use the slow "func(*args)"
+            # unpacking at each iteration?
             func(*args)
             t2 = self.timer()
             self.add(is_warmup, run, t2 - t1)
 
-    def done(self):
+    def display_result(self):
+        print("Average: %s" % self.result.format(self.verbose),
+              file=self._stream())
         sys.stderr.flush()
+
         if self.json:
             print(self.result.json())
