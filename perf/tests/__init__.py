@@ -7,7 +7,10 @@ import sys
 def _capture_stream(name):
     old_stream = getattr(sys, name)
     try:
-        stream = io.StringIO()
+        if sys.version_info >= (3,):
+            stream = io.StringIO()
+        else:
+            stream = io.BytesIO()
         setattr(sys, name, stream)
         yield stream
     finally:

@@ -11,8 +11,14 @@ def noop():
 
 class TestTextRunner(unittest.TestCase):
     def create_runner(self):
+        def fake_timer():
+            t = fake_timer.value
+            fake_timer.value += 1
+            return t
+        fake_timer.value = 0
+
         runner = perf.TextRunner(3)
-        runner.timer = iter(itertools.count()).__next__
+        runner.timer = fake_timer
         return runner
 
     def test_range(self):
