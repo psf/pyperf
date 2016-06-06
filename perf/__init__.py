@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 
@@ -250,6 +251,9 @@ class RunResult:
         else:
             self._formatter = _format_run_result
 
+    def _format_sample(self, sample, verbose=False):
+        return self._formatter([sample], verbose)
+
     def format(self, verbose=False):
         return self._formatter(self.samples, verbose)
 
@@ -290,3 +294,52 @@ class RunResult:
     def json(self):
         json = _import_json()
         return json.dumps({'run_result': self._json()})
+
+
+class TextRunner:
+    def __init__(self, runs, warmups=1):
+        self.result = RunResult()
+        self.warmups = warmups
+        self.runs = runs
+        self.json = False
+        self.timer = perf_counter()
+
+    def _stream(self):
+        return sys.stderr if self.json else None
+
+    def range(self):
+        # FIXME: use six.range
+        for warmup in range(self.warmups):
+            yield (True, warmup)
+        for run in range(self.runs):
+            yield (False, run)
+
+    def add(self, is_warmup, run, sample):
+        if is_warmup:
+            self.result.warmups.append(sample)
+        else:
+            self.result.samples.append(sample)
+
+        text = self.result._format_sample(sample)
+        if is_warmup:
+            text = "Warmup %s: %s" % (1 + run, text)
+        else:
+            text = "Run %s: %s" % (1 + run, text)
+        print(text, file=self._stream())
+
+    def bench_func(self, func, *args):
+        # FIXME: use functools.partial() to not use the slow "func(*args)"
+        # unpacking at each iteration?
+        if self.result.loops is not None:
+            print(_format_number(self.result.loops, 'loop'),
+                  file=self._stream())
+        for is_warmup, run in self.range():
+            t1 = self.timer()
+            func(*args)
+            t2 = self.timer()
+            self.add(is_warmup, run, t2 - t1)
+
+    def done(self):
+        sys.stderr.flush()
+        if self.json:
+            print(self.result.json())

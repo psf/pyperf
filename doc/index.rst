@@ -270,10 +270,10 @@ RunResult
       numbers are ignored when computing the average and standard deviation.
 
 
-Result
-------
+Results
+-------
 
-.. class:: Result(runs=None, name=None, metadata=None, formatter=None)
+.. class:: Results(runs=None, name=None, metadata=None, formatter=None)
 
    Attributes:
 
@@ -293,6 +293,60 @@ Result
    .. attribute:: runs
 
       List of :class:`RunResult` instances.
+
+
+
+TextRunner
+----------
+
+.. class:: TextRunner(runs, warmups=1)
+
+   Tool to run a benchmark in text mode.
+
+   Methods:
+
+   .. method:: add(is_warmup, sample)
+
+      Add a sample to :attr:`result` if *is_warmup* is false, or a warmup
+      sample to :attr:`result` otherwise.
+
+   .. method:: range()
+
+      Iterator yielding ``(is_warmup, run)`` tuples where *is_warmup* is true
+      if the iteration is a warmup iteration and *run* is a counter for warmup
+      samples and then for samples.
+
+   .. method:: bench_func(func, \*args)
+
+      Benchmark the function ``func(*args)``.
+
+   .. method:: done()
+
+      If :attr:`json` is true, write the result as JSON into ``sys.stdout``.
+
+   Attributes:
+
+   .. attribute:: result
+
+      :class:`RunResult` instance.
+
+   .. attribute:: runs
+
+      Number of samples (``int``).
+
+   .. attribute:: json
+
+      If true, write messages into ``sys.stderr`` and :meth:`done` writes the
+      run result into ``sys.stdout``.
+
+   .. attribute:: warmups
+
+      Number of warmup samples (``int``).
+
+   .. attribute:: timer
+
+      Timer function used to measure time elapsed by benchmarks. Use
+      :func:`perf_counter` by default.
 
 
 

@@ -109,36 +109,24 @@ def _main_common(args=None):
     return (timer, ns, nprocess, warmup, repeat, number)
 
 
-def _main_raw(timer, ns, verbose, warmup, repeat, number):
-    result = perf.RunResult(loops=number)
+def _main_raw(timer, ns, verbose, warmups, repeat, number):
+    runner = perf.TextRunner(repeat, warmups=warmups)
+    runner.result.loops = number
+    runner.json = ns.json
 
     try:
         if not ns.json:
             print(perf._format_number(number, 'loop'))
-        for i in range(warmup + repeat):
+        for is_warmup, run in runner.range():
             it = itertools.repeat(None, number)
             dt = timer.inner(it, timer.timer) / number
-            if i < warmup:
-                result.warmups.append(dt)
-            else:
-                result.samples.append(dt)
 
-            text = perf._format_timedelta(dt)
-            if i < warmup:
-                text = 'warmup %s: %s' % (1 + i, text)
-            else:
-                text = 'sample %s: %s' % (1 + i - warmup, text)
-            if not ns.json:
-                print(text)
-            else:
-                print(text, file=sys.stderr)
-                sys.stderr.flush()
+            runner.add(is_warmup, run, dt)
     except:
         timer.print_exc()
         return 1
 
-    if ns.json:
-        print(result.json())
+    runner.done()
     return None
 
 

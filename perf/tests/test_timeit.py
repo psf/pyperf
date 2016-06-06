@@ -21,9 +21,9 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^1 loop\n'
-                         r'warmup 1: ([0-9]+) ms\n'
-                         r'sample 1: ([0-9]+) ms\n'
-                         r'sample 2: ([0-9]+) ms$',
+                         r'Warmup 1: ([0-9]+) ms\n'
+                         r'Run 1: ([0-9]+) ms\n'
+                         r'Run 2: ([0-9]+) ms$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
 
