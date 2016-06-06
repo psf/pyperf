@@ -156,7 +156,7 @@ def _main():
         _main_raw(timer, ns, ns.verbose, warmup, repeat, number)
         return
 
-    result = perf.Results()
+    result = perf.Results(collect_metadata=ns.json)
     if not ns.json:
         stream = sys.stdout
     else:

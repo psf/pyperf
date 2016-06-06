@@ -279,7 +279,7 @@ RunResult
 Results
 -------
 
-.. class:: Results(runs=None, name=None, metadata=None, formatter=None)
+.. class:: Results(runs=None, name=None, collect_metadata=False, formatter=None)
 
    Attributes:
 

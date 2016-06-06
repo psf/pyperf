@@ -9,6 +9,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Display benchmark results.')
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='an integer for the accumulator')
+    parser.add_argument('-M', '--no-metadata', dest='metadata', action="store_false",
+                        default=True,
+                        help="Don't show metadata.")
     parser.add_argument('filenames', metavar="filename", type=str, nargs="+",
                         help='name of JSON files')
     return parser.parse_args()
@@ -55,10 +58,11 @@ def parse_results(args):
 
 
 def display_result(args, results):
-    if result.metadata:
+    if result.metadata and args.metadata:
         print("Metadata:")
         for key, value in sorted(result.metadata.items()):
             print("- %s: %s" % (key, value))
+        print()
 
     if args.verbose:
         nrun = len(result.runs)

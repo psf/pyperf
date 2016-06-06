@@ -131,7 +131,7 @@ def _format_number(number, unit, units=None):
 
 
 class Results:
-    def __init__(self, runs=None, name=None, metadata=None, formatter=None):
+    def __init__(self, runs=None, name=None, collect_metadata=False, formatter=None):
         if runs is not None:
             self.runs = runs
         else:
@@ -139,10 +139,10 @@ class Results:
         self.name = name
         # Raw metadata dictionary, key=>value, keys and values are non-empty
         # strings
-        if metadata is not None:
-            self.metadata = metadata
-        else:
-            self.metadata = {}
+        self.metadata = {}
+        if collect_metadata:
+            import perf.metadata
+            perf.metadata.collect_metadata(self.metadata)
         if formatter is not None:
             self._formatter = formatter
         else:
@@ -201,7 +201,10 @@ class Results:
         runs = [RunResult._from_json(run) for run in data['runs']]
         metadata = data['metadata']
         name = data.get('name')
-        return cls(runs=runs, name=name, metadata=metadata)
+
+        results = cls(runs=runs, name=name, collect_metadata=False)
+        results.metadata = metadata
+        return results
 
     @classmethod
     def from_json(cls, text):

@@ -95,10 +95,10 @@ class TestResult(unittest.TestCase):
         runs = [perf.RunResult([1.0], loops=100),
                 perf.RunResult([1.5], loops=100),
                 perf.RunResult([2.0], loops=100)]
-        results = perf.Results(runs, "name", {"key": "value"})
+        results = perf.Results(runs, "name")
         self.assertEqual(results.runs, runs)
         self.assertEqual(results.name, "name")
-        self.assertEqual(results.metadata, {"key": "value"})
+        self.assertEqual(results.metadata, {})
         self.assertEqual(str(results),
                          'name: 1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample x 100 loops)')
