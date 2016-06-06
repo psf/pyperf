@@ -11,7 +11,7 @@ class TestPerfCLI(unittest.TestCase):
         run = perf.RunResult([1.0, 1.5, 2.0], loops=100)
         json = run.json()
 
-        with tempfile.NamedTemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
             tmp.write(json)
             tmp.seek(0)
 
@@ -36,7 +36,7 @@ class TestPerfCLI(unittest.TestCase):
         # check that empty lines are ignore
         json = '\n' + json + '\n\n'
 
-        with tempfile.NamedTemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
             tmp.write(json)
             tmp.seek(0)
 
