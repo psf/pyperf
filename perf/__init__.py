@@ -302,7 +302,7 @@ class TextRunner:
         self.warmups = warmups
         self.runs = runs
         self.json = False
-        self.timer = perf_counter()
+        self.timer = perf_counter
 
     def _stream(self):
         return sys.stderr if self.json else None
