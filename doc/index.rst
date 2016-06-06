@@ -67,8 +67,14 @@ Example::
 perf CLI
 --------
 
-``python3 -m perf`` reads JSON from stdin and displays the average. It expects
-one result encoded to JSON per line.
+Display run results or results::
+
+    python3 -m perf
+        [-v]
+        filename.json [filename2.json ...]
+
+Each file must be a text file which contains one result encoded to JSON per
+line. If a filename is "-", read JSON from stdin.
 
 Example::
 
@@ -76,7 +82,7 @@ Example::
     .........................
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
-    $ python3 -m perf < run.json
+    $ python3 -m perf run.json
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
 It is also possible to store a single run. Example::
@@ -87,7 +93,7 @@ It is also possible to store a single run. Example::
     sample 2: 18.3 ns
     sample 3: 18.3 ns
 
-    $ python3 -m perf < run1.json
+    $ python3 -m perf run1.json
     Average: 18.3 ns +- 0.0 ns (3 samples x 10^7 loops)
 
 Combine 3 runs::
@@ -104,7 +110,7 @@ Combine 3 runs::
     sample 2: 18.2 ns
     sample 3: 18.2 ns
 
-    $ cat run1.json run2.json run3.json | python3 -m perf
+    $ python3 -m perf run1.json run2.json run3.json
     Average: 18.2 ns +- 0.0 ns (3 runs x 3 samples x 10^7 loops)
 
 
