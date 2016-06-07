@@ -38,25 +38,19 @@ try:
 except ImportError:
     import math
 
-    def mean(data):
-        if not data:
-            raise ValueError("data must be non-empty")
-        return float(sum(data)) / len(data)
+    def mean(seq):
+        if not seq:
+            raise ValueError("sequence seq must be non-empty")
+        return float(sum(seq)) / len(seq)
 
-    def stdev(data):
-        data = [float(value) for value in data]
-        n = len(data)
-        if n < 2:
+    def stdev(seq):
+        seq = [float(value) for value in seq]
+        if len(seq) < 2:
             raise ValueError('stdev requires at least two data points')
 
-        c = mean(data)
-
-        total = sum((x - c) ** 2 for x in data)
-        total2 = sum((x - c) for x in data)
-        ss = total - total2**2 / n
-        variance = ss / (n - 1)
-
-        return math.sqrt(variance)
+        c = mean(seq)
+        squares = ((x - c) ** 2 for x in seq)
+        return math.sqrt(sum(squares) / (len(seq) - 1))
 
 
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
