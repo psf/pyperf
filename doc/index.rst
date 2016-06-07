@@ -255,6 +255,27 @@ RunResult
 
    Result of a single benchmark run.
 
+
+   Methods:
+
+   .. method:: format(verbose=False):
+
+      Format samples.
+
+   .. method:: json()
+
+      Encode the result as JSON.
+
+   .. classmethod:: from_json(text)
+
+      Load a result from JSON which was encoded by :meth:`json`.
+
+   .. classmethod:: from_subprocess(args, \**kwargs)
+
+      Run a child process and create a result from its standard output decoded
+      from JSON
+
+
    Attributes:
 
    .. attribute:: formatter
@@ -280,6 +301,23 @@ Results
 -------
 
 .. class:: Results(runs=None, name=None, collect_metadata=False, formatter=None)
+
+   Result of multiple benchmark runs.
+
+   Methods:
+
+   .. method:: format(verbose=False):
+
+      Format runs.
+
+   .. method:: json()
+
+      Encode the result as JSON.
+
+   .. classmethod:: from_json(text)
+
+      Load a result from JSON which was encoded by :meth:`json`.
+
 
    Attributes:
 

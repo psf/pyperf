@@ -139,15 +139,8 @@ def _run_subprocess(number, timeit_args, warmup):
     # FIXME: don't pass duplicate -n
     args.extend(timeit_args)
 
-    proc = subprocess.Popen(args,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True)
-
-    # FIXME: use context manager on Python 3
-    stdout, stderr = proc.communicate()
-
-    return perf.RunResult.from_json(stdout)
+    return perf.RunResult.from_subprocess(args,
+                                          stderr=subprocess.PIPE)
 
 
 def _main():

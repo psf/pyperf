@@ -3,6 +3,7 @@ import sys
 
 
 __version__ = '0.2'
+_PY3 = (sys.version_info >= (3,))
 
 
 def _import_json():
@@ -12,6 +13,15 @@ def _import_json():
         import json
     return json
 json = None
+
+
+def _import_subprocess():
+    """Import subprocess module on demand."""
+    global subprocess
+    if subprocess is None:
+        import subprocess
+    return subprocess
+subprocess = None
 
 
 # Clocks
@@ -278,6 +288,27 @@ class RunResult:
         data = data['run_result']
 
         return cls._from_json(data)
+
+    @classmethod
+    def from_subprocess(cls, args, **kwargs):
+        subprocess = _import_subprocess()
+
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True,
+                                **kwargs)
+
+        if _PY3:
+            with proc:
+                stdout = proc.communicate()[0]
+        else:
+            stdout = proc.communicate()[0]
+
+        if proc.returncode:
+            raise RuntimeError("%s with with exit code %s"
+                               % (args[0], proc.returncode))
+
+        return cls.from_json(stdout)
 
     def _json(self):
         data = {'version': 1,
