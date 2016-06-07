@@ -80,18 +80,37 @@ Example::
 
     $ python3 -m perf.timeit --json 1+1 > run.json
     .........................
-    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
+    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples x 10^7 loops)
 
     $ python3 -m perf run.json
-    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
+    Metadata:
+    - aslr: enabled
+    - cpu_count: 4
+    - cpu_model_name: Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
+    - date: 2016-06-07T15:07:27
+    - platform: Linux-4.4.9-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    - python_executable: /usr/bin/python3
+    - python_implementation: cpython
+    - python_version: 3.4.3
+
+    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples x 10^7 loops)
+
+Store the result and then display it allows to control how results are
+displayed.  For example, timeit doesn't show metadata by default, whereas perf
+CLI shows them by default. Use verbose mode to see more details::
+
+    $ python3 -m perf -M -v run.json
+    Run 1/25: warmup (1): 19.4 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
+    Run 2/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
+    Run 3/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
+    (...)
+    Run 25/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
+    Average: 18.6 ns +- 0.4 ns (min: 18.2 ns, max: 19.2 ns) (25 runs x 3 samples x 10^7 loops; 1 warmup)
 
 It is also possible to store a single run. Example::
 
     $ python3 -m perf.timeit --raw --json 1+1 > run1.json
-    warmup 1: 18.3 ns
-    sample 1: 18.3 ns
-    sample 2: 18.3 ns
-    sample 3: 18.3 ns
+    Average: 18.3 ns +- 0.0 ns
 
     $ python3 -m perf run1.json
     Average: 18.3 ns +- 0.0 ns (3 samples x 10^7 loops)
@@ -99,19 +118,13 @@ It is also possible to store a single run. Example::
 Combine 3 runs::
 
     $ python3 -m perf.timeit --raw --json 1+1 > run2.json
-    warmup 1: 18.2 ns
-    sample 1: 18.2 ns
-    sample 2: 18.2 ns
-    sample 3: 18.2 ns
+    Average: 18.4 ns +- 0.0 ns
 
     $ python3 -m perf.timeit --raw --json 1+1 > run3.json
-    warmup 1: 18.2 ns
-    sample 1: 18.2 ns
-    sample 2: 18.2 ns
-    sample 3: 18.2 ns
+    Average: 18.2 ns +- 0.0 ns
 
     $ python3 -m perf run1.json run2.json run3.json
-    Average: 18.2 ns +- 0.0 ns (3 runs x 3 samples x 10^7 loops)
+    Average: 18.3 ns +- 0.1 ns (3 runs x 3 samples x 10^7 loops)
 
 
 perf.metadata CLI
