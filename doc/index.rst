@@ -416,17 +416,15 @@ Metadata functions
 Changelog
 =========
 
-* Version 0.2
+* Version 0.2 (2016-06-07)
 
+  - use JSON to exchange results between processes
   - new ``python3 -m perf`` CLI
-  - timeit now uses 25 processes instead of 5 by default
-  - timeit timer calibration now limits the number of loops to limit the
-    maximum duration of a single run to 1 second
-  - timeit displays dots to show the progress
+  - new :class:`TextRunner` class
+  - huge enhancement of the timeit module
   - timeit has a better output format in verbose mode and now also supports a
     ``-vv`` (very verbose) mode. Minimum and maximum are not more shown in
     verbose module, only in very verbose mode.
-  - timeit now uses internally a JSON format to exchange run result
   - metadata: add ``python_implementation`` and ``aslr``
 
 * Version 0.1 (2016-06-02)
