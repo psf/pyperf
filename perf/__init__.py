@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys
 
 
-__version__ = '0.2'
+__version__ = '0.3'
 _PY3 = (sys.version_info >= (3,))
 
 
