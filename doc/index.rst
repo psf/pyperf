@@ -34,17 +34,18 @@ perf.timeit CLI
 Microbenchmark::
 
     python3 -m perf.timeit
-        [-v][-v]
-        [-p RUNS] [-r SAMPLES] [-w WARMUP] [-n LOOPS]
-        [-m/--metadata]
-        [--raw] [--json]
-        [-s SETUP_STMT] STMT [STMT2 ...]
+        [-h] [-v]
+        [--json] [--raw]
+        [--metadata]
+        [-p PROCESSES] [-n LOOPS] [-r SAMPLES] [-w WARMUPS]
+        [-s SETUP]
+        stmt [stmt ...]
 
 Iterations:
 
-* ``RUNS``: number of processes used to run the benchmark (default: 25)
+* ``PROCESSES``: number of processes used to run the benchmark (default: 25)
 * ``SAMPLES``: number of samples per process (default: 3)
-* ``WARMUP``: the number of samples used to warmup to benchmark (default: 1)
+* ``WARMUPS``: the number of samples used to warmup to benchmark (default: 1)
 * ``LOOPS``: number of loops per sample. By default, the timer is calibrated
   to get samples taking between 100 ms and 1 sec.
 
@@ -356,43 +357,42 @@ Results
 TextRunner
 ----------
 
-.. class:: TextRunner(runs, warmups=1)
+.. class:: perf.text_runner.TextRunner(nsample=3, nwarmup=1)
 
    Tool to run a benchmark in text mode.
 
    Methods:
 
-   .. method:: add(is_warmup, sample)
-
-      Add a sample to :attr:`result` if *is_warmup* is false, or a warmup
-      sample to :attr:`result` otherwise.
-
-   .. method:: range()
-
-      Iterator yielding ``(is_warmup, run)`` tuples where *is_warmup* is true
-      if the iteration is a warmup iteration and *run* is a counter for warmup
-      samples and then for samples.
-
    .. method:: bench_func(func, \*args)
 
       Benchmark the function ``func(*args)``.
 
-   .. method:: display_headers()
+   .. method:: bench_sample_func(func, \*args)
 
-      Display the number of loops of :attr:`result` if set.
+      Benchmark a function ``func(*args)``, the function must return
+      the sample value (ex: elapsed time).
 
-   .. method:: display_result()
+   .. method:: parse_args(args=None)
 
-      Display the result (average). If :attr:`json` is true, write also the
-      result as JSON into ``sys.stdout``.
+      Parse command line arguments using :attr:`argparser` and put the result
+      into :attr:`args`.
 
    Attributes:
+
+   .. attribute:: args
+
+      Namespace of arguments, see the :meth:`parse_args` method, ``None``
+      before :meth:`parse_args` is called.
+
+   .. attribute:: argparser
+
+      :class:`argparse.ArgumentParser` instance.
 
    .. attribute:: result
 
       :class:`RunResult` instance.
 
-   .. attribute:: runs
+   .. attribute:: nsample
 
       Number of samples (``int``).
 
@@ -401,7 +401,7 @@ TextRunner
       If true, write messages into ``sys.stderr`` and :meth:`done` writes the
       run result into ``sys.stdout``.
 
-   .. attribute:: warmups
+   .. attribute:: nwarmup
 
       Number of warmup samples (``int``).
 

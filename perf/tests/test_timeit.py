@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import sys
@@ -26,8 +27,10 @@ class TestTimeit(unittest.TestCase):
                          r'Run 1: ([0-9]+) ms\n'
                          r'Run 2: ([0-9]+) ms\n'
                          r'Average: ([0-9]+) ms \+- ([0-9]+) ms '
-                            r'\(min: ([0-9]+) ms, max: ([0-9]+) ms\)$',
-                         stdout.rstrip())
+                            r'\(min: ([0-9]+) ms, max: ([0-9]+) ms\) '
+                            r'\(2 samples\)\n'
+                         r'$',
+                         stdout)
         self.assertIsNotNone(match, repr(stdout))
 
         values = [float(match.group(i)) for i in range(1, 4)]
@@ -70,14 +73,16 @@ class TestTimeit(unittest.TestCase):
     def test_cli_help(self):
         args = [sys.executable,
                 '-m', 'perf.timeit', '--help']
+        env = dict(os.environ, COLUMNS='1000')
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
-                                universal_newlines=True)
+                                universal_newlines=True,
+                                env=env)
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        self.assertIn('Tool for measuring execution time '
-                      'of small code snippets.',
+        self.assertIn('[-h] [-v] [--json] [--raw] [--metadata] [-p PROCESSES] '
+                      '[-n LOOPS] [-r REPEAT] [-w WARMUPS] [-s SETUP] stmt [stmt ...]',
                       stdout)
 
     def test_cli_snippet_error(self):

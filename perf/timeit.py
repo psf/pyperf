@@ -4,12 +4,12 @@ import subprocess
 import sys
 import timeit
 
-import perf
+import perf.text_runner
 
 
 _DEFAULT_NPROCESS = 25
-_DEFAULT_WARMUP = 1
-_DEFAULT_REPEAT = 3
+_DEFAULT_WARMUPS = 1
+_DEFAULT_SAMPLES = 3
 _MIN_TIME = 0.1
 _MAX_TIME = 1.0
 
@@ -39,57 +39,35 @@ def _main_common(args=None):
     if args is None:
         args = sys.argv[1:]
 
-    try:
-        opts, args = getopt.getopt(args, "n:s:r:p:w:vmh",
-                                   ["number=", "setup=", "repeat=",
-                                    "nprocess=", "warmup=",
-                                    "verbose", "raw", "json", "metadata",
-                                    "help"])
-    except getopt.error as err:
-        print(err)
-        print("use -h/--help for command line help")
-        sys.exit(2)
+    runner = perf.text_runner.TextRunner()
+    parser = runner.argparser
+    parser.add_argument('--raw', action="store_true",
+                        help='run a single process')
+    parser.add_argument('--metadata', action="store_true",
+                        help='show metadata')
+    parser.add_argument('-p', '--processes', type=int, default=_DEFAULT_NPROCESS,
+                        help='number of processes used to run benchmarks (default: %s)'
+                             % _DEFAULT_NPROCESS)
+    parser.add_argument('-n', '--loops', type=int, default=0,
+                        help='number of loops per sample (default: calibrate)')
+    parser.add_argument('-r', '--repeat', type=int, default=_DEFAULT_SAMPLES,
+                        help='number of samples (default: %s)'
+                             % _DEFAULT_SAMPLES)
+    parser.add_argument('-w', '--warmups', type=int, default=_DEFAULT_WARMUPS,
+                        help='number of warmup samples per process (default: %s)'
+                             % _DEFAULT_WARMUPS)
+    parser.add_argument('-s', '--setup', action='append',
+                        help='setup statements')
+    parser.add_argument('stmt', nargs='+',
+                        help='executed statements')
 
-    class Namespace:
-        pass
+    runner.parse_args()
+    runner.nsample = runner.args.repeat
+    runner.nwarmup = runner.args.warmups
 
-    stmt = "\n".join(args) or "pass"
-    ns = Namespace()
-    ns.raw = False
-    ns.json = False
-    ns.metadata = False
-    ns.verbose = 0
-    nprocess = _DEFAULT_NPROCESS
-    warmup = _DEFAULT_WARMUP
-    number = 0   # auto-determine
-    setup = []
-    repeat = _DEFAULT_REPEAT
-    for o, a in opts:
-        if o in ("-v", "--verbose"):
-            ns.verbose += 1
-        if o == "--raw":
-            ns.raw = True
-        if o == "--json":
-            ns.json = True
-        if o in ("-p", "--nprocess"):
-            nprocess = int(a)
-        if o in ("-m", "--metadata"):
-            ns.metadata = True
-        if o in ("-w", "--warmup"):
-            warmup = int(a)
-        if o in ("-n", "--number"):
-            number = int(a)
-        if o in ("-s", "--setup"):
-            setup.append(a)
-        if o in ("-r", "--repeat"):
-            repeat = int(a)
-            if repeat <= 0:
-                repeat = 1
-        if o in ("-h", "--help"):
-            # FIXME: display perf.timeit usage, not timeit help!
-            print(timeit.__doc__)
-            sys.exit(0)
-    setup = "\n".join(setup) or "pass"
+    stmt = "\n".join(runner.args.stmt) or "pass"
+    # FIXME: remove "or ()"
+    setup = "\n".join(runner.args.setup or ()) or "pass"
 
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
@@ -98,45 +76,39 @@ def _main_common(args=None):
     sys.path.insert(0, os.curdir)
 
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
-    if number == 0:
-        stream = sys.stderr if ns.json else None
+    if runner.args.loops == 0:
+        stream = sys.stderr if runner.json else None
         try:
-            number = _calibrate_timer(timer, ns.verbose, stream=stream)
+            runner.args.loops = _calibrate_timer(timer, runner.verbose, stream=stream)
         except:
             timer.print_exc()
             sys.exit(1)
 
-    return (timer, ns, nprocess, warmup, repeat, number)
+    return (runner, timer)
 
 
-def _main_raw(timer, ns, verbose, warmups, repeat, number):
-    runner = perf.TextRunner(repeat, warmups=warmups)
-    runner.verbose = verbose
-    runner.result.loops = number
-    runner.json = ns.json
+def _main_raw(runner, timer):
+    loops = runner.args.loops
 
+    def func(timer, loops):
+        it = itertools.repeat(None, loops)
+        return timer.inner(it, timer.timer) / loops
+
+    runner.result.loops = loops
     try:
-        runner.display_headers()
-
-        for is_warmup, run in runner.range():
-            it = itertools.repeat(None, number)
-            dt = timer.inner(it, timer.timer) / number
-
-            runner.add(is_warmup, run, dt)
+        runner.bench_sample_func(func, timer, loops)
     except:
         timer.print_exc()
-        return 1
-
-    runner.display_result()
-    return None
+        sys.exit(1)
 
 
-def _run_subprocess(number, timeit_args, warmup):
+def _run_subprocess(nsample, timeit_args):
     args = [sys.executable,
             '-m', 'perf.timeit',
             '--raw', '--json',
-            "-n", str(number)]
+            "-n", str(nsample)]
     # FIXME: don't pass duplicate -n
+    # FIXME: pass warmups?
     args.extend(timeit_args)
 
     return perf.RunResult.from_subprocess(args,
@@ -145,18 +117,18 @@ def _run_subprocess(number, timeit_args, warmup):
 
 def _main():
     args = sys.argv[1:]
-    timer, ns, processes, warmup, repeat, number = _main_common(args)
-    if ns.raw:
-        _main_raw(timer, ns, ns.verbose, warmup, repeat, number)
+    runner, timer  = _main_common(args)
+    if runner.args.raw:
+        _main_raw(runner, timer)
         return
 
-    result = perf.Results(collect_metadata=ns.json)
-    if not ns.json:
+    result = perf.Results(collect_metadata=runner.json)
+    if not runner.json:
         stream = sys.stdout
     else:
         stream = sys.stderr
 
-    if ns.metadata:
+    if runner.args.metadata:
         from perf import metadata as perf_metadata
 
         perf_metadata.collect_metadata(result.metadata)
@@ -165,10 +137,11 @@ def _main():
         for key, value in sorted(result.metadata.items()):
             print("- %s: %s" % (key, value), file=stream)
 
-    for process in range(processes):
-        run = _run_subprocess(number, args, warmup)
+    nprocess = runner.args.processes
+    for process in range(nprocess):
+        run = _run_subprocess(runner.nsample, args)
         result.runs.append(run)
-        if ns.verbose > 1:
+        if runner.verbose > 1:
             text = ', '.join(perf._format_timedeltas(run.samples))
             text = 'runs (%s): %s' % (len(run.samples), text)
             if run.warmups:
@@ -177,19 +150,19 @@ def _main():
                            ', '.join(perf._format_timedeltas(run.warmups)),
                            text))
 
-            print("Run %s/%s: %s" % (1 + process, processes, text), file=stream)
-        elif ns.verbose:
+            print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
+        elif runner.verbose:
             mean = perf.mean(run.samples)
             print(perf._format_timedelta(mean), end=' ', file=stream)
             stream.flush()
         else:
             print(".", end='', file=stream)
             stream.flush()
-    if ns.verbose <= 1:
+    if runner.verbose <= 1:
         print(file=stream)
-    print("Average: %s" % result.format(ns.verbose > 1), file=stream)
+    print("Average: %s" % result.format(runner.verbose > 1), file=stream)
 
-    if ns.json:
+    if runner.json:
         stream.flush()
         print(result.json())
 
