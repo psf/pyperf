@@ -102,7 +102,9 @@ class TestTimeit(unittest.TestCase):
             self.assertEqual(len(run.samples), 3)
             self.assertEqual(run.loops, 4)
 
-            for sample in run.warmups + run.samples:
+            for warmup in run.warmups:
+                self.assertTrue(0.9e-3 <= warmup <= 1.5e-3, warmup)
+            for sample in run.samples:
                 self.assertTrue(0.9e-3 <= sample <= 1.5e-3, sample)
 
     def test_cli_help(self):

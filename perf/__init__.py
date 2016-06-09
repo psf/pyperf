@@ -343,7 +343,7 @@ class RunResult:
 def _very_verbose_run(run):
     # FIXME: use run.formatter
     text = ', '.join(_format_timedeltas(run.samples))
-    text = 'runs (%s): %s' % (len(run.samples), text)
+    text = 'samples (%s): %s' % (len(run.samples), text)
     if run.warmups:
         text = ('warmup (%s): %s; %s'
                 % (len(run.warmups),

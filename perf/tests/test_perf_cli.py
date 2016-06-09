@@ -62,9 +62,9 @@ class TestPerfCLI(unittest.TestCase):
     def test_results_verbose(self):
         stdout = self.results(verbose=True, metadata=False)
         self.assertEqual(stdout.rstrip(),
-                         'Run 1/3: runs (1): 1.00 sec\n'
-                         'Run 2/3: runs (1): 1.50 sec\n'
-                         'Run 3/3: runs (1): 2.00 sec\n'
+                         'Run 1/3: samples (1): 1.00 sec\n'
+                         'Run 2/3: samples (1): 1.50 sec\n'
+                         'Run 3/3: samples (1): 2.00 sec\n'
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec '
                          '(min: 1.00 sec, max: 2.00 sec) '
