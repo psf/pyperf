@@ -369,6 +369,10 @@ TextRunner
    warmup samples and processes. These values can be changed with command line
    options.
 
+   If isolated CPUs are detected, the CPU affinity is automatically
+   set to these isolated CPUs. On Linux, see the ``isolcpus`` kernel command
+   line argument and the ``/sys/devices/system/cpu/isolated`` file.
+
    Methods:
 
    .. method:: bench_func(func, \*args)
@@ -419,6 +423,8 @@ Changelog
 
   - TextRunner is now able to spawn child processes, parse command arguments
     and more features
+  - If TextRunner detects isolated CPUs, it sets automatically the CPU affinity
+    to these isolated CPUs
   - Add ``--json-file`` command line option
   - Add :meth:`TextRunner.bench_sample_func` method
 

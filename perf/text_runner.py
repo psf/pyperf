@@ -1,6 +1,8 @@
 from __future__ import print_function
 import argparse
 import functools
+import io
+import os
 import subprocess
 import sys
 
@@ -22,6 +24,33 @@ def _json_dump(result, args):
         stdout = sys.stdout
         result.json_dump_into(stdout)
         stdout.flush()
+
+
+def _get_isolated_cpus():
+    path = '/sys/devices/system/cpu/isolated'
+    try:
+        fp = io.open(path, encoding='ascii')
+        with fp:
+            isolated = fp.readline().rstrip()
+    except (OSError, IOError):
+        # missing file
+        return
+
+    if isolated == '(null)':
+        # no CPU isolated
+        return
+
+    cpus = []
+    for part in isolated.split(','):
+        if '-' in part:
+            parts = part.split('-', 1)
+            first = int(parts[0])
+            last = int(parts[1])
+            for cpu in range(first, last+1):
+                cpus.append(cpu)
+        else:
+            cpus.append(int(part))
+    return cpus
 
 
 class TextRunner:
@@ -101,12 +130,28 @@ class TextRunner:
 
         _json_dump(self.result, self.args)
 
+    def _cpu_affinity(self):
+        if not hasattr(os, 'sched_setaffinity'):
+            # missing os.sched_setaffinity()
+            return
+
+        isolated_cpus = _get_isolated_cpus()
+        if not isolated_cpus:
+            # no CPU isolated, or able to get the info
+            return
+
+        if self.args.verbose:
+            print("Set affinity to isolated CPUs: %s" % isolated_cpus,
+                  file=self._stream())
+        os.sched_setaffinity(0, isolated_cpus)
+
     def _main(self, func, *args):
         self.parse_args()
         if not self.args.raw:
             self._subprocesses()
             return
 
+        self._cpu_affinity()
         self._display_headers()
         func(*args)
         self._display_result()
@@ -143,7 +188,7 @@ class TextRunner:
                 '--samples', str(self.args.nsample),
                 '--warmups', str(self.args.nwarmup)]
         if self.args.verbose:
-            args.append('-v' * self.args.verbose)
+            args.append('-' + 'v' * self.args.verbose)
 
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)

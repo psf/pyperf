@@ -25,12 +25,14 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(r'^1 loop\n'
+        match = re.match(r'^'
+                         r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
+                         r'1 loop\n'
                          r'Warmup 1: ([0-9]+) ms\n'
                          r'Run 1: ([0-9]+) ms\n'
                          r'Run 2: ([0-9]+) ms\n'
-                         r'Average: ([0-9]+) ms \+- ([0-9]+) ms '
-                            r'\(min: ([0-9]+) ms, max: ([0-9]+) ms\) '
+                         r'Average: (?P<avg>[0-9]+) ms \+- (?P<stdev>[0-9]+) ms '
+                            r'\(min: (?P<min>[0-9]+) ms, max: (?P<max>[0-9]+) ms\) '
                             r'\(2 samples\)\n'
                          r'$',
                          stdout)
@@ -40,12 +42,12 @@ class TestTimeit(unittest.TestCase):
         for value in values:
             self.assertTrue(90 <= value <= 150, repr(value))
 
-        mean = float(match.group(4))
+        mean = float(match.group('avg'))
         self.assertTrue(90 <= mean <= 150, mean)
-        stdev = float(match.group(5))
+        stdev = float(match.group('stdev'))
         self.assertLessEqual(stdev, 10)
 
-        min_dt, max_dt = float(match.group(6)), float(match.group(7))
+        min_dt, max_dt = float(match.group('min')), float(match.group('max'))
         self.assertTrue(90 <= min_dt <= max_dt < 150, (min_dt, max_dt))
 
     def test_cli(self):
@@ -63,14 +65,14 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^\.\.\n'
-                         r'Average: ([0-9]+\.[0-9]+) ms'
-                             r' \+- ([0-9]+\.[0-9]+) ms'
+                         r'Average: (?P<avg>[0-9]+\.[0-9]+) ms'
+                             r' \+- (?P<stdev>[0-9]+\.[0-9]+) ms'
                          r' \(2 runs x 3 samples x 4 loops\)$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
-        mean = float(match.group(1))
+        mean = float(match.group('avg'))
         self.assertTrue(0.9 <= mean <= 1.5, mean)
-        stdev = float(match.group(2))
+        stdev = float(match.group('stdev'))
         self.assertTrue(0 <= stdev <= 0.10, stdev)
 
     def test_json_file(self):

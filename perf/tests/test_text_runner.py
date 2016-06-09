@@ -20,9 +20,15 @@ class TestTextRunner(unittest.TestCase):
         fake_timer.value = 0
         return fake_timer
 
-    def test_bench_func(self):
+    def create_text_runner(self, args):
         runner = perf.text_runner.TextRunner()
-        runner.parse_args(['--raw', '--json', '--verbose'])
+        # disable CPU affinity to not pollute stdout
+        runner._cpu_affinity = lambda: None
+        runner.parse_args(args)
+        return runner
+
+    def test_bench_func(self):
+        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
 
         with mock.patch('perf.perf_counter', self.create_fake_timer()):
             with tests.capture_stdout() as stdout:
@@ -40,10 +46,9 @@ class TestTextRunner(unittest.TestCase):
                          runner.result.json())
 
     def test_json_file(self):
-        runner = perf.text_runner.TextRunner()
-
         with tempfile.NamedTemporaryFile('wb+') as tmp:
-            runner.parse_args(['--raw', '-v', '--json-file', tmp.name])
+            runner = self.create_text_runner(['--raw', '-v',
+                                              '--json-file', tmp.name])
 
             with mock.patch('perf.perf_counter', self.create_fake_timer()):
                 with tests.capture_stdout() as stdout:
