@@ -169,7 +169,7 @@ class TextRunner:
         if args:
             # Use partial() to avoid expensive argument unpacking of
             # func(*args) syntax when bench_func() is called without argument
-            func = functools.partial(func, args)
+            func = functools.partial(func, *args)
 
         for is_warmup, run in self._range():
             t1 = timer()

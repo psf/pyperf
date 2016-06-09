@@ -7,8 +7,11 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
-def noop():
-    pass
+def check_args(a, b):
+    if a != 1:
+        raise ValueError
+    if b != 2:
+        raise ValueError
 
 
 class TestTextRunner(unittest.TestCase):
@@ -33,7 +36,7 @@ class TestTextRunner(unittest.TestCase):
         with mock.patch('perf.perf_counter', self.create_fake_timer()):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
-                    runner.bench_func(noop)
+                    runner.bench_func(check_args, 1, 2)
 
         self.assertRegex(stderr.getvalue(),
                          r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
@@ -58,7 +61,7 @@ class TestTextRunner(unittest.TestCase):
             with mock.patch('perf.perf_counter', self.create_fake_timer()):
                 with tests.capture_stdout() as stdout:
                     with tests.capture_stderr() as stderr:
-                        runner.bench_func(noop)
+                        runner.bench_func(check_args, 1, 2)
 
             self.assertRegex(stdout.getvalue(),
                              r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
