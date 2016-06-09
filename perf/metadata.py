@@ -89,6 +89,12 @@ def _collect_linux_metadata(metadata):
         metadata['aslr'] = enabled
         break
 
+    # CPU affinity
+    # if hasattr(os, 'sched_getaffinity'):
+    #     cpus = os.sched_getaffinity(0)
+    #     # FIXME: skip if cpus == all cpus
+    #     metadata['cpu_affinity'] = str(cpus)
+
 
 def _collect_system_metadata(metadata):
     metadata['platform'] = platform.platform(True, False)
