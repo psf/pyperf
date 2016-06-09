@@ -3,7 +3,7 @@ import argparse
 import json
 import sys
 
-import perf
+import perf.metadata
 
 
 def parse_args():
@@ -59,11 +59,8 @@ def parse_results(args):
 
 
 def display_result(args, results):
-    if result.metadata and args.metadata:
-        print("Metadata:")
-        for key, value in sorted(result.metadata.items()):
-            print("- %s: %s" % (key, value))
-        print()
+    if args.metadata:
+        perf.metadata._display_metadata(result.get_metadata())
 
     if args.verbose:
         nrun = len(result.runs)

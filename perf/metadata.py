@@ -1,3 +1,4 @@
+from __future__ import print_function
 import datetime
 import os
 import platform
@@ -89,12 +90,6 @@ def _collect_linux_metadata(metadata):
         metadata['aslr'] = enabled
         break
 
-    # CPU affinity
-    # if hasattr(os, 'sched_getaffinity'):
-    #     cpus = os.sched_getaffinity(0)
-    #     # FIXME: skip if cpus == all cpus
-    #     metadata['cpu_affinity'] = str(cpus)
-
 
 def _collect_system_metadata(metadata):
     metadata['platform'] = platform.platform(True, False)
@@ -119,12 +114,27 @@ def _collect_system_metadata(metadata):
     if cpu_count is not None and cpu_count >= 1:
         metadata['cpu_count'] = str(cpu_count)
 
+    # CPU affinity
+    if hasattr(os, 'sched_getaffinity'):
+        cpus = os.sched_getaffinity(0)
+        # FIXME: skip if cpus == all cpus
+        metadata['cpu_affinity'] = ', '.join(sorted(map(str, cpus)))
+
 
 def collect_metadata(metadata):
     date = datetime.datetime.now().isoformat()
     metadata['date'] = date.split('.', 1)[0]
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)
+
+
+def _display_metadata(metadata, file=None):
+    if not metadata:
+        return
+    print("Metadata:", file=file)
+    for key, value in sorted(metadata.items()):
+        print("- %s: %s" % (key, value), file=file)
+    print(file=file)
 
 
 if __name__ == "__main__":

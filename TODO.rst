@@ -1,10 +1,6 @@
 TODO
 ====
 
-* Collect some metadata in each RunResult: needed to add CPU affinity metadata,
-  the main process is not pinned to isolated CPus
-* Results.get_metadata() combines its own metadata + metadata of all runs.
-  Simple filter: skip different values.
 * -m perf CLI: add command to combine run results
 * -m perf CLI: add compare command
 * Integration with pybench

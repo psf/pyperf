@@ -28,9 +28,11 @@ class TestPerfCLI(unittest.TestCase):
                          '(3 samples x 100 loops)')
 
     def results(self, verbose=False, metadata=True):
-        runs = [perf.RunResult([1.0], loops=100),
-                perf.RunResult([1.5], loops=100),
-                perf.RunResult([2.0], loops=100)]
+        runs = []
+        for sample in (1.0, 1.5, 2.0):
+            run = perf.RunResult([sample], loops=100)
+            run.metadata['key'] = 'value'
+            runs.append(run)
         results = perf.Results(runs=runs)
         results.metadata = {'key': 'value'}
 

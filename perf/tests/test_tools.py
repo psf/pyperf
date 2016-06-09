@@ -92,13 +92,16 @@ class TestResult(unittest.TestCase):
         self.assertEqual(run.warmups, [5.0])
 
     def test_results(self):
-        runs = [perf.RunResult([1.0], loops=100),
-                perf.RunResult([1.5], loops=100),
-                perf.RunResult([2.0], loops=100)]
+        runs = []
+        for sample in (1.0, 1.5, 2.0):
+            run = perf.RunResult([sample], loops=100)
+            run.metadata['key'] = 'value'
+            runs.append(run)
+
         results = perf.Results(runs, "name")
         self.assertEqual(results.runs, runs)
         self.assertEqual(results.name, "name")
-        self.assertEqual(results.metadata, {})
+        self.assertEqual(results.get_metadata(), {'key': 'value'})
         self.assertEqual(str(results),
                          'name: 1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample x 100 loops)')

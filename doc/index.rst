@@ -196,9 +196,14 @@ Metadata
 
   - ``platform``: short string describing the platform
   - ``cpu_count``: number of CPUs
-  - ``cpu_model_name``: CPU model name (currently only supported on Linux)
+
+* Linux metadata:
+
+  - ``cpu_model_name``: CPU model name
   - ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
-    ``disabled`` (currently only supported on Linux)
+    ``disabled``
+  - ``cpu_affinity``: if set, the process is pinned to the specified list of
+    CPUs
 
 * Misc metadata:
 
@@ -269,10 +274,12 @@ Clocks
 RunResult
 ---------
 
-.. class:: RunResult(samples=None, loops=None, formatter=None)
+.. class:: RunResult(samples=None, loops=None, formatter=None, collect_metadata=False)
 
    Result of a single benchmark run.
 
+   If *collect_metadata* is true, call :func:`collect_metadata` with
+   :attr:`metadata`.
 
    Methods:
 
@@ -304,6 +311,11 @@ RunResult
 
       Number of loops (``int`` or ``None``).
 
+   .. attribute:: metadata
+
+      Dictionary of metadata (``dict``): key=>value, where keys and values are
+      non-empty strings.
+
    .. attribute:: samples
 
       List of numbers (``float``). Usually, :attr:`samples` is a list of number
@@ -318,11 +330,21 @@ RunResult
 Results
 -------
 
-.. class:: Results(runs=None, name=None, collect_metadata=False, formatter=None)
+.. class:: Results(runs=None, name=None, formatter=None)
 
    Result of multiple benchmark runs.
 
    Methods:
+
+   .. method:: get_samples():
+
+      Get samples from all runs.
+
+   .. method:: get_metadata():
+
+      Get metadata of all runs and the result: skip metadata with different
+      values or not existing in all run. Return an empty dictionary
+      if :attr:`runs` is empty.
 
    .. method:: format(verbose=False):
 
@@ -346,11 +368,6 @@ Results
    .. attribute:: name
 
       Benchmark name (``str`` or ``None``).
-
-   .. attribute:: metadata
-
-      Raw dictionary of metadata (``dict``): key=>value, where keys and values
-      are strings.
 
    .. attribute:: runs
 
@@ -427,6 +444,8 @@ Changelog
     to these isolated CPUs
   - Add ``--json-file`` command line option
   - Add :meth:`TextRunner.bench_sample_func` method
+  - Move metadata from :class:`Results` to :class:`RunResult`
+  - Add metadata ``cpu_affinity``
 
 * Version 0.2 (2016-06-07)
 

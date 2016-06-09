@@ -137,22 +137,38 @@ def _format_number(number, unit, units=None):
 
 
 class Results:
-    def __init__(self, runs=None, name=None, collect_metadata=False, formatter=None):
+    def __init__(self, runs=None, name=None, formatter=None):
         if runs is not None:
             self.runs = runs
         else:
             self.runs = []
         self.name = name
-        # Raw metadata dictionary, key=>value, keys and values are non-empty
-        # strings
-        self.metadata = {}
-        if collect_metadata:
-            import perf.metadata
-            perf.metadata.collect_metadata(self.metadata)
         if formatter is not None:
             self._formatter = formatter
         else:
             self._formatter = _format_run_result
+
+    def get_samples(self):
+        samples = []
+        for run in self.runs:
+            samples.extend(run.samples)
+        return samples
+
+    def get_metadata(self):
+        if not self.runs:
+            return dict()
+
+        metadata = dict(self.runs[0].metadata)
+        for run in self.runs[1:]:
+            for key, run_value in run.metadata.items():
+                try:
+                    value = metadata[key]
+                except KeyError:
+                    pass
+                else:
+                    if run_value != value:
+                        del metadata[key]
+        return metadata
 
     def format(self, verbose=False):
         if self.runs:
@@ -209,12 +225,9 @@ class Results:
         data = data['results']
 
         runs = [RunResult._from_json(run) for run in data['runs']]
-        metadata = data['metadata']
         name = data.get('name')
 
-        results = cls(runs=runs, name=name, collect_metadata=False)
-        results.metadata = metadata
-        return results
+        return cls(runs=runs, name=name)
 
     @classmethod
     def from_json(cls, text):
@@ -225,8 +238,7 @@ class Results:
 
     def _as_json(self):
         runs = [run._as_json() for run in self.runs]
-        data = {'runs': runs,
-                'metadata': self.metadata}
+        data = {'runs': runs}
         if self.name:
             data['name'] = self.name
         # FIXME: export formatter
@@ -243,7 +255,8 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, loops=None, formatter=None):
+    def __init__(self, samples=None, warmups=None, loops=None, formatter=None,
+                 collect_metadata=False):
         if not(loops is None or (isinstance(loops, int) and loops >= 0)):
             raise TypeError("loops must be an int >= 0 or None")
         if (samples is not None
@@ -267,6 +280,10 @@ class RunResult:
         else:
             self._formatter = _format_run_result
 
+        # Metadata dictionary: key=>value, keys and values are non-empty
+        # strings
+        self.metadata = {}
+
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
 
@@ -289,7 +306,12 @@ class RunResult:
         samples = data['samples']
         warmups = data['warmups']
         loops = data.get('loops')
-        return cls(loops=loops, samples=samples, warmups=warmups)
+        metadata = data.get('metadata')
+
+        run = cls(loops=loops, samples=samples, warmups=warmups,
+                  collect_metadata=False)
+        run.metadata = metadata
+        return run
 
     @classmethod
     def from_json(cls, text):
@@ -324,7 +346,8 @@ class RunResult:
 
     def _as_json(self):
         data = {'samples': self.samples,
-                'warmups': self.warmups}
+                'warmups': self.warmups,
+                'metadata': self.metadata}
         if self.loops is not None:
             data['loops'] = self.loops
         # FIXME: export formatter

@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-import perf
+import perf.metadata
 
 
 def _json_dump(result, args):
@@ -152,6 +152,7 @@ class TextRunner:
             return
 
         self._cpu_affinity()
+        perf.metadata.collect_metadata(self.result.metadata)
         self._display_headers()
         func(*args)
         self._display_result()
@@ -201,9 +202,8 @@ class TextRunner:
 
         metadata = self.args.metadata
         verbose = self.args.verbose
-        collect_metadata = metadata or self.args.json or self.args.json_file
 
-        result = perf.Results(collect_metadata=collect_metadata)
+        result = perf.Results()
         stream = self._stream()
 
         if metadata:
