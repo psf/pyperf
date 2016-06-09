@@ -411,6 +411,13 @@ Metadata functions
 Changelog
 =========
 
+* Version 0.3
+
+  - TextRunner is now able to spawn child processes, parse command arguments
+    and more features
+  - Add ``--json-file`` command line option
+  - Add :meth:`TextRunner.bench_sample_func` method
+
 * Version 0.2 (2016-06-07)
 
   - use JSON to exchange results between processes

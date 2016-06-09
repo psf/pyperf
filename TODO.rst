@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Collect some metadata in each RunResult
+* Results.get_metadata() combines its own metadata + metadata of all runs.
+  Simple filter: skip different values.
 * -m perf CLI: add command to combine run results
 * -m perf CLI: add compare command
 * Integration with pybench
