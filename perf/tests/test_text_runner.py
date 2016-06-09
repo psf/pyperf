@@ -3,6 +3,7 @@ import unittest
 
 import perf.text_runner
 from perf import tests
+from perf.tests import mock
 
 
 def noop():
@@ -21,9 +22,10 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args(['--raw', '--json', '--verbose'])
         runner.timer = fake_timer
 
-        with tests.capture_stdout() as stdout:
-            with tests.capture_stderr() as stderr:
-                runner.bench_func(noop)
+        with mock.patch('perf.perf_counter', fake_timer):
+            with tests.capture_stdout() as stdout:
+                with tests.capture_stderr() as stderr:
+                    runner.bench_func(noop)
         self.assertEqual(stderr.getvalue(),
                          "Warmup 1: 1.00 sec\n"
                          "Run 1: 1.00 sec\n"

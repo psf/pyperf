@@ -2,6 +2,11 @@ import contextlib
 import io
 import sys
 
+try:
+    from unittest import mock   # Python 3.3
+except ImportError:
+    import mock
+
 
 @contextlib.contextmanager
 def _capture_stream(name):

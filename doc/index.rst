@@ -262,8 +262,8 @@ Clocks
    difference between the results of consecutive calls is valid.
 
    On Python 3.3 and newer, it's :func:`time.monotonic`. On older versions,
-   it's :func:`time.time`. See the PEP 418 for more information on Python
-   clocks.
+   it's :func:`time.time` and so is not monotonic. See the PEP 418 for more
+   information on Python clocks.
 
 
 RunResult
@@ -395,23 +395,6 @@ TextRunner
    .. attribute:: result
 
       :class:`RunResult` instance.
-
-   .. attribute:: nsample
-
-      Number of samples (``int``).
-
-   .. attribute:: nwarmup
-
-      Number of warmup samples (``int``).
-
-   .. attribute:: verbose
-
-      Verbose mode (``bool``), default: ``False``.
-
-   .. attribute:: timer
-
-      Timer function used to measure time elapsed by benchmarks, default:
-      :func:`perf_counter`.
 
 
 

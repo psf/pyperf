@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import functools
 import subprocess
 import sys
 
@@ -9,7 +10,6 @@ import perf
 class TextRunner:
     def __init__(self):
         self.result = perf.RunResult()
-        self.timer = perf.perf_counter
         self.argparser = self._create_argparser()
         # result of argparser.parse_args()
         self.args = None
@@ -95,12 +95,18 @@ class TextRunner:
         self._display_result()
 
     def _bench_func(self, func, args):
+        # local alias for fast variable lookup
+        timer = perf.perf_counter
+
+        if args:
+            # Use partial() to avoid expensive argument unpacking of
+            # func(*args) syntax when bench_func() is called without argument
+            func = functools.partial(func, args)
+
         for is_warmup, run in self._range():
-            t1 = self.timer()
-            # FIXME: use functools.partial() to not use the slow "func(*args)"
-            # unpacking at each iteration?
-            func(*args)
-            t2 = self.timer()
+            t1 = timer()
+            func()
+            t2 = timer()
             self._add(is_warmup, run, t2 - t1)
 
     def bench_func(self, func, *args):
@@ -108,8 +114,6 @@ class TextRunner:
 
     def _bench_sample_func(self, func, args):
         for is_warmup, run in self._range():
-            # FIXME: use functools.partial() to not use the slow "func(*args)"
-            # unpacking at each iteration?
             dt = func(*args)
             self._add(is_warmup, run, dt)
 
