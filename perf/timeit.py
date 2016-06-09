@@ -88,12 +88,11 @@ def _main_common(args=None):
 
 
 def _main_raw(runner, timer):
-    loops = runner.args.loops
-
     def func(timer, loops):
         it = itertools.repeat(None, loops)
         return timer.inner(it, timer.timer) / loops
 
+    loops = runner.args.loops
     runner.result.loops = loops
     try:
         runner.bench_sample_func(func, timer, loops)
@@ -102,6 +101,7 @@ def _main_raw(runner, timer):
         sys.exit(1)
 
 
+# FIXME: move this feature into TextRunner directly?
 def _run_subprocess(nsample, timeit_args):
     args = [sys.executable,
             '-m', 'perf.timeit',
@@ -120,51 +120,22 @@ def _main():
     runner, timer  = _main_common(args)
     if runner.args.raw:
         _main_raw(runner, timer)
-        return
-
-    result = perf.Results(collect_metadata=runner.json)
-    if not runner.json:
-        stream = sys.stdout
     else:
-        stream = sys.stderr
+        def create_args(runner):
+            args = [sys.executable,
+                    '-m', 'perf.timeit',
+                    '--raw', '--json',
+                    "-n", str(runner.nsample)]
+            # FIXME: don't pass duplicate -n
+            # FIXME: pass warmups?
+            args.extend(sys.argv[1:])
+            return args
 
-    if runner.args.metadata:
-        from perf import metadata as perf_metadata
 
-        perf_metadata.collect_metadata(result.metadata)
+        runner.subprocesses(create_args,
+                            runner.args.processes,
+                            metadata=runner.args.metadata)
 
-        print("Metadata:", file=stream)
-        for key, value in sorted(result.metadata.items()):
-            print("- %s: %s" % (key, value), file=stream)
-
-    nprocess = runner.args.processes
-    for process in range(nprocess):
-        run = _run_subprocess(runner.nsample, args)
-        result.runs.append(run)
-        if runner.verbose > 1:
-            text = ', '.join(perf._format_timedeltas(run.samples))
-            text = 'runs (%s): %s' % (len(run.samples), text)
-            if run.warmups:
-                text = ('warmup (%s): %s; %s'
-                        % (len(run.warmups),
-                           ', '.join(perf._format_timedeltas(run.warmups)),
-                           text))
-
-            print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
-        elif runner.verbose:
-            mean = perf.mean(run.samples)
-            print(perf._format_timedelta(mean), end=' ', file=stream)
-            stream.flush()
-        else:
-            print(".", end='', file=stream)
-            stream.flush()
-    if runner.verbose <= 1:
-        print(file=stream)
-    print("Average: %s" % result.format(runner.verbose > 1), file=stream)
-
-    if runner.json:
-        stream.flush()
-        print(result.json())
 
 
 if __name__ == "__main__":

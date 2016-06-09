@@ -90,6 +90,8 @@ def _format_timedelta(value):
     return _format_timedeltas((value,))[0]
 
 
+# FIXME: put this code into RunResult, and pass _format_timedeltas as formatter
+# to RunResult
 def _format_run_result(values, verbose=0):
     numbers = [mean(values)]
     with_stdev = (len(values) >= 2)
@@ -322,3 +324,15 @@ class RunResult:
     def json(self):
         json = _import_json()
         return json.dumps({'run_result': self._json()})
+
+
+def _very_verbose_run(run):
+    # FIXME: use run.formatter
+    text = ', '.join(_format_timedeltas(run.samples))
+    text = 'runs (%s): %s' % (len(run.samples), text)
+    if run.warmups:
+        text = ('warmup (%s): %s; %s'
+                % (len(run.warmups),
+                   ', '.join(_format_timedeltas(run.warmups)),
+                   text))
+    return text

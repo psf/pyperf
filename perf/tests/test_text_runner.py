@@ -10,7 +10,7 @@ def noop():
 
 
 class TestTextRunner(unittest.TestCase):
-    def create_runner(self):
+    def test_bench_func(self):
         def fake_timer():
             t = fake_timer.value
             fake_timer.value += 1
@@ -21,18 +21,6 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args([])
         runner.timer = fake_timer
         runner.verbose = True
-        return runner
-
-    def test_range(self):
-        runner = self.create_runner()
-        self.assertEqual(list(runner.range()),
-                         [(True, 0),
-                          (False, 0),
-                          (False, 1),
-                          (False, 2)])
-
-    def test_bench_func(self):
-        runner = self.create_runner()
         runner.json = True
 
         with tests.capture_stdout() as stdout:

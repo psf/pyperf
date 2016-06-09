@@ -67,14 +67,7 @@ def display_result(args, results):
     if args.verbose:
         nrun = len(result.runs)
         for index, run in enumerate(result.runs, 1):
-            text = ', '.join(perf._format_timedeltas(run.samples))
-            text = 'runs (%s): %s' % (len(run.samples), text)
-            if run.warmups:
-                text = ('warmup (%s): %s; %s'
-                        % (len(run.warmups),
-                           ', '.join(perf._format_timedeltas(run.warmups)),
-                           text))
-
+            text = perf._very_verbose_run(run)
             print("Run %s/%s: %s" % (index, nrun, text))
 
     print("Average: %s" % result.format(verbose=args.verbose))

@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import subprocess
 import sys
 
 import perf
@@ -20,7 +21,7 @@ class TextRunner:
 
     def _create_argparser(self):
         parser = argparse.ArgumentParser(description='Benchmark')
-        parser.add_argument('-v', '--verbose', action='count',
+        parser.add_argument('-v', '--verbose', action='count', default=0,
                             help='enable verbose mode')
         parser.add_argument('--json', action="store_true",
                             help='write results encoded to JSON into stdout')
@@ -103,3 +104,44 @@ class TextRunner:
     def bench_sample_func(self, func, *args):
         return self._main(self._bench_sample_func, func, args)
 
+    def _run_subprocess(self, create_args):
+        args = create_args(self)
+        return perf.RunResult.from_subprocess(args,
+                                              stderr=subprocess.PIPE)
+
+    def subprocesses(self, create_args, nprocess, metadata=False):
+        result = perf.Results(collect_metadata=self.json or metadata)
+        if not self.json:
+            stream = sys.stdout
+        else:
+            stream = sys.stderr
+
+        if metadata:
+            print("Metadata:", file=stream)
+            for key, value in sorted(result.metadata.items()):
+                print("- %s: %s" % (key, value), file=stream)
+
+        for process in range(nprocess):
+            run = self._run_subprocess(create_args)
+            result.runs.append(run)
+            if self.verbose > 1:
+                text = perf._very_verbose_run(run)
+                print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
+            elif self.verbose:
+                mean = perf.mean(run.samples)
+                print(perf._format_timedelta(mean), end=' ', file=stream)
+                stream.flush()
+            else:
+                print(".", end='', file=stream)
+                stream.flush()
+        if self.verbose <= 1:
+            print(file=stream)
+        print("Average: %s" % result.format(self.verbose > 1), file=stream)
+
+        if self.json:
+            stream.flush()
+            print(result.json())
+
+
+    if __name__ == "__main__":
+        _main()
