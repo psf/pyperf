@@ -53,7 +53,7 @@ Options:
 * ``-v`` enables verbose mode
 * ``-vv`` enables very verbose mode
 * ``--metadata`` displays metadata
-* ``--raw`` runs a single process
+* ``--raw`` runs a single process (must only be used internally)
 * ``--json`` writes result as JSON into stdout, and write other messages
   into stderr
 * ``--json-file=FILENAME`` writes result as JSON into *FILENAME*, and write
@@ -65,7 +65,7 @@ Example::
     .........................
     Average: 18.3 ns +- 0.3 ns
 
-Use ``-v`` to enable verbose mode::
+Use ``-v`` to enable the verbose mode::
 
     $ python3 -m perf.timeit -v 1+1
     .........................
@@ -83,7 +83,7 @@ Use ``-v`` to enable verbose mode::
 
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples; 1 warmup)
 
-Try also ``-vv`` to enable very verbose mode.
+Try also ``-vv`` to enable the very verbose mode.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
@@ -105,13 +105,13 @@ Compare two result files::
         [-v/--verbose] [-M/--no-metadata]
         compare ref.json changed.json
 
-If a filename is "-", read its JSON content from stdin.
+If a filename is ``-``, read the JSON content from stdin.
 
 Example: first create a JSON file using timeit::
 
     $ python3 -m perf.timeit --json-file=run.json 1+1
     .........................
-    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples)
+    Average: 18.6 ns +- 0.4 ns
 
 Display the JSON file::
 
@@ -134,7 +134,7 @@ Metadata is displayed by default, whereas timeit hides them by default. Use
 ``-M`` (``--no-metadata``) to hide metadata and ``-v`` (``--verbose``) to enable
 the verbose mode::
 
-    $ python3 -m perf show -M -v run.json
+    $ python3 -m perf -M -v show run.json
     Run 1/25: warmup (1): 19.4 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     Run 2/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     Run 3/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
@@ -142,7 +142,7 @@ the verbose mode::
     Run 25/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples; 1 warmup)
 
-Try also ``-vv`` to enable very verbose mode.
+Try also ``-vv`` to enable the very verbose mode.
 
 
 perf.metadata CLI
