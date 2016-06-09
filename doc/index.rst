@@ -63,7 +63,27 @@ Example::
 
     $ python3 -m perf.timeit 1+1
     .........................
-    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples)
+    Average: 18.3 ns +- 0.3 ns
+
+Use ``-v`` to enable verbose mode::
+
+    $ python3 -m perf.timeit -v 1+1
+    .........................
+    Metadata:
+    - aslr: enabled
+    - cpu_count: 4
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    - python_executable: /usr/bin/python3
+    - python_implementation: cpython
+    - python_version: 3.4.3
+    - timeit_loops: 10^7
+    - timeit_setup: 'pass'
+    - timeit_stmt: '1+1'
+
+    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples; 1 warmup)
+
+Try also ``-vv`` to enable very verbose mode.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
@@ -77,7 +97,7 @@ Display run results or results::
 
     python3 -m perf
         [-v]
-        filename.json [filename2.json ...]
+        show filename.json [filename2.json ...]
 
 If a filename is "-", read its JSON content from stdin.
 
@@ -89,13 +109,12 @@ Example: first create a JSON file using timeit::
 
 Display the JSON file::
 
-    $ python3 -m perf run.json
+    $ python3 -m perf show run.json
     Metadata:
     - aslr: enabled
-    - cpu_affinity: 2, 3
     - cpu_count: 4
-    - cpu_model_name: Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
-    - platform: Linux-4.4.9-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
     - python_executable: /usr/bin/python3
     - python_implementation: cpython
     - python_version: 3.4.3
@@ -103,38 +122,21 @@ Display the JSON file::
     - timeit_setup: 'pass'
     - timeit_stmt: '1+1'
 
-    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples)
+    Average: 17.4 ns +- 0.8 ns
 
-Store the result and then display it allows to control how results are
-displayed. For example, timeit doesn't show metadata by default, whereas perf
-CLI shows them by default. Use verbose mode to see more details::
+Metadata is displayed by default, whereas timeit hides them by default. Use
+``-M`` (``--no-metadata``) to hide metadata and ``-v`` (``--verbose``) to enable
+the verbose mode::
 
-    $ python3 -m perf -M -v run.json
+    $ python3 -m perf show -M -v run.json
     Run 1/25: warmup (1): 19.4 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     Run 2/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     Run 3/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     (...)
     Run 25/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
-    Average: 18.6 ns +- 0.4 ns (min: 18.2 ns, max: 19.2 ns) (25 runs x 3 samples; 1 warmup)
+    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples; 1 warmup)
 
-It is also possible to store a single run. Example::
-
-    $ python3 -m perf.timeit --raw --json-file=run1.json 1+1
-    Average: 18.3 ns +- 0.0 ns
-
-    $ python3 -m perf run1.json
-    Average: 18.3 ns +- 0.0 ns (3 samples)
-
-Combine 3 runs::
-
-    $ python3 -m perf.timeit --raw --json-file=run2.json 1+1
-    Average: 18.4 ns +- 0.0 ns
-
-    $ python3 -m perf.timeit --raw --json-file=run3.json 1+1
-    Average: 18.2 ns +- 0.0 ns
-
-    $ python3 -m perf run1.json run2.json run3.json
-    Average: 18.3 ns +- 0.1 ns (3 runs x 3 samples)
+Try also ``-vv`` to enable very verbose mode.
 
 
 perf.metadata CLI
@@ -147,11 +149,14 @@ Display collected metadata::
 Example::
 
     $ python3 -m perf.metadata
+    aslr: enabled
     cpu_count: 4
     cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    date: 2016-06-01T23:43:25
+    date: 2016-06-09T21:39:57
+    hostname: selma
     platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
     python_executable: /usr/bin/python3
+    python_implementation: cpython
     python_version: 3.4.3
 
 
@@ -161,14 +166,14 @@ timeit versus perf.timeit
 The timeit module of the Python standard library has multiple issues:
 
 * It displays the minimum
-* It only runs the benchmark 3 times using a single process
+* It only runs the benchmark 3 times using a single process (1 run, 3 samples)
 * It disables the garbage collector
 
 perf.timeit is more reliable and gives a result more representative of a real
 use case:
 
 * It displays the average and the standard deviation
-* It runs the benchmark in multiple processes
+* It runs the benchmark in multiple processes (default: 25 runs, 3 samples)
 * By default, it uses a first sample in each process to "warmup" the benchmark
 * It does not disable the garbage collector
 
@@ -199,6 +204,7 @@ Metadata
 
 * System metadata:
 
+  - ``hostname``: Host name
   - ``platform``: short string describing the platform
   - ``cpu_count``: number of CPUs
 
@@ -214,6 +220,8 @@ Metadata
 
   - ``date``: date when the benchmark started, formatted as ISO 8601
 
+See the :func:`metadata.collect_metadata` function.
+
 
 API
 ===
@@ -221,7 +229,7 @@ API
 Statistics
 ----------
 
-.. function:: mean(data)
+.. function:: perf.mean(data)
 
    Return the sample arithmetic mean of *data*, a sequence or iterator of
    real-valued numbers.
@@ -236,14 +244,14 @@ Statistics
    On Python 3.4 and newer, it's :func:`statistics.mean`. On older versions,
    it is implemented with ``float(sum(data)) / len(data)``.
 
-.. function:: stdev(data)
+.. function:: perf.stdev(data)
 
    Return the sample standard deviation (the square root of the sample
    variance).
 
    ::
 
-      >>> stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
+      >>> perf.stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
       1.0810874155219827
 
    On Python 3.4 and newer, it is implemented with :func:`statistics.stdev`.
@@ -252,7 +260,7 @@ Statistics
 Clocks
 ------
 
-.. function:: perf_counter()
+.. function:: perf.perf_counter()
 
    Return the value (in fractional seconds) of a performance counter, i.e. a
    clock with the highest available resolution to measure a short duration.  It
@@ -264,7 +272,7 @@ Clocks
    it's :func:`time.clock` on Windows and :func:`time.time` on other
    platforms. See the PEP 418 for more information on Python clocks.
 
-.. function:: monotonic_clock()
+.. function:: perf.monotonic_clock()
 
    Return the value (in fractional seconds) of a monotonic clock, i.e. a clock
    that cannot go backwards.  The clock is not affected by system clock updates.
@@ -279,7 +287,7 @@ Clocks
 RunResult
 ---------
 
-.. class:: RunResult(samples=None, warmups=None, formatter=None)
+.. class:: perf.RunResult(samples=None, warmups=None, formatter=None)
 
    Result of a single benchmark run.
 
@@ -291,11 +299,21 @@ RunResult
 
    .. method:: json()
 
-      Encode the result as JSON.
+      Encode the run result as a JSON string (``str``).
 
-   .. classmethod:: from_json(text)
+   .. classmethod:: json_load(text)
 
-      Load a result from JSON which was encoded by :meth:`json`.
+      Load a result from a JSON string (``str``) which was encoded by
+      :meth:`json`.
+
+   .. method:: json_dump_into(file)
+
+      Encode the run result as JSON into the *file*.
+
+   .. classmethod:: json_load_from(file)
+
+      Load a run result from the JSON file *file* which was created by
+      :meth:`json_dump_into`.
 
    .. classmethod:: from_subprocess(args, \**kwargs)
 
@@ -328,7 +346,7 @@ RunResult
 Results
 -------
 
-.. class:: Results(runs=None, name=None, formatter=None)
+.. class:: perf.Results(runs=None, name=None, formatter=None)
 
    Result of multiple benchmark runs.
 
@@ -340,22 +358,29 @@ Results
 
    .. method:: get_metadata():
 
-      Get metadata of all runs and the result: skip metadata with different
-      values or not existing in all run. Return an empty dictionary
-      if :attr:`runs` is empty.
+      Get metadata of all runs. Skip metadata with different values or not
+      existing in all run. Return an empty dictionary if :attr:`runs` is empty.
 
    .. method:: format(verbose=False):
 
-      Format runs.
+      Format runs as a string (``str``).
 
    .. method:: json()
 
-      Encode the result as JSON.
+      Encode the result as a JSON string (``str``).
 
-   .. classmethod:: from_json(text)
+   .. classmethod:: json_load(text)
 
-      Load a result from JSON which was encoded by :meth:`json`.
+      Load a result from a JSON string (``str``) which was encoded by :meth:`json`.
 
+   .. method:: json_dump_into(file)
+
+      Encode the result as JSON into the *file*.
+
+   .. classmethod:: json_load_from(file)
+
+      Load a result from the JSON file *file* which was created by
+      :meth:`json_dump_into`.
 
    Attributes:
 
@@ -424,9 +449,9 @@ TextRunner
 Metadata functions
 ------------------
 
-.. function:: metadata.collect_metadata(metadata)
+.. function:: perf.metadata.collect_metadata(metadata)
 
-   Collect metadata: date, python, system, etc.
+   Collect metadata: date, python, system, etc.: see `Metadata`_.
 
    *metadata* must be a dictionary.
 
