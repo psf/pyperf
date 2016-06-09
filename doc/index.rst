@@ -35,7 +35,7 @@ Microbenchmark::
 
     python3 -m perf.timeit
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
-        [--metadata] [--json] [--raw]
+        [--metadata] [--json [FILENAME]] [--raw]
         [-h/--help] [-v]
         [-s SETUP]
         stmt [stmt ...]
@@ -56,6 +56,8 @@ Options:
 * ``--raw`` runs a single process
 * ``--json`` writes result as JSON into stdout, and write other messages
   into stderr
+* ``--json-file=FILENAME`` writes result as JSON into *FILENAME*, and write
+  other messages into stdout
 
 Example::
 
@@ -77,12 +79,11 @@ Display run results or results::
         [-v]
         filename.json [filename2.json ...]
 
-Each file must be a text file which contains one result encoded to JSON per
-line. If a filename is "-", read JSON from stdin.
+If a filename is "-", read its JSON content from stdin.
 
 Example::
 
-    $ python3 -m perf.timeit --json 1+1 > run.json
+    $ python3 -m perf.timeit --json-file=run.json 1+1
     .........................
     Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples x 10^7 loops)
 
@@ -113,7 +114,7 @@ CLI shows them by default. Use verbose mode to see more details::
 
 It is also possible to store a single run. Example::
 
-    $ python3 -m perf.timeit --raw --json 1+1 > run1.json
+    $ python3 -m perf.timeit --raw --json-file=run1.json 1+1
     Average: 18.3 ns +- 0.0 ns
 
     $ python3 -m perf run1.json
@@ -121,10 +122,10 @@ It is also possible to store a single run. Example::
 
 Combine 3 runs::
 
-    $ python3 -m perf.timeit --raw --json 1+1 > run2.json
+    $ python3 -m perf.timeit --raw --json-file=run2.json 1+1
     Average: 18.4 ns +- 0.0 ns
 
-    $ python3 -m perf.timeit --raw --json 1+1 > run3.json
+    $ python3 -m perf.timeit --raw --json-file=run3.json 1+1
     Average: 18.2 ns +- 0.0 ns
 
     $ python3 -m perf run1.json run2.json run3.json

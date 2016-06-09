@@ -7,6 +7,23 @@ import sys
 import perf
 
 
+def _json_dump(result, args):
+    if args.json_file:
+        # --json-file=FILENAME
+        if perf._PY3:
+            fp = open(args.json_file, "w", encoding="utf-8")
+        else:
+            fp = open(args.json_file, "wb")
+        with fp:
+            result.json_dump_into(fp)
+            fp.flush()
+    elif args.json:
+        # --json
+        stdout = sys.stdout
+        result.json_dump_into(stdout)
+        stdout.flush()
+
+
 class TextRunner:
     def __init__(self):
         self.result = perf.RunResult()
@@ -30,8 +47,10 @@ class TextRunner:
                                  % nwarmup)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help='enable verbose mode')
-        parser.add_argument('--json', action="store_true",
+        parser.add_argument('--json', action='store_true',
                             help='write results encoded to JSON into stdout')
+        parser.add_argument('--json-file', metavar='FILENAME',
+                            help='write results encoded to JSON into FILENAME')
         parser.add_argument('--raw', action="store_true",
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
@@ -46,7 +65,7 @@ class TextRunner:
         self.args = self.argparser.parse_args(args)
 
     def _stream(self):
-        return sys.stderr if self.args.json else None
+        return sys.stderr if self.args.json else sys.stdout
 
     def _range(self):
         # FIXME: use six.range
@@ -81,8 +100,7 @@ class TextRunner:
         print(text, file=self._stream())
         sys.stderr.flush()
 
-        if self.args.json:
-            print(self.result.json())
+        _json_dump(self.result, self.args)
 
     def _main(self, func, *args):
         self.parse_args()
@@ -133,14 +151,11 @@ class TextRunner:
         self.parse_args()
 
         metadata = self.args.metadata
-        json = self.args.json
         verbose = self.args.verbose
+        collect_metadata = metadata or self.args.json or self.args.json_file
 
-        result = perf.Results(collect_metadata=json or metadata)
-        if not json:
-            stream = sys.stdout
-        else:
-            stream = sys.stderr
+        result = perf.Results(collect_metadata=collect_metadata)
+        stream = self._stream()
 
         if metadata:
             print("Metadata:", file=stream)
@@ -165,9 +180,9 @@ class TextRunner:
             print(file=stream)
         print("Average: %s" % result.format(verbose > 1), file=stream)
 
-        if json:
-            stream.flush()
-            print(result.json())
+        stream.flush()
+        _json_dump(result, self.args)
+
 
 
     if __name__ == "__main__":

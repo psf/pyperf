@@ -26,10 +26,10 @@ def parse_file(results, runs, fp):
 
         data = json.loads(line)
         if 'run_result' in data:
-            run = perf.RunResult._from_json(data['run_result'])
+            run = perf.RunResult._from_json(data)
             runs.append(run)
         elif 'results' in data:
-            result = perf.Results._from_json(data['results'])
+            result = perf.Results._from_json(data)
             results.append(result)
         else:
             print("ERROR: invalid JSON")

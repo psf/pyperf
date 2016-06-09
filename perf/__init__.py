@@ -204,6 +204,10 @@ class Results:
         if version != 1:
             raise ValueError("version %r not supported" % version)
 
+        if 'results' not in data:
+            raise ValueError("JSON doesn't contain results")
+        data = data['results']
+
         runs = [RunResult._from_json(run) for run in data['runs']]
         metadata = data['metadata']
         name = data.get('name')
@@ -217,22 +221,25 @@ class Results:
         json = _import_json()
         data = json.loads(text)
 
-        if 'results' not in data:
-            raise ValueError("JSON doesn't contain results")
-        data = data['results']
-
         return cls._from_json(data)
 
-    def json(self):
-        json = _import_json()
-        runs = [run._json() for run in self.runs]
-        data = {'version': 1,
-                'runs': runs,
+    def _as_json(self):
+        runs = [run._as_json() for run in self.runs]
+        data = {'runs': runs,
                 'metadata': self.metadata}
         if self.name:
             data['name'] = self.name
         # FIXME: export formatter
-        return json.dumps({'results': data})
+        return {'results': data, 'version': 1}
+
+    def json(self):
+        json = _import_json()
+        return json.dumps(self._as_json()) + '\n'
+
+    def json_dump_into(self, file):
+        json = _import_json()
+        json.dump(self._as_json(), file)
+        file.write('\n')
 
 
 class RunResult:
@@ -275,6 +282,10 @@ class RunResult:
         if version != 1:
             raise ValueError("version %r not supported" % version)
 
+        if 'run_result' not in data:
+            raise ValueError("JSON doesn't contain run_result")
+        data = data['run_result']
+
         samples = data['samples']
         warmups = data['warmups']
         loops = data.get('loops')
@@ -284,10 +295,6 @@ class RunResult:
     def from_json(cls, text):
         json = _import_json()
         data = json.loads(text)
-
-        if 'run_result' not in data:
-            raise ValueError("JSON doesn't contain run_result")
-        data = data['run_result']
 
         return cls._from_json(data)
 
@@ -312,18 +319,22 @@ class RunResult:
 
         return cls.from_json(stdout)
 
-    def _json(self):
-        data = {'version': 1,
-                'samples': self.samples,
+    def _as_json(self):
+        data = {'samples': self.samples,
                 'warmups': self.warmups}
         if self.loops is not None:
             data['loops'] = self.loops
         # FIXME: export formatter
-        return data
+        return {'run_result': data, 'version': 1}
 
     def json(self):
         json = _import_json()
-        return json.dumps({'run_result': self._json()})
+        return json.dumps(self._as_json()) + '\n'
+
+    def json_dump_into(self, file):
+        json = _import_json()
+        json.dump(self._as_json(), file)
+        file.write('\n')
 
 
 def _very_verbose_run(run):
