@@ -109,7 +109,8 @@ class TestPerfCLI(unittest.TestCase):
                     '- python_version: 3.4\n'
                     '\n'
                     'Average: [py2] 1.50 sec +- 0.50 sec '
-                        '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower')
+                        '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+                    'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
 

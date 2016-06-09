@@ -235,22 +235,23 @@ API
 Statistics
 ----------
 
-.. function:: perf.mean(data)
+.. function:: perf.mean(samples)
 
-   Return the sample arithmetic mean of *data*, a sequence or iterator of
+   Return the sample arithmetic mean of *samples*, a sequence or iterator of
    real-valued numbers.
 
-   The arithmetic mean is the sum of the data divided by the number of data
+   The arithmetic mean is the sum of the samples divided by the number of samples
    points.  It is commonly called "the average", although it is only one of many
    different mathematical averages.  It is a measure of the central location of
-   the data.
+   the samples.
 
-   If *data* is empty, an exception will be raised.
+   If *samples* is empty, an exception will be raised.
 
    On Python 3.4 and newer, it's :func:`statistics.mean`. On older versions,
-   it is implemented with ``float(sum(data)) / len(data)``.
+   it is implemented with ``float(sum(samples)) / len(samples)``.
 
-.. function:: perf.stdev(data)
+
+.. function:: perf.stdev(samples)
 
    Return the sample standard deviation (the square root of the sample
    variance).
@@ -261,6 +262,17 @@ Statistics
       1.0810874155219827
 
    On Python 3.4 and newer, it is implemented with :func:`statistics.stdev`.
+
+
+.. function:: perf.is_significant(samples1, samples2)
+
+    Determine whether two samples differ significantly.
+
+    This uses a Student's two-sample, two-tailed t-test with alpha=0.95.
+
+    Returns ``(significant, t_score)`` where significant is a ``bool``
+    indicating whether the two samples differ significantly; ``t_score`` is the
+    score from the two-sample T test.
 
 
 Clocks

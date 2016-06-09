@@ -74,22 +74,31 @@ def compare_results(args, ref_result, changed_result):
         perf._display_metadata(changed_result.get_metadata(),
                                header='%s metadata:' % changed_result.name)
 
+    # Compute means
+    ref_samples = ref_result.get_samples()
+    changed_samples = changed_result.get_samples()
+    ref_avg = perf.mean(ref_samples)
+    changed_avg = perf.mean(changed_samples)
     text = ("Average: [%s] %s -> [%s] %s"
             % (ref_result.name,
                ref_result.format(verbose=args.verbose),
                changed_result.name,
                changed_result.format(verbose=args.verbose)))
 
-    ref_avg = perf.mean(ref_result.get_samples())
-    changed_avg = perf.mean(changed_result.get_samples())
     # avoid division by zero
     if ref_avg and changed_avg:
         if changed_avg < ref_avg:
             text = "%s: %.1fx faster" % (text, ref_avg /  changed_avg)
         else:
             text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)
-
     print(text)
+
+    # significant?
+    significant, t_score = perf.is_significant(ref_samples, changed_samples)
+    if significant:
+        print("Significant (t=%.2f)" % t_score)
+    else:
+        print("Not significant!")
 
 
 parser = create_parser()

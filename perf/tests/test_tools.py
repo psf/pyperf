@@ -24,6 +24,33 @@ class TestStatistics(unittest.TestCase):
     def test_mean(self):
         self.assertEqual(perf.mean([1.0, 1.5, 2.0]), 1.5)
 
+    def test_is_significant(self):
+        # not significant
+        samples1 = (1.0, 1.5, 2.0)
+        samples2 = (1.5, 2.0, 2.5)
+        self.assertEqual(perf.is_significant(samples1, samples2),
+                         (False, -1.224744871391589))
+
+        # significant
+        n = 100
+        samples1 = (1.0,) * n + (1.5,)
+        samples2 = (2.0,) * n + (1.5,)
+        self.assertEqual(perf.is_significant(samples1, samples2),
+                         (True, -141.4213562373095))
+
+        # FIXME: _TScore() division by zero: error=0
+        # n = 100
+        # samples1 = (1.0,) * n
+        # samples2 = (2.0,) * n
+        # self.assertEqual(perf.is_significant(samples1, samples2),
+        #                  (True, -141.4213562373095))
+
+        # FIXME: same error
+        # # same samples
+        # samples = (1.0,) * 50
+        # self.assertEqual(perf.is_significant(samples, samples),
+        #                  (True, -141.4213562373095))
+
 
 class TestTools(unittest.TestCase):
     def test_timedelta(self):
