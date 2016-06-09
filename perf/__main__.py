@@ -8,7 +8,7 @@ import perf.metadata
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Display benchmark results.')
-    parser.add_argument('-v', '--verbose', action="store_true",
+    parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='an integer for the accumulator')
     parser.add_argument('-M', '--no-metadata', dest='metadata', action="store_false",
                         default=True,
