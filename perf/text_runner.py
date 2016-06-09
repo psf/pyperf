@@ -30,7 +30,8 @@ class TextRunner:
         self.argparser = self._create_argparser()
         # result of argparser.parse_args()
         self.args = None
-        self.create_subprocess_args = None
+        # called with prepare(runner, args), args must be modified in-place
+        self.prepare_subprocess_args = None
 
     def _create_argparser(self, nprocess=25, nsample=3, nwarmup=1):
         parser = argparse.ArgumentParser(description='Benchmark')
@@ -105,7 +106,7 @@ class TextRunner:
     def _main(self, func, *args):
         self.parse_args()
         if not self.args.raw:
-            self.subprocesses()
+            self._subprocesses()
             return
 
         self._display_headers()
@@ -139,15 +140,20 @@ class TextRunner:
         return self._main(self._bench_sample_func, func, args)
 
     def _run_subprocess(self):
-        if self.create_subprocess_args:
-            args = self.create_subprocess_args(self)
-        else:
-            args = [sys.executable] + sys.argv + ['--raw', '--json']
+        args = [sys.executable, sys.argv[0],
+                '--raw', '--json',
+                '--samples', str(self.args.nsample),
+                '--warmups', str(self.args.nwarmup)]
+        if self.args.verbose:
+            args.append('-v' * self.args.verbose)
+
+        if self.prepare_subprocess_args:
+            self.prepare_subprocess_args(self, args)
 
         return perf.RunResult.from_subprocess(args,
                                               stderr=subprocess.PIPE)
 
-    def subprocesses(self):
+    def _subprocesses(self):
         self.parse_args()
 
         metadata = self.args.metadata

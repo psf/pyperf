@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import json
 import sys
@@ -69,6 +70,7 @@ def display_result(args, results):
         for index, run in enumerate(result.runs, 1):
             text = perf._very_verbose_run(run)
             print("Run %s/%s: %s" % (index, nrun, text))
+        print()
 
     print("Average: %s" % result.format(verbose=args.verbose))
 

@@ -2,7 +2,10 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
+
+import perf
 
 
 class TestTimeit(unittest.TestCase):
@@ -69,6 +72,36 @@ class TestTimeit(unittest.TestCase):
         self.assertTrue(0.9 <= mean <= 1.5, mean)
         stdev = float(match.group(2))
         self.assertTrue(0 <= stdev <= 0.10, stdev)
+
+    def test_json_file(self):
+        with tempfile.NamedTemporaryFile() as tmp:
+            args = [sys.executable,
+                    '-m', 'perf.timeit',
+                    '-p', '2',
+                    '-n', '3',
+                    '-l', '4',
+                    '--json-file', tmp.name,
+                    '-s', 'import time',
+                    'time.sleep(1e-3)']
+            proc = subprocess.Popen(args,
+                                    stdout=subprocess.PIPE,
+                                    universal_newlines=True)
+            stdout = proc.communicate()[0]
+            self.assertEqual(proc.returncode, 0)
+
+            json = tmp.read()
+            if perf._PY3:
+                json = json.decode('utf-8')
+            result = perf.Results.from_json(json)
+
+        self.assertEqual(len(result.runs), 2)
+        for run in result.runs:
+            self.assertEqual(len(run.warmups), 1)
+            self.assertEqual(len(run.samples), 3)
+            self.assertEqual(run.loops, 4)
+
+            for sample in run.warmups + run.samples:
+                self.assertTrue(0.9e-3 <= sample <= 1.5e-3, sample)
 
     def test_cli_help(self):
         args = [sys.executable,

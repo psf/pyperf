@@ -295,7 +295,6 @@ class RunResult:
     def from_json(cls, text):
         json = _import_json()
         data = json.loads(text)
-
         return cls._from_json(data)
 
     @classmethod
@@ -309,11 +308,15 @@ class RunResult:
 
         if _PY3:
             with proc:
-                stdout = proc.communicate()[0]
+                stdout, stderr = proc.communicate()
         else:
-            stdout = proc.communicate()[0]
+            stdout, stderr = proc.communicate()
 
         if proc.returncode:
+            sys.stdout.write(stdout)
+            sys.stdout.flush()
+            sys.stderr.write(stderr)
+            sys.stderr.flush()
             raise RuntimeError("%s with with exit code %s"
                                % (args[0], proc.returncode))
 
