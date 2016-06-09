@@ -92,7 +92,7 @@ class TestTimeit(unittest.TestCase):
             json = tmp.read()
             if perf._PY3:
                 json = json.decode('utf-8')
-            result = perf.Results.from_json(json)
+            result = perf.Results.json_loads(json)
 
         self.assertEqual(len(result.runs), 2)
         for run in result.runs:

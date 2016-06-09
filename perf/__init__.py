@@ -213,7 +213,7 @@ class Results:
         return self.format()
 
     @classmethod
-    def _from_json(cls, data):
+    def _json_loads(cls, data):
         version = data.get('version')
         if version != 1:
             raise ValueError("version %r not supported" % version)
@@ -222,17 +222,17 @@ class Results:
             raise ValueError("JSON doesn't contain results")
         data = data['results']
 
-        runs = [RunResult._from_json(run) for run in data['runs']]
+        runs = [RunResult._json_loads(run) for run in data['runs']]
         name = data.get('name')
 
         return cls(runs=runs, name=name)
 
     @classmethod
-    def from_json(cls, text):
+    def json_loads(cls, text):
         json = _import_json()
         data = json.loads(text)
 
-        return cls._from_json(data)
+        return cls._json_loads(data)
 
     def _as_json(self):
         runs = [run._as_json() for run in self.runs]
@@ -288,7 +288,7 @@ class RunResult:
         return self.format()
 
     @classmethod
-    def _from_json(cls, data):
+    def _json_loads(cls, data):
         version = data.get('version')
         if version != 1:
             raise ValueError("version %r not supported" % version)
@@ -306,10 +306,10 @@ class RunResult:
         return run
 
     @classmethod
-    def from_json(cls, text):
+    def json_loads(cls, text):
         json = _import_json()
         data = json.loads(text)
-        return cls._from_json(data)
+        return cls._json_loads(data)
 
     @classmethod
     def from_subprocess(cls, args, **kwargs):
@@ -334,7 +334,7 @@ class RunResult:
             raise RuntimeError("%s with with exit code %s"
                                % (args[0], proc.returncode))
 
-        return cls.from_json(stdout)
+        return cls.json_loads(stdout)
 
     def _as_json(self):
         data = {'samples': self.samples,
