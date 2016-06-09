@@ -1,6 +1,8 @@
 TODO
 ====
 
+* "samples" is not the best term, "a data sample is a set of data":
+  https://en.wikipedia.org/wiki/Sample_%28statistics%29
 * -m perf CLI: add command to show and/or combine run results
 * Integration with pybench
 * Raise an error or warning if timings are too short/benchmakr is unstable:

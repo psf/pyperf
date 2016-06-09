@@ -268,7 +268,8 @@ Statistics
 
     Determine whether two samples differ significantly.
 
-    This uses a Student's two-sample, two-tailed t-test with alpha=0.95.
+    This uses a `Student's two-sample, two-tailed t-test
+    <https://en.wikipedia.org/wiki/Student's_t-test>`_ with alpha=0.95.
 
     Returns ``(significant, t_score)`` where significant is a ``bool``
     indicating whether the two samples differ significantly; ``t_score`` is the
