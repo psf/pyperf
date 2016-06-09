@@ -43,16 +43,12 @@ def _main_common(args=None):
     parser = runner.argparser
     parser.add_argument('-l', '--loops', type=int, default=0,
                         help='number of loops per sample (default: calibrate)')
-    parser.add_argument('-r', '--repeat', type=int, default=_DEFAULT_SAMPLES,
-                        help='number of samples (default: %s)'
-                             % _DEFAULT_SAMPLES)
     parser.add_argument('-s', '--setup', action='append',
                         help='setup statements')
     parser.add_argument('stmt', nargs='+',
                         help='executed statements')
 
     runner.parse_args()
-    runner.nsample = runner.args.repeat
 
     stmt = "\n".join(runner.args.stmt) or "pass"
     # FIXME: remove "or ()"
@@ -94,7 +90,7 @@ def _create_args(runner):
     args = [sys.executable,
             '-m', 'perf.timeit',
             '--raw', '--json',
-            "-n", str(runner.nsample)]
+            "--loops", str(runner.args.loops)]
     # FIXME: don't pass duplicate -n
     args.extend(sys.argv[1:])
     return args

@@ -34,10 +34,9 @@ perf.timeit CLI
 Microbenchmark::
 
     python3 -m perf.timeit
-        [-h] [-v]
-        [--json] [--raw]
-        [--metadata]
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
+        [--metadata] [--json] [--raw]
+        [-h/--help] [-v]
         [-s SETUP]
         stmt [stmt ...]
 
@@ -64,9 +63,9 @@ Example::
     .........................
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
 
-.. warning::
-   timeit ``-n`` option becomes ``-l`` in perf.timeit.
-   timeit ``-r`` option becomes ``-n`` in perf.timeit.
+.. note::
+   timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
+   ``-n`` (runs) in perf.timeit.
 
 
 perf CLI

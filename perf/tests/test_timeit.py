@@ -84,8 +84,8 @@ class TestTimeit(unittest.TestCase):
 
 
 
-        self.assertIn('[-h] [-n NSAMPLE] [-w NWARMUP] [-v] [--json] [--raw] '
-                      '[-p PROCESSES] [--metadata] [-l LOOPS] [-r REPEAT] '
+        self.assertIn('[-h] [-p PROCESSES] [-n NSAMPLE] [-w NWARMUP] '
+                      '[-v] [--json] [--raw] [--metadata] [-l LOOPS] '
                       '[-s SETUP] stmt [stmt ...]',
                       stdout)
 

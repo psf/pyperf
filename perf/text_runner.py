@@ -17,13 +17,16 @@ class TextRunner:
 
     def _create_argparser(self, nprocess=25, nsample=3, nwarmup=1):
         parser = argparse.ArgumentParser(description='Benchmark')
+        parser.add_argument('-p', '--processes', type=int, default=nprocess,
+                            help='number of processes used to run benchmarks (default: %s)'
+                                 % nprocess)
         parser.add_argument('-n', '--samples', dest="nsample",
                             type=int, default=nsample,
                             help='number of samples per process (default: %s)'
                                  % nsample)
         parser.add_argument('-w', '--warmups', dest="nwarmup",
                             type=int, default=nwarmup,
-                            help='number of warmup samples per process (default: %s)'
+                            help='number of skipped samples per run used to warmup the benchmark (default: %s)'
                                  % nwarmup)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help='enable verbose mode')
@@ -31,9 +34,6 @@ class TextRunner:
                             help='write results encoded to JSON into stdout')
         parser.add_argument('--raw', action="store_true",
                             help='run a single process')
-        parser.add_argument('-p', '--processes', type=int, default=nprocess,
-                            help='number of processes used to run benchmarks (default: %s)'
-                                 % nprocess)
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
         return parser
