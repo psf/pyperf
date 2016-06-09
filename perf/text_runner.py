@@ -116,18 +116,18 @@ class TextRunner:
                 text = "Run %s: %s" % (1 + run, text)
             print(text, file=self._stream())
 
-    def _display_headers(self):
-        if self.result.loops is not None and self.args.verbose:
-            print(perf._format_number(self.result.loops, 'loop'),
-                  file=self._stream())
-
     def _display_result(self):
+        stream = self._stream()
+
+        if self.args.metadata:
+            perf.metadata._display_metadata(self.result.metadata, file=stream)
+
         text = self.result.format(self.args.verbose)
         nsample = perf._format_number(len(self.result.samples), 'sample')
         text = "Average: %s (%s)" % (text, nsample)
         print(text, file=self._stream())
-        sys.stderr.flush()
 
+        stream.flush()
         _json_dump(self.result, self.args)
 
     def _cpu_affinity(self):
@@ -153,7 +153,6 @@ class TextRunner:
 
         self._cpu_affinity()
         perf.metadata.collect_metadata(self.result.metadata)
-        self._display_headers()
         func(*args)
         self._display_result()
 

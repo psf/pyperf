@@ -83,7 +83,7 @@ def _main():
         return timer.inner(it, timer.timer) / loops
 
     loops = runner.args.loops
-    runner.result.loops = loops
+    runner.result.metadata['timeit_loops'] = perf._format_number(loops)
     try:
         runner.bench_sample_func(func, timer, loops)
     except:

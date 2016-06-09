@@ -115,7 +115,7 @@ def _format_run_result(values, verbose=0):
     return text
 
 
-def _format_number(number, unit, units=None):
+def _format_number(number, unit=None, units=None):
     plural = (abs(number) > 1)
     if number >= 10000:
         pow10 = 0
@@ -127,6 +127,9 @@ def _format_number(number, unit, units=None):
             pow10 += 1
         if x == 1 and digit == 0:
             number = '10^%s' % pow10
+
+    if not unit:
+        return str(number)
 
     if plural:
         if not units:
@@ -172,16 +175,13 @@ class Results:
 
     def format(self, verbose=False):
         if self.runs:
-            samples = []
+            # FIXME: handle the case where all samples are empty
+            samples = self.get_samples()
+
             first_run = self.runs[0]
             warmup = len(first_run.warmups)
             nsample = len(first_run.samples)
-            loops = first_run.loops
             for run in self.runs:
-                # FIXME: handle the case where samples is empty
-                samples.extend(run.samples)
-                if loops is not None and run.loops != loops:
-                    loops = None
                 run_nsample = len(run.samples)
                 if nsample is not None and nsample != run_nsample:
                     nsample = None
@@ -196,8 +196,6 @@ class Results:
             if nsample:
                 text = _format_number(nsample, 'sample')
                 iterations.append(text)
-            if loops:
-                iterations.append(_format_number(loops, 'loop'))
             iterations = ' x '.join(iterations)
             if verbose and warmup:
                 iterations += '; %s' % _format_number(warmup, 'warmup')
@@ -255,10 +253,8 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, loops=None, formatter=None,
+    def __init__(self, samples=None, warmups=None, formatter=None,
                  collect_metadata=False):
-        if not(loops is None or (isinstance(loops, int) and loops >= 0)):
-            raise TypeError("loops must be an int >= 0 or None")
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -271,7 +267,6 @@ class RunResult:
         self.samples = []
         if samples is not None:
             self.samples.extend(samples)
-        self.loops = loops
         self.warmups = []
         if warmups is not None:
             self.warmups.extend(warmups)
@@ -305,10 +300,9 @@ class RunResult:
 
         samples = data['samples']
         warmups = data['warmups']
-        loops = data.get('loops')
         metadata = data.get('metadata')
 
-        run = cls(loops=loops, samples=samples, warmups=warmups,
+        run = cls(samples=samples, warmups=warmups,
                   collect_metadata=False)
         run.metadata = metadata
         return run
@@ -348,8 +342,6 @@ class RunResult:
         data = {'samples': self.samples,
                 'warmups': self.warmups,
                 'metadata': self.metadata}
-        if self.loops is not None:
-            data['loops'] = self.loops
         # FIXME: export formatter
         return {'run_result': data, 'version': 1}
 
