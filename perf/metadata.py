@@ -3,6 +3,7 @@ import datetime
 import os
 import platform
 import re
+import socket
 import sys
 
 PY3 = (sys.version_info >= (3,))
@@ -122,6 +123,10 @@ def _collect_system_metadata(metadata):
                 cpus = None
         if cpus:
             metadata['cpu_affinity'] = ', '.join(sorted(map(str, cpus)))
+
+    # Hostname
+    hostname = socket.gethostname()
+    _add(metadata, 'hostname', hostname)
 
 
 def collect_metadata(metadata):
