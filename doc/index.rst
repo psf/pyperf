@@ -63,7 +63,7 @@ Example::
 
     $ python3 -m perf.timeit 1+1
     .........................
-    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
+    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples)
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
@@ -81,27 +81,32 @@ Display run results or results::
 
 If a filename is "-", read its JSON content from stdin.
 
-Example::
+Example: first create a JSON file using timeit::
 
     $ python3 -m perf.timeit --json-file=run.json 1+1
     .........................
-    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples x 10^7 loops)
+    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples)
+
+Display the JSON file::
 
     $ python3 -m perf run.json
     Metadata:
     - aslr: enabled
+    - cpu_affinity: 2, 3
     - cpu_count: 4
     - cpu_model_name: Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
-    - date: 2016-06-07T15:07:27
     - platform: Linux-4.4.9-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
     - python_executable: /usr/bin/python3
     - python_implementation: cpython
     - python_version: 3.4.3
+    - timeit_loops: 10^7
+    - timeit_setup: 'pass'
+    - timeit_stmt: '1+1'
 
-    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples x 10^7 loops)
+    Average: 18.6 ns +- 0.4 ns (25 runs x 3 samples)
 
 Store the result and then display it allows to control how results are
-displayed.  For example, timeit doesn't show metadata by default, whereas perf
+displayed. For example, timeit doesn't show metadata by default, whereas perf
 CLI shows them by default. Use verbose mode to see more details::
 
     $ python3 -m perf -M -v run.json
@@ -110,7 +115,7 @@ CLI shows them by default. Use verbose mode to see more details::
     Run 3/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
     (...)
     Run 25/25: warmup (1): 18.2 ns; runs (3): 18.2 ns, 18.2 ns, 18.2 ns
-    Average: 18.6 ns +- 0.4 ns (min: 18.2 ns, max: 19.2 ns) (25 runs x 3 samples x 10^7 loops; 1 warmup)
+    Average: 18.6 ns +- 0.4 ns (min: 18.2 ns, max: 19.2 ns) (25 runs x 3 samples; 1 warmup)
 
 It is also possible to store a single run. Example::
 
@@ -118,7 +123,7 @@ It is also possible to store a single run. Example::
     Average: 18.3 ns +- 0.0 ns
 
     $ python3 -m perf run1.json
-    Average: 18.3 ns +- 0.0 ns (3 samples x 10^7 loops)
+    Average: 18.3 ns +- 0.0 ns (3 samples)
 
 Combine 3 runs::
 
@@ -129,7 +134,7 @@ Combine 3 runs::
     Average: 18.2 ns +- 0.0 ns
 
     $ python3 -m perf run1.json run2.json run3.json
-    Average: 18.3 ns +- 0.1 ns (3 runs x 3 samples x 10^7 loops)
+    Average: 18.3 ns +- 0.1 ns (3 runs x 3 samples)
 
 
 perf.metadata CLI
@@ -274,12 +279,9 @@ Clocks
 RunResult
 ---------
 
-.. class:: RunResult(samples=None, loops=None, formatter=None, collect_metadata=False)
+.. class:: RunResult(samples=None, warmups=None, formatter=None)
 
    Result of a single benchmark run.
-
-   If *collect_metadata* is true, call :func:`collect_metadata` with
-   :attr:`metadata`.
 
    Methods:
 
@@ -306,10 +308,6 @@ RunResult
    .. attribute:: formatter
 
       Function to format a list of numbers.
-
-   .. attribute:: loops
-
-      Number of loops (``int`` or ``None``).
 
    .. attribute:: metadata
 
