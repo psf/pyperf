@@ -253,8 +253,7 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, formatter=None,
-                 collect_metadata=False):
+    def __init__(self, samples=None, warmups=None, formatter=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -302,8 +301,7 @@ class RunResult:
         warmups = data['warmups']
         metadata = data.get('metadata')
 
-        run = cls(samples=samples, warmups=warmups,
-                  collect_metadata=False)
+        run = cls(samples=samples, warmups=warmups)
         run.metadata = metadata
         return run
 
