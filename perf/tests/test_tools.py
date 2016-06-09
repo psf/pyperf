@@ -91,9 +91,11 @@ class TestResult(unittest.TestCase):
 
     def test_run_result_json(self):
         run = perf.RunResult([1.0, 1.5, 2.0], warmups=[5.0])
-        run = perf.RunResult.json_loads(run.json())
+        run.metadata = {'key': 'value'}
+        run = perf.RunResult.json_load(run.json())
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
         self.assertEqual(run.warmups, [5.0])
+        self.assertEqual(run.metadata, {'key': 'value'})
 
     def test_results(self):
         runs = []

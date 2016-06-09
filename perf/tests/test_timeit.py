@@ -74,7 +74,11 @@ class TestTimeit(unittest.TestCase):
         self.assertTrue(0 <= stdev <= 0.10, stdev)
 
     def test_json_file(self):
-        with tempfile.NamedTemporaryFile() as tmp:
+        if perf._PY3:
+            tmp = tempfile.NamedTemporaryFile('w+', encoding='utf-8')
+        else:
+            tmp = tempfile.NamedTemporaryFile()
+        with tmp:
             args = [sys.executable,
                     '-m', 'perf.timeit',
                     '-p', '2',
@@ -89,10 +93,7 @@ class TestTimeit(unittest.TestCase):
             stdout = proc.communicate()[0]
             self.assertEqual(proc.returncode, 0)
 
-            json = tmp.read()
-            if perf._PY3:
-                json = json.decode('utf-8')
-            result = perf.Results.json_loads(json)
+            result = perf.Results.json_load_from(tmp)
 
         self.assertEqual(len(result.runs), 2)
         for run in result.runs:

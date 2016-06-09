@@ -213,7 +213,7 @@ class Results:
         return self.format()
 
     @classmethod
-    def _json_loads(cls, data):
+    def _json_load(cls, data):
         version = data.get('version')
         if version != 1:
             raise ValueError("version %r not supported" % version)
@@ -222,17 +222,22 @@ class Results:
             raise ValueError("JSON doesn't contain results")
         data = data['results']
 
-        runs = [RunResult._json_loads(run) for run in data['runs']]
+        runs = [RunResult._json_load(run) for run in data['runs']]
         name = data.get('name')
 
         return cls(runs=runs, name=name)
 
     @classmethod
-    def json_loads(cls, text):
+    def json_load_from(cls, file):
+        json = _import_json()
+        data = json.load(file)
+        return cls._json_load(data)
+
+    @classmethod
+    def json_load(cls, text):
         json = _import_json()
         data = json.loads(text)
-
-        return cls._json_loads(data)
+        return cls._json_load(data)
 
     def _as_json(self):
         runs = [run._as_json() for run in self.runs]
@@ -288,7 +293,7 @@ class RunResult:
         return self.format()
 
     @classmethod
-    def _json_loads(cls, data):
+    def _json_load(cls, data):
         version = data.get('version')
         if version != 1:
             raise ValueError("version %r not supported" % version)
@@ -306,10 +311,16 @@ class RunResult:
         return run
 
     @classmethod
-    def json_loads(cls, text):
+    def json_load_from(cls, file):
+        json = _import_json()
+        data = json.load(file)
+        return cls._json_load(data)
+
+    @classmethod
+    def json_load(cls, text):
         json = _import_json()
         data = json.loads(text)
-        return cls._json_loads(data)
+        return cls._json_load(data)
 
     @classmethod
     def from_subprocess(cls, args, **kwargs):
@@ -334,7 +345,7 @@ class RunResult:
             raise RuntimeError("%s with with exit code %s"
                                % (args[0], proc.returncode))
 
-        return cls.json_loads(stdout)
+        return cls.json_load(stdout)
 
     def _as_json(self):
         data = {'samples': self.samples,
