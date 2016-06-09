@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-import perf.metadata
+import perf
 
 
 def _json_dump(result, args):
@@ -122,7 +122,7 @@ class TextRunner:
         stream = self._stream()
 
         if self.args.metadata:
-            perf.metadata._display_metadata(self.result.metadata, file=stream)
+            perf._display_metadata(self.result.metadata, file=stream)
 
         text = self.result.format(self.args.verbose)
         nsample = perf._format_number(len(self.result.samples), 'sample')
@@ -153,6 +153,9 @@ class TextRunner:
         if not self.args.raw:
             self._subprocesses()
             return
+
+        # only import metadata submodule in worker processes
+        import perf.metadata
 
         self._cpu_affinity()
         perf.metadata.collect_metadata(self.result.metadata)
@@ -221,7 +224,7 @@ class TextRunner:
             print(file=stream)
 
         if self.args.metadata:
-            perf.metadata._display_metadata(result.get_metadata(), file=stream)
+            perf._display_metadata(result.get_metadata(), file=stream)
 
         print("Average: %s" % result.format(verbose), file=stream)
 

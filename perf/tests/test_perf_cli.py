@@ -39,11 +39,13 @@ class TestPerfCLI(unittest.TestCase):
             results.json_dump_into(tmp)
             tmp.seek(0)
 
-            args = [sys.executable, '-m', 'perf', 'show', tmp.name]
+            args = [sys.executable, '-m', 'perf']
             if verbose:
                 args.append('-v')
             if not metadata:
                 args.append('-M')
+            args.extend(('show', tmp.name))
+
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     universal_newlines=True)

@@ -205,12 +205,13 @@ class Results:
                     text = '%s (%s)' % (text, iterations)
         else:
             text = '<no run>'
-        if self.name:
-            text = '%s: %s' % (self.name, text)
         return text
 
     def __str__(self):
-        return self.format()
+        text = self.format()
+        if self.name:
+            text = '%s: %s' % (self.name, text)
+        return text
 
     @classmethod
     def _json_load(cls, data):
@@ -374,3 +375,12 @@ def _very_verbose_run(run):
                    ', '.join(_format_timedeltas(run.warmups)),
                    text))
     return text
+
+
+def _display_metadata(metadata, file=None, header="Metadata:"):
+    if not metadata:
+        return
+    print(header, file=file)
+    for key, value in sorted(metadata.items()):
+        print("- %s: %s" % (key, value), file=file)
+    print(file=file)

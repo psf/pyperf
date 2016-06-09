@@ -93,11 +93,17 @@ Try also ``-vv`` to enable very verbose mode.
 perf CLI
 --------
 
-Display run results or results::
+Display a result file::
 
     python3 -m perf
-        [-v]
+        [-v/--verbose] [-M/--no-metadata]
         show filename.json [filename2.json ...]
+
+Compare two result files::
+
+    python3 -m perf
+        [-v/--verbose] [-M/--no-metadata]
+        compare ref.json changed.json
 
 If a filename is "-", read its JSON content from stdin.
 
@@ -461,6 +467,7 @@ Changelog
 
 * Version 0.3
 
+  - Add ``compare`` command to ``-m perf`` CLI
   - TextRunner is now able to spawn child processes, parse command arguments
     and more features
   - If TextRunner detects isolated CPUs, it sets automatically the CPU affinity

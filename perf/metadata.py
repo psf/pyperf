@@ -136,15 +136,6 @@ def collect_metadata(metadata):
     _collect_system_metadata(metadata)
 
 
-def _display_metadata(metadata, file=None):
-    if not metadata:
-        return
-    print("Metadata:", file=file)
-    for key, value in sorted(metadata.items()):
-        print("- %s: %s" % (key, value), file=file)
-    print(file=file)
-
-
 if __name__ == "__main__":
     metadata = {}
     collect_metadata(metadata)

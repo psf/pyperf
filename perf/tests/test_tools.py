@@ -110,9 +110,13 @@ class TestResult(unittest.TestCase):
         self.assertEqual(results.get_metadata(), {'key': 'value'})
         self.assertEqual(str(results),
                          'name: 1.50 sec +- 0.50 sec')
+        self.assertEqual(results.format(0),
+                         '1.50 sec +- 0.50 sec')
         self.assertEqual(results.format(1),
-                         'name: 1.50 sec +- 0.50 sec '
+                         '1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample)')
+
+
 class MiscTests(unittest.TestCase):
     def test_version(self):
         import setup
