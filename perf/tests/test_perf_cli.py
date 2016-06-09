@@ -8,7 +8,7 @@ import perf
 
 class TestPerfCLI(unittest.TestCase):
     def test_run_result(self):
-        run = perf.RunResult([1.0, 1.5, 2.0], loops=100)
+        run = perf.RunResult([1.0, 1.5, 2.0])
         json = run.json()
 
         with tempfile.NamedTemporaryFile(mode="w+") as tmp:
@@ -25,12 +25,12 @@ class TestPerfCLI(unittest.TestCase):
 
         self.assertEqual(stdout.rstrip(),
                          'Average: 1.50 sec +- 0.50 sec '
-                         '(3 samples x 100 loops)')
+                         '(3 samples)')
 
     def results(self, verbose=False, metadata=True):
         runs = []
         for sample in (1.0, 1.5, 2.0):
-            run = perf.RunResult([sample], loops=100)
+            run = perf.RunResult([sample])
             run.metadata['key'] = 'value'
             runs.append(run)
         results = perf.Results(runs=runs)
@@ -59,7 +59,7 @@ class TestPerfCLI(unittest.TestCase):
                          '- key: value\n'
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample x 100 loops)')
+                         '(3 runs x 1 sample)')
 
     def test_results_verbose(self):
         stdout = self.results(verbose=True, metadata=False)
@@ -70,7 +70,7 @@ class TestPerfCLI(unittest.TestCase):
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec '
                          '(min: 1.00 sec, max: 2.00 sec) '
-                         '(3 runs x 1 sample x 100 loops)')
+                         '(3 runs x 1 sample)')
 
 
 if __name__ == "__main__":

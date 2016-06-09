@@ -27,7 +27,6 @@ class TestTimeit(unittest.TestCase):
 
         match = re.match(r'^'
                          r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
-                         r'1 loop\n'
                          r'Warmup 1: ([0-9]+) ms\n'
                          r'Run 1: ([0-9]+) ms\n'
                          r'Run 2: ([0-9]+) ms\n'
@@ -67,7 +66,7 @@ class TestTimeit(unittest.TestCase):
         match = re.match(r'^\.\.\n'
                          r'Average: (?P<avg>[0-9]+\.[0-9]+) ms'
                              r' \+- (?P<stdev>[0-9]+\.[0-9]+) ms'
-                         r' \(2 runs x 3 samples x 4 loops\)$',
+                         r' \(2 runs x 3 samples\)$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
         mean = float(match.group('avg'))
@@ -100,7 +99,7 @@ class TestTimeit(unittest.TestCase):
         for run in result.runs:
             self.assertEqual(len(run.warmups), 1)
             self.assertEqual(len(run.samples), 3)
-            self.assertEqual(run.loops, 4)
+            self.assertEqual(run.metadata['timeit_loops'], '4')
 
             for warmup in run.warmups:
                 self.assertTrue(0.9e-3 <= warmup <= 1.5e-3, warmup)

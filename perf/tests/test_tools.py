@@ -79,22 +79,20 @@ class TestTools(unittest.TestCase):
 
 class TestResult(unittest.TestCase):
     def test_run_result(self):
-        run = perf.RunResult([1.0, 1.5, 2.0], loops=1000)
+        run = perf.RunResult([1.0, 1.5, 2.0])
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
-        self.assertEqual(run.loops, 1000)
         self.assertEqual(str(run), '1.50 sec +- 0.50 sec')
 
     def test_run_result_json(self):
-        run = perf.RunResult([1.0, 1.5, 2.0], loops=1000, warmups=[5.0])
+        run = perf.RunResult([1.0, 1.5, 2.0], warmups=[5.0])
         run = perf.RunResult.from_json(run.json())
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
-        self.assertEqual(run.loops, 1000)
         self.assertEqual(run.warmups, [5.0])
 
     def test_results(self):
         runs = []
         for sample in (1.0, 1.5, 2.0):
-            run = perf.RunResult([sample], loops=100)
+            run = perf.RunResult([sample])
             run.metadata['key'] = 'value'
             runs.append(run)
 
@@ -104,7 +102,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(results.get_metadata(), {'key': 'value'})
         self.assertEqual(str(results),
                          'name: 1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample x 100 loops)')
+                         '(3 runs x 1 sample)')
 class MiscTests(unittest.TestCase):
     def test_version(self):
         import setup
