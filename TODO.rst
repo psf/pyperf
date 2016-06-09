@@ -1,10 +1,9 @@
 TODO
 ====
 
-* Integration with timeit: IN PROGRESS
+* -m perf CLI: add command to combine run results
+* -m perf CLI: add compare command
 * Integration with pybench
-* Integration with perf.py
-* Add duration to Result (metadata?)
 * Raise an error or warning if timings are too short/benchmakr is unstable:
 
     $ python3 -m perf.timeit -n 1 1+1
