@@ -229,6 +229,44 @@ Metadata
 See the :func:`metadata.collect_metadata` function.
 
 
+API Examples
+============
+
+TextRunner.bench_sample_func() example
+--------------------------------------
+
+Dummy microbenchmark to measure the performance of ``dict[key]``::
+
+    import perf.text_runner
+
+    NLOOP = 10**6
+    mydict = {str(k): k for k in range(1000)}
+
+    def func():
+        t0 = perf.perf_counter()
+        for loops in range(NLOOP):
+            mydict['0']
+            mydict['100']
+            mydict['200']
+            mydict['300']
+            mydict['400']
+            mydict['500']
+            mydict['600']
+            mydict['800']
+            mydict['900']
+        dt = perf.perf_counter() - t0
+        return dt / NLOOP
+
+    runner = perf.text_runner.TextRunner()
+    runner.bench_sample_func(func)
+
+.. note::
+   The example doesn't use :meth:`TextRunner.bench_func` because this
+   function doesn't support to automatically calibrate the number of
+   loop iterations yet. The number of iterations, 10^6, is hardcoded in the
+   example.
+
+
 API
 ===
 
