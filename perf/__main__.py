@@ -23,7 +23,8 @@ def create_parser():
     compare = subparsers.add_parser('compare')
     compare.add_argument('ref_filename', type=str,
                          help='Reference JSON file')
-    compare.add_argument('changed_filename', type=str,
+    compare.add_argument('changed_filenames', metavar="changed_filename",
+                         type=str, nargs='+',
                          help='Changed JSON file')
 
     return parser
@@ -63,53 +64,63 @@ def display_result(args, results):
     print("Average: %s" % result.format(verbose=args.verbose))
 
 
-def compare_results(args, ref_result, changed_result):
+def compare_results(args, results):
+    ref_result = results[0]
+
     print("Reference: %s" % ref_result.name)
-    print("Changed: %s" % changed_result.name)
+    for index, result in enumerate(results[1:], 1):
+        if index > 1:
+            prefix = 'Changed #%s' % index
+        else:
+            prefix = 'Changed'
+        print("%s: %s" % (prefix, result.name))
     print()
 
     if args.metadata:
-        ref_metadata = ref_result.get_metadata()
-        changed_metadata = changed_result.get_metadata()
+        metadatas = [result.get_metadata() for result in results]
 
-        common_metadata = perf._common_metadata([ref_metadata, changed_metadata])
+        common_metadata = perf._common_metadata(metadatas)
         perf._display_metadata(common_metadata,
                                header='Common metadata:')
 
         for key in common_metadata:
-            ref_metadata.pop(key, None)
-            changed_metadata.pop(key, None)
+            for metadata in metadatas:
+                metadata.pop(key, None)
 
-        perf._display_metadata(ref_metadata,
-                               header='%s metadata:' % ref_result.name)
-        perf._display_metadata(changed_metadata,
-                               header='%s metadata:' % changed_result.name)
+        for result, metadata in zip(results, metadatas):
+            perf._display_metadata(metadata,
+                                   header='%s metadata:' % result.name)
 
     # Compute means
     ref_samples = ref_result.get_samples()
-    changed_samples = changed_result.get_samples()
     ref_avg = perf.mean(ref_samples)
-    changed_avg = perf.mean(changed_samples)
-    text = ("Average: [%s] %s -> [%s] %s"
-            % (ref_result.name,
-               ref_result.format(verbose=args.verbose),
-               changed_result.name,
-               changed_result.format(verbose=args.verbose)))
+    last_index = len(results) - 1
+    for index, changed_result in enumerate(results[1:], 1):
+        changed_samples = changed_result.get_samples()
+        changed_avg = perf.mean(changed_samples)
+        text = ("Average: [%s] %s -> [%s] %s"
+                % (ref_result.name,
+                   ref_result.format(verbose=args.verbose),
+                   changed_result.name,
+                   changed_result.format(verbose=args.verbose)))
 
-    # avoid division by zero
-    if ref_avg and changed_avg:
-        if changed_avg < ref_avg:
-            text = "%s: %.1fx faster" % (text, ref_avg /  changed_avg)
+        # avoid division by zero
+        if ref_avg and changed_avg:
+            if changed_avg < ref_avg:
+                text = "%s: %.1fx faster" % (text, ref_avg /  changed_avg)
+            else:
+                text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)
+        print(text)
+
+        # significant?
+        significant, t_score = perf.is_significant(ref_samples, changed_samples)
+        if significant:
+            print("Significant (t=%.2f)" % t_score)
         else:
-            text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)
-    print(text)
+            print("Not significant!")
 
-    # significant?
-    significant, t_score = perf.is_significant(ref_samples, changed_samples)
-    if significant:
-        print("Significant (t=%.2f)" % t_score)
-    else:
-        print("Not significant!")
+        if index != last_index:
+            print()
 
 
 parser = create_parser()
@@ -120,8 +131,15 @@ if action == 'show':
     display_result(args, result)
 elif action == 'compare':
     ref_result = parse_results(args.ref_filename, '<ref>')
-    changed_result = parse_results(args.changed_filename, '<changed>')
-    compare_results(args, ref_result, changed_result)
+    results = [ref_result]
+    for index, filename in enumerate(args.changed_filenames, 1):
+        if index > 1:
+            default_name = '<changed #%s>' % index
+        else:
+            default_name = '<changed>'
+        result = parse_results(filename, default_name)
+        results.append(result)
+    compare_results(args, results)
 else:
     parser.print_usage()
     sys.exit(1)
