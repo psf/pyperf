@@ -32,6 +32,17 @@ def _calibrate_timer(timer, verbose=0, stream=None):
     return number
 
 
+def _format_stmt(statements):
+    result = []
+    for stmt in statements:
+        stmt = stmt.rstrip()
+        if stmt:
+            result.append(stmt)
+    if not result:
+        result.append('pass')
+    return result
+
+
 def _main_common():
     runner = perf.text_runner.TextRunner()
     parser = runner.argparser
@@ -44,14 +55,20 @@ def _main_common():
 
     runner.parse_args()
 
-    stmt = "\n".join(runner.args.stmt) or "pass"
-    setup = "\n".join(runner.args.setup) or "pass"
+    runner.args.setup = _format_stmt(runner.args.setup)
+    runner.args.stmt = _format_stmt(runner.args.stmt)
+
+    runner.result.metadata['timeit_setup'] = ' '.join(repr(stmt) for stmt in runner.args.setup)
+    runner.result.metadata['timeit_stmt'] = ' '.join(repr(stmt) for stmt in runner.args.stmt)
 
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
     # directory)
     import os
     sys.path.insert(0, os.curdir)
+
+    stmt = "\n".join(runner.args.stmt)
+    setup = "\n".join(runner.args.setup)
 
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
     if runner.args.loops == 0:
