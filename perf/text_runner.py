@@ -105,11 +105,15 @@ class TextRunner:
         return self._main(self._bench_sample_func, func, args)
 
     def _run_subprocess(self, create_args):
-        args = create_args(self)
+        if create_args:
+            args = create_args(self)
+        else:
+            args = [sys.executable] + sys.argv + ['--raw', '--json']
+
         return perf.RunResult.from_subprocess(args,
                                               stderr=subprocess.PIPE)
 
-    def subprocesses(self, create_args, nprocess, metadata=False):
+    def subprocesses(self, nprocess, create_args=None, metadata=False):
         result = perf.Results(collect_metadata=self.json or metadata)
         if not self.json:
             stream = sys.stdout

@@ -132,8 +132,8 @@ def _main():
             return args
 
 
-        runner.subprocesses(create_args,
-                            runner.args.processes,
+        runner.subprocesses(runner.args.processes,
+                            create_args=create_args,
                             metadata=runner.args.metadata)
 
 
