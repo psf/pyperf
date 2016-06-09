@@ -118,9 +118,6 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-
-
-
         self.assertIn('[-h] [-p PROCESSES] [-n NSAMPLE] [-w NWARMUP] '
                       '[-v] [--json] [--json-file FILENAME] [--raw] [--metadata] [-l LOOPS] '
                       '[-s SETUP] stmt [stmt ...]',

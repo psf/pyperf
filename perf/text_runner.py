@@ -200,16 +200,10 @@ class TextRunner:
     def _subprocesses(self):
         self.parse_args()
 
-        metadata = self.args.metadata
         verbose = self.args.verbose
 
         result = perf.Results()
         stream = self._stream()
-
-        if metadata:
-            print("Metadata:", file=stream)
-            for key, value in sorted(result.metadata.items()):
-                print("- %s: %s" % (key, value), file=stream)
 
         nprocess = self.args.processes
         for process in range(nprocess):
@@ -227,6 +221,10 @@ class TextRunner:
                 stream.flush()
         if verbose <= 1:
             print(file=stream)
+
+        if self.args.metadata:
+            perf.metadata._display_metadata(result.get_metadata(), file=stream)
+
         print("Average: %s" % result.format(verbose > 1), file=stream)
 
         stream.flush()
