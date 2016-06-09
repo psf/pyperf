@@ -214,10 +214,6 @@ class TextRunner:
             if verbose > 1:
                 text = perf._very_verbose_run(run)
                 print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
-            elif verbose:
-                mean = perf.mean(run.samples)
-                print(perf._format_timedelta(mean), end=' ', file=stream)
-                stream.flush()
             else:
                 print(".", end='', file=stream)
                 stream.flush()
