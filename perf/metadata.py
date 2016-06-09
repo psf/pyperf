@@ -117,8 +117,11 @@ def _collect_system_metadata(metadata):
     # CPU affinity
     if hasattr(os, 'sched_getaffinity'):
         cpus = os.sched_getaffinity(0)
-        # FIXME: skip if cpus == all cpus
-        metadata['cpu_affinity'] = ', '.join(sorted(map(str, cpus)))
+        if cpu_count is not None and cpu_count >= 1:
+            if cpus == set(range(cpu_count)):
+                cpus = None
+        if cpus:
+            metadata['cpu_affinity'] = ', '.join(sorted(map(str, cpus)))
 
 
 def collect_metadata(metadata):

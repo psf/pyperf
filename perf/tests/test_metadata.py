@@ -3,6 +3,7 @@ import sys
 import unittest
 
 import perf.metadata
+from perf.tests import mock
 
 
 MANDATORY_METADATA = [
@@ -33,6 +34,23 @@ class TestMetadata(unittest.TestCase):
         metadata = {}
         perf.metadata.collect_metadata(metadata)
         self.check_all_metadata(metadata)
+
+    def test_cpu_affinity(self):
+        # affinity=2/4 CPUs
+        with mock.patch('os.sched_getaffinity',
+                        return_value={2, 3}, create=True):
+            with mock.patch('os.cpu_count', return_value=4, create=True):
+                metadata = {}
+                perf.metadata.collect_metadata(metadata)
+        self.assertEqual(metadata['cpu_affinity'], '2, 3')
+
+        # affinity=all CPUs: ignore metadata
+        with mock.patch('os.sched_getaffinity',
+                        return_value={0, 1}, create=True):
+            with mock.patch('os.cpu_count', return_value=2, create=True):
+                metadata = {}
+                perf.metadata.collect_metadata(metadata)
+        self.assertNotIn('cpu_affinity', metadata)
 
     def test_cli(self):
         args = [sys.executable, '-m', 'perf.metadata']
