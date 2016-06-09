@@ -6,6 +6,10 @@ try:
     from unittest import mock   # Python 3.3
 except ImportError:
     import mock
+try:
+    import unittest2 as unittest   # Python 2.7
+except ImportError:
+    import unittest
 
 
 @contextlib.contextmanager

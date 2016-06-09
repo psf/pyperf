@@ -51,15 +51,19 @@ class TestTools(unittest.TestCase):
 
     def test_format_run_result(self):
         # 1 sample
-        self.assertEqual(perf._format_run_result([1.5], False),
+        self.assertEqual(perf._format_run_result([1.5], 0),
                          "1.50 sec")
-        self.assertEqual(perf._format_run_result([1.5], True),
+        self.assertEqual(perf._format_run_result([1.5], 1),
+                         "1.50 sec")
+        self.assertEqual(perf._format_run_result([1.5], 2),
                          "1.50 sec (min: 1.50 sec, max: 1.50 sec)")
 
         # multiple samples with std dev
-        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], False),
+        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 0),
                          "1.50 sec +- 0.50 sec")
-        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], True),
+        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 1),
+                         "1.50 sec +- 0.50 sec")
+        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 2),
                          "1.50 sec +- 0.50 sec (min: 1.00 sec, max: 2.00 sec)")
 
     def test_format_number(self):
@@ -101,6 +105,8 @@ class TestResult(unittest.TestCase):
         self.assertEqual(results.name, "name")
         self.assertEqual(results.get_metadata(), {'key': 'value'})
         self.assertEqual(str(results),
+                         'name: 1.50 sec +- 0.50 sec')
+        self.assertEqual(results.format(1),
                          'name: 1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample)')
 class MiscTests(unittest.TestCase):

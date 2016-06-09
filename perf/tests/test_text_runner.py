@@ -1,10 +1,10 @@
 import itertools
 import tempfile
-import unittest
 
 import perf.text_runner
 from perf import tests
 from perf.tests import mock
+from perf.tests import unittest
 
 
 def noop():
@@ -34,14 +34,19 @@ class TestTextRunner(unittest.TestCase):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
                     runner.bench_func(noop)
-        self.assertEqual(stderr.getvalue(),
-                         "Warmup 1: 1.00 sec\n"
-                         "Run 1: 1.00 sec\n"
-                         "Run 2: 1.00 sec\n"
-                         "Run 3: 1.00 sec\n"
-                         "Average: 1.00 sec +- 0.00 sec "
-                             "(min: 1.00 sec, max: 1.00 sec) "
-                             "(3 samples)\n")
+
+        self.assertRegex(stderr.getvalue(),
+                         r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
+                         r'Warmup 1: 1\.00 sec\n'
+                         r'Run 1: 1\.00 sec\n'
+                         r'Run 2: 1\.00 sec\n'
+                         r'Run 3: 1\.00 sec\n'
+                         r'Metadata:\n'
+                         r'(- .*\n)+'
+                         r'\n'
+                         r'Average: 1\.00 sec \+- 0\.00 sec '
+                             r'\(3 samples\)\n$')
+
         self.assertEqual(stdout.getvalue(),
                          runner.result.json())
 
@@ -55,14 +60,17 @@ class TestTextRunner(unittest.TestCase):
                     with tests.capture_stderr() as stderr:
                         runner.bench_func(noop)
 
-            self.assertEqual(stdout.getvalue(),
-                             "Warmup 1: 1.00 sec\n"
-                             "Run 1: 1.00 sec\n"
-                             "Run 2: 1.00 sec\n"
-                             "Run 3: 1.00 sec\n"
-                             "Average: 1.00 sec +- 0.00 sec "
-                                 "(min: 1.00 sec, max: 1.00 sec) "
-                                 "(3 samples)\n")
+            self.assertRegex(stdout.getvalue(),
+                             r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
+                             r'Warmup 1: 1\.00 sec\n'
+                             r'Run 1: 1\.00 sec\n'
+                             r'Run 2: 1\.00 sec\n'
+                             r'Run 3: 1\.00 sec\n'
+                             r'Metadata:\n'
+                             r'(- .*\n)+'
+                             r'\n'
+                             r'Average: 1\.00 sec \+- 0\.00 sec '
+                                r'\(3 samples\)\n$')
 
             self.assertEqual(stderr.getvalue(), '')
 

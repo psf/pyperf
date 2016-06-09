@@ -24,8 +24,7 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         self.assertEqual(stdout.rstrip(),
-                         'Average: 1.50 sec +- 0.50 sec '
-                         '(3 samples)')
+                         'Average: 1.50 sec +- 0.50 sec')
 
     def results(self, verbose=False, metadata=True):
         runs = []
@@ -58,8 +57,7 @@ class TestPerfCLI(unittest.TestCase):
                          'Metadata:\n'
                          '- key: value\n'
                          '\n'
-                         'Average: 1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample)')
+                         'Average: 1.50 sec +- 0.50 sec')
 
     def test_results_verbose(self):
         stdout = self.results(verbose=True, metadata=False)
@@ -69,7 +67,6 @@ class TestPerfCLI(unittest.TestCase):
                          'Run 3/3: samples (1): 2.00 sec\n'
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec '
-                         '(min: 1.00 sec, max: 2.00 sec) '
                          '(3 runs x 1 sample)')
 
 

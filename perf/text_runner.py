@@ -133,6 +133,7 @@ class TextRunner:
         _json_dump(self.result, self.args)
 
     def _cpu_affinity(self):
+        # FIXME: support also Python 2 using taskset command
         if not hasattr(os, 'sched_setaffinity'):
             # missing os.sched_setaffinity()
             return

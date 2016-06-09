@@ -30,9 +30,11 @@ class TestTimeit(unittest.TestCase):
                          r'Warmup 1: ([0-9]+) ms\n'
                          r'Run 1: ([0-9]+) ms\n'
                          r'Run 2: ([0-9]+) ms\n'
+                         r'Metadata:\n'
+                         r'(- .*\n)+'
+                         r'\n'
                          r'Average: (?P<avg>[0-9]+) ms \+- (?P<stdev>[0-9]+) ms '
-                            r'\(min: (?P<min>[0-9]+) ms, max: (?P<max>[0-9]+) ms\) '
-                            r'\(2 samples\)\n'
+                             r'\(2 samples\)\n'
                          r'$',
                          stdout)
         self.assertIsNotNone(match, repr(stdout))
@@ -45,9 +47,6 @@ class TestTimeit(unittest.TestCase):
         self.assertTrue(90 <= mean <= 150, mean)
         stdev = float(match.group('stdev'))
         self.assertLessEqual(stdev, 10)
-
-        min_dt, max_dt = float(match.group('min')), float(match.group('max'))
-        self.assertTrue(90 <= min_dt <= max_dt < 150, (min_dt, max_dt))
 
     def test_cli(self):
         args = [sys.executable,
@@ -66,7 +65,7 @@ class TestTimeit(unittest.TestCase):
         match = re.match(r'^\.\.\n'
                          r'Average: (?P<avg>[0-9]+\.[0-9]+) ms'
                              r' \+- (?P<stdev>[0-9]+\.[0-9]+) ms'
-                         r' \(2 runs x 3 samples\)$',
+                         r'$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
         mean = float(match.group('avg'))
