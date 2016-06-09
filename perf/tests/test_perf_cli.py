@@ -75,10 +75,12 @@ class TestPerfCLI(unittest.TestCase):
                          '(3 runs x 1 sample)')
 
     def test_compare(self):
-        runs = self.create_runs((1.0, 1.5, 2.0), {'python_version': '2.7'})
+        runs = self.create_runs((1.0, 1.5, 2.0),
+                                {'hostname': 'toto', 'python_version': '2.7'})
         ref_result = perf.Results(runs=runs, name='py2')
 
-        runs = self.create_runs((1.5, 2.0, 2.5), {'python_version': '3.4'})
+        runs = self.create_runs((1.5, 2.0, 2.5),
+                                {'hostname': 'toto', 'python_version': '3.4'})
         changed_result = perf.Results(runs=runs, name='py3')
 
         with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:
@@ -101,6 +103,9 @@ class TestPerfCLI(unittest.TestCase):
 
         expected = ('Reference: py2\n'
                     'Changed: py3\n'
+                    '\n'
+                    'Common metadata:\n'
+                    '- hostname: toto\n'
                     '\n'
                     'py2 metadata:\n'
                     '- python_version: 2.7\n'

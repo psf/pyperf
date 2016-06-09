@@ -69,9 +69,20 @@ def compare_results(args, ref_result, changed_result):
     print()
 
     if args.metadata:
-        perf._display_metadata(ref_result.get_metadata(),
+        ref_metadata = ref_result.get_metadata()
+        changed_metadata = changed_result.get_metadata()
+
+        common_metadata = perf._common_metadata([ref_metadata, changed_metadata])
+        perf._display_metadata(common_metadata,
+                               header='Common metadata:')
+
+        for key in common_metadata:
+            ref_metadata.pop(key, None)
+            changed_metadata.pop(key, None)
+
+        perf._display_metadata(ref_metadata,
                                header='%s metadata:' % ref_result.name)
-        perf._display_metadata(changed_result.get_metadata(),
+        perf._display_metadata(changed_metadata,
                                header='%s metadata:' % changed_result.name)
 
     # Compute means

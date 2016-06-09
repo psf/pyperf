@@ -140,6 +140,23 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
+def _common_metadata(metadatas):
+    if not metadatas:
+        return dict()
+
+    metadata = dict(metadatas[0])
+    for run_metadata in metadatas[1:]:
+        for key, run_value in run_metadata.items():
+            try:
+                value = metadata[key]
+            except KeyError:
+                pass
+            else:
+                if run_value != value:
+                    del metadata[key]
+    return metadata
+
+
 class Results:
     def __init__(self, runs=None, name=None, formatter=None):
         if runs is not None:
@@ -159,20 +176,8 @@ class Results:
         return samples
 
     def get_metadata(self):
-        if not self.runs:
-            return dict()
-
-        metadata = dict(self.runs[0].metadata)
-        for run in self.runs[1:]:
-            for key, run_value in run.metadata.items():
-                try:
-                    value = metadata[key]
-                except KeyError:
-                    pass
-                else:
-                    if run_value != value:
-                        del metadata[key]
-        return metadata
+        metadatas = [run.metadata for run in self.runs]
+        return _common_metadata(metadatas)
 
     def format(self, verbose=0):
         if self.runs:
