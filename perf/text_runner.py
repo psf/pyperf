@@ -25,15 +25,13 @@ def _json_dump(result, args):
 
 
 class TextRunner:
-    def __init__(self):
+    def __init__(self, nsample=3, nwarmup=1, nprocess=25):
         self.result = perf.RunResult()
-        self.argparser = self._create_argparser()
         # result of argparser.parse_args()
         self.args = None
         # called with prepare(runner, args), args must be modified in-place
         self.prepare_subprocess_args = None
 
-    def _create_argparser(self, nprocess=25, nsample=3, nwarmup=1):
         parser = argparse.ArgumentParser(description='Benchmark')
         parser.add_argument('-p', '--processes', type=int, default=nprocess,
                             help='number of processes used to run benchmarks (default: %s)'
@@ -56,7 +54,7 @@ class TextRunner:
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
-        return parser
+        self.argparser = parser
 
     def parse_args(self, args=None):
         if self.args is not None:

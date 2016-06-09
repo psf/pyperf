@@ -361,9 +361,13 @@ Results
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(nsample=3, nwarmup=1)
+.. class:: perf.text_runner.TextRunner(nsample=3, nwarmup=1, nprocess=25)
 
    Tool to run a benchmark in text mode.
+
+   *nsample*, *nwarmup* and *nprocess* are the default number of samples,
+   warmup samples and processes. These values can be changed with command line
+   options.
 
    Methods:
 
