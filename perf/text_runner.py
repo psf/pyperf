@@ -36,7 +36,7 @@ def _get_isolated_cpus():
         # missing file
         return
 
-    if isolated == '(null)':
+    if not isolated or isolated == '(null)':
         # no CPU isolated
         return
 
