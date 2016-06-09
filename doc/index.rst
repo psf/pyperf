@@ -37,7 +37,7 @@ Microbenchmark::
         [-h] [-v]
         [--json] [--raw]
         [--metadata]
-        [-p PROCESSES] [-n LOOPS] [-r SAMPLES] [-w WARMUPS]
+        [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
         [-s SETUP]
         stmt [stmt ...]
 
@@ -63,6 +63,10 @@ Example::
     $ python3 -m perf.timeit 1+1
     .........................
     Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples x 10^7 loops)
+
+.. warning::
+   timeit ``-n`` option becomes ``-l`` in perf.timeit.
+   timeit ``-r`` option becomes ``-n`` in perf.timeit.
 
 
 perf CLI
@@ -395,11 +399,6 @@ TextRunner
    .. attribute:: nsample
 
       Number of samples (``int``).
-
-   .. attribute:: json
-
-      If true, write messages into ``sys.stderr`` and :meth:`done` writes the
-      run result into ``sys.stdout``.
 
    .. attribute:: nwarmup
 

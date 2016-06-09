@@ -41,21 +41,11 @@ def _main_common(args=None):
 
     runner = perf.text_runner.TextRunner()
     parser = runner.argparser
-    parser.add_argument('--raw', action="store_true",
-                        help='run a single process')
-    parser.add_argument('--metadata', action="store_true",
-                        help='show metadata')
-    parser.add_argument('-p', '--processes', type=int, default=_DEFAULT_NPROCESS,
-                        help='number of processes used to run benchmarks (default: %s)'
-                             % _DEFAULT_NPROCESS)
-    parser.add_argument('-n', '--loops', type=int, default=0,
+    parser.add_argument('-l', '--loops', type=int, default=0,
                         help='number of loops per sample (default: calibrate)')
     parser.add_argument('-r', '--repeat', type=int, default=_DEFAULT_SAMPLES,
                         help='number of samples (default: %s)'
                              % _DEFAULT_SAMPLES)
-    parser.add_argument('-w', '--warmups', type=int, default=_DEFAULT_WARMUPS,
-                        help='number of warmup samples per process (default: %s)'
-                             % _DEFAULT_WARMUPS)
     parser.add_argument('-s', '--setup', action='append',
                         help='setup statements')
     parser.add_argument('stmt', nargs='+',
@@ -63,7 +53,6 @@ def _main_common(args=None):
 
     runner.parse_args()
     runner.nsample = runner.args.repeat
-    runner.nwarmup = runner.args.warmups
 
     stmt = "\n".join(runner.args.stmt) or "pass"
     # FIXME: remove "or ()"
@@ -77,9 +66,9 @@ def _main_common(args=None):
 
     timer = timeit.Timer(stmt, setup, perf.perf_counter)
     if runner.args.loops == 0:
-        stream = sys.stderr if runner.json else None
+        stream = sys.stderr if runner.args.json else None
         try:
-            runner.args.loops = _calibrate_timer(timer, runner.verbose, stream=stream)
+            runner.args.loops = _calibrate_timer(timer, runner.args.verbose, stream=stream)
         except:
             timer.print_exc()
             sys.exit(1)
@@ -101,41 +90,24 @@ def _main_raw(runner, timer):
         sys.exit(1)
 
 
-# FIXME: move this feature into TextRunner directly?
-def _run_subprocess(nsample, timeit_args):
+def _create_args(runner):
     args = [sys.executable,
             '-m', 'perf.timeit',
             '--raw', '--json',
-            "-n", str(nsample)]
+            "-n", str(runner.nsample)]
     # FIXME: don't pass duplicate -n
-    # FIXME: pass warmups?
-    args.extend(timeit_args)
-
-    return perf.RunResult.from_subprocess(args,
-                                          stderr=subprocess.PIPE)
+    args.extend(sys.argv[1:])
+    return args
 
 
 def _main():
     args = sys.argv[1:]
     runner, timer  = _main_common(args)
-    if runner.args.raw:
-        _main_raw(runner, timer)
-    else:
-        def create_args(runner):
-            args = [sys.executable,
-                    '-m', 'perf.timeit',
-                    '--raw', '--json',
-                    "-n", str(runner.nsample)]
-            # FIXME: don't pass duplicate -n
-            # FIXME: pass warmups?
-            args.extend(sys.argv[1:])
-            return args
 
 
-        runner.subprocesses(runner.args.processes,
-                            create_args=create_args,
-                            metadata=runner.args.metadata)
+    runner.create_subprocess_args = _create_args
 
+    _main_raw(runner, timer)
 
 
 if __name__ == "__main__":

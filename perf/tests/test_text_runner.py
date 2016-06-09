@@ -17,11 +17,9 @@ class TestTextRunner(unittest.TestCase):
             return t
         fake_timer.value = 0
 
-        runner = perf.text_runner.TextRunner(3)
-        runner.parse_args([])
+        runner = perf.text_runner.TextRunner()
+        runner.parse_args(['--raw', '--json', '--verbose'])
         runner.timer = fake_timer
-        runner.verbose = True
-        runner.json = True
 
         with tests.capture_stdout() as stdout:
             with tests.capture_stderr() as stderr:

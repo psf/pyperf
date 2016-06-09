@@ -11,8 +11,8 @@ class TestTimeit(unittest.TestCase):
                 '-m', 'perf.timeit',
                 '--raw',
                 '-w', '1',
-                '-r', '2',
-                '-n', '1',
+                '-n', '2',
+                '-l', '1',
                 '-v',
                 '-s', 'import time',
                 'time.sleep(0.1)']
@@ -49,8 +49,8 @@ class TestTimeit(unittest.TestCase):
         args = [sys.executable,
                 '-m', 'perf.timeit',
                 '-p', '2',
-                '-r', '3',
-                '-n', '4',
+                '-n', '3',
+                '-l', '4',
                 '-s', 'import time',
                 'time.sleep(1e-3)']
         proc = subprocess.Popen(args,
@@ -81,8 +81,12 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        self.assertIn('[-h] [-v] [--json] [--raw] [--metadata] [-p PROCESSES] '
-                      '[-n LOOPS] [-r REPEAT] [-w WARMUPS] [-s SETUP] stmt [stmt ...]',
+
+
+
+        self.assertIn('[-h] [-n NSAMPLE] [-w NWARMUP] [-v] [--json] [--raw] '
+                      '[-p PROCESSES] [--metadata] [-l LOOPS] [-r REPEAT] '
+                      '[-s SETUP] stmt [stmt ...]',
                       stdout)
 
     def test_cli_snippet_error(self):
