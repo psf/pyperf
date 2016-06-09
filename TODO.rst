@@ -2,7 +2,6 @@ TODO
 ====
 
 * -m perf CLI: add command to show and/or combine run results
-* -m perf CLI: add compare command
 * Integration with pybench
 * Raise an error or warning if timings are too short/benchmakr is unstable:
 

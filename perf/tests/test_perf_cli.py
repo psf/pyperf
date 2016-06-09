@@ -13,7 +13,7 @@ class TestPerfCLI(unittest.TestCase):
 
     #    with tempfile.NamedTemporaryFile(mode="w+") as tmp:
     #        tmp.write(json)
-    #        tmp.seek(0)
+    #        tmp.flush()
 
     #        args = [sys.executable, '-m', 'perf', 'show', tmp.name]
 
@@ -26,18 +26,21 @@ class TestPerfCLI(unittest.TestCase):
     #    self.assertEqual(stdout.rstrip(),
     #                     'Average: 1.50 sec +- 0.50 sec')
 
-    def results(self, verbose=False, metadata=True):
+    def create_runs(self, samples, metadata):
         runs = []
-        for sample in (1.0, 1.5, 2.0):
+        for sample in samples:
             run = perf.RunResult([sample])
-            run.metadata['key'] = 'value'
+            run.metadata.update(metadata)
             runs.append(run)
+        return runs
+
+    def show(self, verbose=False, metadata=True):
+        runs = self.create_runs((1.0, 1.5, 2.0), {'key': 'value'})
         results = perf.Results(runs=runs)
-        results.metadata = {'key': 'value'}
 
         with tempfile.NamedTemporaryFile(mode="w+") as tmp:
             results.json_dump_into(tmp)
-            tmp.seek(0)
+            tmp.flush()
 
             args = [sys.executable, '-m', 'perf']
             if verbose:
@@ -53,16 +56,16 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         return stdout
 
-    def test_results(self):
-        stdout = self.results()
+    def test_show(self):
+        stdout = self.show()
         self.assertEqual(stdout.rstrip(),
                          'Metadata:\n'
                          '- key: value\n'
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec')
 
-    def test_results_verbose(self):
-        stdout = self.results(verbose=True, metadata=False)
+    def test_show_verbose(self):
+        stdout = self.show(verbose=True, metadata=False)
         self.assertEqual(stdout.rstrip(),
                          'Run 1/3: samples (1): 1.00 sec\n'
                          'Run 2/3: samples (1): 1.50 sec\n'
@@ -70,6 +73,46 @@ class TestPerfCLI(unittest.TestCase):
                          '\n'
                          'Average: 1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample)')
+
+    def test_compare(self):
+        runs = self.create_runs((1.0, 1.5, 2.0), {'python_version': '2.7'})
+        ref_result = perf.Results(runs=runs, name='py2')
+
+        runs = self.create_runs((1.5, 2.0, 2.5), {'python_version': '3.4'})
+        changed_result = perf.Results(runs=runs, name='py3')
+
+        with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:
+            ref_result.json_dump_into(ref_tmp)
+            ref_tmp.flush()
+
+            with tempfile.NamedTemporaryFile(mode="w+") as changed_tmp:
+                changed_result.json_dump_into(changed_tmp)
+                changed_tmp.flush()
+
+                args = [sys.executable, '-m', 'perf',
+                        'compare', ref_tmp.name, changed_tmp.name]
+
+                proc = subprocess.Popen(args,
+                                        stdout=subprocess.PIPE,
+                                        universal_newlines=True)
+                stdout = proc.communicate()[0]
+
+        self.assertEqual(proc.returncode, 0)
+
+        expected = ('Reference: py2\n'
+                    'Changed: py3\n'
+                    '\n'
+                    'py2 metadata:\n'
+                    '- python_version: 2.7\n'
+                    '\n'
+                    'py3 metadata:\n'
+                    '- python_version: 3.4\n'
+                    '\n'
+                    'Average: [py2] 1.50 sec +- 0.50 sec '
+                        '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower')
+        self.assertEqual(stdout.rstrip(),
+                         expected)
+
 
 
 if __name__ == "__main__":
