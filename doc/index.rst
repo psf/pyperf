@@ -480,7 +480,7 @@ Changelog
 
 * Version 0.3
 
-  - Add ``compare`` command to ``-m perf`` CLI
+  - Add ``compare`` and ``compare_to`` commands to the ``-m perf`` CLI
   - TextRunner is now able to spawn child processes, parse command arguments
     and more features
   - If TextRunner detects isolated CPUs, it sets automatically the CPU affinity

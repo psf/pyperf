@@ -27,6 +27,13 @@ def create_parser():
                          type=str, nargs='+',
                          help='Changed JSON file')
 
+    compare_to = subparsers.add_parser('compare_to')
+    compare_to.add_argument('ref_filename', type=str,
+                            help='Reference JSON file')
+    compare_to.add_argument('changed_filenames', metavar="changed_filename",
+                            type=str, nargs='+',
+                            help='Changed JSON file')
+
     return parser
 
 
@@ -64,16 +71,27 @@ def display_result(args, results):
     print("Average: %s" % result.format(verbose=args.verbose))
 
 
-def compare_results(args, results):
+def _result_sort_key(result):
+    samples = result.get_samples()
+    return perf.mean(samples)
+
+
+def compare_results(args, results, sort_results):
+    if sort_results:
+        results.sort(key=_result_sort_key)
+
     ref_result = results[0]
 
-    print("Reference: %s" % ref_result.name)
-    for index, result in enumerate(results[1:], 1):
-        if index > 1:
-            prefix = 'Changed #%s' % index
-        else:
-            prefix = 'Changed'
-        print("%s: %s" % (prefix, result.name))
+    if sort_results:
+        print("Reference (best): %s" % ref_result.name)
+    else:
+        print("Reference: %s" % ref_result.name)
+        for index, result in enumerate(results[1:], 1):
+            if index > 1:
+                prefix = 'Changed #%s' % index
+            else:
+                prefix = 'Changed'
+            print("%s: %s" % (prefix, result.name))
     print()
 
     if args.metadata:
@@ -129,17 +147,13 @@ action = args.action
 if action == 'show':
     result = parse_results(args.filename)
     display_result(args, result)
-elif action == 'compare':
-    ref_result = parse_results(args.ref_filename, '<ref>')
+elif action in ('compare', 'compare_to'):
+    ref_result = parse_results(args.ref_filename, '<file#1>')
     results = [ref_result]
-    for index, filename in enumerate(args.changed_filenames, 1):
-        if index > 1:
-            default_name = '<changed #%s>' % index
-        else:
-            default_name = '<changed>'
-        result = parse_results(filename, default_name)
+    for index, filename in enumerate(args.changed_filenames, 2):
+        result = parse_results(filename, '<file#%s>' % index)
         results.append(result)
-    compare_results(args, results)
+    compare_results(args, results, action == 'compare')
 else:
     parser.print_usage()
     sys.exit(1)
