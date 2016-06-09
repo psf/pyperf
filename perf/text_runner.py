@@ -91,6 +91,8 @@ class TextRunner:
             return
 
         self.args = self.argparser.parse_args(args)
+        if self.args.verbose:
+            self.args.metadata = True
 
     def _stream(self):
         return sys.stderr if self.args.json else sys.stdout
@@ -224,7 +226,7 @@ class TextRunner:
         if self.args.metadata:
             perf.metadata._display_metadata(result.get_metadata(), file=stream)
 
-        print("Average: %s" % result.format(verbose > 1), file=stream)
+        print("Average: %s" % result.format(verbose), file=stream)
 
         stream.flush()
         _json_dump(result, self.args)

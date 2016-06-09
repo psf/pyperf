@@ -97,12 +97,12 @@ def _format_run_result(values, verbose=0):
     with_stdev = (len(values) >= 2)
     if with_stdev:
         numbers.append(stdev(values))
-    if verbose:
+    if verbose > 1:
         numbers.append(min(values))
         numbers.append(max(values))
 
     numbers = _format_timedeltas(numbers)
-    if verbose:
+    if verbose > 1:
         if with_stdev:
             text = '%s +- %s (min: %s, max: %s)' % numbers
         else:
@@ -173,7 +173,7 @@ class Results:
                         del metadata[key]
         return metadata
 
-    def format(self, verbose=False):
+    def format(self, verbose=0):
         if self.runs:
             # FIXME: handle the case where all samples are empty
             samples = self.get_samples()
@@ -189,20 +189,20 @@ class Results:
                 if warmup is not None and warmup != run_warmup:
                     warmup = None
 
-            iterations = []
-            nrun = len(self.runs)
-            if nrun > 1:
-                iterations.append(_format_number(nrun, 'run'))
-            if nsample:
-                text = _format_number(nsample, 'sample')
-                iterations.append(text)
-            iterations = ' x '.join(iterations)
-            if verbose and warmup:
-                iterations += '; %s' % _format_number(warmup, 'warmup')
-
             text = self._formatter(samples, verbose)
-            if iterations:
-                text = '%s (%s)' % (text, iterations)
+
+            if verbose:
+                iterations = []
+                nrun = len(self.runs)
+                if nrun > 1:
+                    iterations.append(_format_number(nrun, 'run'))
+                if nsample:
+                    iterations.append(_format_number(nsample, 'sample'))
+                iterations = ' x '.join(iterations)
+                if warmup:
+                    iterations += '; %s' % _format_number(warmup, 'warmup')
+                if iterations:
+                    text = '%s (%s)' % (text, iterations)
         else:
             text = '<no run>'
         if self.name:
