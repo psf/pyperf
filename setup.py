@@ -4,8 +4,8 @@
 #
 #  - git pull --rebase
 #  - update version in setup.py, perf/__init__.py and doc/conf.py
-#  - run tests: tox
 #  - set release date in doc/changelog.rst
+#  - run tests: tox
 #  - git commit -a
 #  - git push
 #
@@ -21,7 +21,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '0.3'
+VERSION = '0.4'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [

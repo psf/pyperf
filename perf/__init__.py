@@ -3,7 +3,7 @@ import math
 import sys
 
 
-__version__ = '0.3'
+__version__ = '0.4'
 _PY3 = (sys.version_info >= (3,))
 
 
