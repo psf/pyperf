@@ -8,8 +8,18 @@ import unittest
 import perf
 
 
+SLEEP = 'time.sleep(1e-3)'
+# The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
+# systems. The unit test doesn't test the system but more the output format.
+MIN_SAMPLE = 0.9 # ms
+MAX_SAMPLE = 5.0 # ms
+MIN_MEAN = MIN_SAMPLE
+MAX_MEAN = MAX_SAMPLE / 2
+MAX_STDEV = 1.5 # ms
+
+
 class TestTimeit(unittest.TestCase):
-    def test_raw(self):
+    def test_raw_verbose(self):
         args = [sys.executable,
                 '-m', 'perf.timeit',
                 '--raw',
@@ -18,7 +28,7 @@ class TestTimeit(unittest.TestCase):
                 '-l', '1',
                 '-v',
                 '-s', 'import time',
-                'time.sleep(0.1)']
+                SLEEP]
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 universal_newlines=True)
@@ -27,13 +37,13 @@ class TestTimeit(unittest.TestCase):
 
         match = re.match(r'^'
                          r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
-                         r'Warmup 1: ([0-9]+) ms\n'
-                         r'Sample 1: ([0-9]+) ms\n'
-                         r'Sample 2: ([0-9]+) ms\n'
+                         r'Warmup 1: ([0-9.]+) ms\n'
+                         r'Sample 1: ([0-9.]+) ms\n'
+                         r'Sample 2: ([0-9.]+) ms\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
-                         r'Average: (?P<avg>[0-9]+) ms \+- (?P<stdev>[0-9]+) ms '
+                         r'Average: (?P<avg>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms '
                              r'\(2 samples\)\n'
                          r'$',
                          stdout)
@@ -41,12 +51,13 @@ class TestTimeit(unittest.TestCase):
 
         values = [float(match.group(i)) for i in range(1, 4)]
         for value in values:
-            self.assertTrue(90 <= value <= 150, repr(value))
+            self.assertTrue(MIN_SAMPLE <= value <= MAX_SAMPLE,
+                            repr(value))
 
         mean = float(match.group('avg'))
-        self.assertTrue(90 <= mean <= 150, mean)
+        self.assertTrue(MIN_MEAN <= mean <= MAX_MEAN, mean)
         stdev = float(match.group('stdev'))
-        self.assertLessEqual(stdev, 10)
+        self.assertLessEqual(stdev, MAX_STDEV)
 
     def test_cli(self):
         args = [sys.executable,
@@ -55,7 +66,7 @@ class TestTimeit(unittest.TestCase):
                 '-n', '3',
                 '-l', '4',
                 '-s', 'import time',
-                'time.sleep(1e-3)']
+                SLEEP]
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 universal_newlines=True)
@@ -63,15 +74,18 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^\.\.\n'
-                         r'Average: (?P<avg>[0-9]+\.[0-9]+) ms'
-                             r' \+- (?P<stdev>[0-9]+\.[0-9]+) ms'
+                         r'Average: (?P<avg>[0-9.]+) ms'
+                             r' \+- (?P<stdev>[0-9.]+) ms'
                          r'$',
                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
+
+        # Tolerate large differences on busy systems
         mean = float(match.group('avg'))
-        self.assertTrue(0.9 <= mean <= 1.5, mean)
+        self.assertTrue(MIN_MEAN <= mean <= MAX_MEAN, mean)
+
         stdev = float(match.group('stdev'))
-        self.assertTrue(0 <= stdev <= 0.10, stdev)
+        self.assertLessEqual(stdev, MAX_STDEV)
 
     def test_json_file(self):
         if perf._PY3:
@@ -86,7 +100,7 @@ class TestTimeit(unittest.TestCase):
                     '-l', '4',
                     '--json-file', tmp.name,
                     '-s', 'import time',
-                    'time.sleep(1e-3)']
+                    SLEEP]
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     universal_newlines=True)
@@ -101,10 +115,11 @@ class TestTimeit(unittest.TestCase):
             self.assertEqual(len(run.samples), 3)
             self.assertEqual(run.metadata['loops'], '4')
 
+            # Tolerate large differences on busy systems
             for warmup in run.warmups:
-                self.assertTrue(0.9e-3 <= warmup <= 1.5e-3, warmup)
+                self.assertTrue(MIN_SAMPLE <= warmup * 1e3 <= MAX_SAMPLE, warmup)
             for sample in run.samples:
-                self.assertTrue(0.9e-3 <= sample <= 1.5e-3, sample)
+                self.assertTrue(MIN_SAMPLE <= sample * 1e3 <= MAX_SAMPLE, sample)
 
     def test_cli_help(self):
         args = [sys.executable,
