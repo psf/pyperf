@@ -169,7 +169,6 @@ def display_histogram(args, result):
         columns = shutil.get_terminal_size()[0]
     else:
         columns = 80
-    width = max(columns - len('99.9 ms: # 99.9%'), 3)
 
     samples = result.get_samples()
     nsample = len(samples)
@@ -187,7 +186,10 @@ def display_histogram(args, result):
         return int(round(value / sample_k))
 
     counter = collections.Counter([bucket(value) for value in samples])
+    count_max = max(counter.values())
 
+    line = '%s: # %s' % (perf._format_timedelta(avg), count_max)
+    width = max(columns - len(line), 3)
     line_k = float(width) / max(counter.values())
     for ms in range(min(counter), max(counter)+1):
         count = counter.get(ms, 0)
