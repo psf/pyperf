@@ -7,22 +7,16 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
-def check_args(a, b):
+def check_args(loops, a, b):
     if a != 1:
         raise ValueError
     if b != 2:
         raise ValueError
+    # number of loops => number of seconds
+    return loops
 
 
 class TestTextRunner(unittest.TestCase):
-    def create_fake_timer(self):
-        def fake_timer():
-            t = fake_timer.value
-            fake_timer.value += 1
-            return t
-        fake_timer.value = 0
-        return fake_timer
-
     def create_text_runner(self, args):
         runner = perf.text_runner.TextRunner()
         # disable CPU affinity to not pollute stdout
@@ -33,10 +27,9 @@ class TestTextRunner(unittest.TestCase):
     def test_bench_func(self):
         runner = self.create_text_runner(['--raw', '--json', '--verbose'])
 
-        with mock.patch('perf.perf_counter', self.create_fake_timer()):
-            with tests.capture_stdout() as stdout:
-                with tests.capture_stderr() as stderr:
-                    runner.bench_func(check_args, 1, 2)
+        with tests.capture_stdout() as stdout:
+            with tests.capture_stderr() as stderr:
+                runner.bench_sample_func(check_args, 1, 2)
 
         self.assertRegex(stderr.getvalue(),
                          r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
@@ -58,10 +51,9 @@ class TestTextRunner(unittest.TestCase):
             runner = self.create_text_runner(['--raw', '-v',
                                               '--json-file', tmp.name])
 
-            with mock.patch('perf.perf_counter', self.create_fake_timer()):
-                with tests.capture_stdout() as stdout:
-                    with tests.capture_stderr() as stderr:
-                        runner.bench_func(check_args, 1, 2)
+            with tests.capture_stdout() as stdout:
+                with tests.capture_stderr() as stderr:
+                    runner.bench_sample_func(check_args, 1, 2)
 
             self.assertRegex(stdout.getvalue(),
                              r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'

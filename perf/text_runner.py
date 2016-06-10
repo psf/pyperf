@@ -273,7 +273,7 @@ class TextRunner:
 
             return dt
 
-        return self.bench_sample_func(sample_func)
+        return self._main(sample_func)
 
     def _run_subprocess(self):
         args = [sys.executable, sys.argv[0],
@@ -287,8 +287,7 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
 
-        return perf.RunResult.from_subprocess(args,
-                                              stderr=subprocess.PIPE)
+        return perf.RunResult.from_subprocess(args, stderr=subprocess.PIPE)
 
     def _spawn_workers(self):
         verbose = self.args.verbose
@@ -305,6 +304,7 @@ class TextRunner:
             else:
                 print(".", end='', file=stream)
                 stream.flush()
+
         if verbose <= 1:
             print(file=stream)
 
