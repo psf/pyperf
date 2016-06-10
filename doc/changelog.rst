@@ -10,8 +10,11 @@ Changelog
     to these isolated CPUs
   - Add ``--json-file`` command line option
   - Add :meth:`TextRunner.bench_sample_func` method
+  - Add examples of the API to the documentation. Split also the documentation
+    into subpages.
   - Move metadata from :class:`~perf.Results` to :class:`~perf.RunResult`
   - Add metadata ``cpu_affinity``
+  - Add :func:`perf.is_significant` function
 
 * Version 0.2 (2016-06-07)
 

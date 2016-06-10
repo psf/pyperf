@@ -158,16 +158,14 @@ def _common_metadata(metadatas):
 
 
 class Results:
-    def __init__(self, runs=None, name=None, formatter=None):
+    def __init__(self, runs=None, name=None):
         if runs is not None:
             self.runs = runs
         else:
             self.runs = []
         self.name = name
-        if formatter is not None:
-            self._formatter = formatter
-        else:
-            self._formatter = _format_run_result
+        # FIXME: make the formatter configurable
+        self._formatter = _format_run_result
 
     def get_samples(self):
         samples = []
@@ -250,7 +248,6 @@ class Results:
         data = {'runs': runs}
         if self.name:
             data['name'] = self.name
-        # FIXME: export formatter
         return {'results': data, 'version': 1}
 
     def json(self):
@@ -264,7 +261,7 @@ class Results:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, formatter=None):
+    def __init__(self, samples=None, warmups=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -280,10 +277,8 @@ class RunResult:
         self.warmups = []
         if warmups is not None:
             self.warmups.extend(warmups)
-        if formatter is not None:
-            self._formatter = formatter
-        else:
-            self._formatter = _format_run_result
+        # FIXME: make the formatter configurable
+        self._formatter = _format_run_result
 
         # Metadata dictionary: key=>value, keys and values are non-empty
         # strings
@@ -357,7 +352,6 @@ class RunResult:
         data = {'samples': self.samples,
                 'warmups': self.warmups,
                 'metadata': self.metadata}
-        # FIXME: export formatter
         return {'run_result': data, 'version': 1}
 
     def json(self):

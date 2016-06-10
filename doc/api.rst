@@ -145,7 +145,7 @@ Clocks
 RunResult
 ---------
 
-.. class:: perf.RunResult(samples=None, warmups=None, formatter=None)
+.. class:: perf.RunResult(samples=None, warmups=None)
 
    Result of a single benchmark run.
 
@@ -181,10 +181,6 @@ RunResult
 
    Attributes:
 
-   .. attribute:: formatter
-
-      Function to format a list of numbers.
-
    .. attribute:: metadata
 
       Dictionary of metadata (``dict``): key=>value, where keys and values are
@@ -204,7 +200,7 @@ RunResult
 Results
 -------
 
-.. class:: perf.Results(runs=None, name=None, formatter=None)
+.. class:: perf.Results(runs=None, name=None)
 
    Result of multiple benchmark runs.
 
@@ -241,10 +237,6 @@ Results
       :meth:`json_dump_into`.
 
    Attributes:
-
-   .. attribute:: formatter
-
-      Function to format a list of numbers.
 
    .. attribute:: name
 
