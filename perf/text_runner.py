@@ -54,7 +54,8 @@ def _get_isolated_cpus():
 
 
 class TextRunner:
-    def __init__(self, nsample=3, nwarmup=1, nprocess=25):
+    def __init__(self, nsample=3, nwarmup=1, nprocess=25,
+                 nloop=0, min_time=0.1, max_time=1.0):
         self.result = perf.RunResult()
         # result of argparser.parse_args()
         self.args = None
@@ -73,17 +74,56 @@ class TextRunner:
                             type=int, default=nwarmup,
                             help='number of skipped samples per run used to warmup the benchmark (default: %s)'
                                  % nwarmup)
+        parser.add_argument('-l', '--loops', type=int, default=nloop,
+                            help='number of loops per sample, 0 means '
+                                 'automatic calibration (default: %s)'
+                                 % nloop)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help='enable verbose mode')
         parser.add_argument('--json', action='store_true',
                             help='write results encoded to JSON into stdout')
         parser.add_argument('--json-file', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
+        parser.add_argument('--min-time', type=float, default=0.1,
+                            help='Minimum duration in seconds of a single '
+                                 'sample, used to calibrate the number of '
+                                 'loops (default: 100 ms)')
+        parser.add_argument('--max-time', type=float, default=1.0,
+                            help='Maximum duration in seconds of a single '
+                                 'sample, used to calibrate the number of '
+                                 'loops (default: 1 sec)')
         parser.add_argument('--raw', action="store_true",
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
         self.argparser = parser
+
+    def _calibrate_sample_func(self, sample_func):
+        stream = self._stream()
+        timer = perf.perf_counter
+
+        min_dt = self.args.min_time * 0.90
+        max_dt = self.args.max_time
+        for index in range(0, 10):
+            loops = 10 ** index
+
+            dt = sample_func(loops)
+            if self.args.verbose > 1:
+                print("calibration: 10^%s loops: %s"
+                      % (index, perf._format_timedelta(dt)),
+                      file=stream)
+
+            if dt >= max_dt:
+                index = max(index - 1, 0)
+                loops = 10 ** index
+                break
+            if dt >= min_dt:
+                break
+        if self.args.verbose > 1:
+            print("calibration: use %s" % perf._format_number(loops, 'loop'),
+                  file=stream)
+
+        return loops
 
     def parse_args(self, args=None):
         if self.args is not None:
@@ -115,7 +155,7 @@ class TextRunner:
             if is_warmup:
                 text = "Warmup %s: %s" % (1 + run, text)
             else:
-                text = "Run %s: %s" % (1 + run, text)
+                text = "Sample %s: %s" % (1 + run, text)
             print(text, file=self._stream())
 
     def _display_result(self):
@@ -148,51 +188,99 @@ class TextRunner:
                   file=self._stream())
         os.sched_setaffinity(0, isolated_cpus)
 
-    def _main(self, func, *args):
-        self.parse_args()
-        if not self.args.raw:
-            self._subprocesses()
-            return
+    def _worker(self, sample_func):
+        loops = self.args.loops
+        if loops < 1:
+            # FIXME: move this check in argument parsing
+            raise ValueError("--loops must be >= 1")
 
         # only import metadata submodule in worker processes
         import perf.metadata
-
-        self._cpu_affinity()
         perf.metadata.collect_metadata(self.result.metadata)
-        func(*args)
-        self._display_result()
-
-    def _bench_func(self, func, args):
-        # local alias for fast variable lookup
-        timer = perf.perf_counter
-
-        if args:
-            # Use partial() to avoid expensive argument unpacking of
-            # func(*args) syntax when bench_func() is called without argument
-            func = functools.partial(func, *args)
+        self.result.metadata['loops'] = perf._format_number(loops)
 
         for is_warmup, run in self._range():
-            t1 = timer()
-            func()
-            t2 = timer()
-            self._add(is_warmup, run, t2 - t1)
-
-    def bench_func(self, func, *args):
-        return self._main(self._bench_func, func, args)
-
-    def _bench_sample_func(self, func, args):
-        for is_warmup, run in self._range():
-            dt = func(*args)
+            dt = sample_func(loops)
+            dt = float(dt) / loops
             self._add(is_warmup, run, dt)
 
-    def bench_sample_func(self, func, *args):
-        return self._main(self._bench_sample_func, func, args)
+        self._display_result()
+
+    def _main(self, sample_func):
+        self.parse_args()
+
+        self._cpu_affinity()
+
+        if self.args.loops == 0:
+            self.args.loops = self._calibrate_sample_func(sample_func)
+
+        if not self.args.raw:
+            self._spawn_workers()
+        else:
+            self._worker(sample_func)
+
+    def bench_sample_func(self, sample_func, *args):
+        """"Benchmark sample_func(loops, *args)
+
+        The function must return the total elapsed time, not the average time
+        per loop iteration. The total elapsed time is required to be able
+        to automatically calibrate the number of loops.
+
+        perf.perf_counter() should be used to measure the elapsed time.
+        """
+
+        if not args:
+            return self._main(sample_func)
+
+        def wrap_sample_func(loops):
+            return sample_func(loops, *args)
+
+        return self._main(wrap_sample_func)
+
+    def bench_func(self, func, *args):
+        """"Benchmark func(*args)."""
+
+        def sample_func(loops):
+            # use fast local variables
+            local_timer = perf.perf_counter
+            local_func = func
+            local_args = args
+
+            if local_args:
+                if loops != 1:
+                    range_it = range(loops)
+
+                    t0 = local_timer()
+                    for _ in range_it:
+                        local_func(*local_args)
+                    dt = local_timer() - t0
+                else:
+                    t0 = local_timer()
+                    local_func(*local_args)
+                    dt = local_timer() - t0
+            else:
+                if loops != 1:
+                    range_it = range(loops)
+
+                    t0 = local_timer()
+                    for _ in range_it:
+                        local_func()
+                    dt = local_timer() - t0
+                else:
+                    t0 = local_timer()
+                    local_func()
+                    dt = local_timer() - t0
+
+            return dt
+
+        return self.bench_sample_func(sample_func)
 
     def _run_subprocess(self):
         args = [sys.executable, sys.argv[0],
                 '--raw', '--json',
                 '--samples', str(self.args.nsample),
-                '--warmups', str(self.args.nwarmup)]
+                '--warmups', str(self.args.nwarmup),
+                '--loops', str(self.args.loops)]
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
 
@@ -202,15 +290,12 @@ class TextRunner:
         return perf.RunResult.from_subprocess(args,
                                               stderr=subprocess.PIPE)
 
-    def _subprocesses(self):
-        self.parse_args()
-
+    def _spawn_workers(self):
         verbose = self.args.verbose
-
-        result = perf.Results()
         stream = self._stream()
-
         nprocess = self.args.processes
+        result = perf.Results()
+
         for process in range(nprocess):
             run = self._run_subprocess()
             result.runs.append(run)
@@ -230,8 +315,3 @@ class TextRunner:
 
         stream.flush()
         _json_dump(result, self.args)
-
-
-
-    if __name__ == "__main__":
-        _main()

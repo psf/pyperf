@@ -28,8 +28,8 @@ class TestTimeit(unittest.TestCase):
         match = re.match(r'^'
                          r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
                          r'Warmup 1: ([0-9]+) ms\n'
-                         r'Run 1: ([0-9]+) ms\n'
-                         r'Run 2: ([0-9]+) ms\n'
+                         r'Sample 1: ([0-9]+) ms\n'
+                         r'Sample 2: ([0-9]+) ms\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
@@ -99,7 +99,7 @@ class TestTimeit(unittest.TestCase):
         for run in result.runs:
             self.assertEqual(len(run.warmups), 1)
             self.assertEqual(len(run.samples), 3)
-            self.assertEqual(run.metadata['timeit_loops'], '4')
+            self.assertEqual(run.metadata['loops'], '4')
 
             for warmup in run.warmups:
                 self.assertTrue(0.9e-3 <= warmup <= 1.5e-3, warmup)
@@ -117,9 +117,9 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        self.assertIn('[-h] [-p PROCESSES] [-n NSAMPLE] [-w NWARMUP] '
-                      '[-v] [--json] [--json-file FILENAME] [--raw] [--metadata] [-l LOOPS] '
-                      '[-s SETUP] stmt [stmt ...]',
+        self.assertIn('[-h] [-p PROCESSES] [-n NSAMPLE] [-w NWARMUP] [-l LOOPS] '
+                      '[-v] [--json] [--json-file FILENAME] [--min-time MIN_TIME] '
+                      '[--max-time MAX_TIME] [--raw] [--metadata] [-s SETUP] stmt [stmt ...]',
                       stdout)
 
     def test_cli_snippet_error(self):
