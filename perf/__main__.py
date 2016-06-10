@@ -43,7 +43,7 @@ def parse_results(filename, default_name=None):
     else:
         fp = sys.stdin
     with fp:
-        result = perf.Results.json_load_from(fp)
+        result = perf.Benchmark.json_load_from(fp)
 
     if not result.name and filename != "-":
         name = filename

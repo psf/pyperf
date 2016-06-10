@@ -131,7 +131,7 @@ class TestResult(unittest.TestCase):
             run.metadata['key'] = 'value'
             runs.append(run)
 
-        results = perf.Results(runs, "name")
+        results = perf.Benchmark(runs, "name")
         self.assertEqual(results.runs, runs)
         self.assertEqual(results.name, "name")
         self.assertEqual(results.get_metadata(), {'key': 'value'})

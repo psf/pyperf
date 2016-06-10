@@ -37,7 +37,7 @@ class TestPerfCLI(unittest.TestCase):
 
     def show(self, verbose=False, metadata=True):
         runs = self.create_runs((1.0, 1.5, 2.0), {'key': 'value'})
-        results = perf.Results(runs=runs)
+        results = perf.Benchmark(runs=runs)
 
         with tempfile.NamedTemporaryFile(mode="w+") as tmp:
             results.json_dump_into(tmp)
@@ -98,11 +98,11 @@ class TestPerfCLI(unittest.TestCase):
     def test_compare_to(self):
         runs = self.create_runs((1.0, 1.5, 2.0),
                                 {'hostname': 'toto', 'python_version': '2.7'})
-        ref_result = perf.Results(runs=runs, name='py2')
+        ref_result = perf.Benchmark(runs=runs, name='py2')
 
         runs = self.create_runs((1.5, 2.0, 2.5),
                                 {'hostname': 'toto', 'python_version': '3.4'})
-        changed_result = perf.Results(runs=runs, name='py3')
+        changed_result = perf.Benchmark(runs=runs, name='py3')
 
         stdout = self.compare('compare_to', ref_result, changed_result)
 
@@ -126,10 +126,10 @@ class TestPerfCLI(unittest.TestCase):
 
     def test_compare(self):
         runs = self.create_runs((1.0, 1.5, 2.0))
-        ref_result = perf.Results(runs=runs, name='py2')
+        ref_result = perf.Benchmark(runs=runs, name='py2')
 
         runs = self.create_runs((1.5, 2.0, 2.5))
-        changed_result = perf.Results(runs=runs, name='py3')
+        changed_result = perf.Benchmark(runs=runs, name='py3')
 
         stdout = self.compare('compare', ref_result, changed_result)
 

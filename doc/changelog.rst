@@ -12,9 +12,10 @@ Changelog
   - Add :meth:`TextRunner.bench_sample_func` method
   - Add examples of the API to the documentation. Split also the documentation
     into subpages.
-  - Move metadata from :class:`~perf.Results` to :class:`~perf.RunResult`
   - Add metadata ``cpu_affinity``
   - Add :func:`perf.is_significant` function
+  - Move metadata from :class:`~perf.Benchmark` to :class:`~perf.RunResult`
+  - Rename the ``Results`` class to :class:`~perf.Benchmark`
 
 * Version 0.2 (2016-06-07)
 

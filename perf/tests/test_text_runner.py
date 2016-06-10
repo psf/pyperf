@@ -38,7 +38,7 @@ class TestTextRunner(unittest.TestCase):
                              r'\(3 samples\)\n$')
 
         # check bench_sample_func() result
-        self.assertIsInstance(result, perf.Results)
+        self.assertIsInstance(result, perf.Benchmark)
         self.assertEqual(result.name, 'test_runner')
         self.assertEqual(len(result.runs), 1)
         self.assertEqual(result.runs[0], runner.result)

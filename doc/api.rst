@@ -197,12 +197,12 @@ RunResult
       numbers are ignored when computing the average and standard deviation.
 
 
-Results
--------
+Benchmark
+---------
 
-.. class:: perf.Results(runs=None, name=None)
+.. class:: perf.Benchmark(runs=None, name=None)
 
-   Result of multiple benchmark runs.
+   A benchmark is made of multiple run results.
 
    Methods:
 
@@ -278,7 +278,7 @@ TextRunner
       The :meth:`bench_sample_func` method is recommended if ``func(*args)``
       takes less than 1 millisecond (0.001 sec).
 
-      Return a :class:`~perf.Results` instance.
+      Return a :class:`~perf.Benchmark` instance.
 
    .. method:: bench_sample_func(sample_func, \*args)
 
@@ -294,7 +294,7 @@ TextRunner
       is the output of ``sample_func(loops, *args)``. See the
       :attr:`inner_loops` attribute.
 
-      Return a :class:`~perf.Results` instance.
+      Return a :class:`~perf.Benchmark` instance.
 
    .. method:: parse_args(args=None)
 
@@ -316,7 +316,7 @@ TextRunner
 
       Name of the benchmark.
 
-      The value is passed to the :class:`~perf.Results` object created by
+      The value is passed to the :class:`~perf.Benchmark` object created by
       the :meth:`bench_sample_func` method.
 
    .. attribute:: inner_loops

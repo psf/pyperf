@@ -157,7 +157,7 @@ def _common_metadata(metadatas):
     return metadata
 
 
-class Results:
+class Benchmark:
     def __init__(self, runs=None, name=None):
         if runs is not None:
             self.runs = runs

@@ -107,7 +107,7 @@ class TestTimeit(unittest.TestCase):
             stdout = proc.communicate()[0]
             self.assertEqual(proc.returncode, 0)
 
-            result = perf.Results.json_load_from(tmp)
+            result = perf.Benchmark.json_load_from(tmp)
 
         self.assertEqual(len(result.runs), 2)
         for run in result.runs:

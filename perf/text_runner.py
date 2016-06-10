@@ -217,7 +217,7 @@ class TextRunner:
 
         self._display_result()
 
-        result = perf.Results(name=self.name)
+        result = perf.Benchmark(name=self.name)
         result.runs.append(self.result)
         return result
 
@@ -311,7 +311,7 @@ class TextRunner:
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
-        result = perf.Results(name=self.name)
+        result = perf.Benchmark(name=self.name)
 
         for process in range(nprocess):
             run = self._run_subprocess()
