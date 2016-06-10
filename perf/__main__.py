@@ -199,18 +199,17 @@ def display_histogram(args, result):
 
     counter = collections.Counter([bucket(value) for value in samples])
     count_max = max(counter.values())
+    count_width = len(str(count_max))
 
-    line = '%s: # %s' % (perf._format_timedelta(avg), count_max)
+    line = '%s: %s #' % (perf._format_timedelta(avg), count_max)
     width = max(columns - len(line), 3)
     line_k = float(width) / max(counter.values())
     for ms in range(min(counter), max(counter)+1):
         count = counter.get(ms, 0)
         linelen = int(round(count * line_k))
         text = perf._format_timedelta(float(ms) * sample_k)
-        if 0:
-            count = "%.1f%%" % (float(count) * 100 / nsample)
         line = ('#' * linelen) or '|'
-        print("%s: %s %s" % (text, line, count))
+        print("{}: {:>{}} {}".format(text, count, count_width, line))
 
     print()
 
