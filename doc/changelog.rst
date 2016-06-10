@@ -1,6 +1,12 @@
 Changelog
 =========
 
+* Version 0.4
+
+  - New ``--affinity=CPU_LIST`` command line option
+  - On Python 2.7, the ``tasket`` command is now used if available to pin
+    worker processes to isolated CPUs
+
 * Version 0.3 (2016-06-10)
 
   - Add ``compare`` and ``compare_to`` commands to the ``-m perf`` CLI

@@ -334,6 +334,22 @@ TextRunner
 
       :class:`~perf.RunResult` instance.
 
+   .. attribute:: prepare_subprocess_args
+
+      Callback used to prepare command line arguments to spawn a worker child
+      process. The callback is called with ``prepare(runner, args)``, args must
+      be modified in-place.
+
+      For example, the callback can be used to add arguments not handled
+      directly by :class:`~perf.text_runner.TextRunner`.
+
+   .. attribute:: program_args
+
+      Command list arguments to call the program:
+      ``(sys.executable, sys.argv[0])`` by default.
+
+      For example, "python3 -m perf.timeit" sets program_args to
+      ``('-m', 'perf.timeit')``.
 
 
 Metadata functions

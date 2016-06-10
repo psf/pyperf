@@ -60,10 +60,12 @@ article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
 The :class:`~perf.text_runner.TextRunner` class automatically pin worker
-processes to isolated CPUs (when isolated are detected). Currently, Python 3.3
-is needed to get automatic CPU pinning. CPU pinning can be checked in benchmark
-metadata: it is enabled if the ``cpu_affinity`` :ref:`metadata <metadata>` is
-set.
+processes to isolated CPUs (when isolated are detected). CPU pinning can be
+checked in benchmark metadata: it is enabled if the ``cpu_affinity``
+:ref:`metadata <metadata>` is set.
+
+On Python 3.3 and newer, :func:`os.sched_setaffinity` is used to pin processes.
+On Python 2.7, the ``tasket`` command is used if available.
 
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.

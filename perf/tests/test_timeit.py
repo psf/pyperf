@@ -36,7 +36,7 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^'
-                         r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
+                         r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
                          r'Warmup 1: ([0-9.]+) ms\n'
                          r'Sample 1: ([0-9.]+) ms\n'
                          r'Sample 2: ([0-9.]+) ms\n'

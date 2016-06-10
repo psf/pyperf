@@ -62,8 +62,6 @@ def _main_common():
 
 
 def _prepare_args(runner, args):
-    # replace ".../timeit.py" with "-m perf.timeit"
-    args[1:2] = ['-m', 'perf.timeit']
     for setup in runner.args.setup:
         args.extend(("--setup", setup))
     args.extend(runner.args.stmt)
@@ -71,6 +69,7 @@ def _prepare_args(runner, args):
 
 def _main():
     runner, timer  = _main_common()
+    runner.program_args = (sys.executable, '-m', 'perf.timeit')
     runner.prepare_subprocess_args = _prepare_args
 
     def func(loops, timer):
