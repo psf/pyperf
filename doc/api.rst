@@ -1,10 +1,12 @@
 Examples
 ========
 
-TextRunner example
-------------------
+bench_sample_func() example
+---------------------------
 
-Simple microbenchmark to measure the performance of ``dict[key]``::
+Simple microbenchmark using the
+:meth:`~perf.text_runner.TextRunner.bench_sample_func` method to measure the
+performance of ``dict[key]``::
 
     import perf.text_runner
 
@@ -40,6 +42,30 @@ outter ``range(loops)`` loop. To adjust the final result,
 The repeatition is needed on such microbenchmark where the measured instruction
 takes less than 1 microsecond. In this case, the cost the outter loop is non
 negligible.
+
+
+bench_func() example
+--------------------
+
+Dummy benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func`
+method to measure the time elasped when sleeping 1 ms::
+
+    import time
+
+    import perf.text_runner
+
+    def func():
+        time.sleep(0.001)
+
+    runner = perf.text_runner.TextRunner()
+    runner.bench_func(func)
+
+``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
+
+Reminder: the :meth:`~perf.text_runner.TextRunner.bench_sample_func` method is
+recommended if ``func()`` takes less than 1 ms. The
+:meth:`~perf.text_runner.TextRunner.bench_func` method has a non negligible
+overhead on microbenchmarks.
 
 
 API
@@ -254,7 +280,7 @@ TextRunner
       Benchmark the function ``func(*args)``.
 
       The design of :meth:`bench_func` has a non negligible overhead on
-      microbenchmarks: each loop iteration calls ``func(*args)`` whereas Python
+      microbenchmarks: each loop iteration calls ``func(*args)`` but Python
       function calls are expensive.
 
       The :meth:`bench_sample_func` method is recommended if ``func(*args)``
