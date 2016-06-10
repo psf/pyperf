@@ -79,6 +79,8 @@ def _main():
 
     try:
         runner.bench_sample_func(func, timer)
+    except SystemExit:
+        raise
     except:
         timer.print_exc()
         sys.exit(1)
