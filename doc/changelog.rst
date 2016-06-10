@@ -6,6 +6,8 @@ Changelog
   - New ``--affinity=CPU_LIST`` command line option
   - On Python 2.7, the ``tasket`` command is now used if available to pin
     worker processes to isolated CPUs
+  - Emit a warning or error in english if the standard deviation is larger
+    than 10%
 
 * Version 0.3 (2016-06-10)
 

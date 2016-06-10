@@ -9,7 +9,7 @@ import sys
 import perf
 
 
-def _json_dump(result, args):
+def _json_dump(bench, args):
     if args.json_file:
         # --json-file=FILENAME
         if perf._PY3:
@@ -17,12 +17,12 @@ def _json_dump(result, args):
         else:
             fp = open(args.json_file, "wb")
         with fp:
-            result.json_dump_into(fp)
+            bench.json_dump_into(fp)
             fp.flush()
     elif args.json:
         # --json
         stdout = sys.stdout
-        result.json_dump_into(stdout)
+        bench.json_dump_into(stdout)
         stdout.flush()
 
 
@@ -379,11 +379,11 @@ class TextRunner:
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
-        result = perf.Benchmark(name=self.name)
+        bench = perf.Benchmark(name=self.name)
 
         for process in range(nprocess):
             run = self._spawn_worker(taskset_args)
-            result.runs.append(run)
+            bench.runs.append(run)
             if verbose > 1:
                 text = perf._very_verbose_run(run)
                 print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
@@ -395,10 +395,10 @@ class TextRunner:
             print(file=stream)
 
         if self.args.metadata:
-            perf._display_metadata(result.get_metadata(), file=stream)
+            perf._display_metadata(bench.get_metadata(), file=stream)
 
-        print("Average: %s" % result.format(verbose), file=stream)
+        perf._display_benchmark_avg(bench, verbose=verbose, file=stream)
 
         stream.flush()
-        _json_dump(result, self.args)
-        return result
+        _json_dump(bench, self.args)
+        return bench

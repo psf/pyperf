@@ -376,6 +376,28 @@ def _very_verbose_run(run):
     return text
 
 
+def _display_benchmark_avg(bench, verbose=0, file=None):
+    print("Average: %s" % bench.format(verbose=verbose), file=file)
+
+    samples = bench.get_samples()
+    avg = mean(samples)
+    # Avoid division by zero
+    if avg:
+        k = stdev(samples) / avg
+        if k > 0.10:
+            if k > 0.20:
+                print("ERROR: the benchmark is very unstable, the standard "
+                      "deviation is very high (%.0f%%)!" % (k * 100),
+                      file=file)
+            else:
+                print("Warning: the benchmark seems unstable, the standard "
+                      "deviation is high (%.0f%%)" % (k * 100),
+                      file=file)
+            print("Try to rerun the benchmark with more runs, samples "
+                  "and/or loops",
+                  file=file)
+
+
 def _display_metadata(metadata, file=None, header="Metadata:"):
     if not metadata:
         return

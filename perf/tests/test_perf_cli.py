@@ -59,21 +59,29 @@ class TestPerfCLI(unittest.TestCase):
 
     def test_show(self):
         stdout = self.show()
-        self.assertEqual(stdout.rstrip(),
-                         'Metadata:\n'
-                         '- key: value\n'
-                         '\n'
-                         'Average: 1.50 sec +- 0.50 sec')
+        expected = ('Metadata:\n'
+                    '- key: value\n'
+                    '\n'
+                    'Average: 1.50 sec +- 0.50 sec\n'
+                    'ERROR: the benchmark is very unstable, the standard '
+                        'deviation is very high (33%)!\n'
+                    'Try to rerun the benchmark with more runs, samples '
+                        'and/or loops\n')
+        self.assertEqual(stdout, expected)
 
     def test_show_verbose(self):
         stdout = self.show(verbose=True, metadata=False)
-        self.assertEqual(stdout.rstrip(),
-                         'Run 1/3: samples (1): 1.00 sec\n'
-                         'Run 2/3: samples (1): 1.50 sec\n'
-                         'Run 3/3: samples (1): 2.00 sec\n'
-                         '\n'
-                         'Average: 1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample)')
+        expected = ('Run 1/3: samples (1): 1.00 sec\n'
+                    'Run 2/3: samples (1): 1.50 sec\n'
+                    'Run 3/3: samples (1): 2.00 sec\n'
+                    '\n'
+                    'Average: 1.50 sec +- 0.50 sec '
+                        '(3 runs x 1 sample)\n'
+                    'ERROR: the benchmark is very unstable, the standard '
+                        'deviation is very high (33%)!\n'
+                    'Try to rerun the benchmark with more runs, samples '
+                        'and/or loops\n')
+        self.assertEqual(stdout, expected)
 
     def compare(self, action, ref_result, changed_result):
         with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:

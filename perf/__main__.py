@@ -68,7 +68,7 @@ def display_result(args, results):
             print("Run %s/%s: %s" % (index, nrun, text))
         print()
 
-    print("Average: %s" % result.format(verbose=args.verbose))
+    perf._display_benchmark_avg(result, verbose=args.verbose)
 
 
 def _result_sort_key(result):
