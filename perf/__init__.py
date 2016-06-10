@@ -401,18 +401,15 @@ def _very_verbose_run(run):
 
 
 def _display_benchmark_avg(bench, verbose=0, file=None):
-    print("Average: %s" % bench.format(verbose=verbose), file=file)
-
     samples = bench.get_samples()
     # FIXME: handle empty samples
 
     # Display a warning if the standard deviation is larger than 10%
     avg = mean(samples)
     # Avoid division by zero
-    if avg:
+    if avg and len(samples) > 1:
         k = stdev(samples) / avg
         if k > 0.10:
-            print()
             if k > 0.20:
                 print("ERROR: the benchmark is very unstable, the standard "
                       "deviation is very high (%.0f%%)!" % (k * 100),
@@ -424,6 +421,9 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
             print("Try to rerun the benchmark with more runs, samples "
                   "and/or loops",
                   file=file)
+            print(file=file)
+        elif verbose > 1:
+            print("Standard deviation: %.0f%%" % (k * 100), file=file)
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(samples)
@@ -434,7 +434,6 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     if loops:
         text = '%s (%s)'%  (text, _format_number(loops, 'loop'))
     if shortest < 1e-3:
-        print()
         if shortest < 1e-6:
             print("ERROR: the benchmark may be very unstable, "
                   "the shortest sample only took %s" % text)
@@ -444,6 +443,13 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
         print("Try to rerun the benchmark with more loops "
               "or increase --min-time",
               file=file)
+        print(file=file)
+    elif verbose > 1:
+        print("Shortest sample: %s" % text, file=file)
+        print(file=file)
+
+    # Display the average +- stdev
+    print("Average: %s" % bench.format(verbose=verbose), file=file)
 
 
 def _display_metadata(metadata, file=None, header="Metadata:"):
