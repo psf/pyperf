@@ -257,8 +257,8 @@ TextRunner
       microbenchmarks: each loop iteration calls ``func(*args)`` whereas Python
       function calls are expensive.
 
-      The :meth:`bench_sample_func` method is recommended for microbenchmarks,
-      especially if ``func(*args)`` takes less than 1 microsecond.
+      The :meth:`bench_sample_func` method is recommended if ``func(*args)``
+      takes less than 1 millisecond (0.001 sec).
 
       Return a :class:`~perf.Results` instance.
 
