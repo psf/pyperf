@@ -105,6 +105,7 @@ class TextRunner:
         min_dt = self.args.min_time * 0.90
         max_dt = self.args.max_time
         for index in range(0, 10):
+            # FIXME: watchdog to detect bug in sample_func(): put a limit?
             loops = 10 ** index
 
             dt = sample_func(loops)
@@ -236,44 +237,6 @@ class TextRunner:
             return sample_func(loops, *args)
 
         return self._main(wrap_sample_func)
-
-    def bench_func(self, func, *args):
-        """"Benchmark func(*args)."""
-
-        def sample_func(loops):
-            # use fast local variables
-            local_timer = perf.perf_counter
-            local_func = func
-            local_args = args
-
-            if local_args:
-                if loops != 1:
-                    range_it = range(loops)
-
-                    t0 = local_timer()
-                    for _ in range_it:
-                        local_func(*local_args)
-                    dt = local_timer() - t0
-                else:
-                    t0 = local_timer()
-                    local_func(*local_args)
-                    dt = local_timer() - t0
-            else:
-                if loops != 1:
-                    range_it = range(loops)
-
-                    t0 = local_timer()
-                    for _ in range_it:
-                        local_func()
-                    dt = local_timer() - t0
-                else:
-                    t0 = local_timer()
-                    local_func()
-                    dt = local_timer() - t0
-
-            return dt
-
-        return self._main(sample_func)
 
     def _run_subprocess(self):
         args = [sys.executable, sys.argv[0],

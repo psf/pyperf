@@ -4,16 +4,15 @@ API Examples
 TextRunner.bench_sample_func() example
 --------------------------------------
 
-Dummy microbenchmark to measure the performance of ``dict[key]``::
+Simple microbenchmark to measure the performance of ``dict[key]``::
 
     import perf.text_runner
 
-    NLOOP = 10**6
     mydict = {str(k): k for k in range(1000)}
 
-    def func():
+    def func(loops):
         t0 = perf.perf_counter()
-        for loops in range(NLOOP):
+        for loops in range(loops):
             mydict['0']
             mydict['100']
             mydict['200']
@@ -23,8 +22,7 @@ Dummy microbenchmark to measure the performance of ``dict[key]``::
             mydict['600']
             mydict['800']
             mydict['900']
-        dt = perf.perf_counter() - t0
-        return dt / NLOOP
+        return perf.perf_counter() - t0
 
     runner = perf.text_runner.TextRunner()
     runner.bench_sample_func(func)
@@ -32,14 +30,6 @@ Dummy microbenchmark to measure the performance of ``dict[key]``::
 Running the script without argument should return a reliable average. Pass the
 ``--help`` command line argument to see the whole list of options. ``perf``
 adds many options by default to control the benchmark.
-
-.. note::
-   The example doesn't use :meth:`TextRunner.bench_func` because this
-   function doesn't support to automatically calibrate the number of
-   loop iterations yet. The number of iterations, 10^6, is hardcoded in the
-   example.
-
-
 
 
 API
@@ -247,14 +237,15 @@ TextRunner
 
    Methods:
 
-   .. method:: bench_func(func, \*args)
+   .. method:: bench_sample_func(sample_func, \*args)
 
-      Benchmark the function ``func(*args)``.
+      Benchmark ``sample_func(loops, *args)``.
 
-   .. method:: bench_sample_func(func, \*args)
+      The function must return the total elapsed time (not the average time per
+      loop iteration). The total elapsed time is required to be able to
+      automatically calibrate the number of loops.
 
-      Benchmark a function ``func(*args)``, the function must return
-      the sample value (ex: elapsed time).
+      :func:`perf.perf_counter` should be used to measure the elapsed time.
 
    .. method:: parse_args(args=None)
 
