@@ -25,12 +25,10 @@ perf supports Python 2.7 and Python 3. Install perf on Python 3::
     python3 -m pip install perf
 
 
-Table Of Contents
-=================
-
 .. toctree::
    :maxdepth: 3
 
+   perf
    cli
    api
    changelog

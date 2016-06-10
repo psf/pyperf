@@ -21,6 +21,9 @@ Iterations:
 * ``LOOPS``: number of loops per sample. By default, the timer is calibrated
   to get samples taking between 100 ms and 1 sec.
 
+The :ref:`Runs, samples, warmups, outter and inner loops <loops>` section
+explains the purpose of these parameters and how to configure them.
+
 Options:
 
 * ``-v`` enables verbose mode
@@ -31,6 +34,9 @@ Options:
   into stderr
 * ``--json-file=FILENAME`` writes result as JSON into *FILENAME*, and write
   other messages into stdout
+
+perf.timeit CLI example
+-----------------------
 
 Example::
 
@@ -63,8 +69,8 @@ Try also ``-vv`` to enable the very verbose mode.
    ``-n`` (runs) in perf.timeit.
 
 
-perf CLI
---------
+perf CLI usage
+--------------
 
 Display a result file::
 
@@ -79,6 +85,9 @@ Compare two result files::
         compare ref.json changed.json
 
 If a filename is ``-``, read the JSON content from stdin.
+
+perf CLI example
+----------------
 
 Example: first create a JSON file using timeit::
 
@@ -125,6 +134,9 @@ Display collected metadata::
 
     python3 -m perf.metadata
 
+perf.metadata CLI example
+-------------------------
+
 Example::
 
     $ python3 -m perf.metadata
@@ -167,45 +179,3 @@ specific case, whereas many parameters are random:
 The article `My journey to stable benchmark, part 3 (average)
 <https://haypo.github.io/journey-to-stable-benchmark-average.html>`_ explains
 in depth the multiple issues of being focused on the minimum.
-
-
-.. _metadata:
-
-Metadata
-========
-
-Benchmark:
-
-* ``inner_loops``: number of inner iterations per sample, see the
-  :attr:`~perf.text_runner.TextRunner.inner_loops` attribute of
-  :class:`~perf.text_runner.TextRunner`
-* ``loops``: number of (outter) iterations per sample
-
-Python metadata:
-
-* ``python_implementation``: Python implementation. Examples: ``cpython``,
-  ``pypy``, etc.
-* ``python_version``: Python version, ex: ``2.7.11``
-* ``python_executable``: path to the Python binary program
-* ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
-  only set on Pyhon 2.7, Python 3.2 and older
-
-System metadata:
-
-* ``hostname``: Host name
-* ``platform``: short string describing the platform
-* ``cpu_count``: number of CPUs
-
-Linux metadata:
-
-* ``cpu_model_name``: CPU model name
-* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
-  ``disabled``
-* ``cpu_affinity``: if set, the process is pinned to the specified list of
-  CPUs
-
-Misc:
-
-* ``date``: date when the benchmark started, formatted as ISO 8601
-
-See the :func:`perf.metadata.collect_metadata` function.

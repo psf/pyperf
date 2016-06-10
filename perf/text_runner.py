@@ -183,6 +183,7 @@ class TextRunner:
 
     def _cpu_affinity(self):
         # FIXME: support also Python 2 using taskset command
+        # sched_setaffinity() was added to Python 3.3
         if not hasattr(os, 'sched_setaffinity'):
             # missing os.sched_setaffinity()
             return

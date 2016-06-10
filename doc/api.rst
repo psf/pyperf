@@ -4,9 +4,8 @@ Examples
 bench_sample_func() example
 ---------------------------
 
-Simple microbenchmark using the
-:meth:`~perf.text_runner.TextRunner.bench_sample_func` method to measure the
-performance of ``dict[key]``::
+Microbenchmark using the :meth:`~perf.text_runner.TextRunner.bench_sample_func`
+method to measure the performance of ``dict[key]``::
 
     import perf.text_runner
 
@@ -47,8 +46,8 @@ negligible.
 bench_func() example
 --------------------
 
-Dummy benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func`
-method to measure the time elasped when sleeping 1 ms::
+Benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func` method to
+measure the time elasped when sleeping 1 ms::
 
     import time
 
@@ -62,7 +61,7 @@ method to measure the time elasped when sleeping 1 ms::
 
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
-Reminder: the :meth:`~perf.text_runner.TextRunner.bench_sample_func` method is
+The :meth:`~perf.text_runner.TextRunner.bench_sample_func` method is
 recommended if ``func()`` takes less than 1 ms. The
 :meth:`~perf.text_runner.TextRunner.bench_func` method has a non negligible
 overhead on microbenchmarks.
@@ -270,6 +269,10 @@ TextRunner
    .. method:: bench_func(func, \*args)
 
       Benchmark the function ``func(*args)``.
+
+      The final saved value is ``elapsed_time / loops / inner_loops`` where
+      *elapsed_time* is mesured using :func:`perf.perf_counter`. See the
+      :attr:`inner_loops` attribute.
 
       The design of :meth:`bench_func` has a non negligible overhead on
       microbenchmarks: each loop iteration calls ``func(*args)`` but Python

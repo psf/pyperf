@@ -16,6 +16,9 @@ Changelog
   - Add :func:`perf.is_significant` function
   - Move metadata from :class:`~perf.Benchmark` to :class:`~perf.RunResult`
   - Rename the ``Results`` class to :class:`~perf.Benchmark`
+  - Add :attr:`~perf.text_runner.TextRunner.inner_loops` attribute to
+    :class:`~perf.text_runner.TextRunner`, used for microbenchmarks when an
+    instruction is manually duplicated multiple times
 
 * Version 0.2 (2016-06-07)
 
