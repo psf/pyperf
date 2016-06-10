@@ -405,7 +405,7 @@ _T_DIST_95_CONF_LEVELS = [0, 12.706, 4.303, 3.182, 2.776,
                           2.042]
 
 
-def _TDist95ConfLevel(df):
+def _tdist95conf_level(df):
     """Approximate the 95% confidence interval for Student's T distribution.
 
     Given the degrees of freedom, returns an approximation to the 95%
@@ -436,7 +436,7 @@ def _TDist95ConfLevel(df):
     return _T_DIST_95_CONF_LEVELS[df]
 
 
-def _PooledSampleVariance(sample1, sample2):
+def _pooled_sample_variance(sample1, sample2):
     """Find the pooled sample variance for two samples.
 
     Args:
@@ -455,7 +455,7 @@ def _PooledSampleVariance(sample1, sample2):
     return (sum(squares1) + sum(squares2)) / float(deg_freedom)
 
 
-def _TScore(sample1, sample2):
+def _tscore(sample1, sample2):
     """Calculate a t-test score for the difference between two samples.
 
     Args:
@@ -466,7 +466,7 @@ def _TScore(sample1, sample2):
         The t-test score, as a float.
     """
     assert len(sample1) == len(sample2)
-    error = _PooledSampleVariance(sample1, sample2) / len(sample1)
+    error = _pooled_sample_variance(sample1, sample2) / len(sample1)
     return (mean(sample1) - mean(sample2)) / math.sqrt(error * 2)
 
 
@@ -485,6 +485,6 @@ def is_significant(sample1, sample2):
         two-sample T test.
     """
     deg_freedom = len(sample1) + len(sample2) - 2
-    critical_value = _TDist95ConfLevel(deg_freedom)
-    t_score = _TScore(sample1, sample2)
+    critical_value = _tdist95conf_level(deg_freedom)
+    t_score = _tscore(sample1, sample2)
     return (abs(t_score) >= critical_value, t_score)
