@@ -385,6 +385,28 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
     print(file=file)
 
 
+def _format_cpu_list(cpus):
+    cpus = sorted(cpus)
+    parts = []
+    first = None
+    last = None
+    for cpu in cpus:
+        if first is None:
+            first = cpu
+        elif cpu != last+1:
+            if first != last:
+                parts.append('%s-%s' % (first, last))
+            else:
+                parts.append(str(last))
+            first = cpu
+        last = cpu
+    if first != last:
+        parts.append('%s-%s' % (first, last))
+    else:
+        parts.append(str(last))
+    return ','.join(parts)
+
+
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
 # function of the degrees of freedom. For larger degrees of freedom, we
 # approximate. While this may look less elegant than simply calculating the

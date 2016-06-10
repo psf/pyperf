@@ -109,6 +109,14 @@ class TestTools(unittest.TestCase):
         self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
                          '10001 units')
 
+    def test_format_cpu_list(self):
+        self.assertEqual(perf._format_cpu_list([0]),
+                         '0')
+        self.assertEqual(perf._format_cpu_list([0, 1, 5, 6]),
+                         '0-1,5-6')
+        self.assertEqual(perf._format_cpu_list([1, 3, 7]),
+                         '1,3,7')
+
 
 class TestResult(unittest.TestCase):
     def test_run_result(self):

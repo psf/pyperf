@@ -6,7 +6,7 @@ import re
 import socket
 import sys
 
-PY3 = (sys.version_info >= (3,))
+import perf
 
 
 # FIXME: collect metadata of pybench:
@@ -66,7 +66,7 @@ def _collect_python_metadata(metadata):
 
 def _read_proc(path):
     try:
-        if PY3:
+        if perf._PY3:
             fp = open(path, encoding="utf-8")
         else:
             fp = open("/proc/cpuinfo")
@@ -122,7 +122,7 @@ def _collect_system_metadata(metadata):
             if cpus == set(range(cpu_count)):
                 cpus = None
         if cpus:
-            metadata['cpu_affinity'] = ', '.join(sorted(map(str, cpus)))
+            metadata['cpu_affinity'] = perf._format_cpu_list(cpus)
 
     # Hostname
     hostname = socket.gethostname()
