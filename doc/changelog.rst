@@ -10,14 +10,14 @@ Changelog
     to these isolated CPUs
   - Add ``--json-file`` command line option
   - Add :meth:`TextRunner.bench_sample_func` method
-  - Move metadata from :class:`Results` to :class:`RunResult`
+  - Move metadata from :class:`~perf.Results` to :class:`~perf.RunResult`
   - Add metadata ``cpu_affinity``
 
 * Version 0.2 (2016-06-07)
 
   - use JSON to exchange results between processes
   - new ``python3 -m perf`` CLI
-  - new :class:`TextRunner` class
+  - new :class:`~perf.text_runner.TextRunner` class
   - huge enhancement of the timeit module
   - timeit has a better output format in verbose mode and now also supports a
     ``-vv`` (very verbose) mode. Minimum and maximum are not more shown in

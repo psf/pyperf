@@ -54,13 +54,20 @@ def _get_isolated_cpus():
 
 
 class TextRunner:
-    def __init__(self, nsample=3, nwarmup=1, nprocess=25,
+    def __init__(self, name=None, nsample=3, nwarmup=1, nprocess=25,
                  nloop=0, min_time=0.1, max_time=1.0):
+        self.name = name
         self.result = perf.RunResult()
         # result of argparser.parse_args()
         self.args = None
-        # called with prepare(runner, args), args must be modified in-place
+
+        # callback used to create command arguments to spawn a worker child
+        # process. The callback is called with prepare(runner, args). args
+        # must be modified in-place.
         self.prepare_subprocess_args = None
+
+        # Number of inner-loops of the sample_func for bench_sample_func()
+        self.inner_loops = 1
 
         parser = argparse.ArgumentParser(description='Benchmark')
         parser.add_argument('-p', '--processes', type=int, default=nprocess,
@@ -199,13 +206,19 @@ class TextRunner:
         import perf.metadata
         perf.metadata.collect_metadata(self.result.metadata)
         self.result.metadata['loops'] = perf._format_number(loops)
+        if self.inner_loops != 1:
+            self.result.metadata['inner_loops'] = perf._format_number(self.inner_loops)
 
         for is_warmup, run in self._range():
             dt = sample_func(loops)
-            dt = float(dt) / loops
+            dt = float(dt) / loops / self.inner_loops
             self._add(is_warmup, run, dt)
 
         self._display_result()
+
+        result = perf.Results(name=self.name)
+        result.runs.append(self.result)
+        return result
 
     def _main(self, sample_func):
         self.parse_args()
@@ -216,9 +229,9 @@ class TextRunner:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
         if not self.args.raw:
-            self._spawn_workers()
+            return self._spawn_workers()
         else:
-            self._worker(sample_func)
+            return self._worker(sample_func)
 
     def bench_sample_func(self, sample_func, *args):
         """"Benchmark sample_func(loops, *args)
@@ -256,7 +269,7 @@ class TextRunner:
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
-        result = perf.Results()
+        result = perf.Results(self.name)
 
         for process in range(nprocess):
             run = self._run_subprocess()
@@ -278,3 +291,4 @@ class TextRunner:
 
         stream.flush()
         _json_dump(result, self.args)
+        return result

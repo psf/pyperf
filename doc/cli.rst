@@ -174,31 +174,38 @@ in depth the multiple issues of being focused on the minimum.
 Metadata
 ========
 
-* Python metadata:
+Benchmark:
 
-  - ``python_implementation``: Python implementation. Examples: ``cpython``,
-    ``pypy``, etc.
-  - ``python_version``: Python version, ex: ``2.7.11``
-  - ``python_executable``: path to the Python binary program
-  - ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
-    only set on Pyhon 2.7, Python 3.2 and older
+* ``inner_loops``: number of inner iterations per sample, see the
+  :attr:`~perf.text_runner.TextRunner.inner_loops` attribute of
+  :class:`~perf.text_runner.TextRunner`
+* ``loops``: number of (outter) iterations per sample
 
-* System metadata:
+Python metadata:
 
-  - ``hostname``: Host name
-  - ``platform``: short string describing the platform
-  - ``cpu_count``: number of CPUs
+* ``python_implementation``: Python implementation. Examples: ``cpython``,
+  ``pypy``, etc.
+* ``python_version``: Python version, ex: ``2.7.11``
+* ``python_executable``: path to the Python binary program
+* ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
+  only set on Pyhon 2.7, Python 3.2 and older
 
-* Linux metadata:
+System metadata:
 
-  - ``cpu_model_name``: CPU model name
-  - ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
-    ``disabled``
-  - ``cpu_affinity``: if set, the process is pinned to the specified list of
-    CPUs
+* ``hostname``: Host name
+* ``platform``: short string describing the platform
+* ``cpu_count``: number of CPUs
 
-* Misc metadata:
+Linux metadata:
 
-  - ``date``: date when the benchmark started, formatted as ISO 8601
+* ``cpu_model_name``: CPU model name
+* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
+  ``disabled``
+* ``cpu_affinity``: if set, the process is pinned to the specified list of
+  CPUs
+
+Misc:
+
+* ``date``: date when the benchmark started, formatted as ISO 8601
 
 See the :func:`perf.metadata.collect_metadata` function.

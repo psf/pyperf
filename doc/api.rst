@@ -20,16 +20,26 @@ Simple microbenchmark to measure the performance of ``dict[key]``::
             mydict['400']
             mydict['500']
             mydict['600']
+            mydict['700']
             mydict['800']
             mydict['900']
         return perf.perf_counter() - t0
 
     runner = perf.text_runner.TextRunner()
+    runner.inner_loops = 10
     runner.bench_sample_func(func)
 
-Running the script without argument should return a reliable average. Pass the
-``--help`` command line argument to see the whole list of options. ``perf``
-adds many options by default to control the benchmark.
+Pass ``--help`` to the script to see the command line options automatically
+added by ``perf``.
+
+The ``mydict[key]`` instruction is repeated 10 times to reduce the cost of the
+outter ``range(loops)`` loop. To adjust the final result,
+``runner.inner_loops`` is set to ``10``, the number of times that
+``mydict[key]`` is repeated.
+
+The repeatition is needed on such microbenchmark where the measured instruction
+takes less than 1 microsecond. In this case, the cost the outter loop is non
+negligible.
 
 
 API
@@ -216,16 +226,18 @@ Results
 
    .. attribute:: runs
 
-      List of :class:`RunResult` instances.
+      List of :class:`~perf.RunResult` instances.
 
 
 
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(nsample=3, nwarmup=1, nprocess=25)
+.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25)
 
    Tool to run a benchmark in text mode.
+
+   *name* is the name of the benchmark.
 
    *nsample*, *nwarmup* and *nprocess* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
@@ -247,6 +259,12 @@ TextRunner
 
       :func:`perf.perf_counter` should be used to measure the elapsed time.
 
+      The final saved value is ``result / loops / inner_loops`` where *result*
+      is the output of ``sample_func(loops, *args)``. See the
+      :attr:`inner_loops` attribute.
+
+      Return a :class:`~perf.Results` instance.
+
    .. method:: parse_args(args=None)
 
       Parse command line arguments using :attr:`argparser` and put the result
@@ -263,9 +281,24 @@ TextRunner
 
       :class:`argparse.ArgumentParser` instance.
 
+   .. attribute:: name
+
+      Name of the benchmark.
+
+      The value is passed to the :class:`~perf.Results` object created by
+      the :meth:`bench_sample_func` method.
+
+   .. attribute:: inner_loops
+
+      Number of inner-loops of the *sample_func* of :meth:`bench_sample_func`.
+      This number is compute the final sample from the result of *sample_func*.
+
+      The value is copied to the ``inner_loops`` metadata of created
+      :class:`~perf.RunResult` results.
+
    .. attribute:: result
 
-      :class:`RunResult` instance.
+      :class:`~perf.RunResult` instance.
 
 
 
