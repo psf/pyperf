@@ -367,6 +367,8 @@ class TextRunner:
                      '--loops', str(self.args.loops)))
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
+        if self.args.affinity and not taskset_args:
+            args.append('--affinity=%s' % self.args.affinity)
 
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
