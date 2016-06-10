@@ -1,8 +1,8 @@
-API Examples
-============
+Examples
+========
 
-TextRunner.bench_sample_func() example
---------------------------------------
+TextRunner example
+------------------
 
 Simple microbenchmark to measure the performance of ``dict[key]``::
 
@@ -248,6 +248,10 @@ TextRunner
    line argument and the ``/sys/devices/system/cpu/isolated`` file.
 
    Methods:
+
+   .. method:: bench_func(func, \*args)
+
+      Benchmark the function ``func(*args)``.
 
    .. method:: bench_sample_func(sample_func, \*args)
 
