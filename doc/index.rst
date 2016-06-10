@@ -24,6 +24,10 @@ perf supports Python 2.7 and Python 3. Install perf on Python 3::
 
     python3 -m pip install perf
 
+The ``-m perf hist --scipy`` command requires numpy, scipy and pylab. Command
+to install these packages on Fedora::
+
+    sudo dnf install -y python3-{numpy,scipy,matplotlib}
 
 .. toctree::
    :maxdepth: 3
