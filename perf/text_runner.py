@@ -307,7 +307,7 @@ class TextRunner:
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
-        result = perf.Results(self.name)
+        result = perf.Results(name=self.name)
 
         for process in range(nprocess):
             run = self._run_subprocess()
