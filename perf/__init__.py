@@ -164,8 +164,12 @@ class Benchmark:
         else:
             self.runs = []
         self.name = name
-        # FIXME: make the formatter configurable
-        self._formatter = _format_run_result
+
+    def _format_sample(self, sample, verbose=False):
+        if not self.runs:
+            raise ValueError("Benchmark has no run result")
+        run = self.runs[0]
+        return run._format_sample(sample, verbose)
 
     def get_samples(self):
         samples = []
@@ -176,6 +180,19 @@ class Benchmark:
     def get_metadata(self):
         metadatas = [run.metadata for run in self.runs]
         return _common_metadata(metadatas)
+
+    def get_loops(self):
+        if not self.runs:
+            return None
+
+        loops = self.runs[0].loops
+        if loops is None:
+            return None
+
+        for run in self.runs[1:]:
+            if loops != run.loops:
+                return None
+        return loops
 
     def format(self, verbose=0):
         if self.runs:
@@ -192,7 +209,7 @@ class Benchmark:
 
             # FIXME: handle the case where all samples are empty
             samples = self.get_samples()
-            text = self._formatter(samples, verbose)
+            text = first_run._formatter(samples, verbose)
 
             if verbose:
                 iterations = []
@@ -387,22 +404,46 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     print("Average: %s" % bench.format(verbose=verbose), file=file)
 
     samples = bench.get_samples()
+    # FIXME: handle empty samples
+
+    # Display a warning if the standard deviation is larger than 10%
     avg = mean(samples)
     # Avoid division by zero
     if avg:
         k = stdev(samples) / avg
         if k > 0.10:
+            print()
             if k > 0.20:
                 print("ERROR: the benchmark is very unstable, the standard "
                       "deviation is very high (%.0f%%)!" % (k * 100),
                       file=file)
             else:
-                print("Warning: the benchmark seems unstable, the standard "
+                print("WARNING: the benchmark seems unstable, the standard "
                       "deviation is high (%.0f%%)" % (k * 100),
                       file=file)
             print("Try to rerun the benchmark with more runs, samples "
                   "and/or loops",
                   file=file)
+
+    # Check that the shortest sample took at least 1 ms
+    shortest = min(samples)
+    loops = bench.get_loops()
+    if loops:
+        shortest *= loops
+    text = bench._format_sample(shortest)
+    if loops:
+        text = '%s (%s)'%  (text, _format_number(loops, 'loop'))
+    if shortest < 1e-3:
+        print()
+        if shortest < 1e-6:
+            print("ERROR: the benchmark is likely to be very unstable, "
+                  "the shortest sample only took %s" % text)
+        else:
+            print("WARNING: the benchmark is likely to be unstable, "
+                  "the shortest sample only took %s" % text)
+        print("Try to rerun the benchmark with more loops "
+              "or increase --min-time",
+              file=file)
 
 
 def _display_metadata(metadata, file=None, header="Metadata:"):

@@ -6,8 +6,9 @@ Changelog
   - New ``--affinity=CPU_LIST`` command line option
   - On Python 2.7, the ``tasket`` command is now used if available to pin
     worker processes to isolated CPUs
-  - Emit a warning or error in english if the standard deviation is larger
+  - Emit a warning or an error in english if the standard deviation is larger
     than 10%
+  - Emit a warning or an error if the shortest sample took less than 1 ms
   - New :attr:`perf.RunResult.loops` attribute (loops was previously stored
     in metadata).
   - The ``TextRunner.result`` attribute has been removed, replaced with
