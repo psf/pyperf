@@ -117,8 +117,9 @@ class TextRunner:
 
             dt = sample_func(loops)
             if self.args.verbose > 1:
-                print("calibration: 10^%s loops: %s"
-                      % (index, perf._format_timedelta(dt)),
+                print("calibration: %s: %s"
+                      % (perf._format_number(loops, 'loop'),
+                         perf._format_timedelta(dt)),
                       file=stream)
 
             if dt >= max_dt:
@@ -273,6 +274,9 @@ class TextRunner:
                     local_func(*local_args)
                     dt = local_timer() - t0
             else:
+                # fast-path when func has no argument: avoid the expensive
+                # func(*args) argument unpacking
+
                 if loops != 1:
                     range_it = range(loops)
 

@@ -88,10 +88,10 @@ class TestTextRunner(unittest.TestCase):
         self.assertEqual(runner.args.loops, 10 ** 5)
         self.assertEqual(runner.result.metadata['loops'], '10^5')
 
-        self.assertIn('calibration: 10^0 loops: 1.00 us\n'
-                      'calibration: 10^1 loops: 10.00 us\n'
-                      'calibration: 10^2 loops: 100.0 us\n'
-                      'calibration: 10^3 loops: 1.00 ms\n'
+        self.assertIn('calibration: 1 loop: 1.00 us\n'
+                      'calibration: 10 loops: 10.00 us\n'
+                      'calibration: 100 loops: 100.0 us\n'
+                      'calibration: 1000 loops: 1.00 ms\n'
                       'calibration: 10^4 loops: 10.0 ms\n'
                       'calibration: 10^5 loops: 100.0 ms\n'
                       'calibration: use 10^5 loops\n',
