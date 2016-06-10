@@ -181,19 +181,6 @@ class Benchmark:
         metadatas = [run.metadata for run in self.runs]
         return _common_metadata(metadatas)
 
-    def get_loops(self):
-        if not self.runs:
-            return None
-
-        loops = self.runs[0].loops
-        if loops is None:
-            return None
-
-        for run in self.runs[1:]:
-            if loops != run.loops:
-                return None
-        return loops
-
     def format(self, verbose=0):
         if self.runs:
             first_run = self.runs[0]
@@ -278,7 +265,8 @@ class Benchmark:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, loops=None, metadata=None):
+    def __init__(self, samples=None, warmups=None, loops=None,
+                 inner_loops=None, metadata=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -295,6 +283,7 @@ class RunResult:
         if warmups is not None:
             self.warmups.extend(warmups)
         self.loops = loops
+        self.inner_loops = inner_loops
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
@@ -304,6 +293,24 @@ class RunResult:
             self.metadata = metadata
         else:
             self.metadata = {}
+
+        # FIXME: remove loops/inner_loops from metadata,
+        # but display loops and inner_loops
+        if self.loops is not None:
+            self.metadata['loops'] = _format_number(self.loops)
+        if self.inner_loops is not None:
+            self.metadata['inner_loops'] = _format_number(self.inner_loops)
+
+    def _get_raw_samples(self):
+        factor = 1
+        if self.loops is not None:
+            factor *= self.loops
+        if self.inner_loops is not None:
+            factor *= self.inner_loops
+        if factor != 1:
+            return [sample * factor for sample in self.samples]
+        else:
+            return self.samples
 
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
@@ -320,6 +327,8 @@ class RunResult:
                 'metadata': self.metadata}
         if self.loops:
             data['loops'] = self.loops
+        if self.inner_loops:
+            data['inner_loops'] = self.inner_loops
         return {'run_result': data, 'version': 1}
 
     def json(self):
@@ -345,8 +354,12 @@ class RunResult:
         warmups = data['warmups']
         metadata = data.get('metadata')
         loops = data.get('loops')
+        inner_loops = data.get('inner_loops')
 
-        run = cls(samples=samples, warmups=warmups, loops=loops)
+        run = cls(samples=samples,
+                  warmups=warmups,
+                  loops=loops,
+                  inner_loops=inner_loops)
         run.metadata = metadata
         return run
 
@@ -426,13 +439,8 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
             print("Standard deviation: %.0f%%" % (k * 100), file=file)
 
     # Check that the shortest sample took at least 1 ms
-    shortest = min(samples)
-    loops = bench.get_loops()
-    if loops:
-        shortest *= loops
+    shortest = min(min(run._get_raw_samples()) for run in bench.runs)
     text = bench._format_sample(shortest)
-    if loops:
-        text = '%s (%s)'%  (text, _format_number(loops, 'loop'))
     if shortest < 1e-3:
         if shortest < 1e-6:
             print("ERROR: the benchmark may be very unstable, "

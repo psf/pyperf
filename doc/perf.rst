@@ -37,9 +37,17 @@ manually duplicated to limit the cost of Python loops. See the
 :attr:`~perf.text_runner.TextRunner.inner_loops` attribute of the
 :class:`~perf.text_runner.TextRunner` class.
 
-.. note::
-   When the ``--raw`` command line option is explicitly used, no child process
-   is spawned.
+Example of unstable benchmark because the number of loops is too low::
+
+    $ python3 -m perf.timeit --loops=10 pass
+    .........................
+    WARNING: the benchmark seems unstable, the standard deviation is high (11%)
+    Try to rerun the benchmark with more runs, samples and/or loops
+
+    ERROR: the benchmark may be very unstable, the shortest sample only took 310 ns
+    Try to rerun the benchmark with more loops or increase --min-time
+
+    Average: 36.9 ns +- 4.2 ns
 
 
 Stable and reliable benchmarks

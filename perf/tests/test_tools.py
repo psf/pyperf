@@ -125,7 +125,8 @@ class TestResult(unittest.TestCase):
         self.assertEqual(str(run), '1.50 sec +- 0.50 sec')
 
     def test_run_result_json(self):
-        run = perf.RunResult(samples=[1.0, 1.5, 2.0], warmups=[5.0], loops=10)
+        run = perf.RunResult(samples=[1.0, 1.5, 2.0], warmups=[5.0],
+                             loops=10, inner_loops=3)
         run.metadata = {'key': 'value'}
 
         run = perf.RunResult.json_load(run.json())
@@ -133,6 +134,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(run.warmups, [5.0])
         self.assertEqual(run.metadata, {'key': 'value'})
         self.assertEqual(run.loops, 10)
+        self.assertEqual(run.inner_loops, 3)
 
     def test_results(self):
         runs = []

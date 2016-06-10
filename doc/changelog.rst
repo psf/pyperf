@@ -9,8 +9,8 @@ Changelog
   - Emit a warning or an error in english if the standard deviation is larger
     than 10%
   - Emit a warning or an error if the shortest sample took less than 1 ms
-  - New :attr:`perf.RunResult.loops` attribute (loops was previously stored
-    in metadata).
+  - New :attr:`perf.RunResult.loops` and :attr:`perf.RunResult.inner_loops`
+    attributes (they were previously stored in metadata).
   - The ``TextRunner.result`` attribute has been removed, replaced with
     a new :attr:`~perf.text_runner.TextRunner.metadata` attribute (it's also
     possible to pass metadata to the constructor).

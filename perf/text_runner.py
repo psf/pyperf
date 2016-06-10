@@ -79,7 +79,8 @@ def _check_taskset():
 
 class TextRunner:
     def __init__(self, name=None, nsample=3, nwarmup=1, nprocess=25,
-                 nloop=0, min_time=0.1, max_time=1.0, metadata=None):
+                 nloop=0, min_time=0.1, max_time=1.0, metadata=None,
+                 inner_loops=None):
         self.name = name
         if metadata is not None:
             self.metadata = metadata
@@ -101,7 +102,7 @@ class TextRunner:
         self.program_args = (sys.executable, sys.argv[0])
 
         # Number of inner-loops of the sample_func for bench_sample_func()
-        self.inner_loops = 1
+        self.inner_loops = inner_loops
 
         parser = argparse.ArgumentParser(description='Benchmark')
         parser.add_argument('-p', '--processes', type=int, default=nprocess,
@@ -268,19 +269,19 @@ class TextRunner:
             # FIXME: move this check in argument parsing
             raise ValueError("--loops must be >= 1")
 
-        run_result = perf.RunResult(loops=loops, metadata=self.metadata)
+        run_result = perf.RunResult(loops=loops,
+                                    inner_loops=self.inner_loops,
+                                    metadata=self.metadata)
 
         # only import metadata submodule in worker processes
         from perf import metadata as perf_metadata
         perf_metadata.collect_metadata(run_result.metadata)
 
-        run_result.metadata['loops'] = perf._format_number(loops)
-        if self.inner_loops != 1:
-            run_result.metadata['inner_loops'] = perf._format_number(self.inner_loops)
-
         for is_warmup, run in self._range():
             dt = sample_func(loops)
-            dt = float(dt) / loops / self.inner_loops
+            dt = float(dt) / loops
+            if self.inner_loops is not None:
+                dt /= self.inner_loops
             self._add(run_result, is_warmup, run, dt)
 
         self._display_run_result_avg(run_result)

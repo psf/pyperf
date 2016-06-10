@@ -144,7 +144,7 @@ Clocks
 RunResult
 ---------
 
-.. class:: perf.RunResult(samples=None, warmups=None, loops=None, metadata=None)
+.. class:: perf.RunResult(samples=None, warmups=None, loops=None, inner_loops=None, metadata=None)
 
    Result of a single benchmark run.
 
@@ -180,10 +180,15 @@ RunResult
 
    Attributes:
 
+   .. attribute:: inner_loops
+
+      Number of inner-loop iterations of the benchmark samples
+      (``int``, default: ``None``).
+
    .. attribute:: loops
 
-      Number of outter-loop iteartions of the benchmark run (``int`` or
-      ``None``).
+      Number of outter-loop iterations of the benchmark samples
+      (``int``, default: ``None``).
 
    .. attribute:: metadata
 
