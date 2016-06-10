@@ -48,6 +48,11 @@ Stable and reliable benchmarks
 Getting stable and reliable benchark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`.
 
+.. _pin-cpu:
+
+CPU pinning and CPU isolation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 On Linux with a multicore CPU, isolate at least 1 core has a significant impact
 on the stability of benchmarks. The `My journey to stable benchmark, part 1
 (system) <https://haypo.github.io/journey-to-stable-benchmark-system.html>`_
@@ -59,6 +64,9 @@ processes to isolated CPUs (when isolated are detected). Currently, Python 3.3
 is needed to get automatic CPU pinning. CPU pinning can be checked in benchmark
 metadata: it is enabled if the ``cpu_affinity`` :ref:`metadata <metadata>` is
 set.
+
+Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
+``--affinity`` command line option.
 
 See also the `Microbenchmarks article
 <http://haypo-notes.readthedocs.io/microbenchmark.html>`_ which contains misc

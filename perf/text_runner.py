@@ -26,6 +26,19 @@ def _json_dump(result, args):
         stdout.flush()
 
 
+def _parse_cpu_list(cpu_list):
+    cpus = []
+    for part in cpu_list.split(','):
+        if '-' in part:
+            parts = part.split('-', 1)
+            first = int(parts[0])
+            last = int(parts[1])
+            for cpu in range(first, last+1):
+                cpus.append(cpu)
+        else:
+            cpus.append(int(part))
+    return cpus
+
 def _get_isolated_cpus():
     path = '/sys/devices/system/cpu/isolated'
     try:
@@ -40,17 +53,7 @@ def _get_isolated_cpus():
         # no CPU isolated
         return
 
-    cpus = []
-    for part in isolated.split(','):
-        if '-' in part:
-            parts = part.split('-', 1)
-            first = int(parts[0])
-            last = int(parts[1])
-            for cpu in range(first, last+1):
-                cpus.append(cpu)
-        else:
-            cpus.append(int(part))
-    return cpus
+    return _parse_cpu_list(isolated)
 
 
 class TextRunner:
@@ -103,6 +106,13 @@ class TextRunner:
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
+        parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
+                            help="Specify CPU affinity for worker processes. "
+                                 "This way, benchmarks can be forced to run "
+                                 "on a given set of CPUs to minimize run to "
+                                 "run variation. By default, worker processes "
+                                 "are pinned to isolate CPUs if isolated CPUs "
+                                 "are found.")
         self.argparser = parser
 
     def _calibrate_sample_func(self, sample_func):
@@ -182,21 +192,33 @@ class TextRunner:
         _json_dump(self.result, self.args)
 
     def _cpu_affinity(self):
-        # FIXME: support also Python 2 using taskset command
-        # sched_setaffinity() was added to Python 3.3
-        if not hasattr(os, 'sched_setaffinity'):
-            # missing os.sched_setaffinity()
-            return
+        cpus = self.args.affinity
+        if not cpus:
+            # --affinity option is not set: detect isolated CPUs
 
-        isolated_cpus = _get_isolated_cpus()
-        if not isolated_cpus:
-            # no CPU isolated, or able to get the info
-            return
+            # FIXME: support also Python 2 using taskset command
+            # sched_setaffinity() was added to Python 3.3
+            if not hasattr(os, 'sched_setaffinity'):
+                # missing os.sched_setaffinity()
+                return
 
-        if self.args.verbose:
-            print("Set affinity to isolated CPUs: %s" % isolated_cpus,
-                  file=self._stream())
-        os.sched_setaffinity(0, isolated_cpus)
+            cpus = _get_isolated_cpus()
+            if not cpus:
+                # no CPU isolated, or unable to get the info
+                return
+
+            if self.args.verbose:
+                print("Pin process to isolated CPUs: %s"
+                      % _format_cpu_list(cpus),
+                      file=self._stream())
+        else:
+            cpus = _parse_cpu_list(cpus)
+            if self.args.verbose:
+                print("Pin process to CPUs: %s"
+                      % _format_cpu_list(cpus),
+                      file=self._stream())
+
+        os.sched_setaffinity(0, cpus)
 
     def _worker(self, sample_func):
         loops = self.args.loops

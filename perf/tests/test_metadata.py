@@ -42,7 +42,7 @@ class TestMetadata(unittest.TestCase):
             with mock.patch('os.cpu_count', return_value=4, create=True):
                 metadata = {}
                 perf.metadata.collect_metadata(metadata)
-        self.assertEqual(metadata['cpu_affinity'], '2, 3')
+        self.assertEqual(metadata['cpu_affinity'], '2-3')
 
         # affinity=all CPUs: ignore metadata
         with mock.patch('os.sched_getaffinity',

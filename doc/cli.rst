@@ -8,6 +8,7 @@ Microbenchmark::
 
     python3 -m perf.timeit
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
+        [--affinity=CPU_LIST]
         [--metadata] [--json [FILENAME]] [--raw]
         [-h/--help] [-v]
         [-s SETUP]
@@ -34,6 +35,11 @@ Options:
   into stderr
 * ``--json-file=FILENAME`` writes result as JSON into *FILENAME*, and write
   other messages into stdout
+* ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
+  benchmarks can be forced to run on a given set of CPUs to minimize run to run
+  variation. By default, worker processes are pinned to isolate CPUs if
+  isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+
 
 perf.timeit CLI example
 -----------------------
