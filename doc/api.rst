@@ -253,6 +253,15 @@ TextRunner
 
       Benchmark the function ``func(*args)``.
 
+      The design of :meth:`bench_func` has a non negligible overhead on
+      microbenchmarks: each loop iteration calls ``func(*args)`` whereas Python
+      function calls are expensive.
+
+      The :meth:`bench_sample_func` method is recommended for microbenchmarks,
+      especially if ``func(*args)`` takes less than 1 microsecond.
+
+      Return a :class:`~perf.Results` instance.
+
    .. method:: bench_sample_func(sample_func, \*args)
 
       Benchmark ``sample_func(loops, *args)``.

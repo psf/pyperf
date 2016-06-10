@@ -18,20 +18,14 @@ def check_args(loops, a, b):
 
 class TestTextRunner(unittest.TestCase):
     def create_text_runner(self, args):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.text_runner.TextRunner(name='test_runner')
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
         return runner
 
-    def test_bench_func(self):
-        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
-
-        with tests.capture_stdout() as stdout:
-            with tests.capture_stderr() as stderr:
-                runner.bench_sample_func(check_args, 1, 2)
-
-        self.assertRegex(stderr.getvalue(),
+    def check_bench_result(self, runner, stream, result):
+        self.assertRegex(stream.getvalue(),
                          r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
                          r'Warmup 1: 1\.00 sec\n'
                          r'Sample 1: 1\.00 sec\n'
@@ -43,8 +37,81 @@ class TestTextRunner(unittest.TestCase):
                          r'Average: 1\.00 sec \+- 0\.00 sec '
                              r'\(3 samples\)\n$')
 
+        # check bench_sample_func() result
+        self.assertIsInstance(result, perf.Results)
+        self.assertEqual(result.name, 'test_runner')
+        self.assertEqual(len(result.runs), 1)
+        self.assertEqual(result.runs[0], runner.result)
+
+    def test_bench_func_raw(self):
+        def fake_timer():
+            t = fake_timer.value
+            fake_timer.value += 1
+            return t
+        fake_timer.value = 0
+
+        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
+
+        with mock.patch('perf.perf_counter', fake_timer):
+            with tests.capture_stdout() as stdout:
+                with tests.capture_stderr() as stderr:
+                    result = runner.bench_func(check_args, None, 1, 2)
+
         self.assertEqual(stdout.getvalue(),
                          runner.result.json())
+
+        self.check_bench_result(runner, stderr, result)
+
+    def test_bench_sample_func_raw(self):
+        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
+
+        with tests.capture_stdout() as stdout:
+            with tests.capture_stderr() as stderr:
+                result = runner.bench_sample_func(check_args, 1, 2)
+
+        self.assertEqual(stdout.getvalue(),
+                         runner.result.json())
+
+        self.check_bench_result(runner, stderr, result)
+
+    def test_loops_calibration(self):
+        def sample_func(loops):
+            # number of iterations => number of microseconds
+            return loops * 1e-6
+
+        runner = self.create_text_runner(['--raw', '-vv'])
+
+        with tests.capture_stdout() as stdout:
+            with tests.capture_stderr() as stderr:
+                result = runner.bench_sample_func(sample_func)
+
+        self.assertEqual(runner.args.loops, 10 ** 5)
+        self.assertEqual(runner.result.metadata['loops'], '10^5')
+
+        self.assertIn('calibration: 10^0 loops: 1.00 us\n'
+                      'calibration: 10^1 loops: 10.00 us\n'
+                      'calibration: 10^2 loops: 100.0 us\n'
+                      'calibration: 10^3 loops: 1.00 ms\n'
+                      'calibration: 10^4 loops: 10.0 ms\n'
+                      'calibration: 10^5 loops: 100.0 ms\n'
+                      'calibration: use 10^5 loops\n',
+                      stdout.getvalue())
+        self.assertEqual(stderr.getvalue(), '')
+
+    def test_loops_calibration_min_max_time(self):
+        def sample_func(loops):
+            # number of iterations => number of microseconds
+            return loops * 1e-6
+
+        runner = self.create_text_runner(['--raw', '-vv',
+                                          '--min-time', '0.001',
+                                          '--max-time', '1.0'])
+        with tests.capture_stdout() as stdout:
+            with tests.capture_stderr() as stderr:
+                result = runner.bench_sample_func(sample_func)
+
+        self.assertEqual(runner.args.loops, 10 ** 3)
+        self.assertEqual(runner.result.metadata['loops'], '1000')
 
     def test_json_file(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
@@ -53,19 +120,9 @@ class TestTextRunner(unittest.TestCase):
 
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
-                    runner.bench_sample_func(check_args, 1, 2)
+                    result = runner.bench_sample_func(check_args, 1, 2)
 
-            self.assertRegex(stdout.getvalue(),
-                             r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
-                             r'Warmup 1: 1\.00 sec\n'
-                             r'Sample 1: 1\.00 sec\n'
-                             r'Sample 2: 1\.00 sec\n'
-                             r'Sample 3: 1\.00 sec\n'
-                             r'Metadata:\n'
-                             r'(- .*\n)+'
-                             r'\n'
-                             r'Average: 1\.00 sec \+- 0\.00 sec '
-                                r'\(3 samples\)\n$')
+            self.check_bench_result(runner, stdout, result)
 
             self.assertEqual(stderr.getvalue(), '')
 
