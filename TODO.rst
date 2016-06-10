@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Python 2: use numpy.mean() or numpy.std() when available?
 * Make TextRunner.result private?
 * Set TextRunner.result to None in the main process?
 * CPU pinning: on Python 2, spawn a child process to calibrate the number of

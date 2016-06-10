@@ -20,6 +20,12 @@ def create_parser():
     show.add_argument('filename', type=str,
                       help='Result JSON file')
 
+    hist = subparsers.add_parser('hist')
+    hist.add_argument('--scipy', action="store_true",
+                      help="Draw the histogram using numy, scipy and pylab")
+    hist.add_argument('filename', type=str,
+                      help='Result JSON file')
+
     compare = subparsers.add_parser('compare')
     compare.add_argument('ref_filename', type=str,
                          help='Reference JSON file')
@@ -141,6 +147,81 @@ def compare_results(args, results, sort_results):
             print()
 
 
+def display_histogram_scipy(args, result):
+    import numpy
+    import pylab
+    import scipy.stats as stats
+
+    h = result.get_samples()
+    h.sort()
+    fit = stats.norm.pdf(h, numpy.mean(h), numpy.std(h))
+    pylab.plot(h, fit, '-o')
+    pylab.hist(h, normed=True)
+    pylab.show()
+
+
+def display_histogram(args, result):
+    import collections
+    import os
+    import shutil
+
+    if hasattr(shutil, 'get_terminal_size'):
+        columns = shutil.get_terminal_size()[0]
+    else:
+        columns = 80
+    width = max(columns - len('99.9 ms: # 99.9%'), 3)
+
+    samples = result.get_samples()
+    nsample = len(samples)
+    avg = perf.mean(samples)
+    stdev = perf.stdev(samples)
+
+    for i in range(2, -9, -1):
+        if avg >= 10.0 ** i:
+            break
+    else:
+        i = -9
+    sample_k = 10.0 ** (i - 2)
+
+    def bucket(value):
+        return int(round(value / sample_k))
+
+    counter = collections.Counter([bucket(value) for value in samples])
+
+    line_k = float(width) / max(counter.values())
+    for ms in range(min(counter), max(counter)+1):
+        count = counter.get(ms, 0)
+        linelen = int(round(count * line_k))
+        text = perf._format_timedelta(float(ms) * sample_k)
+        if 0:
+            count = "%.1f%%" % (float(count) * 100 / nsample)
+        line = ('#' * linelen) or '|'
+        print("%s: %s %s" % (text, line, count))
+
+    print()
+
+    def format_count(count):
+        return ("%.1f%% (%s/%s)"
+                % (float(count) * 100 / nsample,
+                   count, nsample))
+
+    if args.verbose:
+        count = counter.get(min(counter))
+        print("Minimum %s: %s"
+             % (perf._format_timedelta(min(samples)), format_count(count)))
+
+    bucket_range = range(bucket(avg - stdev), bucket(avg + stdev) + 1)
+    count = sum(counter.get(bucket, 0) for bucket in bucket_range)
+    parts = perf._format_timedeltas([avg, stdev])
+    print("Average %s +- %s: %s"
+         % (parts[0], parts[1], format_count(count)))
+
+    if args.verbose:
+        count = counter.get(max(counter))
+        print("Maximum %s: %s"
+             % (perf._format_timedelta(max(samples)), format_count(count)))
+
+
 parser = create_parser()
 args = parser.parse_args()
 action = args.action
@@ -154,6 +235,12 @@ elif action in ('compare', 'compare_to'):
         result = parse_results(filename, '<file#%s>' % index)
         results.append(result)
     compare_results(args, results, action == 'compare')
+elif action == 'hist':
+    result = parse_results(args.filename)
+    if args.scipy:
+        display_histogram_scipy(args, result)
+    else:
+        display_histogram(args, result)
 else:
     parser.print_usage()
     sys.exit(1)

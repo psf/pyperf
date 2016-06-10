@@ -82,13 +82,19 @@ Display a result file::
 
     python3 -m perf
         [-v/--verbose] [-M/--no-metadata]
-        show filename.json [filename2.json ...]
+        show filename.json
 
 Compare two result files::
 
     python3 -m perf
         [-v/--verbose] [-M/--no-metadata]
         compare ref.json changed.json
+
+Display an histogram::
+
+    python3 -m perf
+        [-v/--verbose]
+        hist [--scipy] filename.json
 
 If a filename is ``-``, read the JSON content from stdin.
 

@@ -3,6 +3,8 @@ Changelog
 
 * Version 0.4
 
+  - New ``python3 -m perf hist`` CLI: display an histogram in text or graphical
+    (using ``--scipy``) modes
   - New ``--affinity=CPU_LIST`` command line option
   - On Python 2.7, the ``tasket`` command is now used if available to pin
     worker processes to isolated CPUs
