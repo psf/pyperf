@@ -188,6 +188,4 @@ specific case, whereas many parameters are random:
 * Linux uses address space layout randomization (ASLR) by default and so
   the performance of memory accesses is different in each process
 
-The article `My journey to stable benchmark, part 3 (average)
-<https://haypo.github.io/journey-to-stable-benchmark-average.html>`_ explains
-in depth the multiple issues of being focused on the minimum.
+See the :ref:`Minimum versus average and standard deviation <min>` section.

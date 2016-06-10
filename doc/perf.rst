@@ -1,3 +1,7 @@
+++++
+perf
+++++
+
 .. _loops:
 
 Runs, samples, warmups, outter and inner loops
@@ -48,6 +52,51 @@ Example of unstable benchmark because the number of loops is too low::
     Try to rerun the benchmark with more loops or increase --min-time
 
     Average: 36.9 ns +- 4.2 ns
+
+
+.. _min:
+
+Minimum versus average and standard deviation
+=============================================
+
+Articles:
+
+* `Benchmarking: minimum vs average
+  <http://blog.kevmod.com/2016/06/benchmarking-minimum-vs-average/>`_
+  (June 2016) by Kevin Modzelewski
+* `My journey to stable benchmark, part 3 (average)
+  <https://haypo.github.io/journey-to-stable-benchmark-average.html>`_
+  (May 2016) by Victor Stinner
+
+
+Distribution
+============
+
+The ``-m perf hist`` command shows an histogram of the distribution of all
+samples. Example::
+
+    $ python3 -m perf hist telco.json
+    26.2 ms:   6 ###
+    26.3 ms:  29 ###############
+    26.4 ms:  34 #################
+    26.5 ms:  61 ###############################
+    26.6 ms: 131 ##################################################################
+    26.7 ms:  93 ###############################################
+    26.8 ms:  73 #####################################
+    26.9 ms:  45 #######################
+    27.0 ms:  21 ###########
+    27.1 ms:   2 #
+    27.2 ms:   4 ##
+    27.3 ms:   0 |
+    27.4 ms:   1 #
+
+    Average 26.7 ms +- 0.2 ms: 71.6% (358/500)
+
+The distribution looks like a `gaussian curve
+<https://en.wikipedia.org/wiki/Gaussian_function>`_ with a `positive skewness
+<https://en.wikipedia.org/wiki/Skewness>`_.
+
+The "26.7 ms +- 0.2 ms" average contains 72% of samples.
 
 
 Stable and reliable benchmarks
