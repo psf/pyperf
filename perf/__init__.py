@@ -436,10 +436,10 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     if shortest < 1e-3:
         print()
         if shortest < 1e-6:
-            print("ERROR: the benchmark is likely to be very unstable, "
+            print("ERROR: the benchmark may be very unstable, "
                   "the shortest sample only took %s" % text)
         else:
-            print("WARNING: the benchmark is likely to be unstable, "
+            print("WARNING: the benchmark may be unstable, "
                   "the shortest sample only took %s" % text)
         print("Try to rerun the benchmark with more loops "
               "or increase --min-time",
