@@ -1,7 +1,7 @@
 Changelog
 =========
 
-* Version 0.3
+* Version 0.3 (2016-06-10)
 
   - Add ``compare`` and ``compare_to`` commands to the ``-m perf`` CLI
   - TextRunner is now able to spawn child processes, parse command arguments

@@ -5,7 +5,7 @@
 #  - git pull --rebase
 #  - update version in setup.py, perf/__init__.py and doc/conf.py
 #  - run tests: tox
-#  - set release date in the changelog
+#  - set release date in doc/changelog.rst
 #  - git commit -a
 #  - git push
 #
