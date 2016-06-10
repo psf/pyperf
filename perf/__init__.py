@@ -261,7 +261,7 @@ class Benchmark:
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None):
+    def __init__(self, samples=None, warmups=None, loops=None, metadata=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -277,12 +277,16 @@ class RunResult:
         self.warmups = []
         if warmups is not None:
             self.warmups.extend(warmups)
+        self.loops = loops
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
         # Metadata dictionary: key=>value, keys and values are non-empty
         # strings
-        self.metadata = {}
+        if metadata is not None:
+            self.metadata = metadata
+        else:
+            self.metadata = {}
 
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
@@ -292,6 +296,23 @@ class RunResult:
 
     def __str__(self):
         return self.format()
+
+    def _as_json(self):
+        data = {'samples': self.samples,
+                'warmups': self.warmups,
+                'metadata': self.metadata}
+        if self.loops:
+            data['loops'] = self.loops
+        return {'run_result': data, 'version': 1}
+
+    def json(self):
+        json = _import_json()
+        return json.dumps(self._as_json()) + '\n'
+
+    def json_dump_into(self, file):
+        json = _import_json()
+        json.dump(self._as_json(), file)
+        file.write('\n')
 
     @classmethod
     def _json_load(cls, data):
@@ -306,8 +327,9 @@ class RunResult:
         samples = data['samples']
         warmups = data['warmups']
         metadata = data.get('metadata')
+        loops = data.get('loops')
 
-        run = cls(samples=samples, warmups=warmups)
+        run = cls(samples=samples, warmups=warmups, loops=loops)
         run.metadata = metadata
         return run
 
@@ -347,21 +369,6 @@ class RunResult:
                                % (args[0], proc.returncode))
 
         return cls.json_load(stdout)
-
-    def _as_json(self):
-        data = {'samples': self.samples,
-                'warmups': self.warmups,
-                'metadata': self.metadata}
-        return {'run_result': data, 'version': 1}
-
-    def json(self):
-        json = _import_json()
-        return json.dumps(self._as_json()) + '\n'
-
-    def json_dump_into(self, file):
-        json = _import_json()
-        json.dump(self._as_json(), file)
-        file.write('\n')
 
 
 def _very_verbose_run(run):

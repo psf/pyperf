@@ -38,8 +38,8 @@ def _main_common():
     runner.args.setup = _format_stmt(runner.args.setup)
     runner.args.stmt = _format_stmt(runner.args.stmt)
 
-    runner.result.metadata['timeit_setup'] = ' '.join(repr(stmt) for stmt in runner.args.setup)
-    runner.result.metadata['timeit_stmt'] = ' '.join(repr(stmt) for stmt in runner.args.stmt)
+    runner.metadata['timeit_setup'] = ' '.join(repr(stmt) for stmt in runner.args.setup)
+    runner.metadata['timeit_stmt'] = ' '.join(repr(stmt) for stmt in runner.args.stmt)
 
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current

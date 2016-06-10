@@ -79,9 +79,13 @@ def _check_taskset():
 
 class TextRunner:
     def __init__(self, name=None, nsample=3, nwarmup=1, nprocess=25,
-                 nloop=0, min_time=0.1, max_time=1.0):
+                 nloop=0, min_time=0.1, max_time=1.0, metadata=None):
         self.name = name
-        self.result = perf.RunResult()
+        if metadata is not None:
+            self.metadata = metadata
+        else:
+            self.metadata = {}
+
         # result of argparser.parse_args()
         self.args = None
 
@@ -190,33 +194,33 @@ class TextRunner:
         for run in range(self.args.nsample):
             yield (False, run)
 
-    def _add(self, is_warmup, run, sample):
+    def _add(self, run_result, is_warmup, run, sample):
         if is_warmup:
-            self.result.warmups.append(sample)
+            run_result.warmups.append(sample)
         else:
-            self.result.samples.append(sample)
+            run_result.samples.append(sample)
 
         if self.args.verbose:
-            text = self.result._format_sample(sample)
+            text = run_result._format_sample(sample)
             if is_warmup:
                 text = "Warmup %s: %s" % (1 + run, text)
             else:
                 text = "Sample %s: %s" % (1 + run, text)
             print(text, file=self._stream())
 
-    def _display_result(self):
+    def _display_run_result_avg(self, run_result):
         stream = self._stream()
 
         if self.args.metadata:
-            perf._display_metadata(self.result.metadata, file=stream)
+            perf._display_metadata(run_result.metadata, file=stream)
 
-        text = self.result.format(self.args.verbose)
-        nsample = perf._format_number(len(self.result.samples), 'sample')
+        text = run_result.format(self.args.verbose)
+        nsample = perf._format_number(len(run_result.samples), 'sample')
         text = "Average: %s (%s)" % (text, nsample)
         print(text, file=self._stream())
 
         stream.flush()
-        _json_dump(self.result, self.args)
+        _json_dump(run_result, self.args)
 
     def _cpu_affinity(self):
         # sched_setaffinity() was added to Python 3.3
@@ -264,22 +268,25 @@ class TextRunner:
             # FIXME: move this check in argument parsing
             raise ValueError("--loops must be >= 1")
 
+        run_result = perf.RunResult(loops=loops, metadata=self.metadata)
+
         # only import metadata submodule in worker processes
-        import perf.metadata
-        perf.metadata.collect_metadata(self.result.metadata)
-        self.result.metadata['loops'] = perf._format_number(loops)
+        from perf import metadata as perf_metadata
+        perf_metadata.collect_metadata(run_result.metadata)
+
+        run_result.metadata['loops'] = perf._format_number(loops)
         if self.inner_loops != 1:
-            self.result.metadata['inner_loops'] = perf._format_number(self.inner_loops)
+            run_result.metadata['inner_loops'] = perf._format_number(self.inner_loops)
 
         for is_warmup, run in self._range():
             dt = sample_func(loops)
             dt = float(dt) / loops / self.inner_loops
-            self._add(is_warmup, run, dt)
+            self._add(run_result, is_warmup, run, dt)
 
-        self._display_result()
+        self._display_run_result_avg(run_result)
 
         result = perf.Benchmark(name=self.name)
-        result.runs.append(self.result)
+        result.runs.append(run_result)
         return result
 
     def _main(self, sample_func):

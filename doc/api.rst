@@ -144,7 +144,7 @@ Clocks
 RunResult
 ---------
 
-.. class:: perf.RunResult(samples=None, warmups=None)
+.. class:: perf.RunResult(samples=None, warmups=None, loops=None, metadata=None)
 
    Result of a single benchmark run.
 
@@ -179,6 +179,11 @@ RunResult
 
 
    Attributes:
+
+   .. attribute:: loops
+
+      Number of outter-loop iteartions of the benchmark run (``int`` or
+      ``None``).
 
    .. attribute:: metadata
 
@@ -250,19 +255,22 @@ Benchmark
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25)
+.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25, metadata=None)
 
    Tool to run a benchmark in text mode.
 
    *name* is the name of the benchmark.
+
+   *metadata* is passed to the :class:`~perf.RunResult` constructor: see
+   :ref:`Metadata <metadata>`.
 
    *nsample*, *nwarmup* and *nprocess* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
    options.
 
    If isolated CPUs are detected, the CPU affinity is automatically
-   set to these isolated CPUs. On Linux, see the ``isolcpus`` kernel command
-   line argument and the ``/sys/devices/system/cpu/isolated`` file.
+   set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
+   <pin-cpu>`.
 
    Methods:
 
@@ -329,10 +337,6 @@ TextRunner
 
       The value is copied to the ``inner_loops`` metadata of created
       :class:`~perf.RunResult` results.
-
-   .. attribute:: result
-
-      :class:`~perf.RunResult` instance.
 
    .. attribute:: prepare_subprocess_args
 

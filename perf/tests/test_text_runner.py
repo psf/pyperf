@@ -41,7 +41,6 @@ class TestTextRunner(unittest.TestCase):
         self.assertIsInstance(result, perf.Benchmark)
         self.assertEqual(result.name, 'test_runner')
         self.assertEqual(len(result.runs), 1)
-        self.assertEqual(result.runs[0], runner.result)
 
     def test_bench_func_raw(self):
         def fake_timer():
@@ -58,7 +57,7 @@ class TestTextRunner(unittest.TestCase):
                     result = runner.bench_func(check_args, None, 1, 2)
 
         self.assertEqual(stdout.getvalue(),
-                         runner.result.json())
+                         result.runs[0].json())
 
         self.check_bench_result(runner, stderr, result)
 
@@ -70,7 +69,7 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(check_args, 1, 2)
 
         self.assertEqual(stdout.getvalue(),
-                         runner.result.json())
+                         result.runs[0].json())
 
         self.check_bench_result(runner, stderr, result)
 
@@ -86,7 +85,8 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(sample_func)
 
         self.assertEqual(runner.args.loops, 10 ** 5)
-        self.assertEqual(runner.result.metadata['loops'], '10^5')
+        self.assertEqual(result.runs[0].loops, 10 ** 5)
+        self.assertEqual(result.runs[0].metadata['loops'], '10^5')
 
         self.assertIn('calibration: 1 loop: 1.00 us\n'
                       'calibration: 10 loops: 10.00 us\n'
@@ -111,9 +111,10 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(sample_func)
 
         self.assertEqual(runner.args.loops, 10 ** 3)
-        self.assertEqual(runner.result.metadata['loops'], '1000')
+        self.assertEqual(result.runs[0].loops, 10 ** 3)
+        self.assertEqual(result.runs[0].metadata['loops'], '1000')
 
-    def test_json_file(self):
+    def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
             runner = self.create_text_runner(['--raw', '-v',
                                               '--json-file', tmp.name])
@@ -128,7 +129,7 @@ class TestTextRunner(unittest.TestCase):
 
             tmp.seek(0)
             self.assertEqual(tmp.read().decode('utf-8'),
-                             runner.result.json())
+                             result.runs[0].json())
 
     def test_cpu_affinity(self):
         runner = perf.text_runner.TextRunner()

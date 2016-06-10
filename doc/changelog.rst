@@ -8,6 +8,11 @@ Changelog
     worker processes to isolated CPUs
   - Emit a warning or error in english if the standard deviation is larger
     than 10%
+  - New :attr:`perf.RunResult.loops` attribute (loops was previously stored
+    in metadata).
+  - The ``TextRunner.result`` attribute has been removed, replaced with
+    a new :attr:`~perf.text_runner.TextRunner.metadata` attribute (it's also
+    possible to pass metadata to the constructor).
 
 * Version 0.3 (2016-06-10)
 
