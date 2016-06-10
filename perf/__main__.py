@@ -152,11 +152,23 @@ def display_histogram_scipy(args, result):
     import pylab
     import scipy.stats as stats
 
-    h = result.get_samples()
-    h.sort()
-    fit = stats.norm.pdf(h, numpy.mean(h), numpy.std(h))
-    pylab.plot(h, fit, '-o')
-    pylab.hist(h, normed=True)
+    samples = result.get_samples()
+
+    avg = numpy.mean(samples)
+    for i in range(2, -9, -1):
+        if avg >= 10.0 ** i:
+            i -= 1
+            break
+    else:
+        i = -9
+    sample_k = 10.0 ** i
+    print("Sample factor: 10^%s" % i)
+    samples = [sample / sample_k for sample in samples]
+
+    samples.sort()
+    fit = stats.norm.pdf(samples, numpy.mean(samples), numpy.std(samples))
+    pylab.plot(samples, fit, '-o')
+    pylab.hist(samples, normed=True)
     pylab.show()
 
 
