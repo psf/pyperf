@@ -47,12 +47,10 @@ try:
         # Wrapper to hide the xbar parameter, to be portable with Python 2
         return _stdev(data)
 except ImportError:
-    import math
-
     def mean(seq):
         if not seq:
             raise ValueError("sequence seq must be non-empty")
-        return float(sum(seq)) / len(seq)
+        return float(math.fsum(seq)) / len(seq)
 
     def stdev(seq):
         seq = [float(value) for value in seq]
@@ -61,7 +59,7 @@ except ImportError:
 
         c = mean(seq)
         squares = ((x - c) ** 2 for x in seq)
-        return math.sqrt(sum(squares) / (len(seq) - 1))
+        return math.sqrt(math.fsum(squares) / (len(seq) - 1))
 
 
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
@@ -552,7 +550,7 @@ def _pooled_sample_variance(sample1, sample2):
     mean2 = mean(sample2)
     squares2 = ((x - mean2) ** 2 for x in sample2)
 
-    return (sum(squares1) + sum(squares2)) / float(deg_freedom)
+    return (math.fsum(squares1) + math.fsum(squares2)) / float(deg_freedom)
 
 
 def _tscore(sample1, sample2):
