@@ -98,6 +98,14 @@ The distribution looks like a `gaussian curve
 
 The "26.7 ms +- 0.2 ms" average contains 72% of samples.
 
+See also:
+
+* `"How NOT to Measure Latency" by Gil Tene
+  <https://www.youtube.com/watch?v=lJ8ydIuPFeU>`_ (video at Youtube)
+* `HdrHistogram: A High Dynamic Range Histogram.
+  <http://hdrhistogram.github.io/HdrHistogram/>`_: "look at the entire
+  percentile spectrum"
+
 
 Stable and reliable benchmarks
 ==============================
