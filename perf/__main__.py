@@ -67,7 +67,7 @@ def parse_results(filename, default_name=None):
     return result
 
 
-def display_result(args, results):
+def display_result(args, result):
     if args.metadata:
         perf._display_metadata(result.get_metadata())
 
@@ -185,7 +185,7 @@ def _display_histogram_scipy(args, samples):
     fit3 = stats.norm.pdf(samples, perf.mean(samples), perf.stdev(samples))
     pylab.plot(samples, fit3, '-+', label='mean-stdev')
 
-    legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+    legend = plt.legend(loc='upper right', shadow=True, fontsize='x-large')
     pylab.hist(samples, bins=25, normed=True)
     pylab.show()
 
