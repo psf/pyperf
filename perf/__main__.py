@@ -147,12 +147,13 @@ def compare_results(args, results, sort_results):
             print()
 
 
-def display_histogram_scipy(args, result):
+def _display_histogram_scipy(args, samples):
+    import boltons.statsutils
+    import matplotlib.pyplot as plt
     import numpy
     import pylab
     import scipy.stats as stats
-
-    samples = result.get_samples()
+    import statistics
 
     avg = numpy.mean(samples)
     for i in range(2, -9, -1):
@@ -164,28 +165,42 @@ def display_histogram_scipy(args, result):
     sample_k = 10.0 ** i
     print("Sample factor: 10^%s" % i)
     samples = [sample / sample_k for sample in samples]
-
     samples.sort()
-    fit = stats.norm.pdf(samples, numpy.mean(samples), numpy.std(samples))
-    pylab.plot(samples, fit, '-o')
-    pylab.hist(samples, normed=True)
+
+    samples_stats = boltons.statsutils.Stats(samples)
+
+    # median +- MAD
+    fit = stats.norm.pdf(samples, samples_stats.median, samples_stats.median_abs_dev)
+    pylab.plot(samples, fit, '-o', label='median-mad')
+
+    # median +- std dev
+    fit2 = stats.norm.pdf(samples, samples_stats.median, statistics.stdev(samples, samples_stats.median))
+    pylab.plot(samples, fit2, '-v', label='median-stdev')
+
+    # mean + std dev
+    fit3 = stats.norm.pdf(samples, perf.mean(samples), perf.stdev(samples))
+    pylab.plot(samples, fit3, '-+', label='mean-stdev')
+
+    legend = plt.legend(loc='upper center', shadow=True, fontsize='x-large')
+    pylab.hist(samples, bins=25, normed=True)
     pylab.show()
 
-
-def display_histogram(args, result):
+def _display_histogram_text(args, samples):
+    import boltons.statsutils
     import collections
-    import os
     import shutil
+    # FIXME: statistics doesn't exist in Python 2
+    import statistics
 
     if hasattr(shutil, 'get_terminal_size'):
         columns = shutil.get_terminal_size()[0]
     else:
         columns = 80
 
-    samples = result.get_samples()
     nsample = len(samples)
     avg = perf.mean(samples)
     stdev = perf.stdev(samples)
+    stats = boltons.statsutils.Stats(samples)
 
     for i in range(2, -9, -1):
         if avg >= 10.0 ** i:
@@ -218,6 +233,7 @@ def display_histogram(args, result):
                 % (float(count) * 100 / nsample,
                    count, nsample))
 
+    print("Number of samples: %s" % perf._format_number(len(samples)))
     if args.verbose:
         count = counter.get(min(counter))
         print("Minimum %s: %s"
@@ -225,14 +241,38 @@ def display_histogram(args, result):
 
     bucket_range = range(bucket(avg - stdev), bucket(avg + stdev) + 1)
     count = sum(counter.get(bucket, 0) for bucket in bucket_range)
-    parts = perf._format_timedeltas([avg, stdev])
-    print("Average %s +- %s: %s"
-         % (parts[0], parts[1], format_count(count)))
+    print("Mean + std dev: %s +- %s" % perf._format_timedeltas([avg, stdev]))
+    print("Median +- std dev: %s +- %s" % perf._format_timedeltas([stats.median, statistics.stdev(samples, stats.median)]))
+    print("Median +- MAD: %s +- %s" % perf._format_timedeltas([stats.median, stats.median_abs_dev]))
+    print("Skewness: %.2f" % boltons.statsutils.skewness(samples))
+    print()
+
+    def counters(avg, stdev):
+        left = avg - stdev
+        right = avg + stdev
+        count = 0
+        for sample in samples:
+            if left <= sample <= right:
+                count += 1
+        return format_count(count)
+
+    median = stats.median
+    print("Mean+stdev range buckets: %s" % counters(avg, stdev))
+    print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
+    print("Median+stdev range buckets: %s" % counters(median, statistics.stdev(samples, median)))
 
     if args.verbose:
         count = counter.get(max(counter))
         print("Maximum %s: %s"
              % (perf._format_timedelta(max(samples)), format_count(count)))
+
+
+def display_histogram(args, result):
+    samples = result.get_samples()
+    if args.scipy:
+        _display_histogram_scipy(args, samples)
+    else:
+        _display_histogram_text(args, samples)
 
 
 parser = create_parser()
@@ -250,10 +290,7 @@ elif action in ('compare', 'compare_to'):
     compare_results(args, results, action == 'compare')
 elif action == 'hist':
     result = parse_results(args.filename)
-    if args.scipy:
-        display_histogram_scipy(args, result)
-    else:
-        display_histogram(args, result)
+    display_histogram(args, result)
 else:
     parser.print_usage()
     sys.exit(1)

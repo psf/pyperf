@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Optional dependency to boltons.statsutils or copy code for hist:
+  median, median_abs_dev, skewness
 * Python 2: use numpy.mean() or numpy.std() when available?
 * Make TextRunner.result private?
 * Set TextRunner.result to None in the main process?
