@@ -1,6 +1,11 @@
 TODO
 ====
 
+* Add unit test on hist: need JSON data file
+* Metadata: "perf show" doesn't show the date
+* JSON files are a litle bit big
+* Save the system load?
+* Save the duration? of each run? only of the total?
 * Optional dependency to boltons.statsutils or copy code for hist:
   median, median_abs_dev, skewness
 * Python 2: use numpy.mean() or numpy.std() when available?
