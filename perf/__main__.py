@@ -40,6 +40,10 @@ def create_parser():
                             type=str, nargs='+',
                             help='Changed JSON file')
 
+    stats = subparsers.add_parser('stats')
+    stats.add_argument('filename', type=str,
+                       help='Result JSON file')
+
     return parser
 
 
@@ -186,11 +190,8 @@ def _display_histogram_scipy(args, samples):
     pylab.show()
 
 def _display_histogram_text(args, samples):
-    import boltons.statsutils
     import collections
     import shutil
-    # FIXME: statistics doesn't exist in Python 2
-    import statistics
 
     if hasattr(shutil, 'get_terminal_size'):
         columns = shutil.get_terminal_size()[0]
@@ -200,7 +201,6 @@ def _display_histogram_text(args, samples):
     nsample = len(samples)
     avg = perf.mean(samples)
     stdev = perf.stdev(samples)
-    stats = boltons.statsutils.Stats(samples)
 
     for i in range(2, -9, -1):
         if avg >= 10.0 ** i:
@@ -227,25 +227,49 @@ def _display_histogram_text(args, samples):
         print("{}: {:>{}} {}".format(text, count, count_width, line))
 
     print()
+    print("Total number of samples: %s" % perf._format_number(len(samples)))
+
+
+def display_histogram(args, result):
+    samples = result.get_samples()
+    if args.scipy:
+        _display_histogram_scipy(args, samples)
+    else:
+        _display_histogram_text(args, samples)
+
+
+def display_stats(args, result):
+    import boltons.statsutils
+    # FIXME: statistics doesn't exist in Python 2
+    import statistics
+
+    fmt = perf._format_timedelta
+    samples = result.get_samples()
+    stats = boltons.statsutils.Stats(samples)
+
+    nsample = len(samples)
+    print("Number of samples: %s" % perf._format_number(nsample))
+    # FIXME: add % compared to median/mean to min&max
+    print("Minimum %s" % fmt(min(samples)))
+    print("Maximum %s" % fmt(max(samples)))
+    print()
+    print("Mean + std dev: %s +- %s"
+          % perf._format_timedeltas([perf.mean(samples),
+                                     perf.stdev(samples)]))
+    print("Median +- std dev: %s +- %s"
+          % perf._format_timedeltas([stats.median, statistics.stdev(samples, stats.median)]))
+    print("Median +- MAD: %s +- %s"
+          % perf._format_timedeltas([stats.median, stats.median_abs_dev]))
+    print()
+
+    print("Skewness: %.2f"
+          % boltons.statsutils.skewness(samples))
+    print()
 
     def format_count(count):
         return ("%.1f%% (%s/%s)"
                 % (float(count) * 100 / nsample,
                    count, nsample))
-
-    print("Number of samples: %s" % perf._format_number(len(samples)))
-    if args.verbose:
-        count = counter.get(min(counter))
-        print("Minimum %s: %s"
-             % (perf._format_timedelta(min(samples)), format_count(count)))
-
-    bucket_range = range(bucket(avg - stdev), bucket(avg + stdev) + 1)
-    count = sum(counter.get(bucket, 0) for bucket in bucket_range)
-    print("Mean + std dev: %s +- %s" % perf._format_timedeltas([avg, stdev]))
-    print("Median +- std dev: %s +- %s" % perf._format_timedeltas([stats.median, statistics.stdev(samples, stats.median)]))
-    print("Median +- MAD: %s +- %s" % perf._format_timedeltas([stats.median, stats.median_abs_dev]))
-    print("Skewness: %.2f" % boltons.statsutils.skewness(samples))
-    print()
 
     def counters(avg, stdev):
         left = avg - stdev
@@ -257,40 +281,34 @@ def _display_histogram_text(args, samples):
         return format_count(count)
 
     median = stats.median
-    print("Mean+stdev range buckets: %s" % counters(avg, stdev))
+    print("Mean+stdev range buckets: %s" % counters(perf.mean(samples), perf.stdev(samples)))
     print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
     print("Median+stdev range buckets: %s" % counters(median, statistics.stdev(samples, median)))
 
-    if args.verbose:
-        count = counter.get(max(counter))
-        print("Maximum %s: %s"
-             % (perf._format_timedelta(max(samples)), format_count(count)))
 
-
-def display_histogram(args, result):
-    samples = result.get_samples()
-    if args.scipy:
-        _display_histogram_scipy(args, samples)
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+    action = args.action
+    if action == 'show':
+        result = parse_results(args.filename)
+        display_result(args, result)
+    elif action in ('compare', 'compare_to'):
+        ref_result = parse_results(args.ref_filename, '<file#1>')
+        results = [ref_result]
+        for index, filename in enumerate(args.changed_filenames, 2):
+            result = parse_results(filename, '<file#%s>' % index)
+            results.append(result)
+        compare_results(args, results, action == 'compare')
+    elif action == 'hist':
+        result = parse_results(args.filename)
+        display_histogram(args, result)
+    elif action == 'stats':
+        result = parse_results(args.filename)
+        display_stats(args, result)
     else:
-        _display_histogram_text(args, samples)
+        parser.print_usage()
+        sys.exit(1)
 
 
-parser = create_parser()
-args = parser.parse_args()
-action = args.action
-if action == 'show':
-    result = parse_results(args.filename)
-    display_result(args, result)
-elif action in ('compare', 'compare_to'):
-    ref_result = parse_results(args.ref_filename, '<file#1>')
-    results = [ref_result]
-    for index, filename in enumerate(args.changed_filenames, 2):
-        result = parse_results(filename, '<file#%s>' % index)
-        results.append(result)
-    compare_results(args, results, action == 'compare')
-elif action == 'hist':
-    result = parse_results(args.filename)
-    display_histogram(args, result)
-else:
-    parser.print_usage()
-    sys.exit(1)
+main()

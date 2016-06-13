@@ -96,6 +96,15 @@ Display an histogram::
         [-v/--verbose]
         hist [--scipy] filename.json
 
+``hist --scipy`` opens a window with an interactive graphic using the
+``matplotlib`` and ``scipy`` modules.
+
+Display statistics::
+
+    python3 -m perf
+        [-v/--verbose]
+        stats result.json
+
 If a filename is ``-``, read the JSON content from stdin.
 
 perf CLI example
