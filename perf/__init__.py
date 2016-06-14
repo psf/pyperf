@@ -529,7 +529,7 @@ def _pooled_sample_variance(sample1, sample2):
     mean2 = statistics.mean(sample2)
     squares2 = ((x - mean2) ** 2 for x in sample2)
 
-    return (sum(squares1) + sum(squares2)) / float(deg_freedom)
+    return (math.fsum(squares1) + math.fsum(squares2)) / float(deg_freedom)
 
 
 def _tscore(sample1, sample2):
