@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Finish to rename "run_tests" to "benchmark": change the JSON format
 * Add unit test on hist: need JSON data file
 * JSON files are a litle bit big
 * Metadata: "perf show" doesn't show the date

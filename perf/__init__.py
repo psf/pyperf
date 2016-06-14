@@ -135,114 +135,6 @@ def _common_metadata(metadatas):
     return metadata
 
 
-class Benchmark:
-    def __init__(self, runs=None, name=None):
-        if runs is not None:
-            self.runs = runs
-        else:
-            self.runs = []
-        self.name = name
-
-    def _format_sample(self, sample, verbose=False):
-        if not self.runs:
-            raise ValueError("Benchmark has no run result")
-        run = self.runs[0]
-        return run._format_sample(sample, verbose)
-
-    def get_samples(self):
-        samples = []
-        for run in self.runs:
-            samples.extend(run.samples)
-        return samples
-
-    def get_metadata(self):
-        metadatas = [run.metadata for run in self.runs]
-        return _common_metadata(metadatas)
-
-    def format(self, verbose=0):
-        if self.runs:
-            first_run = self.runs[0]
-            warmup = len(first_run.warmups)
-            nsample = len(first_run.samples)
-            for run in self.runs:
-                run_nsample = len(run.samples)
-                if nsample is not None and nsample != run_nsample:
-                    nsample = None
-                run_warmup = len(run.warmups)
-                if warmup is not None and warmup != run_warmup:
-                    warmup = None
-
-            # FIXME: handle the case where all samples are empty
-            samples = self.get_samples()
-            text = first_run._formatter(samples, verbose)
-
-            if verbose:
-                iterations = []
-                nrun = len(self.runs)
-                if nrun > 1:
-                    iterations.append(_format_number(nrun, 'run'))
-                if nsample:
-                    iterations.append(_format_number(nsample, 'sample'))
-                iterations = ' x '.join(iterations)
-                if warmup:
-                    iterations += '; %s' % _format_number(warmup, 'warmup')
-                if iterations:
-                    text = '%s (%s)' % (text, iterations)
-        else:
-            text = '<no run>'
-        return text
-
-    def __str__(self):
-        text = self.format()
-        if self.name:
-            text = '%s: %s' % (self.name, text)
-        return text
-
-    @classmethod
-    def _json_load(cls, data):
-        version = data.get('version')
-        if version != _JSON_VERSION:
-            raise ValueError("version %r not supported" % version)
-
-        if 'results' not in data:
-            raise ValueError("JSON doesn't contain results")
-        data = data['results']
-
-        runs = [RunResult._json_load(run, check_version=False)
-                for run in data['runs']]
-        name = data.get('name')
-
-        return cls(runs=runs, name=name)
-
-    @classmethod
-    def json_load_from(cls, file):
-        json = _import_json()
-        data = json.load(file)
-        return cls._json_load(data)
-
-    @classmethod
-    def json_load(cls, text):
-        json = _import_json()
-        data = json.loads(text)
-        return cls._json_load(data)
-
-    def _as_json(self):
-        runs = [run._as_json(version=False) for run in self.runs]
-        data = {'runs': runs}
-        if self.name:
-            data['name'] = self.name
-        return {'results': data, 'version': _JSON_VERSION}
-
-    def json(self):
-        json = _import_json()
-        return json.dumps(self._as_json()) + '\n'
-
-    def json_dump_into(self, file):
-        json = _import_json()
-        json.dump(self._as_json(), file)
-        file.write('\n')
-
-
 class RunResult:
     def __init__(self, samples=None, warmups=None, loops=None,
                  inner_loops=None, metadata=None):
@@ -382,6 +274,114 @@ class RunResult:
                                % (args[0], proc.returncode))
 
         return cls.json_load(stdout)
+
+
+class Benchmark:
+    def __init__(self, runs=None, name=None):
+        if runs is not None:
+            self.runs = runs
+        else:
+            self.runs = []
+        self.name = name
+
+    def _format_sample(self, sample, verbose=False):
+        if not self.runs:
+            raise ValueError("Benchmark has no run result")
+        run = self.runs[0]
+        return run._format_sample(sample, verbose)
+
+    def get_samples(self):
+        samples = []
+        for run in self.runs:
+            samples.extend(run.samples)
+        return samples
+
+    def get_metadata(self):
+        metadatas = [run.metadata for run in self.runs]
+        return _common_metadata(metadatas)
+
+    def format(self, verbose=0):
+        if self.runs:
+            first_run = self.runs[0]
+            warmup = len(first_run.warmups)
+            nsample = len(first_run.samples)
+            for run in self.runs:
+                run_nsample = len(run.samples)
+                if nsample is not None and nsample != run_nsample:
+                    nsample = None
+                run_warmup = len(run.warmups)
+                if warmup is not None and warmup != run_warmup:
+                    warmup = None
+
+            # FIXME: handle the case where all samples are empty
+            samples = self.get_samples()
+            text = first_run._formatter(samples, verbose)
+
+            if verbose:
+                iterations = []
+                nrun = len(self.runs)
+                if nrun > 1:
+                    iterations.append(_format_number(nrun, 'run'))
+                if nsample:
+                    iterations.append(_format_number(nsample, 'sample'))
+                iterations = ' x '.join(iterations)
+                if warmup:
+                    iterations += '; %s' % _format_number(warmup, 'warmup')
+                if iterations:
+                    text = '%s (%s)' % (text, iterations)
+        else:
+            text = '<no run>'
+        return text
+
+    def __str__(self):
+        text = self.format()
+        if self.name:
+            text = '%s: %s' % (self.name, text)
+        return text
+
+    @classmethod
+    def _json_load(cls, data):
+        version = data.get('version')
+        if version != _JSON_VERSION:
+            raise ValueError("version %r not supported" % version)
+
+        if 'results' not in data:
+            raise ValueError("JSON doesn't contain results")
+        data = data['results']
+
+        runs = [RunResult._json_load(run, check_version=False)
+                for run in data['runs']]
+        name = data.get('name')
+
+        return cls(runs=runs, name=name)
+
+    @classmethod
+    def json_load_from(cls, file):
+        json = _import_json()
+        data = json.load(file)
+        return cls._json_load(data)
+
+    @classmethod
+    def json_load(cls, text):
+        json = _import_json()
+        data = json.loads(text)
+        return cls._json_load(data)
+
+    def _as_json(self):
+        runs = [run._as_json(version=False) for run in self.runs]
+        data = {'runs': runs}
+        if self.name:
+            data['name'] = self.name
+        return {'results': data, 'version': _JSON_VERSION}
+
+    def json(self):
+        json = _import_json()
+        return json.dumps(self._as_json()) + '\n'
+
+    def json_dump_into(self, file):
+        json = _import_json()
+        json.dump(self._as_json(), file)
+        file.write('\n')
 
 
 def _very_verbose_run(run):
