@@ -244,7 +244,6 @@ def display_stats(args, result):
 
     fmt = perf._format_timedelta
     samples = result.get_samples()
-    stats = boltons.statsutils.Stats(samples)
 
     nsample = len(samples)
     print("Number of samples: %s" % perf._format_number(nsample))
@@ -255,10 +254,12 @@ def display_stats(args, result):
     print("Mean + std dev: %s +- %s"
           % perf._format_timedeltas([statistics.mean(samples),
                                      statistics.stdev(samples)]))
+    median = statistics.median(samples)
     print("Median +- std dev: %s +- %s"
-          % perf._format_timedeltas([stats.median, statistics.stdev(samples, stats.median)]))
+          % perf._format_timedeltas([median, statistics.stdev(samples, median)]))
+    stats = boltons.statsutils.Stats(samples)
     print("Median +- MAD: %s +- %s"
-          % perf._format_timedeltas([stats.median, stats.median_abs_dev]))
+          % perf._format_timedeltas([median, stats.median_abs_dev]))
     print()
 
     print("Skewness: %.2f"
@@ -279,10 +280,9 @@ def display_stats(args, result):
                 count += 1
         return format_count(count)
 
-    median = stats.median
     print("Mean+stdev range buckets: %s" % counters(statistics.mean(samples), statistics.stdev(samples)))
-    print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
     print("Median+stdev range buckets: %s" % counters(median, statistics.stdev(samples, median)))
+    print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
 
 
 def main():
