@@ -182,12 +182,13 @@ def display_histogram_scipy(args, result):
 
     samples_stats = boltons.statsutils.Stats(samples)
 
+    median = statistics.median(samples)
     # median +- MAD
-    fit = stats.norm.pdf(samples, samples_stats.median, samples_stats.median_abs_dev)
+    fit = stats.norm.pdf(samples, median, samples_stats.median_abs_dev)
     pylab.plot(samples, fit, '-o', label='median-mad')
 
     # median +- std dev
-    fit2 = stats.norm.pdf(samples, samples_stats.median, statistics.stdev(samples, samples_stats.median))
+    fit2 = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
     pylab.plot(samples, fit2, '-v', label='median-stdev')
 
     # mean + std dev
