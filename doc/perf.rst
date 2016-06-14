@@ -203,8 +203,4 @@ Linux metadata:
 * ``cpu_affinity``: if set, the process is pinned to the specified list of
   CPUs
 
-Misc:
-
-* ``date``: date when the benchmark started, formatted as ISO 8601
-
 See the :func:`perf.metadata.collect_metadata` function.
