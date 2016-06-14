@@ -23,10 +23,16 @@ def create_parser():
                       help='Result JSON file')
 
     hist = subparsers.add_parser('hist')
-    hist.add_argument('--scipy', action="store_true",
-                      help="Draw the histogram using numy, scipy and pylab")
+    hist.add_argument('--extend', action="store_true",
+                      help="Extend the histogram to fit the terminal")
     hist.add_argument('filename', type=str,
                       help='Result JSON file')
+
+    hist_scipy = subparsers.add_parser('hist_scipy')
+    hist_scipy.add_argument('--scipy', action="store_true",
+                            help="Draw the histogram using numy, scipy and pylab")
+    hist_scipy.add_argument('filename', type=str,
+                            help='Result JSON file')
 
     compare = subparsers.add_parser('compare')
     compare.add_argument('ref_filename', type=str,
@@ -153,12 +159,14 @@ def compare_results(args, results, sort_results):
             print()
 
 
-def _display_histogram_scipy(args, samples):
+def display_histogram_scipy(args, result):
     import boltons.statsutils
     import matplotlib.pyplot as plt
     import numpy
     import pylab
     import scipy.stats as stats
+
+    samples = result.get_samples()
 
     avg = numpy.mean(samples)
     for i in range(2, -9, -1):
@@ -190,35 +198,39 @@ def _display_histogram_scipy(args, samples):
     pylab.hist(samples, bins=25, normed=True)
     pylab.show()
 
-def _display_histogram_text(args, samples):
+def display_histogram_text(args, result):
     import collections
     import shutil
 
+    samples = result.get_samples()
     if hasattr(shutil, 'get_terminal_size'):
-        columns = shutil.get_terminal_size()[0]
+        columns, lines = shutil.get_terminal_size()
     else:
         columns = 80
+        lines = 25
 
     nsample = len(samples)
     avg = statistics.mean(samples)
     stdev = statistics.stdev(samples)
 
-    for i in range(2, -9, -1):
-        if avg >= 10.0 ** i:
-            break
-    else:
-        i = -9
-    sample_k = 10.0 ** (i - 2)
+    bins = max(lines - 3, 3)
+    if not args.extend:
+        bins = min(bins, 25)
+    sample_k = float(max(samples) - min(samples)) / bins
 
     def bucket(value):
-        return int(round(value / sample_k))
+        # round towards zero (ROUND_DOWN)
+        return int(value / sample_k)
 
     counter = collections.Counter([bucket(value) for value in samples])
     count_max = max(counter.values())
     count_width = len(str(count_max))
 
     line = '%s: %s #' % (perf._format_timedelta(avg), count_max)
-    width = max(columns - len(line), 3)
+    width = columns - len(line)
+    if not args.extend:
+        width = min(width, 79)
+    width = max(width, 3)
     line_k = float(width) / max(counter.values())
     for ms in range(min(counter), max(counter)+1):
         count = counter.get(ms, 0)
@@ -226,17 +238,6 @@ def _display_histogram_text(args, samples):
         text = perf._format_timedelta(float(ms) * sample_k)
         line = ('#' * linelen) or '|'
         print("{}: {:>{}} {}".format(text, count, count_width, line))
-
-    print()
-    print("Total number of samples: %s" % perf._format_number(len(samples)))
-
-
-def display_histogram(args, result):
-    samples = result.get_samples()
-    if args.scipy:
-        _display_histogram_scipy(args, samples)
-    else:
-        _display_histogram_text(args, samples)
 
 
 def display_stats(args, result):
@@ -301,7 +302,10 @@ def main():
         compare_results(args, results, action == 'compare')
     elif action == 'hist':
         result = parse_results(args.filename)
-        display_histogram(args, result)
+        display_histogram_text(args, result)
+    elif action == 'hist_scipy':
+        result = parse_results(args.filename)
+        display_histogram_scipy(args, result)
     elif action == 'stats':
         result = parse_results(args.filename)
         display_stats(args, result)

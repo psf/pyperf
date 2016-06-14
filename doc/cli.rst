@@ -80,9 +80,7 @@ perf CLI usage
 
 Display a result file::
 
-    python3 -m perf
-        [-v/--verbose] [-M/--no-metadata]
-        show filename.json
+    python3 -m perf [-v/--verbose] [-M/--no-metadata] show filename.json
 
 Compare two result files::
 
@@ -90,20 +88,18 @@ Compare two result files::
         [-v/--verbose] [-M/--no-metadata]
         compare ref.json changed.json
 
-Display an histogram::
+Display an histogram in text mode::
 
-    python3 -m perf
-        [-v/--verbose]
-        hist [--scipy] filename.json
-
-``hist --scipy`` opens a window with an interactive graphic using the
-``matplotlib`` and ``scipy`` modules.
+    python3 -m perf [-v/--verbose] hist filename.json
 
 Display statistics::
 
-    python3 -m perf
-        [-v/--verbose]
-        stats result.json
+    python3 -m perf [-v/--verbose] stats result.json
+
+Display an histogram in graphical mode using the ``matplotlib``, ``numpy``
+``scipy`` modules::
+
+    python3 -m perf [-v/--verbose] hist_scipy filename.json
 
 If a filename is ``-``, read the JSON content from stdin.
 
