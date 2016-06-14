@@ -162,22 +162,10 @@ def compare_results(args, results, sort_results):
 def display_histogram_scipy(args, result):
     import boltons.statsutils
     import matplotlib.pyplot as plt
-    import numpy
     import pylab
     import scipy.stats as stats
 
     samples = result.get_samples()
-
-    avg = numpy.mean(samples)
-    for i in range(2, -9, -1):
-        if avg >= 10.0 ** i:
-            i -= 1
-            break
-    else:
-        i = -9
-    sample_k = 10.0 ** i
-    print("Sample factor: 10^%s" % i)
-    samples = [sample / sample_k for sample in samples]
     samples.sort()
 
     samples_stats = boltons.statsutils.Stats(samples)

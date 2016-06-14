@@ -96,7 +96,7 @@ Display statistics::
 
     python3 -m perf [-v/--verbose] stats result.json
 
-Display an histogram in graphical mode using the ``matplotlib``, ``numpy``
+Display an histogram in graphical mode using the ``matplotlib``, ``pylab``
 ``scipy`` modules::
 
     python3 -m perf [-v/--verbose] hist_scipy filename.json
