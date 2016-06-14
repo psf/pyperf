@@ -2,6 +2,8 @@ from __future__ import print_function
 import math
 import sys
 
+import statistics   # Python 3.4+, or backport on Python 2.7
+
 
 __version__ = '0.4'
 _PY3 = (sys.version_info >= (3,))
@@ -39,29 +41,6 @@ except ImportError:
         perf_counter = time.time
 
 
-# Statistics
-try:
-    from statistics import mean, stdev as _stdev   # Python 3.4+
-
-    def stdev(data):
-        # Wrapper to hide the xbar parameter, to be portable with Python 2
-        return _stdev(data)
-except ImportError:
-    def mean(seq):
-        if not seq:
-            raise ValueError("sequence seq must be non-empty")
-        return float(math.fsum(seq)) / len(seq)
-
-    def stdev(seq):
-        seq = [float(value) for value in seq]
-        if len(seq) < 2:
-            raise ValueError('stdev requires at least two data points')
-
-        c = mean(seq)
-        squares = ((x - c) ** 2 for x in seq)
-        return math.sqrt(math.fsum(squares) / (len(seq) - 1))
-
-
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
@@ -92,10 +71,10 @@ def _format_timedelta(value):
 # FIXME: put this code into RunResult, and pass _format_timedeltas as formatter
 # to RunResult
 def _format_run_result(values, verbose=0):
-    numbers = [mean(values)]
+    numbers = [statistics.mean(values)]
     with_stdev = (len(values) >= 2)
     if with_stdev:
-        numbers.append(stdev(values))
+        numbers.append(statistics.stdev(values))
     if verbose > 1:
         numbers.append(min(values))
         numbers.append(max(values))
@@ -416,10 +395,10 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     # FIXME: handle empty samples
 
     # Display a warning if the standard deviation is larger than 10%
-    avg = mean(samples)
+    avg = statistics.mean(samples)
     # Avoid division by zero
     if avg and len(samples) > 1:
-        k = stdev(samples) / avg
+        k = statistics.stdev(samples) / avg
         if k > 0.10:
             if k > 0.20:
                 print("ERROR: the benchmark is very unstable, the standard "
@@ -545,9 +524,9 @@ def _pooled_sample_variance(sample1, sample2):
         Pooled sample variance, as a float.
     """
     deg_freedom = len(sample1) + len(sample2) - 2
-    mean1 = mean(sample1)
+    mean1 = statistics.mean(sample1)
     squares1 = ((x - mean1) ** 2 for x in sample1)
-    mean2 = mean(sample2)
+    mean2 = statistics.mean(sample2)
     squares2 = ((x - mean2) ** 2 for x in sample2)
 
     return (math.fsum(squares1) + math.fsum(squares2)) / float(deg_freedom)
@@ -565,7 +544,7 @@ def _tscore(sample1, sample2):
     """
     assert len(sample1) == len(sample2)
     error = _pooled_sample_variance(sample1, sample2) / len(sample1)
-    return (mean(sample1) - mean(sample2)) / math.sqrt(error * 2)
+    return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(error * 2)
 
 
 def is_significant(sample1, sample2):

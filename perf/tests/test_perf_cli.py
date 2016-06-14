@@ -45,7 +45,7 @@ class TestPerfCLI(unittest.TestCase):
 
             args = [sys.executable, '-m', 'perf']
             if verbose:
-                args.append('-v')
+                args.append('-' + 'v' * verbose)
             if not metadata:
                 args.append('-M')
             args.extend(('show', tmp.name))
@@ -71,7 +71,7 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(stdout, expected)
 
     def test_show_verbose(self):
-        stdout = self.show(verbose=True, metadata=False)
+        stdout = self.show(verbose=2, metadata=False)
         expected = ('Run 1/3: samples (1): 1.00 sec\n'
                     'Run 2/3: samples (1): 1.50 sec\n'
                     'Run 3/3: samples (1): 2.00 sec\n'
@@ -81,8 +81,10 @@ class TestPerfCLI(unittest.TestCase):
                     'Try to rerun the benchmark with more runs, samples '
                         'and/or loops\n'
                     '\n'
+                    'Shortest sample: 1.00 sec\n'
+                    '\n'
                     'Average: 1.50 sec +- 0.50 sec '
-                        '(3 runs x 1 sample)\n')
+                        '(min: 1.00 sec, max: 2.00 sec) (3 runs x 1 sample)\n')
         self.assertEqual(stdout, expected)
 
     def compare(self, action, ref_result, changed_result):

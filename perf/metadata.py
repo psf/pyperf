@@ -6,6 +6,12 @@ import re
 import socket
 import sys
 
+try:
+    # Optional dependency
+    import psutil
+except ImportError:
+    psutil = None
+
 import perf
 
 
@@ -118,11 +124,20 @@ def _collect_system_metadata(metadata):
     # CPU affinity
     if hasattr(os, 'sched_getaffinity'):
         cpus = os.sched_getaffinity(0)
-        if cpu_count is not None and cpu_count >= 1:
-            if cpus == set(range(cpu_count)):
-                cpus = None
-        if cpus:
-            metadata['cpu_affinity'] = perf._format_cpu_list(cpus)
+    elif psutil is not None:
+        proc = psutil.Process()
+        if hasattr(proc, 'cpu_affinity'):
+            cpus = proc.cpu_affinity()
+        else:
+            # cpu_affinity() is only available on Linux, Windows and FreeBSD
+            cpus = None
+    else:
+        cpus = None
+    if cpus is not None and cpu_count is not None and cpu_count >= 1:
+        if cpus == set(range(cpu_count)):
+            cpus = None
+    if cpus:
+        metadata['cpu_affinity'] = perf._format_cpu_list(cpus)
 
     # Hostname
     hostname = socket.gethostname()

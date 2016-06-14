@@ -57,6 +57,10 @@ def main():
         'author_email': 'victor.stinner@gmail.com',
         'classifiers': CLASSIFIERS,
         'packages': ['perf', 'perf.tests'],
+        'install_requires': ["statistics; python_version < '3.4'"],
+        # optional dependencies:
+        # 'psutil'
+        # ['matplotlib', 'scipy']
     }
     setup(**options)
 

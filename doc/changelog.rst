@@ -3,20 +3,24 @@ Changelog
 
 * Version 0.4
 
-  - New ``python3 -m perf hist`` command: display an histogram in text or
-    graphical (using ``--scipy``) modes
+  - New ``python3 -m perf hist`` and ``python3 -m perf hist_scipy`` commands:
+    display an histogram in text or graphical (using ``scipy``) mode
   - New ``python3 -m perf stats`` command: display statistics of a result
   - New ``--affinity=CPU_LIST`` command line option
-  - On Python 2.7, the ``tasket`` command is now used if available to pin
-    worker processes to isolated CPUs
+  - On Python 2, ``psutil`` optional dependency is now used for CPU affinity.
+    It ensures that CPU affinity is set for loop calibration too.
   - Emit a warning or an error in english if the standard deviation is larger
-    than 10%
+    than 10% and/or the shortest sample is shorter than 1 ms
   - Emit a warning or an error if the shortest sample took less than 1 ms
   - New :attr:`perf.RunResult.loops` and :attr:`perf.RunResult.inner_loops`
     attributes (they were previously stored in metadata).
   - The ``TextRunner.result`` attribute has been removed, replaced with
     a new :attr:`~perf.text_runner.TextRunner.metadata` attribute (it's also
     possible to pass metadata to the constructor).
+  - On Python 2, add dependency to the backported ``statistics`` module:
+    https://pypi.python.org/pypi/statistics
+  - ``perf.mean()`` and ``perf.stdev()`` functions have been removed: use
+    the ``statistics`` module which is also available on Python 2.7
 
 * Version 0.3 (2016-06-10)
 
