@@ -194,7 +194,7 @@ class TextRunner:
                 text = "Sample %s: %s" % (1 + run, text)
             print(text, file=self._stream())
 
-    def _display_run_result_avg(self, run_result):
+    def _display_run_result_avg(self, bench, run_result):
         stream = self._stream()
 
         if self.args.metadata:
@@ -206,7 +206,7 @@ class TextRunner:
         print(text, file=self._stream())
 
         stream.flush()
-        _json_dump(run_result, self.args)
+        _json_dump(bench, self.args)
 
     def _cpu_affinity(self):
         # sched_setaffinity() was added to Python 3.3
@@ -281,11 +281,12 @@ class TextRunner:
                 dt /= self.inner_loops
             self._add(run_result, is_warmup, run, dt)
 
-        self._display_run_result_avg(run_result)
+        bench = perf.Benchmark(name=self.name)
+        bench.runs.append(run_result)
 
-        result = perf.Benchmark(name=self.name)
-        result.runs.append(run_result)
-        return result
+        self._display_run_result_avg(bench, run_result)
+
+        return bench
 
     def _main(self, sample_func):
         self.parse_args()
@@ -374,7 +375,10 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
 
-        return perf.RunResult.from_subprocess(args, stderr=subprocess.PIPE)
+        bench = perf.Benchmark._from_subprocess(args, stderr=subprocess.PIPE)
+        # FIXME: validate that bench is related to the same benchmark
+        # compare metadata? compare loops?
+        return bench.runs[0]
 
     def _spawn_workers(self):
         verbose = self.args.verbose

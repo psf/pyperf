@@ -272,31 +272,6 @@ class RunResult:
         data = json.loads(text)
         return cls._json_load(data)
 
-    @classmethod
-    def from_subprocess(cls, args, **kwargs):
-        subprocess = _import_subprocess()
-
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True,
-                                **kwargs)
-
-        if _PY3:
-            with proc:
-                stdout, stderr = proc.communicate()
-        else:
-            stdout, stderr = proc.communicate()
-
-        if proc.returncode:
-            sys.stdout.write(stdout)
-            sys.stdout.flush()
-            sys.stderr.write(stderr)
-            sys.stderr.flush()
-            raise RuntimeError("%s with with exit code %s"
-                               % (args[0], proc.returncode))
-
-        return cls.json_load(stdout)
-
 
 class Benchmark:
     def __init__(self, runs=None, name=None):
@@ -427,6 +402,31 @@ class Benchmark:
         json = _import_json()
         json.dump(self._as_json(), file)
         file.write('\n')
+
+    @classmethod
+    def _from_subprocess(cls, args, **kwargs):
+        subprocess = _import_subprocess()
+
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True,
+                                **kwargs)
+
+        if _PY3:
+            with proc:
+                stdout, stderr = proc.communicate()
+        else:
+            stdout, stderr = proc.communicate()
+
+        if proc.returncode:
+            sys.stdout.write(stdout)
+            sys.stdout.flush()
+            sys.stderr.write(stderr)
+            sys.stderr.flush()
+            raise RuntimeError("%s failed with exit code %s"
+                               % (args[0], proc.returncode))
+
+        return cls.json_load(stdout)
 
 
 def _very_verbose_run(run):
