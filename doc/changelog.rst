@@ -17,6 +17,10 @@ Changelog
   - The ``TextRunner.result`` attribute has been removed, replaced with
     a new :attr:`~perf.text_runner.TextRunner.metadata` attribute (it's also
     possible to pass metadata to the constructor).
+  - On Python 2, add dependency to the backported ``statistics`` module:
+    https://pypi.python.org/pypi/statistics
+  - ``perf.mean()`` and ``perf.stdev()`` functions have been removed: use
+    the ``statistics`` module which is also available on Python 2.7
 
 * Version 0.3 (2016-06-10)
 

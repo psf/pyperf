@@ -3,6 +3,8 @@ import argparse
 import json
 import sys
 
+import statistics
+
 import perf
 
 
@@ -83,7 +85,7 @@ def display_result(args, result):
 
 def _result_sort_key(result):
     samples = result.get_samples()
-    return perf.mean(samples)
+    return statistics.mean(samples)
 
 
 def compare_results(args, results, sort_results):
@@ -121,11 +123,11 @@ def compare_results(args, results, sort_results):
 
     # Compute means
     ref_samples = ref_result.get_samples()
-    ref_avg = perf.mean(ref_samples)
+    ref_avg = statistics.mean(ref_samples)
     last_index = len(results) - 1
     for index, changed_result in enumerate(results[1:], 1):
         changed_samples = changed_result.get_samples()
-        changed_avg = perf.mean(changed_samples)
+        changed_avg = statistics.mean(changed_samples)
         text = ("Average: [%s] %s -> [%s] %s"
                 % (ref_result.name,
                    ref_result.format(verbose=args.verbose),
@@ -157,7 +159,6 @@ def _display_histogram_scipy(args, samples):
     import numpy
     import pylab
     import scipy.stats as stats
-    import statistics
 
     avg = numpy.mean(samples)
     for i in range(2, -9, -1):
@@ -182,7 +183,7 @@ def _display_histogram_scipy(args, samples):
     pylab.plot(samples, fit2, '-v', label='median-stdev')
 
     # mean + std dev
-    fit3 = stats.norm.pdf(samples, perf.mean(samples), perf.stdev(samples))
+    fit3 = stats.norm.pdf(samples, statistics.mean(samples), statistics.stdev(samples))
     pylab.plot(samples, fit3, '-+', label='mean-stdev')
 
     legend = plt.legend(loc='upper right', shadow=True, fontsize='x-large')
@@ -199,8 +200,8 @@ def _display_histogram_text(args, samples):
         columns = 80
 
     nsample = len(samples)
-    avg = perf.mean(samples)
-    stdev = perf.stdev(samples)
+    avg = statistics.mean(samples)
+    stdev = statistics.stdev(samples)
 
     for i in range(2, -9, -1):
         if avg >= 10.0 ** i:
@@ -240,8 +241,6 @@ def display_histogram(args, result):
 
 def display_stats(args, result):
     import boltons.statsutils
-    # FIXME: statistics doesn't exist in Python 2
-    import statistics
 
     fmt = perf._format_timedelta
     samples = result.get_samples()
@@ -254,8 +253,8 @@ def display_stats(args, result):
     print("Maximum %s" % fmt(max(samples)))
     print()
     print("Mean + std dev: %s +- %s"
-          % perf._format_timedeltas([perf.mean(samples),
-                                     perf.stdev(samples)]))
+          % perf._format_timedeltas([statistics.mean(samples),
+                                     statistics.stdev(samples)]))
     print("Median +- std dev: %s +- %s"
           % perf._format_timedeltas([stats.median, statistics.stdev(samples, stats.median)]))
     print("Median +- MAD: %s +- %s"
@@ -281,7 +280,7 @@ def display_stats(args, result):
         return format_count(count)
 
     median = stats.median
-    print("Mean+stdev range buckets: %s" % counters(perf.mean(samples), perf.stdev(samples)))
+    print("Mean+stdev range buckets: %s" % counters(statistics.mean(samples), statistics.stdev(samples)))
     print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
     print("Median+stdev range buckets: %s" % counters(median, statistics.stdev(samples, median)))
 

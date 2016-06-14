@@ -16,14 +16,6 @@ class TestClocks(unittest.TestCase):
 
 
 class TestStatistics(unittest.TestCase):
-    def test_stdev(self):
-        self.assertEqual(perf.stdev([1.0, 1.5, 2.0]), 0.5)
-        self.assertEqual(perf.stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75]),
-                         1.0810874155219827)
-
-    def test_mean(self):
-        self.assertEqual(perf.mean([1.0, 1.5, 2.0]), 1.5)
-
     def test_is_significant(self):
         # not significant
         samples1 = (1.0, 1.5, 2.0)
