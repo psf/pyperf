@@ -19,6 +19,12 @@ Optional dependencies:
   Command to install these packages on Fedora:
   ``sudo dnf install -y python3-{scipy,matplotlib}``
 
+If you get the error ``'install_requires' must be a string ...``, you must
+upgrade setuptools to support environment markers in ``install_requires`` of
+``setup.py``. Try::
+
+    python3 -m pip install -U setuptools
+
 
 .. _loops:
 
