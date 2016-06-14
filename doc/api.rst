@@ -154,30 +154,6 @@ RunResult
 
       Format samples.
 
-   .. method:: json()
-
-      Encode the run result as a JSON string (``str``).
-
-   .. classmethod:: json_load(text)
-
-      Load a result from a JSON string (``str``) which was encoded by
-      :meth:`json`.
-
-   .. method:: json_dump_into(file)
-
-      Encode the run result as JSON into the *file*.
-
-   .. classmethod:: json_load_from(file)
-
-      Load a run result from the JSON file *file* which was created by
-      :meth:`json_dump_into`.
-
-   .. classmethod:: from_subprocess(args, \**kwargs)
-
-      Run a child process and create a result from its standard output decoded
-      from JSON
-
-
    Attributes:
 
    .. attribute:: inner_loops

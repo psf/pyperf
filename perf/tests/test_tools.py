@@ -118,13 +118,19 @@ class TestResult(unittest.TestCase):
 
     def test_run_result_json(self):
         run = perf.RunResult(samples=[1.0, 1.5, 2.0], warmups=[5.0],
-                             loops=10, inner_loops=3)
-        run.metadata = {'key': 'value'}
+                             loops=10, inner_loops=3,
+                             metadata={'key': 'value'})
 
-        run = perf.RunResult.json_load(run.json())
+        # JSON serialization/deserialization
+        bench = perf.Benchmark(runs=[run])
+        bench = perf.Benchmark.json_load(bench.json())
+        run = bench.runs[0]
+
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
         self.assertEqual(run.warmups, [5.0])
-        self.assertEqual(run.metadata, {'key': 'value'})
+        self.assertEqual(run.metadata, {'key': 'value',
+                                        'loops': '10',
+                                        'inner_loops': '3'})
         self.assertEqual(run.loops, 10)
         self.assertEqual(run.inner_loops, 3)
 

@@ -221,20 +221,6 @@ class RunResult:
             data['inner_loops'] = self.inner_loops
         return {'run_result': data}
 
-    def json(self):
-        json = _import_json()
-
-        data = self._as_json()
-        data['version'] = _JSON_VERSION
-        return json.dumps(data) + '\n'
-
-    def json_dump_into(self, file):
-        json = _import_json()
-        data = self._as_json()
-        data['version'] = _JSON_VERSION
-        json.dump(data, file)
-        file.write('\n')
-
     @classmethod
     def _json_load(cls, data, raw=False):
         if not raw:
@@ -259,18 +245,6 @@ class RunResult:
                   inner_loops=inner_loops)
         run.metadata = metadata
         return run
-
-    @classmethod
-    def json_load_from(cls, file):
-        json = _import_json()
-        data = json.load(file)
-        return cls._json_load(data)
-
-    @classmethod
-    def json_load(cls, text):
-        json = _import_json()
-        data = json.loads(text)
-        return cls._json_load(data)
 
 
 class Benchmark:
