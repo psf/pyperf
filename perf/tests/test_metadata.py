@@ -52,6 +52,18 @@ class TestMetadata(unittest.TestCase):
                 perf.metadata.collect_metadata(metadata)
         self.assertNotIn('cpu_affinity', metadata)
 
+    def test_cpu_affinity_psutil(self):
+        with mock.patch('perf.metadata.os') as mock_os:
+            del mock_os.sched_getaffinity
+            mock_os.cpu_count.return_value = 4
+
+            with mock.patch('psutil.Process') as mock_process:
+                mock_process.return_value.cpu_affinity.return_value = [2, 3]
+
+                metadata = {}
+                perf.metadata.collect_metadata(metadata)
+            self.assertEqual(metadata['cpu_affinity'], '2-3')
+
     def test_cli(self):
         args = [sys.executable, '-m', 'perf.metadata']
         proc = subprocess.Popen(args,

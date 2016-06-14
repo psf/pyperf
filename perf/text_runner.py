@@ -6,6 +6,12 @@ import os
 import subprocess
 import sys
 
+try:
+    # Optional dependency
+    import psutil
+except ImportError:
+    psutil = None
+
 import perf
 
 
@@ -54,27 +60,6 @@ def _get_isolated_cpus():
         return
 
     return _parse_cpu_list(isolated)
-
-
-def _check_taskset():
-    """Check if the taskset command is available.
-
-    Return None on success. Return an error message on error.
-    """
-    with open(os.devnull, "wb") as dev_null:
-        # Try to pin a temporary Python process to CPU #0
-        command = ["taskset", "--cpu-list", "0",
-                   sys.executable, "-c", "pass"]
-        try:
-            exitcode = subprocess.call(command,
-                                       stdout=dev_null, stderr=dev_null)
-        except OSError as exc:
-            return ("Command taskset not found: %s" % exc)
-
-    if exitcode != 0:
-        return ("Command taskset failed with exit code %s" % exitcode)
-
-    return None
 
 
 class TextRunner:
@@ -227,13 +212,15 @@ class TextRunner:
         # sched_setaffinity() was added to Python 3.3
         has_sched_setaffinity = hasattr(os, 'sched_setaffinity')
         if not has_sched_setaffinity:
-            taskset_err = _check_taskset()
+            if psutil is not None:
+                proc = psutil.Process()
+                psutil_has_cpu_affinity = hasattr(proc, 'cpu_affinity')
+            else:
+                psutil_has_cpu_affinity = False
 
         cpus = self.args.affinity
         if not cpus:
-            if not has_sched_setaffinity and taskset_err:
-                # unable to pin CPUs
-                return
+            stream = self._stream()
 
             # --affinity option is not set: detect isolated CPUs
             cpus = _get_isolated_cpus()
@@ -241,17 +228,20 @@ class TextRunner:
                 # no isolated CPUs or unable to get the isolated CPUs
                 return
 
+            if not has_sched_setaffinity and not psutil_has_cpu_affinity:
+                # unable to pin CPUs
+                print("WARNING: unable to pin worker processes to "
+                      "isolated CPUs, CPU affinity not available", file=stream)
+                print("Use Python 3.3 or newer, or install psutil dependency",
+                      file=stream)
+                return
+
             if self.args.verbose:
                 print("Pin process to isolated CPUs: %s"
-                      % perf._format_cpu_list(cpus),
-                      file=self._stream())
-        else:
-            if not has_sched_setaffinity and taskset_err:
-                print("ERROR: Option --affinity not available. %s"
-                      % taskset_err,
-                      file=sys.stderr)
-                sys.exit(1)
+                      % perf._format_cpu_list(cpus), file=stream)
 
+            self.args.affinity = perf._format_cpu_list(cpus)
+        else:
             cpus = _parse_cpu_list(cpus)
             if self.args.verbose:
                 print("Pin process to CPUs: %s"
@@ -260,8 +250,15 @@ class TextRunner:
 
         if has_sched_setaffinity:
             os.sched_setaffinity(0, cpus)
+        elif psutil_has_cpu_affinity:
+            proc = psutil.Process()
+            proc.cpu_affinity(cpus)
         else:
-            return ('taskset', '--cpu-list', perf._format_cpu_list(cpus))
+            print("ERROR: CPU affinity not available.", file=sys.stderr)
+            print("Use Python 3.3 or newer, or install psutil dependency",
+                  file=stream)
+            sys.exit(1)
+
 
     def _worker(self, sample_func):
         loops = self.args.loops
@@ -293,15 +290,13 @@ class TextRunner:
     def _main(self, sample_func):
         self.parse_args()
 
-        taskset_args = self._cpu_affinity()
+        self._cpu_affinity()
 
         if self.args.loops == 0:
-            # FIXME: spawn a child process for the calibration if taskset_args
-            # is non-empty
             self.args.loops = self._calibrate_sample_func(sample_func)
 
         if not self.args.raw:
-            return self._spawn_workers(taskset_args)
+            return self._spawn_workers()
         else:
             return self._worker(sample_func)
 
@@ -364,10 +359,8 @@ class TextRunner:
 
         return self._main(sample_func)
 
-    def _spawn_worker(self, taskset_args):
+    def _spawn_worker(self):
         args = []
-        if taskset_args:
-            args.extend(taskset_args)
         args.extend(self.program_args)
         args.extend(('--raw', '--json',
                      '--samples', str(self.args.nsample),
@@ -375,7 +368,7 @@ class TextRunner:
                      '--loops', str(self.args.loops)))
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
-        if self.args.affinity and not taskset_args:
+        if self.args.affinity:
             args.append('--affinity=%s' % self.args.affinity)
 
         if self.prepare_subprocess_args:
@@ -383,14 +376,14 @@ class TextRunner:
 
         return perf.RunResult.from_subprocess(args, stderr=subprocess.PIPE)
 
-    def _spawn_workers(self, taskset_args):
+    def _spawn_workers(self):
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
         bench = perf.Benchmark(name=self.name)
 
         for process in range(nprocess):
-            run = self._spawn_worker(taskset_args)
+            run = self._spawn_worker()
             bench.runs.append(run)
             if verbose > 1:
                 text = perf._very_verbose_run(run)

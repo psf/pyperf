@@ -1,4 +1,5 @@
 import itertools
+import os
 import tempfile
 
 import perf.text_runner
@@ -131,19 +132,39 @@ class TestTextRunner(unittest.TestCase):
             self.assertEqual(tmp.read().decode('utf-8'),
                              result.runs[0].json())
 
-    def test_cpu_affinity(self):
+    def test_cpu_affinity_psutil_isolcpus(self):
         runner = perf.text_runner.TextRunner()
         runner.parse_args([])
 
-        # with isolated CPUs
+        with mock.patch('perf.text_runner.os') as mock_os:
+            del mock_os.sched_setaffinity
+
+            with mock.patch('psutil.Process') as mock_process:
+                with mock.patch('io.open') as mock_open:
+                    mock_file = mock_open.return_value
+                    mock_file.readline.return_value = '1-2'
+                    runner._cpu_affinity()
+            self.assertEqual(runner.args.affinity, '1-2')
+
+            cpu_affinity = mock_process.return_value.cpu_affinity
+            cpu_affinity.assert_called_once_with([1, 2])
+
+    def test_cpu_affinity_isolcpus(self):
+        runner = perf.text_runner.TextRunner()
+        runner.parse_args([])
+
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
             with mock.patch('io.open') as mock_open:
                 mock_file = mock_open.return_value
                 mock_file.readline.return_value = '1-2'
                 runner._cpu_affinity()
+        self.assertEqual(runner.args.affinity, '1-2')
         mock_setaffinity.assert_called_once_with(0, [1, 2])
 
-        # without isolated CPU
+    def test_cpu_affinity_without_isolcpus(self):
+        runner = perf.text_runner.TextRunner()
+        runner.parse_args([])
+
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
             with mock.patch('io.open') as mock_open:
                 mock_file = mock_open.return_value

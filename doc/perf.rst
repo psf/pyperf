@@ -2,6 +2,24 @@
 perf
 ++++
 
+
+Install perf
+============
+
+perf supports Python 2.7 and Python 3. Install perf on Python 3::
+
+    python3 -m pip install perf
+
+On Python 2.7, the ``statistics`` dependency is installed.
+
+Optional dependencies:
+
+* ``psutil``: needed for CPU affinity on Python 2.7
+* The ``-m perf hist_scipy`` command requires ``scipy`` and ``matplotlib``.
+  Command to install these packages on Fedora:
+  ``sudo dnf install -y python3-{scipy,matplotlib}``
+
+
 .. _loops:
 
 Runs, samples, warmups, outter and inner loops
@@ -130,7 +148,8 @@ checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
 
 On Python 3.3 and newer, :func:`os.sched_setaffinity` is used to pin processes.
-On Python 2.7, the ``tasket`` command is used if available.
+On Python 2.7, the ``psutil`` is required for
+``psutil.Process().cpu_affinity``.
 
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.
