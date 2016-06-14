@@ -79,7 +79,7 @@ def display_result(args, result):
     if args.metadata:
         perf._display_metadata(result.get_metadata())
 
-    if args.verbose:
+    if args.verbose > 1:
         nrun = len(result.runs)
         for index, run in enumerate(result.runs, 1):
             text = perf._very_verbose_run(run)
