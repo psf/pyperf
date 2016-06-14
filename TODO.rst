@@ -2,8 +2,8 @@ TODO
 ====
 
 * Add unit test on hist: need JSON data file
-* Metadata: "perf show" doesn't show the date
 * JSON files are a litle bit big
+* Metadata: "perf show" doesn't show the date
 * Save the system load?
 * Save the duration? of each run? only of the total?
 * Optional dependency to boltons.statsutils or copy code for hist:
