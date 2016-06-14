@@ -7,6 +7,7 @@ import statistics   # Python 3.4+, or backport on Python 2.7
 
 __version__ = '0.4'
 _PY3 = (sys.version_info >= (3,))
+_JSON_VERSION = 1
 
 
 def _import_json():
@@ -200,14 +201,15 @@ class Benchmark:
     @classmethod
     def _json_load(cls, data):
         version = data.get('version')
-        if version != 1:
+        if version != _JSON_VERSION:
             raise ValueError("version %r not supported" % version)
 
         if 'results' not in data:
             raise ValueError("JSON doesn't contain results")
         data = data['results']
 
-        runs = [RunResult._json_load(run) for run in data['runs']]
+        runs = [RunResult._json_load(run, check_version=False)
+                for run in data['runs']]
         name = data.get('name')
 
         return cls(runs=runs, name=name)
@@ -225,11 +227,11 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        runs = [run._as_json() for run in self.runs]
+        runs = [run._as_json(version=False) for run in self.runs]
         data = {'runs': runs}
         if self.name:
             data['name'] = self.name
-        return {'results': data, 'version': 1}
+        return {'results': data, 'version': _JSON_VERSION}
 
     def json(self):
         json = _import_json()
@@ -298,7 +300,7 @@ class RunResult:
     def __str__(self):
         return self.format()
 
-    def _as_json(self):
+    def _as_json(self, version=True):
         data = {'samples': self.samples,
                 'warmups': self.warmups,
                 'metadata': self.metadata}
@@ -306,7 +308,10 @@ class RunResult:
             data['loops'] = self.loops
         if self.inner_loops:
             data['inner_loops'] = self.inner_loops
-        return {'run_result': data, 'version': 1}
+        data = {'run_result': data}
+        if version:
+            data['version'] = _JSON_VERSION
+        return data
 
     def json(self):
         json = _import_json()
@@ -318,10 +323,11 @@ class RunResult:
         file.write('\n')
 
     @classmethod
-    def _json_load(cls, data):
-        version = data.get('version')
-        if version != 1:
-            raise ValueError("version %r not supported" % version)
+    def _json_load(cls, data, check_version=True):
+        if check_version:
+            version = data.get('version')
+            if version != _JSON_VERSION:
+                raise ValueError("version %r not supported" % version)
 
         if 'run_result' not in data:
             raise ValueError("JSON doesn't contain run_result")
