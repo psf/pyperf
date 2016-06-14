@@ -91,7 +91,7 @@ def display_result(args, result):
 
 def _result_sort_key(result):
     samples = result.get_samples()
-    return statistics.mean(samples)
+    return (statistics.mean(samples), result.name or '')
 
 
 def compare_results(args, results, sort_results):
@@ -142,7 +142,9 @@ def compare_results(args, results, sort_results):
 
         # avoid division by zero
         if ref_avg and changed_avg:
-            if changed_avg < ref_avg:
+            if changed_avg == ref_avg:
+                text = "%s: same speed" % (text,)
+            elif changed_avg < ref_avg:
                 text = "%s: %.1fx faster" % (text, ref_avg /  changed_avg)
             else:
                 text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)

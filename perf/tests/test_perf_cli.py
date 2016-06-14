@@ -153,6 +153,23 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
+    def test_compare_same(self):
+        samples = (1.0, 1.5, 2.0)
+        runs = self.create_runs(samples)
+        ref_result = perf.Benchmark(runs=runs, name='b')
+
+        runs = self.create_runs(samples)
+        changed_result = perf.Benchmark(runs=runs, name='a')
+
+        stdout = self.compare('compare', ref_result, changed_result)
+
+        expected = ('Reference (best): a\n'
+                    '\n'
+                    'Average: [a] 1.50 sec +- 0.50 sec '
+                        '-> [b] 1.50 sec +- 0.50 sec: same speed\n'
+                    'Not significant!')
+        self.assertEqual(stdout.rstrip(),
+                         expected)
 
 
 if __name__ == "__main__":
