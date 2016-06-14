@@ -192,10 +192,14 @@ class RunResult:
     def __str__(self):
         return self.format()
 
-    def _as_json(self, version=True):
+    def _as_json(self, version=True, ignore_metadata=None):
+        metadata = self.metadata
+        if ignore_metadata:
+            metadata = {key:value for key, value in metadata.items()
+                        if key not in ignore_metadata}
         data = {'samples': self.samples,
                 'warmups': self.warmups,
-                'metadata': self.metadata}
+                'metadata': metadata}
         if self.loops:
             data['loops'] = self.loops
         if self.inner_loops:
@@ -349,8 +353,12 @@ class Benchmark:
             raise ValueError("JSON doesn't contain results")
         data = data['results']
 
+        common_metadata = data.get('common_metadata')
         runs = [RunResult._json_load(run, check_version=False)
                 for run in data['runs']]
+        if common_metadata:
+            for run in runs:
+                run.metadata.update(common_metadata)
         name = data.get('name')
 
         return cls(runs=runs, name=name)
@@ -368,8 +376,14 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        runs = [run._as_json(version=False) for run in self.runs]
+        common_metadata = self.get_metadata()
+        runs = [run._as_json(version=False,
+                             ignore_metadata=set(common_metadata))
+                for run in self.runs]
         data = {'runs': runs}
+        common_attr = {}
+        if common_metadata:
+            data['common_metadata'] = common_metadata
         if self.name:
             data['name'] = self.name
         return {'results': data, 'version': _JSON_VERSION}

@@ -7,7 +7,6 @@ from perf.tests import mock
 
 
 MANDATORY_METADATA = [
-    'date',
     'python_implementation', 'python_version',
     'platform']
 if sys.platform.startswith('linux'):

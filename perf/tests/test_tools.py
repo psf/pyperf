@@ -128,24 +128,46 @@ class TestResult(unittest.TestCase):
         self.assertEqual(run.loops, 10)
         self.assertEqual(run.inner_loops, 3)
 
-    def test_results(self):
+    def assertRunResultsEqual(self, results1, results2):
+        for result1, result2 in zip(results1, results2):
+            for attr in 'samples warmups loops inner_loops metadata'.split():
+                self.assertEqual(getattr(result1, attr),
+                                 getattr(result2, attr),
+                                 attr)
+
+    def test_benchmark(self):
         runs = []
         for sample in (1.0, 1.5, 2.0):
             run = perf.RunResult([sample])
             run.metadata['key'] = 'value'
             runs.append(run)
 
-        results = perf.Benchmark(runs, "name")
-        self.assertEqual(results.runs, runs)
-        self.assertEqual(results.name, "name")
-        self.assertEqual(results.get_metadata(), {'key': 'value'})
-        self.assertEqual(str(results),
+        bench = perf.Benchmark(runs, "name")
+        self.assertRunResultsEqual(bench.runs, runs)
+        self.assertEqual(bench.name, "name")
+        self.assertEqual(bench.get_metadata(), {'key': 'value'})
+        self.assertEqual(str(bench),
                          'name: 1.50 sec +- 0.50 sec')
-        self.assertEqual(results.format(0),
+        self.assertEqual(bench.format(0),
                          '1.50 sec +- 0.50 sec')
-        self.assertEqual(results.format(1),
+        self.assertEqual(bench.format(1),
                          '1.50 sec +- 0.50 sec '
                          '(3 runs x 1 sample)')
+
+    def test_benchmark_json(self):
+        runs = []
+        for sample in (1.0, 1.5, 2.0):
+            run = perf.RunResult([sample])
+            run.metadata['key'] = 'value'
+            run.metadata['index'] = str(len(runs))
+            runs.append(run)
+
+        bench = perf.Benchmark(runs, "name")
+        bench = perf.Benchmark.json_load(bench.json())
+        self.assertRunResultsEqual(bench.runs, runs)
+        self.assertEqual(bench.name, "name")
+        self.assertEqual(bench.get_metadata(), {'key': 'value'})
+        self.assertEqual(bench.runs[0].metadata['index'], '0')
 
 
 class MiscTests(unittest.TestCase):
