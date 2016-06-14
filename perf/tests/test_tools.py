@@ -157,7 +157,8 @@ class TestResult(unittest.TestCase):
     def test_benchmark_json(self):
         runs = []
         for sample in (1.0, 1.5, 2.0):
-            run = perf.RunResult([sample])
+            run = perf.RunResult([sample], warmups=[3.0],
+                                 loops=100, inner_loops=20)
             run.metadata['key'] = 'value'
             run.metadata['index'] = str(len(runs))
             runs.append(run)
@@ -166,7 +167,10 @@ class TestResult(unittest.TestCase):
         bench = perf.Benchmark.json_load(bench.json())
         self.assertRunResultsEqual(bench.runs, runs)
         self.assertEqual(bench.name, "name")
-        self.assertEqual(bench.get_metadata(), {'key': 'value'})
+        self.assertEqual(bench.get_metadata(),
+                         {'key': 'value',
+                          'inner_loops': '20',
+                          'loops': '100'})
         self.assertEqual(bench.runs[0].metadata['index'], '0')
 
 

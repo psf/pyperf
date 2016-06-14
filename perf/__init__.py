@@ -135,6 +135,21 @@ def _common_metadata(metadatas):
     return metadata
 
 
+def _common_value(values):
+    if not values:
+        return None
+
+    value = values[0]
+    if value is None:
+        return None
+
+    for other in values[1:]:
+        if value != other:
+            return None
+
+    return value
+
+
 class RunResult:
     def __init__(self, samples=None, warmups=None, loops=None,
                  inner_loops=None, metadata=None):
@@ -192,7 +207,7 @@ class RunResult:
     def __str__(self):
         return self.format()
 
-    def _as_json(self, version=True, ignore_metadata=None):
+    def _as_json(self, ignore_metadata=None):
         metadata = self.metadata
         if ignore_metadata:
             metadata = {key:value for key, value in metadata.items()
@@ -204,27 +219,30 @@ class RunResult:
             data['loops'] = self.loops
         if self.inner_loops:
             data['inner_loops'] = self.inner_loops
-        data = {'run_result': data}
-        if version:
-            data['version'] = _JSON_VERSION
-        return data
+        return {'run_result': data}
 
     def json(self):
         json = _import_json()
-        return json.dumps(self._as_json()) + '\n'
+
+        data = self._as_json()
+        data['version'] = _JSON_VERSION
+        return json.dumps(data) + '\n'
 
     def json_dump_into(self, file):
         json = _import_json()
-        json.dump(self._as_json(), file)
+        data = self._as_json()
+        data['version'] = _JSON_VERSION
+        json.dump(data, file)
         file.write('\n')
 
     @classmethod
-    def _json_load(cls, data, check_version=True):
-        if check_version:
+    def _json_load(cls, data, raw=False):
+        if not raw:
             version = data.get('version')
             if version != _JSON_VERSION:
                 raise ValueError("version %r not supported" % version)
 
+        # FIXME: move this inside raw
         if 'run_result' not in data:
             raise ValueError("JSON doesn't contain run_result")
         data = data['run_result']
@@ -354,12 +372,19 @@ class Benchmark:
         data = data['results']
 
         common_metadata = data.get('common_metadata')
-        runs = [RunResult._json_load(run, check_version=False)
+        runs = [RunResult._json_load(run, raw=True)
                 for run in data['runs']]
         if common_metadata:
             for run in runs:
                 run.metadata.update(common_metadata)
         name = data.get('name')
+
+        loops = data.get('loops')
+        if loops is not None:
+            for run in runs:
+                run.loops = loops
+                run.metadata['loops'] = _format_number(loops)
+                print("SET", repr(run))
 
         return cls(runs=runs, name=name)
 
@@ -376,11 +401,18 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
+        # FIXME: find common metadata in JSON, not in objects directly
         common_metadata = self.get_metadata()
-        runs = [run._as_json(version=False,
-                             ignore_metadata=set(common_metadata))
+        runs = [run._as_json(ignore_metadata=set(common_metadata))
                 for run in self.runs]
         data = {'runs': runs}
+
+        loops = _common_value([run['run_result'].get('loops') for run in runs])
+        if loops:
+            for run in runs:
+                del run['run_result']['loops']
+            data['loops'] = loops
+
         common_attr = {}
         if common_metadata:
             data['common_metadata'] = common_metadata
