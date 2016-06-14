@@ -384,7 +384,6 @@ class Benchmark:
             for run in runs:
                 run.loops = loops
                 run.metadata['loops'] = _format_number(loops)
-                print("SET", repr(run))
 
         return cls(runs=runs, name=name)
 
