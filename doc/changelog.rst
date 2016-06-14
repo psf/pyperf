@@ -19,6 +19,8 @@ Changelog
     possible to pass metadata to the constructor).
   - On Python 2, add dependency to the backported ``statistics`` module:
     https://pypi.python.org/pypi/statistics
+  - On Python 2, ``psutil`` optional dependency is now used for CPU affinity.
+    It ensures that CPU affinity is set for loop calibration too.
   - ``perf.mean()`` and ``perf.stdev()`` functions have been removed: use
     the ``statistics`` module which is also available on Python 2.7
 
