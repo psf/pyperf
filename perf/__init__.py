@@ -187,17 +187,6 @@ class RunResult:
         if self.inner_loops is not None:
             self.metadata['inner_loops'] = _format_number(self.inner_loops)
 
-    def _get_raw_samples(self):
-        factor = 1
-        if self.loops is not None:
-            factor *= self.loops
-        if self.inner_loops is not None:
-            factor *= self.inner_loops
-        if factor != 1:
-            return [sample * factor for sample in self.samples]
-        else:
-            return self.samples
-
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
 
@@ -265,6 +254,23 @@ class Benchmark:
         samples = []
         for run in self.runs:
             samples.extend(run.samples)
+        return samples
+
+    def _get_result_raw_samples(self, result):
+        factor = 1
+        if result.loops is not None:
+            factor *= result.loops
+        if result.inner_loops is not None:
+            factor *= result.inner_loops
+        if factor != 1:
+            return [sample * factor for sample in result.samples]
+        else:
+            return result.samples
+
+    def _get_raw_samples(self):
+        samples = []
+        for run in self.runs:
+            samples.extend(self._get_result_raw_samples(run))
         return samples
 
     def get_metadata(self):
@@ -441,7 +447,7 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
             print("Standard deviation: %.0f%%" % (k * 100), file=file)
 
     # Check that the shortest sample took at least 1 ms
-    shortest = min(min(run._get_raw_samples()) for run in bench.runs)
+    shortest = min(bench._get_raw_samples())
     text = bench._format_sample(shortest)
     if shortest < 1e-3:
         if shortest < 1e-6:
