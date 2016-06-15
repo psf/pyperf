@@ -62,6 +62,29 @@ def _get_isolated_cpus():
     return _parse_cpu_list(isolated)
 
 
+def _bench_from_subprocess(args):
+    proc = subprocess.Popen(args,
+                            universal_newlines=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
+    if perf._PY3:
+        with proc:
+            stdout, stderr = proc.communicate()
+    else:
+        stdout, stderr = proc.communicate()
+
+    if proc.returncode:
+        sys.stdout.write(stdout)
+        sys.stdout.flush()
+        sys.stderr.write(stderr)
+        sys.stderr.flush()
+        raise RuntimeError("%s failed with exit code %s"
+                           % (args[0], proc.returncode))
+
+    return perf.Benchmark.json_load(stdout)
+
+
 class TextRunner:
     def __init__(self, name=None, nsample=3, nwarmup=1, nprocess=25,
                  nloop=0, min_time=0.1, max_time=1.0, metadata=None,
@@ -374,8 +397,7 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
 
-        return perf.Benchmark._from_subprocess(args,
-                                               stderr=subprocess.PIPE)
+        return _bench_from_subprocess(args)
 
     def _spawn_workers(self, bench):
         verbose = self.args.verbose

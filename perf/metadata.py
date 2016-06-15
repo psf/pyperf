@@ -24,6 +24,7 @@ import perf
 #       Build:          May 26 2016 12:16:43 (#default:d3d8faaaaade)
 
 
+# FIXME: move it Benchmark
 def _add(metadata, key, value):
     if value is None:
         return

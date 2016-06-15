@@ -10,24 +10,6 @@ _PY3 = (sys.version_info >= (3,))
 _JSON_VERSION = 1
 
 
-def _import_json():
-    """Import json module on demand."""
-    global json
-    if json is None:
-        import json
-    return json
-json = None
-
-
-def _import_subprocess():
-    """Import subprocess module on demand."""
-    global subprocess
-    if subprocess is None:
-        import subprocess
-    return subprocess
-subprocess = None
-
-
 # Clocks
 try:
     # Python 3.3+ (PEP 418)
@@ -40,6 +22,15 @@ except ImportError:
         perf_counter = time.clock
     else:
         perf_counter = time.time
+
+
+def _import_json():
+    """Import json module on demand."""
+    global json
+    if json is None:
+        import json
+    return json
+json = None
 
 
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
@@ -324,31 +315,6 @@ class Benchmark:
         json = _import_json()
         json.dump(self._as_json(), file)
         file.write('\n')
-
-    @classmethod
-    def _from_subprocess(cls, args, **kwargs):
-        subprocess = _import_subprocess()
-
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True,
-                                **kwargs)
-
-        if _PY3:
-            with proc:
-                stdout, stderr = proc.communicate()
-        else:
-            stdout, stderr = proc.communicate()
-
-        if proc.returncode:
-            sys.stdout.write(stdout)
-            sys.stdout.flush()
-            sys.stderr.write(stderr)
-            sys.stderr.flush()
-            raise RuntimeError("%s failed with exit code %s"
-                               % (args[0], proc.returncode))
-
-        return cls.json_load(stdout)
 
 
 def _display_run(bench, index, nrun, samples, warmups, file=None):
