@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Clarify run vs process in TextRunner CLI
+* Calibration: use powers of 2, not powers of 10
 * Metadata: cpu_affinity, check if CPUs are isolated
 * Metadata: CPU frequency?
 * Remove min/max from very verbose but add --stats to display statistics?

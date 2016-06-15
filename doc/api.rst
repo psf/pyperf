@@ -217,7 +217,7 @@ Benchmark
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25, nloop=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
+.. class:: perf.text_runner.TextRunner(name=None, samples=3, warmups=1, processes=25, nloop=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
 
    Tool to run a benchmark in text mode.
 

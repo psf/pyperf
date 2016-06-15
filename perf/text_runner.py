@@ -93,7 +93,7 @@ def _bench_from_subprocess(args):
 
 
 class TextRunner:
-    def __init__(self, name=None, nsample=3, nwarmup=1, nprocess=25,
+    def __init__(self, name=None, samples=3, warmups=1, processes=25,
                  nloop=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None):
         self.name = name
@@ -120,17 +120,17 @@ class TextRunner:
         self.inner_loops = inner_loops
 
         parser = argparse.ArgumentParser(description='Benchmark')
-        parser.add_argument('-p', '--processes', type=int, default=nprocess,
+        parser.add_argument('-p', '--processes', type=int, default=processes,
                             help='number of processes used to run benchmarks (default: %s)'
-                                 % nprocess)
-        parser.add_argument('-n', '--samples', dest="nsample",
-                            type=int, default=nsample,
+                                 % processes)
+        parser.add_argument('-n', '--samples', dest="samples",
+                            type=int, default=samples,
                             help='number of samples per process (default: %s)'
-                                 % nsample)
-        parser.add_argument('-w', '--warmups', dest="nwarmup",
-                            type=int, default=nwarmup,
+                                 % samples)
+        parser.add_argument('-w', '--warmups', dest="warmups",
+                            type=int, default=warmups,
                             help='number of skipped samples per run used to warmup the benchmark (default: %s)'
-                                 % nwarmup)
+                                 % warmups)
         parser.add_argument('-l', '--loops', type=int, default=nloop,
                             help='number of loops per sample, 0 means '
                                  'automatic calibration (default: %s)'
@@ -202,9 +202,9 @@ class TextRunner:
 
     def _range(self):
         # FIXME: use six.range
-        for warmup in range(self.args.nwarmup):
+        for warmup in range(self.args.warmups):
             yield (True, 1 + warmup)
-        for run in range(self.args.nsample):
+        for run in range(self.args.samples):
             yield (False, 1 + run)
 
     def _display_run_result_avg(self, bench):
@@ -315,7 +315,7 @@ class TextRunner:
             raise ValueError("loops must be >= 1")
 
         bench = perf.Benchmark(name=self.name,
-                               warmups=self.args.nwarmup,
+                               warmups=self.args.warmups,
                                loops=loops,
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
@@ -396,8 +396,8 @@ class TextRunner:
         args = []
         args.extend(self.program_args)
         args.extend(('--raw', '--json',
-                     '--samples', str(self.args.nsample),
-                     '--warmups', str(self.args.nwarmup),
+                     '--samples', str(self.args.samples),
+                     '--warmups', str(self.args.warmups),
                      '--loops', str(self.args.loops)))
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
