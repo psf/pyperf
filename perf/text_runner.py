@@ -180,11 +180,11 @@ class TextRunner:
         for run in range(self.args.nsample):
             yield (False, run)
 
-    def _add(self, bench, run_result, is_warmup, run, sample):
+    def _add(self, bench, warmups, samples, is_warmup, run, sample):
         if is_warmup:
-            run_result.warmups.append(sample)
+            warmups.append(sample)
         else:
-            run_result.samples.append(sample)
+            samples.append(sample)
 
         if self.args.verbose:
             text = bench._format_sample(sample)
@@ -194,16 +194,14 @@ class TextRunner:
                 text = "Sample %s: %s" % (1 + run, text)
             print(text, file=self._stream())
 
-    def _display_run_result_avg(self, bench, run_result):
+    def _display_run_result_avg(self, bench):
         stream = self._stream()
 
         if self.args.metadata:
             perf._display_metadata(bench.metadata, file=stream)
 
-        text = bench._format_run(run_result, self.args.verbose)
-        nsample = perf._format_number(len(run_result.samples), 'sample')
-        text = "Average: %s (%s)" % (text, nsample)
-        print(text, file=self._stream())
+        print("Average: %s" % bench.format(self.args.verbose),
+              file=self._stream())
 
         stream.flush()
         _json_dump(bench, self.args)
@@ -260,7 +258,8 @@ class TextRunner:
             sys.exit(1)
 
     def _worker(self, bench, sample_func):
-        run_result = perf.RunResult()
+        warmups = []
+        samples = []
 
         for is_warmup, run in self._range():
             dt = sample_func(bench.loops)
@@ -268,11 +267,12 @@ class TextRunner:
             dt = float(dt) / bench.loops
             if bench.inner_loops is not None:
                 dt /= bench.inner_loops
-            self._add(bench, run_result, is_warmup, run, dt)
+            self._add(bench, warmups, samples,
+                      is_warmup, run, dt)
 
-        bench.add_run(run_result)
+        bench.add_run(perf.RunResult(samples, warmups))
 
-        self._display_run_result_avg(bench, run_result)
+        self._display_run_result_avg(bench)
 
         return bench
 

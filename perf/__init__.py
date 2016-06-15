@@ -135,16 +135,6 @@ def _common_value(values):
 
 class RunResult:
     def __init__(self, samples=None, warmups=None):
-        if (samples is not None
-        and any(not(isinstance(value, float) and value >= 0)
-                for value in samples)):
-            raise TypeError("samples must be a list of float >= 0")
-
-        if (warmups is not None
-        and any(not(isinstance(value, float) and value >= 0)
-                for value in warmups)):
-            raise TypeError("warmups must be a list of float >= 0")
-
         self.samples = []
         if samples is not None:
             self.samples.extend(samples)
@@ -173,6 +163,16 @@ class Benchmark:
         self._formatter = _format_run_result
 
     def add_run(self, run_result):
+        if (run_result.samples is None
+        or any(not(isinstance(value, float) and value >= 0)
+                for value in run_result.samples)):
+            raise TypeError("samples must be a list of float >= 0")
+
+        if (run_result.warmups is None
+        or any(not(isinstance(value, float) and value >= 0)
+                for value in run_result.warmups)):
+            raise TypeError("warmups must be a list of float >= 0")
+
         self._runs.append(run_result)
 
     def _get_worker_run(self, run_bench):
@@ -278,13 +278,13 @@ class Benchmark:
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
 
-        runs = [RunResult(samples=run_data['samples'],
-                          warmups=run_data['warmups'])
-                for run_data in data['runs']]
-
         bench = cls(name=name, metadata=metadata,
                     loops=loops, inner_loops=inner_loops)
-        bench._runs = runs
+
+        for run_data in data['runs']:
+            run = RunResult(samples=run_data['samples'], warmups=run_data['warmups'])
+            bench.add_run(run)
+
         return bench
 
     @classmethod
