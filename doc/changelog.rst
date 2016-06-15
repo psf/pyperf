@@ -15,6 +15,7 @@ Changelog
   - Move metadata from :class:`perf.RunResult` to :class:`perf.Benchmark`
   - New :attr:`perf.Benchmark.loops` and :attr:`perf.Benchmark.inner_loops`
     attributes (they were previously stored in metadata).
+  - :attr:`perf.Benchmark.runs` becomes private.
   - The ``TextRunner.result`` attribute has been removed, replaced with
     a new :attr:`~perf.text_runner.TextRunner.metadata` attribute (it's also
     possible to pass metadata to the constructor).

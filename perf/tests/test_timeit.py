@@ -109,10 +109,10 @@ class TestTimeit(unittest.TestCase):
 
             bench = perf.Benchmark.json_load_from(tmp)
 
-        self.assertEqual(len(bench.runs), 2)
+        self.assertEqual(len(bench._runs), 2)
         self.assertEqual(bench.loops, 4)
         self.assertEqual(bench.get_metadata()['loops'], '4')
-        for run in bench.runs:
+        for run in bench._runs:
             self.assertEqual(len(run.warmups), 1)
             self.assertEqual(len(run.samples), 3)
 

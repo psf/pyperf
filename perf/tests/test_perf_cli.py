@@ -7,28 +7,11 @@ import perf
 
 
 class TestPerfCLI(unittest.TestCase):
-    #def test_run_result(self):
-    #    run = perf.RunResult([1.0, 1.5, 2.0])
-    #    json = run.json()
-
-    #    with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-    #        tmp.write(json)
-    #        tmp.flush()
-
-    #        args = [sys.executable, '-m', 'perf', 'show', tmp.name]
-
-    #        proc = subprocess.Popen(args,
-    #                                stdout=subprocess.PIPE,
-    #                                universal_newlines=True)
-    #        stdout = proc.communicate()[0]
-    #    self.assertEqual(proc.returncode, 0)
-
-    #    self.assertEqual(stdout.rstrip(),
-    #                     'Average: 1.50 sec +- 0.50 sec')
-
     def create_bench(self, samples, **kw):
-        runs = [perf.RunResult([sample]) for sample in samples]
-        return perf.Benchmark(runs=runs, **kw)
+        bench = perf.Benchmark(**kw)
+        for sample in samples:
+            bench.add_run(perf.RunResult([sample]))
+        return bench
 
     def show(self, verbose=False, metadata=True):
         results = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})

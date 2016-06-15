@@ -164,11 +164,15 @@ RunResult
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(runs=None, name=None, loops=None, inner_loops=None, metadata=None)
+.. class:: perf.Benchmark(name=None, loops=None, inner_loops=None, metadata=None)
 
    A benchmark is made of multiple run results.
 
    Methods:
+
+   .. method:: add_run(run: RunResult):
+
+      Add a run result.
 
    .. method:: get_samples():
 
@@ -220,10 +224,6 @@ Benchmark
    .. attribute:: name
 
       Benchmark name (``str`` or ``None``).
-
-   .. attribute:: runs
-
-      List of :class:`~perf.RunResult` instances.
 
 
 

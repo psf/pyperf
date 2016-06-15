@@ -117,13 +117,13 @@ class TestResult(unittest.TestCase):
 
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
-        runs = [perf.RunResult([sample], warmups=[1.0]) for sample in samples]
-
-        bench = perf.Benchmark(runs, "name", loops=20, inner_loops=3)
+        bench = perf.Benchmark(name="name", loops=20, inner_loops=3)
+        for sample in samples:
+            bench.add_run(perf.RunResult([sample], warmups=[1.0]))
         bench.metadata['key'] = 'value'
 
         for index, sample in enumerate(samples):
-            run = bench.runs[index]
+            run = bench._runs[index]
             self.assertEqual(run.samples, [sample])
             self.assertEqual(run.warmups, [1.0])
 
@@ -144,9 +144,12 @@ class TestResult(unittest.TestCase):
 
     def test_benchmark_json(self):
         samples = (1.0, 1.5, 2.0)
-        runs = [perf.RunResult([sample], warmups=[3.0]) for sample in samples]
+        bench = perf.Benchmark(name="name",
+                               loops=100, inner_loops=20,
+                               metadata={'key': 'value'})
+        for sample in samples:
+            bench.add_run(perf.RunResult([sample], warmups=[3.0]))
 
-        bench = perf.Benchmark(runs, "name", loops=100, inner_loops=20, metadata={'key': 'value'})
         bench = perf.Benchmark.json_load(bench.json())
         self.assertEqual(bench.name, "name")
         self.assertEqual(bench.get_metadata(),
@@ -157,7 +160,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(bench.inner_loops, 20)
 
         for index, sample in enumerate(samples):
-            run = bench.runs[index]
+            run = bench._runs[index]
             self.assertEqual(run.samples, [sample])
             self.assertEqual(run.warmups, [3.0])
 

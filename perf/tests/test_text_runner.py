@@ -41,7 +41,7 @@ class TestTextRunner(unittest.TestCase):
         # check bench_sample_func() result
         self.assertIsInstance(result, perf.Benchmark)
         self.assertEqual(result.name, 'test_runner')
-        self.assertEqual(len(result.runs), 1)
+        self.assertEqual(len(result._runs), 1)
 
     def test_bench_func_raw(self):
         def fake_timer():
