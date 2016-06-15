@@ -259,15 +259,13 @@ class TextRunner:
                   file=stream)
             sys.exit(1)
 
-
-    def _worker(self, sample_func):
+    def _worker(self, bench, sample_func):
         loops = self.args.loops
         if loops < 1:
             # FIXME: move this check in argument parsing
             raise ValueError("--loops must be >= 1")
 
         run_result = perf.RunResult(loops=loops,
-                                    inner_loops=self.inner_loops,
                                     metadata=self.metadata)
 
         # only import metadata submodule in worker processes
@@ -277,11 +275,11 @@ class TextRunner:
         for is_warmup, run in self._range():
             dt = sample_func(loops)
             dt = float(dt) / loops
-            if self.inner_loops is not None:
-                dt /= self.inner_loops
+            # FIXME: don't divide here but in Benchmark.samples()
+            if bench.inner_loops is not None:
+                dt /= bench.inner_loops
             self._add(run_result, is_warmup, run, dt)
 
-        bench = perf.Benchmark(name=self.name)
         bench.runs.append(run_result)
 
         self._display_run_result_avg(bench, run_result)
@@ -296,10 +294,13 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
+        bench = perf.Benchmark(name=self.name,
+                               inner_loops=self.inner_loops)
+
         if not self.args.raw:
-            return self._spawn_workers()
+            return self._spawn_workers(bench)
         else:
-            return self._worker(sample_func)
+            return self._worker(bench, sample_func)
 
     def bench_sample_func(self, sample_func, *args):
         """"Benchmark sample_func(loops, *args)
@@ -375,19 +376,17 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
 
-        bench = perf.Benchmark._from_subprocess(args, stderr=subprocess.PIPE)
-        # FIXME: validate that bench is related to the same benchmark
-        # compare metadata? compare loops?
-        return bench.runs[0]
+        return perf.Benchmark._from_subprocess(args,
+                                               stderr=subprocess.PIPE)
 
-    def _spawn_workers(self):
+    def _spawn_workers(self, bench):
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
-        bench = perf.Benchmark(name=self.name)
 
         for process in range(nprocess):
-            run = self._spawn_worker()
+            run_bench = self._spawn_worker()
+            run = bench._get_worker_run(run_bench)
             bench.runs.append(run)
             if verbose > 1:
                 text = perf._very_verbose_run(run)

@@ -118,7 +118,7 @@ class TestResult(unittest.TestCase):
 
     def test_run_result_json(self):
         run = perf.RunResult(samples=[1.0, 1.5, 2.0], warmups=[5.0],
-                             loops=10, inner_loops=3,
+                             loops=10,
                              metadata={'key': 'value'})
 
         # JSON serialization/deserialization
@@ -129,14 +129,12 @@ class TestResult(unittest.TestCase):
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
         self.assertEqual(run.warmups, [5.0])
         self.assertEqual(run.metadata, {'key': 'value',
-                                        'loops': '10',
-                                        'inner_loops': '3'})
+                                        'loops': '10'})
         self.assertEqual(run.loops, 10)
-        self.assertEqual(run.inner_loops, 3)
 
     def assertRunResultsEqual(self, results1, results2):
         for result1, result2 in zip(results1, results2):
-            for attr in 'samples warmups loops inner_loops metadata'.split():
+            for attr in 'samples warmups loops metadata'.split():
                 self.assertEqual(getattr(result1, attr),
                                  getattr(result2, attr),
                                  attr)
@@ -164,12 +162,12 @@ class TestResult(unittest.TestCase):
         runs = []
         for sample in (1.0, 1.5, 2.0):
             run = perf.RunResult([sample], warmups=[3.0],
-                                 loops=100, inner_loops=20)
+                                 loops=100)
             run.metadata['key'] = 'value'
             run.metadata['index'] = str(len(runs))
             runs.append(run)
 
-        bench = perf.Benchmark(runs, "name")
+        bench = perf.Benchmark(runs, "name", inner_loops=20)
         bench = perf.Benchmark.json_load(bench.json())
         self.assertRunResultsEqual(bench.runs, runs)
         self.assertEqual(bench.name, "name")
@@ -178,6 +176,7 @@ class TestResult(unittest.TestCase):
                           'inner_loops': '20',
                           'loops': '100'})
         self.assertEqual(bench.runs[0].metadata['index'], '0')
+        self.assertEqual(bench.inner_loops, 20)
 
 
 class MiscTests(unittest.TestCase):
