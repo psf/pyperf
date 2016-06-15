@@ -67,11 +67,19 @@ def _bench_from_subprocess(args):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
-    if perf._PY3:
-        with proc:
+    try:
+        if perf._PY3:
+            with proc:
+                stdout, stderr = proc.communicate()
+        else:
             stdout, stderr = proc.communicate()
-    else:
-        stdout, stderr = proc.communicate()
+    except:
+        try:
+            proc.kill()
+        except OSError:
+            pass
+        proc.wait()
+        raise
 
     if proc.returncode:
         sys.stdout.write(stdout)
@@ -316,10 +324,14 @@ class TextRunner:
             from perf import metadata as perf_metadata
             perf_metadata.collect_metadata(bench.metadata)
 
-        if not self.args.raw:
-            return self._spawn_workers(bench, start_time)
-        else:
-            return self._worker(bench, sample_func)
+        try:
+            if not self.args.raw:
+                return self._spawn_workers(bench, start_time)
+            else:
+                return self._worker(bench, sample_func)
+        except KeyboardInterrupt:
+            print("Interrupted: exit", file=sys.stderr)
+            sys.exit(1)
 
     def bench_sample_func(self, sample_func, *args):
         """"Benchmark sample_func(loops, *args)
