@@ -178,10 +178,6 @@ class Benchmark(object):
     def _format_sample(self, sample):
         return self._format_samples((sample,))[0]
 
-    # FIXME: remove it?
-    def _format_run_samples(self, samples, verbose=False):
-        return self._formatter(samples, verbose)
-
     def get_nrun(self):
         return len(self._runs)
 
