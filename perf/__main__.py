@@ -265,22 +265,31 @@ def display_stats(args, result):
     nsample = len(samples)
     print("Number of samples: %s" % perf._format_number(nsample))
     # FIXME: add % compared to median/mean to min&max
-    print("Minimum %s" % fmt(min(samples)))
-    print("Maximum %s" % fmt(max(samples)))
+    min_dt = min(samples)
+    max_dt = max(samples)
+    print("Minimum %s" % fmt(min_dt))
+    print("Maximum %s" % fmt(max_dt))
     print()
 
+    def fmt_stdev(value, dev):
+        left = median - dev
+        right = median + dev
+        #left = max(left, min_dt)
+        #right = min(right, max_dt)
+        return ("%s +- %s (%s .. %s)"
+                % perf._format_timedeltas((median, dev, left, right)))
+
     median = result.median()
-    print("Median +- std dev: %s +- %s"
-          % perf._format_timedeltas([median, statistics.stdev(samples, median)]))
+    print("Median +- std dev: %s"
+          % fmt_stdev(median, statistics.stdev(samples, median)))
 
-    print("Mean + std dev: %s +- %s"
-          % perf._format_timedeltas([result.mean(),
-                                     statistics.stdev(samples)]))
     if boltons is not None:
-        stats = boltons.statsutils.Stats(samples)
-        print("Median +- MAD: %s +- %s"
-              % perf._format_timedeltas([median, stats.median_abs_dev]))
+        mad = boltons.statsutils.Stats(samples).median_abs_dev
+        print("Median +- MAD: %s" % fmt_stdev(median, mad))
 
+    mean = result.mean()
+    print("Mean + std dev: %s"
+          % fmt_stdev(mean, statistics.stdev(samples, mean)))
     if boltons is not None:
         print()
         print("Skewness: %.2f"
