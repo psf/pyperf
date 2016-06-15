@@ -80,10 +80,7 @@ def display_result(args, result):
         perf._display_metadata(result.get_metadata())
 
     if args.verbose > 1:
-        nrun = len(result.runs)
-        for index, run in enumerate(result.runs, 1):
-            text = perf._very_verbose_run(run)
-            print("Run %s/%s: %s" % (index, nrun, text))
+        perf._display_runs(result)
         print()
 
     perf._display_benchmark_avg(result, verbose=args.verbose)

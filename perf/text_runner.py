@@ -270,7 +270,7 @@ class TextRunner:
                 dt /= bench.inner_loops
             self._add(bench, run_result, is_warmup, run, dt)
 
-        bench.runs.append(run_result)
+        bench.add_run(run_result)
 
         self._display_run_result_avg(bench, run_result)
 
@@ -385,10 +385,9 @@ class TextRunner:
         for process in range(nprocess):
             run_bench = self._spawn_worker()
             run = bench._get_worker_run(run_bench)
-            bench.runs.append(run)
+            bench.add_run(run)
             if verbose > 1:
-                text = perf._very_verbose_run(run)
-                print("Run %s/%s: %s" % (1 + process, nprocess, text), file=stream)
+                perf._display_run(1 + process, nprocess, run, file=stream)
             else:
                 print(".", end='', file=stream)
                 stream.flush()

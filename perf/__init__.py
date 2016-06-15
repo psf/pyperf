@@ -175,6 +175,9 @@ class Benchmark:
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
+    def add_run(self, run_result):
+        self.runs.append(run_result)
+
     def _get_worker_run(self, run_bench):
         if len(run_bench.runs) != 1:
             raise ValueError("A worker must return exactly one run")
@@ -346,7 +349,7 @@ class Benchmark:
         return cls.json_load(stdout)
 
 
-def _very_verbose_run(run):
+def _display_run(index, nrun, run, file=None):
     # FIXME: use run.formatter
     text = ', '.join(_format_timedeltas(run.samples))
     text = 'samples (%s): %s' % (len(run.samples), text)
@@ -355,7 +358,16 @@ def _very_verbose_run(run):
                 % (len(run.warmups),
                    ', '.join(_format_timedeltas(run.warmups)),
                    text))
-    return text
+
+    text = "Run %s/%s: %s" % (index, nrun, text)
+    print(text, file=file)
+
+
+def _display_runs(result):
+    runs = result.runs
+    nrun = len(runs)
+    for index, run in enumerate(runs, 1):
+        _display_run(index, nrun, run)
 
 
 def _display_benchmark_avg(bench, verbose=0, file=None):
