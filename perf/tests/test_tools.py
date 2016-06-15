@@ -115,7 +115,7 @@ class TestResult(unittest.TestCase):
         self.assertRaises(ValueError, bench.add_run, [1.0])
         bench.add_run([1.5, 1.0])
 
-    def test_benchmark_properties(self):
+    def test_benchmark_warmups_property(self):
         bench = perf.Benchmark()
         self.assertEqual(bench.warmups, 1)
 
@@ -131,6 +131,22 @@ class TestResult(unittest.TestCase):
             perf.Benchmark(warmups=-1)
         with self.assertRaises(ValueError):
             perf.Benchmark(warmups="hello")
+
+    def test_benchmark_loops_property(self):
+        bench = perf.Benchmark()
+        self.assertIsNone(bench.loops)
+        with self.assertRaises(ValueError):
+            bench.loops = -1
+        with self.assertRaises(ValueError):
+            perf.Benchmark(loops=-1)
+
+    def test_benchmark_inner_loops_property(self):
+        bench = perf.Benchmark()
+        self.assertIsNone(bench.inner_loops)
+        with self.assertRaises(ValueError):
+            bench.inner_loops = -1
+        with self.assertRaises(ValueError):
+            perf.Benchmark(inner_loops=-1)
 
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)

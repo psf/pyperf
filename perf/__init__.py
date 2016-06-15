@@ -85,8 +85,15 @@ class Benchmark(object):
     def __init__(self, name=None, loops=None, inner_loops=None,
                  warmups=1, metadata=None):
         self.name = name
-        self.loops = loops
-        self.inner_loops = inner_loops
+        if loops is not None:
+            self.loops = loops
+        else:
+            self._loops = None
+        if inner_loops is not None:
+            # check done by the property
+            self.inner_loops = inner_loops
+        else:
+            self._inner_loops = None
         self.warmups = warmups
 
         # list of samples where samples are a non-empty tuples
@@ -104,6 +111,28 @@ class Benchmark(object):
 
         # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
+
+    @property
+    def inner_loops(self):
+        return self._inner_loops
+
+    @inner_loops.setter
+    def inner_loops(self, value):
+        if not(isinstance(value, int) and value >= 0):
+            raise ValueError("inner_loops must be an int >= 0")
+        self._clear_stats_cache()
+        self._inner_loops = value
+
+    @property
+    def loops(self):
+        return self._loops
+
+    @loops.setter
+    def loops(self, value):
+        if not(isinstance(value, int) and value >= 0):
+            raise ValueError("loops must be an int >= 0")
+        self._clear_stats_cache()
+        self._loops = value
 
     @property
     def warmups(self):
@@ -168,13 +197,8 @@ class Benchmark(object):
 
         factor = 1.0
         if self.loops is not None:
-            # FIXME: move these checks inside a property?
-            if self.loops <= 0:
-                raise ValueError("loops must be >=0")
             factor *= self.loops
         if self.inner_loops is not None:
-            if self.inner_loops <= 0:
-                raise ValueError("inner_loops must be >=0")
             factor *= self.inner_loops
 
         samples = []
