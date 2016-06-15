@@ -94,7 +94,7 @@ def _bench_from_subprocess(args):
 
 class TextRunner:
     def __init__(self, name=None, samples=3, warmups=1, processes=25,
-                 nloop=0, min_time=0.1, max_time=1.0, metadata=None,
+                 loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None):
         self.name = name
         if metadata is not None:
@@ -131,10 +131,10 @@ class TextRunner:
                             type=int, default=warmups,
                             help='number of skipped samples per run used to warmup the benchmark (default: %s)'
                                  % warmups)
-        parser.add_argument('-l', '--loops', type=int, default=nloop,
+        parser.add_argument('-l', '--loops', type=int, default=loops,
                             help='number of loops per sample, 0 means '
                                  'automatic calibration (default: %s)'
-                                 % nloop)
+                                 % loops)
         parser.add_argument('-v', '--verbose', action='count', default=0,
                             help='enable verbose mode')
         parser.add_argument('--json', action='store_true',
