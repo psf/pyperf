@@ -144,7 +144,7 @@ Clocks
 RunResult
 ---------
 
-.. class:: perf.RunResult(samples=None, warmups=None, loops=None, metadata=None)
+.. class:: perf.RunResult(samples=None, warmups=None, metadata=None)
 
    Result of a single benchmark run.
 
@@ -155,11 +155,6 @@ RunResult
       Format samples.
 
    Attributes:
-
-   .. attribute:: loops
-
-      Number of outter-loop iterations of the benchmark samples
-      (``int``, default: ``None``).
 
    .. attribute:: metadata
 
@@ -180,7 +175,7 @@ RunResult
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(runs=None, name=None, inner_loops=None)
+.. class:: perf.Benchmark(runs=None, name=None, loops=None, inner_loops=None)
 
    A benchmark is made of multiple run results.
 
@@ -221,6 +216,11 @@ Benchmark
    .. attribute:: inner_loops
 
       Number of inner-loop iterations of the benchmark samples
+      (``int``, default: ``None``).
+
+   .. attribute:: loops
+
+      Number of outter-loop iterations of the benchmark samples
       (``int``, default: ``None``).
 
    .. attribute:: name

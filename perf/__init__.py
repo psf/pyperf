@@ -151,8 +151,7 @@ def _common_value(values):
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, loops=None,
-                 metadata=None):
+    def __init__(self, samples=None, warmups=None, metadata=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
@@ -168,7 +167,6 @@ class RunResult:
         self.warmups = []
         if warmups is not None:
             self.warmups.extend(warmups)
-        self.loops = loops
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
@@ -178,11 +176,6 @@ class RunResult:
             self.metadata = metadata
         else:
             self.metadata = {}
-
-        # FIXME: remove loops from metadata,
-        # but display loops
-        if self.loops is not None:
-            self.metadata['loops'] = _format_number(self.loops)
 
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
@@ -201,8 +194,6 @@ class RunResult:
         data = {'samples': self.samples,
                 'warmups': self.warmups,
                 'metadata': metadata}
-        if self.loops:
-            data['loops'] = self.loops
         return {'run_result': data}
 
     @classmethod
@@ -220,29 +211,29 @@ class RunResult:
         samples = data['samples']
         warmups = data['warmups']
         metadata = data.get('metadata')
-        loops = data.get('loops')
 
-        run = cls(samples=samples,
-                  warmups=warmups,
-                  loops=loops)
+        run = cls(samples=samples, warmups=warmups)
         run.metadata = metadata
         return run
 
 
 class Benchmark:
-    def __init__(self, runs=None, name=None, inner_loops=None):
+    def __init__(self, runs=None, name=None, loops=None, inner_loops=None):
         if runs is not None:
             self.runs = runs
         else:
             self.runs = []
         self.name = name
+        self.loops = loops
         self.inner_loops = inner_loops
 
     def _get_worker_run(self, run_bench):
         if len(run_bench.runs) != 1:
             raise ValueError("A worker must return exactly one run")
+        if self.loops != run_bench.loops:
+            raise ValueError("Numbers of loops value are different")
         if self.inner_loops != run_bench.inner_loops:
-            raise ValueError("Inner-loop value is different")
+            raise ValueError("Number of inner-loops value are different")
 
         return run_bench.runs[0]
 
@@ -260,8 +251,8 @@ class Benchmark:
 
     def _get_result_raw_samples(self, result):
         factor = 1
-        if result.loops is not None:
-            factor *= result.loops
+        if self.loops is not None:
+            factor *= self.loops
         if self.inner_loops is not None:
             factor *= self.inner_loops
         if factor != 1:
@@ -278,8 +269,10 @@ class Benchmark:
     def get_metadata(self):
         metadatas = [run.metadata for run in self.runs]
         metadata = _common_metadata(metadatas)
+        # FIXME: don't expose loops/inner_loops as metadata
+        if self.loops is not None:
+            metadata['loops'] = _format_number(self.loops)
         if self.inner_loops is not None:
-            # FIXME: don't expose inner_loops as metadata
             metadata['inner_loops'] = _format_number(self.inner_loops)
         return metadata
 
@@ -333,6 +326,7 @@ class Benchmark:
         data = data['results']
 
         name = data.get('name')
+        loops = data.get('loops')
         inner_loops = data.get('inner_loops')
 
         common_metadata = data.get('common_metadata')
@@ -342,13 +336,8 @@ class Benchmark:
             for run in runs:
                 run.metadata.update(common_metadata)
 
-        loops = data.get('loops')
-        if loops is not None:
-            for run in runs:
-                run.loops = loops
-                run.metadata['loops'] = _format_number(loops)
-
-        return cls(runs=runs, name=name, inner_loops=inner_loops)
+        return cls(runs=runs, name=name,
+                   loops=loops, inner_loops=inner_loops)
 
     @classmethod
     def json_load_from(cls, file):
@@ -369,14 +358,10 @@ class Benchmark:
         runs = [run._as_json(ignore_metadata=set(common_metadata))
                 for run in self.runs]
         data = {'runs': runs}
+        if self.loops is not None:
+            data['loops'] = self.loops
         if self.inner_loops is not None:
             data['inner_loops'] = self.inner_loops
-
-        loops = _common_value([run['run_result'].get('loops') for run in runs])
-        if loops:
-            for run in runs:
-                del run['run_result']['loops']
-            data['loops'] = loops
 
         common_attr = {}
         if common_metadata:

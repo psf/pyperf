@@ -86,8 +86,8 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(sample_func)
 
         self.assertEqual(runner.args.loops, 10 ** 5)
-        self.assertEqual(result.runs[0].loops, 10 ** 5)
-        self.assertEqual(result.runs[0].metadata['loops'], '10^5')
+        self.assertEqual(result.loops, 10 ** 5)
+        self.assertEqual(result.get_metadata()['loops'], '10^5')
 
         self.assertIn('calibration: 1 loop: 1.00 us\n'
                       'calibration: 10 loops: 10.00 us\n'
@@ -112,8 +112,8 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(sample_func)
 
         self.assertEqual(runner.args.loops, 10 ** 3)
-        self.assertEqual(result.runs[0].loops, 10 ** 3)
-        self.assertEqual(result.runs[0].metadata['loops'], '1000')
+        self.assertEqual(result.loops, 10 ** 3)
+        self.assertEqual(result.get_metadata()['loops'], '1000')
 
     def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:

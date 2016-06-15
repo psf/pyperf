@@ -107,13 +107,14 @@ class TestTimeit(unittest.TestCase):
             stdout = proc.communicate()[0]
             self.assertEqual(proc.returncode, 0)
 
-            result = perf.Benchmark.json_load_from(tmp)
+            bench = perf.Benchmark.json_load_from(tmp)
 
-        self.assertEqual(len(result.runs), 2)
-        for run in result.runs:
+        self.assertEqual(len(bench.runs), 2)
+        self.assertEqual(bench.loops, 4)
+        self.assertEqual(bench.get_metadata()['loops'], '4')
+        for run in bench.runs:
             self.assertEqual(len(run.warmups), 1)
             self.assertEqual(len(run.samples), 3)
-            self.assertEqual(run.metadata['loops'], '4')
 
             # Tolerate large differences on busy systems
             for warmup in run.warmups:

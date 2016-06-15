@@ -260,22 +260,16 @@ class TextRunner:
             sys.exit(1)
 
     def _worker(self, bench, sample_func):
-        loops = self.args.loops
-        if loops < 1:
-            # FIXME: move this check in argument parsing
-            raise ValueError("--loops must be >= 1")
-
-        run_result = perf.RunResult(loops=loops,
-                                    metadata=self.metadata)
+        run_result = perf.RunResult(metadata=self.metadata)
 
         # only import metadata submodule in worker processes
         from perf import metadata as perf_metadata
         perf_metadata.collect_metadata(run_result.metadata)
 
         for is_warmup, run in self._range():
-            dt = sample_func(loops)
-            dt = float(dt) / loops
+            dt = sample_func(bench.loops)
             # FIXME: don't divide here but in Benchmark.samples()
+            dt = float(dt) / bench.loops
             if bench.inner_loops is not None:
                 dt /= bench.inner_loops
             self._add(run_result, is_warmup, run, dt)
@@ -294,7 +288,13 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
+        loops = self.args.loops
+        if loops < 1:
+            # FIXME: move this check in argument parsing
+            raise ValueError("loops must be >= 1")
+
         bench = perf.Benchmark(name=self.name,
+                               loops=loops,
                                inner_loops=self.inner_loops)
 
         if not self.args.raw:
