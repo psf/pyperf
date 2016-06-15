@@ -119,19 +119,31 @@ class TextRunner:
         # Number of inner-loops of the sample_func for bench_sample_func()
         self.inner_loops = inner_loops
 
+        def strictly_positive(value):
+            value = int(value)
+            if value <= 0:
+                raise ValueError("value must be > 0")
+            return value
+
+        def positive_or_nul(value):
+            value = int(value)
+            if value < 0:
+                raise ValueError("value must be >= 0")
+            return value
+
         parser = argparse.ArgumentParser(description='Benchmark')
-        parser.add_argument('-p', '--processes', type=int, default=processes,
+        parser.add_argument('-p', '--processes', type=strictly_positive, default=processes,
                             help='number of processes used to run benchmarks (default: %s)'
                                  % processes)
         parser.add_argument('-n', '--samples', dest="samples",
-                            type=int, default=samples,
+                            type=strictly_positive, default=samples,
                             help='number of samples per process (default: %s)'
                                  % samples)
         parser.add_argument('-w', '--warmups', dest="warmups",
-                            type=int, default=warmups,
+                            type=positive_or_nul, default=warmups,
                             help='number of skipped samples per run used to warmup the benchmark (default: %s)'
                                  % warmups)
-        parser.add_argument('-l', '--loops', type=int, default=loops,
+        parser.add_argument('-l', '--loops', type=positive_or_nul, default=loops,
                             help='number of loops per sample, 0 means '
                                  'automatic calibration (default: %s)'
                                  % loops)
@@ -309,14 +321,9 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
-        loops = self.args.loops
-        if loops < 1:
-            # FIXME: move this check in argument parsing
-            raise ValueError("loops must be >= 1")
-
         bench = perf.Benchmark(name=self.name,
                                warmups=self.args.warmups,
-                               loops=loops,
+                               loops=self.args.loops,
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
 
