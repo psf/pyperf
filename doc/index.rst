@@ -20,8 +20,10 @@ Links:
   <https://pypi.python.org/pypi/perf>`_
 * License: MIT
 
+Table Of Content:
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    perf
    cli
