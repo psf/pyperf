@@ -221,16 +221,6 @@ class Benchmark(object):
             samples.extend(run_samples[self.warmups:])
         return samples
 
-    # FIXME: remove the method, use directly metadata attribute
-    def get_metadata(self):
-        metadata = dict(self.metadata)
-        # FIXME: don't expose loops/inner_loops as metadata
-        if self.loops is not None:
-            metadata['loops'] = _format_number(self.loops)
-        if self.inner_loops is not None:
-            metadata['inner_loops'] = _format_number(self.inner_loops)
-        return metadata
-
     def format(self, verbose=0):
         nrun = self.get_nrun()
         if not nrun:
@@ -248,9 +238,14 @@ class Benchmark(object):
         nsample = len(self._runs[0]) - self.warmups
         iterations.append(_format_number(nsample, 'sample'))
 
+        if self.loops is not None and self.loops > 1:
+            iterations.append(_format_number(self.loops, 'loop'))
+
         iterations = ' x '.join(iterations)
         if self.warmups:
             iterations += '; %s' % _format_number(self.warmups, 'warmup')
+        if self.inner_loops:
+            iterations += '; %s' % _format_number(self.inner_loops, 'inner-loop')
 
         if iterations:
             text = '%s (%s)' % (text, iterations)

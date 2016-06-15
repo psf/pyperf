@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.5
+-----------
+
+Changes:
+
+* ``Benchmark.get_metadata()`` method removed: use directly the
+  :attr:`perf.Benchmark.metadata` attribute
+
+
 Version 0.4 (2016-06-15)
 ------------------------
 

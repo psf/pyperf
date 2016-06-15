@@ -424,7 +424,7 @@ class TextRunner:
             bench.metadata['duration'] = '%.1f sec' % secs
 
         if self.args.metadata:
-            perf._display_metadata(bench.get_metadata(), file=stream)
+            perf._display_metadata(bench.metadata, file=stream)
             print(file=stream)
 
         perf._display_benchmark_avg(bench, verbose=verbose, file=stream)

@@ -152,13 +152,6 @@ Metadata
 The :class:`~perf.text_runner.TextRunner` class collects metadata in each
 worker process.
 
-Benchmark:
-
-* ``inner_loops``: number of inner iterations per sample, see the
-  :attr:`~perf.text_runner.TextRunner.inner_loops` attribute of
-  :class:`~perf.text_runner.TextRunner`
-* ``loops``: number of (outter) iterations per sample
-
 Python metadata:
 
 * ``python_implementation``: Python implementation. Examples: ``cpython``,

@@ -173,17 +173,14 @@ class TestResult(unittest.TestCase):
         self.assertEqual(bench.name, "name")
         self.assertEqual(bench.loops, 20)
         self.assertEqual(bench.inner_loops, 3)
-        self.assertEqual(bench.get_metadata(),
-                         {'key': 'value',
-                          'inner_loops': '3',
-                          'loops': '20'})
+        self.assertEqual(bench.metadata, {'key': 'value'})
         self.assertEqual(str(bench),
                          'name: 1.50 sec +- 0.50 sec')
         self.assertEqual(bench.format(0),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(bench.format(1),
                          '1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample; 1 warmup)')
+                         '(3 runs x 1 sample x 20 loops; 1 warmup; 3 inner-loops)')
 
     def test_benchmark_json(self):
         samples = (1.0, 1.5, 2.0)
@@ -195,10 +192,7 @@ class TestResult(unittest.TestCase):
 
         bench = perf.Benchmark.json_load(bench.json())
         self.assertEqual(bench.name, "name")
-        self.assertEqual(bench.get_metadata(),
-                         {'key': 'value',
-                          'inner_loops': '20',
-                          'loops': '100'})
+        self.assertEqual(bench.metadata, {'key': 'value'})
         self.assertEqual(bench.loops, 100)
         self.assertEqual(bench.inner_loops, 20)
 

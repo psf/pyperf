@@ -83,7 +83,7 @@ def parse_results(filename, default_name=None):
 
 def display_result(args, result):
     if args.metadata:
-        perf._display_metadata(result.get_metadata())
+        perf._display_metadata(result.metadata)
         print()
 
     if args.verbose > 1:
@@ -133,7 +133,7 @@ def compare_results(args, results, sort_results):
     print()
 
     if args.metadata:
-        metadatas = [result.get_metadata() for result in results]
+        metadatas = [result.metadata for result in results]
 
         common_metadata = _common_metadata(metadatas)
         perf._display_metadata(common_metadata,
