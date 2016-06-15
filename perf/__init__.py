@@ -37,10 +37,7 @@ _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
 def _format_timedeltas(values):
-    if any(dt < 0 for dt in values):
-        raise ValueError("numbers must be positive")
-
-    ref_value = values[0]
+    ref_value = abs(values[0])
     for i in range(2, -9, -1):
         if ref_value >= 10.0 ** i:
             break

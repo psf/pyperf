@@ -62,6 +62,8 @@ class TestTools(unittest.TestCase):
 
         self.assertEqual(fmt_delta(1e-10), "0.10 ns")
 
+        self.assertEqual(fmt_delta(-2), "-2.00 sec")
+
     def test_timedelta_stdev(self):
         def fmt_stdev(seconds, stdev):
             return "%s +- %s" % perf._format_timedeltas((seconds, stdev))
