@@ -203,4 +203,8 @@ Linux metadata:
 * ``cpu_affinity``: if set, the process is pinned to the specified list of
   CPUs
 
+Other:
+
+* ``perf_version``: Version of the ``perf`` module
+
 See the :func:`perf.metadata.collect_metadata` function.

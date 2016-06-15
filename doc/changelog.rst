@@ -23,6 +23,7 @@ Changelog
     https://pypi.python.org/pypi/statistics
   - ``perf.mean()`` and ``perf.stdev()`` functions have been removed: use
     the ``statistics`` module which is also available on Python 2.7
+  - add ``perf_version`` metadata
 
 * Version 0.3 (2016-06-10)
 

@@ -145,6 +145,7 @@ def _collect_system_metadata(metadata):
 
 
 def collect_metadata(metadata):
+    metadata['perf_version'] = perf.__version__
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)
 
