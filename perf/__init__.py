@@ -69,8 +69,8 @@ def _format_timedelta(value):
     return _format_timedeltas((value,))[0]
 
 
-# FIXME: put this code into RunResult, and pass _format_timedeltas as formatter
-# to RunResult
+# FIXME: put this code into Benchmark, and pass _format_timedeltas as formatter
+# to Benchmark
 def _format_run_result(values, verbose=0):
     numbers = [statistics.mean(values)]
     with_stdev = (len(values) >= 2)
@@ -133,15 +133,11 @@ def _common_value(values):
     return value
 
 
-class RunResult:
-    def __init__(self, samples=None, warmups=None):
-        self.samples = []
-        if samples is not None:
-            self.samples.extend(samples)
-
-        self.warmups = []
-        if warmups is not None:
-            self.warmups.extend(warmups)
+# FIXME: replace _RunResult with a tuple/namedtuple?
+class _RunResult:
+    def __init__(self, samples, warmups):
+        self.samples = samples
+        self.warmups = warmups
 
 
 class Benchmark:
@@ -162,18 +158,21 @@ class Benchmark:
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
-    def add_run(self, run_result):
-        if (run_result.samples is None
+    def add_run(self, samples, warmups=None):
+        if (not samples
         or any(not(isinstance(value, float) and value >= 0)
-                for value in run_result.samples)):
-            raise TypeError("samples must be a list of float >= 0")
+                for value in samples)):
+            raise TypeError("samples must be a non-empty list of float >= 0")
 
-        if (run_result.warmups is None
-        or any(not(isinstance(value, float) and value >= 0)
-                for value in run_result.warmups)):
+        if (warmups
+        and any(not(isinstance(value, float) and value >= 0)
+                for value in warmups)):
             raise TypeError("warmups must be a list of float >= 0")
 
-        self._runs.append(run_result)
+        if not warmups:
+            warmups = ()
+
+        self._runs.append(_RunResult(samples, warmups))
 
     def _get_worker_run(self, run_bench):
         if len(run_bench._runs) != 1:
@@ -282,8 +281,7 @@ class Benchmark:
                     loops=loops, inner_loops=inner_loops)
 
         for run_data in data['runs']:
-            run = RunResult(samples=run_data['samples'], warmups=run_data['warmups'])
-            bench.add_run(run)
+            bench.add_run(run_data['samples'], run_data['warmups'])
 
         return bench
 

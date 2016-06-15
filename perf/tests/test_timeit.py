@@ -44,7 +44,7 @@ class TestTimeit(unittest.TestCase):
                          r'(- .*\n)+'
                          r'\n'
                          r'Average: (?P<avg>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms '
-                             r'\(2 samples\)\n'
+                             r'\(2 samples; 1 warmup\)\n'
                          r'$',
                          stdout)
         self.assertIsNotNone(match, repr(stdout))

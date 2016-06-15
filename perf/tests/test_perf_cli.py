@@ -10,7 +10,7 @@ class TestPerfCLI(unittest.TestCase):
     def create_bench(self, samples, **kw):
         bench = perf.Benchmark(**kw)
         for sample in samples:
-            bench.add_run(perf.RunResult([sample]))
+            bench.add_run([sample])
         return bench
 
     def show(self, verbose=False, metadata=True):

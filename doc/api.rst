@@ -141,26 +141,6 @@ Clocks
    information on Python clocks.
 
 
-RunResult
----------
-
-.. class:: perf.RunResult(samples=None, warmups=None)
-
-   Result of a single benchmark run.
-
-   Attributes:
-
-   .. attribute:: samples
-
-      List of numbers (``float``). Usually, :attr:`samples` is a list of number
-      of seconds.
-
-   .. attribute:: warmups
-
-      Similar to :attr:`samples`: samples run to "warmup" the benchmark. These
-      numbers are ignored when computing the average and standard deviation.
-
-
 Benchmark
 ---------
 
@@ -170,20 +150,27 @@ Benchmark
 
    Methods:
 
-   .. method:: add_run(run: RunResult):
+   .. method:: add_run(samples, warmups=None)
 
       Add a run result.
 
-   .. method:: get_samples():
+      *samples* is a non-empty list of numbers (``float``). Usually, *samples*
+      is a list of number of seconds.
+
+      *warmups* is an optional list of numbers (``float``), it can be empty. It
+      is similar to *samples*: samples used to "warmup" the benchmark. These
+      numbers are ignored when computing the average and standard deviation.
+
+   .. method:: get_samples()
 
       Get samples from all runs.
 
-   .. method:: get_metadata():
+   .. method:: get_metadata()
 
       Get metadata of all runs. Skip metadata with different values or not
       existing in all run. Return an empty dictionary if :attr:`runs` is empty.
 
-   .. method:: format(verbose=False):
+   .. method:: format(verbose=False)
 
       Format runs as a string (``str``).
 
@@ -236,7 +223,7 @@ TextRunner
 
    *name* is the name of the benchmark.
 
-   *metadata* is passed to the :class:`~perf.RunResult` constructor: see
+   *metadata* is passed to the :class:`~perf.Benchmark` constructor: see
    :ref:`Metadata <metadata>`.
 
    *nsample*, *nwarmup* and *nprocess* are the default number of samples,
@@ -310,8 +297,7 @@ TextRunner
       Number of inner-loops of the *sample_func* of :meth:`bench_sample_func`.
       This number is compute the final sample from the result of *sample_func*.
 
-      The value is copied to the ``inner_loops`` metadata of created
-      :class:`~perf.RunResult` results.
+      The value is is passed to the :class:`~perf.Benchmark` constructor.
 
    .. attribute:: prepare_subprocess_args
 

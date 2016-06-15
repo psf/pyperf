@@ -270,7 +270,7 @@ class TextRunner:
             self._add(bench, warmups, samples,
                       is_warmup, run, dt)
 
-        bench.add_run(perf.RunResult(samples, warmups))
+        bench.add_run(samples, warmups)
 
         self._display_run_result_avg(bench)
 
@@ -385,7 +385,8 @@ class TextRunner:
         for process in range(nprocess):
             run_bench = self._spawn_worker()
             run = bench._get_worker_run(run_bench)
-            bench.add_run(run)
+            # FIXME: avoid _RunResult object
+            bench.add_run(run.samples, run.warmups)
             if verbose > 1:
                 perf._display_run(1 + process, nprocess, run, file=stream)
             else:

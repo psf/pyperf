@@ -36,7 +36,7 @@ class TestTextRunner(unittest.TestCase):
                          r'(- .*\n)+'
                          r'\n'
                          r'Average: 1\.00 sec \+- 0\.00 sec '
-                             r'\(3 samples\)\n$')
+                             r'\(3 samples; 1 warmup\)\n$')
 
         # check bench_sample_func() result
         self.assertIsInstance(result, perf.Benchmark)

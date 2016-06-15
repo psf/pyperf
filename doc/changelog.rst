@@ -12,7 +12,7 @@ Changelog
   - Emit a warning or an error in english if the standard deviation is larger
     than 10% and/or the shortest sample is shorter than 1 ms
   - Emit a warning or an error if the shortest sample took less than 1 ms
-  - Move metadata from :class:`perf.RunResult` to :class:`perf.Benchmark`
+  - Move metadata from ``RunResult`` to :class:`perf.Benchmark`
   - New :attr:`perf.Benchmark.loops` and :attr:`perf.Benchmark.inner_loops`
     attributes (they were previously stored in metadata).
   - :attr:`perf.Benchmark.runs` becomes private.
@@ -37,7 +37,7 @@ Changelog
     into subpages.
   - Add metadata ``cpu_affinity``
   - Add :func:`perf.is_significant` function
-  - Move metadata from :class:`~perf.Benchmark` to :class:`~perf.RunResult`
+  - Move metadata from :class:`~perf.Benchmark` to ``RunResult``
   - Rename the ``Results`` class to :class:`~perf.Benchmark`
   - Add :attr:`~perf.text_runner.TextRunner.inner_loops` attribute to
     :class:`~perf.text_runner.TextRunner`, used for microbenchmarks when an
