@@ -177,9 +177,6 @@ class RunResult:
         else:
             self.metadata = {}
 
-    def _format_sample(self, sample, verbose=False):
-        return self._formatter([sample], verbose)
-
     def format(self, verbose=False):
         return self._formatter(self.samples, verbose)
 
@@ -226,6 +223,8 @@ class Benchmark:
         self.name = name
         self.loops = loops
         self.inner_loops = inner_loops
+        # FIXME: make the formatter configurable
+        self._formatter = _format_run_result
 
     def _get_worker_run(self, run_bench):
         if len(run_bench.runs) != 1:
@@ -238,10 +237,7 @@ class Benchmark:
         return run_bench.runs[0]
 
     def _format_sample(self, sample, verbose=False):
-        if not self.runs:
-            raise ValueError("Benchmark has no run result")
-        run = self.runs[0]
-        return run._format_sample(sample, verbose)
+        return self._formatter([sample], verbose)
 
     def get_samples(self):
         samples = []

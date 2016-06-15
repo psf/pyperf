@@ -180,14 +180,14 @@ class TextRunner:
         for run in range(self.args.nsample):
             yield (False, run)
 
-    def _add(self, run_result, is_warmup, run, sample):
+    def _add(self, bench, run_result, is_warmup, run, sample):
         if is_warmup:
             run_result.warmups.append(sample)
         else:
             run_result.samples.append(sample)
 
         if self.args.verbose:
-            text = run_result._format_sample(sample)
+            text = bench._format_sample(sample)
             if is_warmup:
                 text = "Warmup %s: %s" % (1 + run, text)
             else:
@@ -272,7 +272,7 @@ class TextRunner:
             dt = float(dt) / bench.loops
             if bench.inner_loops is not None:
                 dt /= bench.inner_loops
-            self._add(run_result, is_warmup, run, dt)
+            self._add(bench, run_result, is_warmup, run, dt)
 
         bench.runs.append(run_result)
 
