@@ -7,7 +7,6 @@ TODO
   Can it have an impact on the statistics?
 * Save system load to detect unstable benchmark?
 * Add int type in Benchmark.add_run() samples?
-* Add unit test on hist: need JSON data file
 * Metadata: "perf show" doesn't show the date
 * Metadata: add the date, it was in run metadata but ignored because different
   at each run

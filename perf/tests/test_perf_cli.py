@@ -1,9 +1,14 @@
+import os
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 
 import perf
+
+
+TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
 
 
 class TestPerfCLI(unittest.TestCase):
@@ -143,6 +148,64 @@ class TestPerfCLI(unittest.TestCase):
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
+
+    def check_command(self, expected, *args, **kwargs):
+        cmd = [sys.executable, '-m', 'perf']
+        cmd.extend(args)
+        proc = subprocess.Popen(cmd,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True,
+                                **kwargs)
+        stdout = proc.communicate()[0]
+
+        self.assertEqual(stdout.rstrip(), textwrap.dedent(expected).strip())
+
+    def test_hist(self):
+        # Force terminal size on Python 3 for shutil.get_terminal_size()
+        env = dict(os.environ)
+        env['COLUMNS'] = '80'
+        env['LINES'] = '25'
+
+        expected = ("""
+            26.3 ms:  1 ##
+            26.4 ms:  0 |
+            26.4 ms:  3 ######
+            26.5 ms:  1 ##
+            26.5 ms:  1 ##
+            26.6 ms:  8 ################
+            26.6 ms:  6 ############
+            26.6 ms: 10 ####################
+            26.7 ms: 17 ##################################
+            26.7 ms: 17 ##################################
+            26.8 ms: 24 ###############################################
+            26.8 ms: 34 ###################################################################
+            26.9 ms: 28 #######################################################
+            26.9 ms: 14 ############################
+            26.9 ms: 19 #####################################
+            27.0 ms: 18 ###################################
+            27.0 ms: 10 ####################
+            27.1 ms: 12 ########################
+            27.1 ms:  9 ##################
+            27.2 ms: 12 ########################
+            27.2 ms:  4 ########
+            27.2 ms:  1 ##
+            27.3 ms:  1 ##
+        """)
+        self.check_command(expected, 'hist', TELCO, env=env)
+
+    def test_stats(self):
+        expected = ("""
+            Number of samples: 250
+            Minimum 26.4 ms
+            Maximum 27.3 ms
+
+            Mean + std dev: 26.9 ms +- 0.2 ms
+            Median +- std dev: 26.9 ms +- 0.2 ms
+            Median +- MAD: 26.9 ms +- 0.1 ms
+
+            Skewness: 0.04
+        """)
+        self.check_command(expected, 'stats', TELCO)
 
 
 if __name__ == "__main__":
