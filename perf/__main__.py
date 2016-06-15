@@ -156,7 +156,7 @@ def compare_results(args, results, sort_results):
     for index, changed_result in enumerate(results[1:], 1):
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.mean()
-        text = ("Mean +- std dev: [%s] %s -> [%s] %s"
+        text = ("Median +- std dev: [%s] %s -> [%s] %s"
                 % (ref_result.name,
                    ref_result.format(verbose=args.verbose),
                    changed_result.name,
@@ -268,12 +268,14 @@ def display_stats(args, result):
     print("Minimum %s" % fmt(min(samples)))
     print("Maximum %s" % fmt(max(samples)))
     print()
+
+    median = result.median()
+    print("Median +- std dev: %s +- %s"
+          % perf._format_timedeltas([median, statistics.stdev(samples, median)]))
+
     print("Mean + std dev: %s +- %s"
           % perf._format_timedeltas([result.mean(),
                                      statistics.stdev(samples)]))
-    median = statistics.median(samples)
-    print("Median +- std dev: %s +- %s"
-          % perf._format_timedeltas([median, statistics.stdev(samples, median)]))
     if boltons is not None:
         stats = boltons.statsutils.Stats(samples)
         print("Median +- MAD: %s +- %s"

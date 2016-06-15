@@ -183,7 +183,13 @@ Benchmark
 
    .. method:: mean()
 
-      Get the mean of :meth:`get_samples`.
+      Get the `mean <https://en.wikipedia.org/wiki/Mean>`_ of
+      :meth:`get_samples`, also known as "average" or "arithmetic mean".
+
+   .. method:: median()
+
+      Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
+      :meth:`get_samples`.
 
    Attributes:
 

@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Metadata: cpu_affinity, check if CPUs are isolated
+* Metadata: CPU frequency?
+* Remove min/max from very verbose but add --stats to display statistics?
 * add_run(): reject sample=0?
 * round(sample, 9): does it have an impact on statistics?
 * JSON size: truncate even more digits in TextRunner (round(sample, 9)) if

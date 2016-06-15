@@ -120,7 +120,7 @@ class Benchmark(object):
         self._warmups = value
 
     def _formatter(self, values, verbose=0):
-        numbers = [statistics.mean(values)]
+        numbers = [statistics.median(values)]
         with_stdev = (len(values) >= 2)
         if with_stdev:
             numbers.append(statistics.stdev(values))
@@ -144,11 +144,17 @@ class Benchmark(object):
     def _clear_stats_cache(self):
         self._samples = None
         self._mean = None
+        self._median = None
 
     def mean(self):
         if self._mean is None:
             self._mean = statistics.mean(self.get_samples())
         return self._mean
+
+    def median(self):
+        if self._median is None:
+            self._median = statistics.median(self.get_samples())
+        return self._median
 
     def add_run(self, samples):
         if (not samples
@@ -386,7 +392,7 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
         print(file=file)
 
     # Display the average +- stdev
-    print("Mean +- std dev: %s" % bench.format(verbose=verbose), file=file)
+    print("Median +- std dev: %s" % bench.format(verbose=verbose), file=file)
 
 
 def _display_metadata(metadata, file=None, header="Metadata:"):

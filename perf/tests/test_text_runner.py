@@ -33,7 +33,7 @@ class TestTextRunner(unittest.TestCase):
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
-                         r'Mean \+- std dev: 1\.00 sec \+- 0\.00 sec '
+                         r'Median \+- std dev: 1\.00 sec \+- 0\.00 sec '
                              r'\(3 samples; 1 warmup\)\n$')
 
         # check bench_sample_func() result

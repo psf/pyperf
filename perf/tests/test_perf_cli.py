@@ -40,7 +40,7 @@ class TestPerfCLI(unittest.TestCase):
                     'Try to rerun the benchmark with more runs, samples '
                         'and/or loops\n'
                     '\n'
-                    'Mean +- std dev: 1.50 sec +- 0.50 sec\n')
+                    'Median +- std dev: 1.50 sec +- 0.50 sec\n')
         self.assertEqual(stdout, expected)
 
     def test_show_verbose(self):
@@ -56,7 +56,7 @@ class TestPerfCLI(unittest.TestCase):
                     '\n'
                     'Shortest raw sample: 1.00 sec\n'
                     '\n'
-                    'Mean +- std dev: 1.50 sec +- 0.50 sec '
+                    'Median +- std dev: 1.50 sec +- 0.50 sec '
                         '(min: 1.00 sec, max: 2.00 sec) (3 runs x 1 sample)\n')
         self.assertEqual(stdout, expected)
 
@@ -98,7 +98,7 @@ class TestPerfCLI(unittest.TestCase):
                     'py3 metadata:\n'
                     '- python_version: 3.4\n'
                     '\n'
-                    'Mean +- std dev: [py2] 1.50 sec +- 0.50 sec '
+                    'Median +- std dev: [py2] 1.50 sec +- 0.50 sec '
                         '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -112,7 +112,7 @@ class TestPerfCLI(unittest.TestCase):
 
         expected = ('Reference (best): py2\n'
                     '\n'
-                    'Mean +- std dev: [py2] 1.50 sec +- 0.50 sec '
+                    'Median +- std dev: [py2] 1.50 sec +- 0.50 sec '
                         '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -127,7 +127,7 @@ class TestPerfCLI(unittest.TestCase):
 
         expected = ('Reference (best): a\n'
                     '\n'
-                    'Mean +- std dev: [a] 1.50 sec +- 0.50 sec '
+                    'Median +- std dev: [a] 1.50 sec +- 0.50 sec '
                         '-> [b] 1.50 sec +- 0.50 sec: same speed\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -190,8 +190,8 @@ class TestPerfCLI(unittest.TestCase):
             Minimum 26.4 ms
             Maximum 27.3 ms
 
-            Mean + std dev: 26.9 ms +- 0.2 ms
             Median +- std dev: 26.9 ms +- 0.2 ms
+            Mean + std dev: 26.9 ms +- 0.2 ms
             Median +- MAD: 26.9 ms +- 0.1 ms
 
             Skewness: 0.04

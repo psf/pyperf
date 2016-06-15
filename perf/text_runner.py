@@ -214,7 +214,7 @@ class TextRunner:
             perf._display_metadata(bench.metadata, file=stream)
             print(file=stream)
 
-        print("Mean +- std dev: %s" % bench.format(self.args.verbose),
+        print("Median +- std dev: %s" % bench.format(self.args.verbose),
               file=self._stream())
 
         stream.flush()
