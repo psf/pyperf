@@ -63,7 +63,7 @@ class TestPerfCLI(unittest.TestCase):
                     'Try to rerun the benchmark with more runs, samples '
                         'and/or loops\n'
                     '\n'
-                    'Shortest sample: 1.00 sec\n'
+                    'Shortest raw sample: 1.00 sec\n'
                     '\n'
                     'Average: 1.50 sec +- 0.50 sec '
                         '(min: 1.00 sec, max: 2.00 sec) (3 runs x 1 sample)\n')

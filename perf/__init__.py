@@ -378,16 +378,16 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     if shortest < 1e-3:
         if shortest < 1e-6:
             print("ERROR: the benchmark may be very unstable, "
-                  "the shortest sample only took %s" % text)
+                  "the shortest raw sample only took %s" % text)
         else:
             print("WARNING: the benchmark may be unstable, "
-                  "the shortest sample only took %s" % text)
+                  "the shortest raw sample only took %s" % text)
         print("Try to rerun the benchmark with more loops "
               "or increase --min-time",
               file=file)
         print(file=file)
     elif verbose > 1:
-        print("Shortest sample: %s" % text, file=file)
+        print("Shortest raw sample: %s" % text, file=file)
         print(file=file)
 
     # Display the average +- stdev
