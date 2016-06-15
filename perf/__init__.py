@@ -116,28 +116,6 @@ class Benchmark(object):
         self._clear_stats_cache()
         self._warmups = value
 
-    def _formatter(self, values, verbose=0):
-        numbers = [statistics.median(values)]
-        with_stdev = (len(values) >= 2)
-        if with_stdev:
-            numbers.append(statistics.stdev(values))
-        if verbose > 1:
-            numbers.append(min(values))
-            numbers.append(max(values))
-
-        numbers = self._format_samples(numbers)
-        if verbose > 1:
-            if with_stdev:
-                text = '%s +- %s (min: %s, max: %s)' % numbers
-            else:
-                text = '%s (min: %s, max: %s)' % numbers
-        else:
-            if with_stdev:
-                text = '%s +- %s' % numbers
-            else:
-                text = numbers[0]
-        return text
-
     def _clear_stats_cache(self):
         self._samples = None
         self._median = None
@@ -220,7 +198,25 @@ class Benchmark(object):
             return '<no run>'
 
         samples = self.get_samples()
-        text = self._formatter(samples, verbose)
+        numbers = [self.median()]
+        with_stdev = (len(samples) >= 2)
+        if with_stdev:
+            numbers.append(statistics.stdev(samples))
+        if verbose > 1:
+            numbers.append(min(samples))
+            numbers.append(max(samples))
+
+        numbers = self._format_samples(numbers)
+        if verbose > 1:
+            if with_stdev:
+                text = '%s +- %s (min: %s, max: %s)' % numbers
+            else:
+                text = '%s (min: %s, max: %s)' % numbers
+        else:
+            if with_stdev:
+                text = '%s +- %s' % numbers
+            else:
+                text = numbers[0]
         if not verbose:
             return text
 
