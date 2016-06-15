@@ -118,21 +118,6 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
-def _common_value(values):
-    if not values:
-        return None
-
-    value = values[0]
-    if value is None:
-        return None
-
-    for other in values[1:]:
-        if value != other:
-            return None
-
-    return value
-
-
 class Benchmark:
     def __init__(self, name=None, loops=None, inner_loops=None,
                  metadata=None):
@@ -165,14 +150,18 @@ class Benchmark:
                 for value in warmups)):
             raise TypeError("warmups must be a list of float >= 0")
 
-        # FIXME: check the number of samples and number of warmups
-        # see format()
-
         if warmups:
             run = (tuple(samples), tuple(warmups))
         else:
             # warmups can be None
             run = (tuple(samples), ())
+
+        if self._runs:
+            first_run = self._runs[0]
+            if len(run[0]) != len(first_run[0]):
+                raise ValueError("different number of samples")
+            if len(run[1]) != len(first_run[1]):
+                raise ValueError("different number of warmups")
 
         self._runs.append(run)
 
@@ -234,17 +223,6 @@ class Benchmark:
         if not self._runs:
             return '<no run>'
 
-        first_run = self._runs[0]
-        nsample = len(first_run[0])
-        warmup = len(first_run[1])
-        for run_samples, run_warmups in self._runs:
-            run_nsample = len(run_samples)
-            if nsample is not None and nsample != run_nsample:
-                nsample = None
-            run_warmup = len(run_warmups)
-            if warmup is not None and warmup != run_warmup:
-                warmup = None
-
         # FIXME: handle the case where all samples are empty
         samples = self.get_samples()
         text = self._formatter(samples, verbose)
@@ -255,11 +233,15 @@ class Benchmark:
         nrun = len(self._runs)
         if nrun > 1:
             iterations.append(_format_number(nrun, 'run'))
-        if nsample:
-            iterations.append(_format_number(nsample, 'sample'))
+
+        first_run = self._runs[0]
+        iterations.append(_format_number(len(first_run[0]), 'sample'))
+
         iterations = ' x '.join(iterations)
-        if warmup:
-            iterations += '; %s' % _format_number(warmup, 'warmup')
+        nwarmup = len(first_run[1])
+        if nwarmup:
+            iterations += '; %s' % _format_number(nwarmup, 'warmup')
+
         if iterations:
             text = '%s (%s)' % (text, iterations)
         return text

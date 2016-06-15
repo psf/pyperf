@@ -162,6 +162,9 @@ Benchmark
       benchmark. These numbers are ignored when computing the average and
       standard deviation.
 
+      All runs must have the same number of samples and the same number of
+      warmups.
+
    .. method:: get_nrun()
 
       Get the number of runs (``int``).

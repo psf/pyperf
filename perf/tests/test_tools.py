@@ -118,6 +118,15 @@ class TestResult(unittest.TestCase):
             self.assertEqual(run[0], (sample,))
             self.assertEqual(run[1], (warmup,))
 
+    def test_add_run_nsample(self):
+        bench = perf.Benchmark()
+        bench.add_run([1.0], [1.0])
+        # All runs must have the same number of samples and the same number of
+        # warmups.
+        self.assertRaises(ValueError, bench.add_run, [1.0, 2.0], [1.0])
+        self.assertRaises(ValueError, bench.add_run, [1.0])
+        bench.add_run([1.0], [1.0])
+
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         bench = perf.Benchmark(name="name", loops=20, inner_loops=3)
