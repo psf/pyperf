@@ -105,7 +105,7 @@ class TestTimeit(unittest.TestCase):
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     universal_newlines=True)
-            stdout = proc.communicate()[0]
+            proc.communicate()
             self.assertEqual(proc.returncode, 0)
 
             bench = perf.Benchmark.json_load_from(tmp)

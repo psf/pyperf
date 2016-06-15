@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import json
 import sys
 
 import statistics
@@ -87,8 +86,7 @@ def display_result(args, result):
 
 
 def _result_sort_key(result):
-    samples = result.get_samples()
-    return (statistics.mean(samples), result.name or '')
+    return (result.mean(), result.name or '')
 
 
 def _common_metadata(metadatas):
@@ -143,11 +141,11 @@ def compare_results(args, results, sort_results):
 
     # Compute means
     ref_samples = ref_result.get_samples()
-    ref_avg = statistics.mean(ref_samples)
+    ref_avg = ref_result.mean()
     last_index = len(results) - 1
     for index, changed_result in enumerate(results[1:], 1):
         changed_samples = changed_result.get_samples()
-        changed_avg = statistics.mean(changed_samples)
+        changed_avg = changed_result.mean()
         text = ("Average: [%s] %s -> [%s] %s"
                 % (ref_result.name,
                    ref_result.format(verbose=args.verbose),
@@ -199,10 +197,10 @@ def display_histogram_scipy(args, result):
     pylab.plot(samples, fit2, '-v', label='median-stdev')
 
     # mean + std dev
-    fit3 = stats.norm.pdf(samples, statistics.mean(samples), statistics.stdev(samples))
+    fit3 = stats.norm.pdf(samples, result.mean(), statistics.stdev(samples))
     pylab.plot(samples, fit3, '-+', label='mean-stdev')
 
-    legend = plt.legend(loc='upper right', shadow=True, fontsize='x-large')
+    plt.legend(loc='upper right', shadow=True, fontsize='x-large')
     pylab.hist(samples, bins=25, normed=True)
     pylab.show()
 
@@ -211,15 +209,12 @@ def display_histogram_text(args, result):
     import shutil
 
     samples = result.get_samples()
+    avg = result.mean()
     if hasattr(shutil, 'get_terminal_size'):
         columns, lines = shutil.get_terminal_size()
     else:
         columns = 80
         lines = 25
-
-    nsample = len(samples)
-    avg = statistics.mean(samples)
-    stdev = statistics.stdev(samples)
 
     bins = max(lines - 3, 3)
     if not args.extend:
@@ -264,7 +259,7 @@ def display_stats(args, result):
     print("Maximum %s" % fmt(max(samples)))
     print()
     print("Mean + std dev: %s +- %s"
-          % perf._format_timedeltas([statistics.mean(samples),
+          % perf._format_timedeltas([result.mean(),
                                      statistics.stdev(samples)]))
     median = statistics.median(samples)
     print("Median +- std dev: %s +- %s"

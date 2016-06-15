@@ -1,5 +1,3 @@
-import itertools
-import os
 import tempfile
 
 import perf.text_runner
@@ -107,8 +105,8 @@ class TestTextRunner(unittest.TestCase):
         runner = self.create_text_runner(['--raw', '-vv',
                                           '--min-time', '0.001',
                                           '--max-time', '1.0'])
-        with tests.capture_stdout() as stdout:
-            with tests.capture_stderr() as stderr:
+        with tests.capture_stdout():
+            with tests.capture_stderr():
                 result = runner.bench_sample_func(sample_func)
 
         self.assertEqual(runner.args.loops, 10 ** 3)

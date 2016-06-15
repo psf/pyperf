@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import functools
 import io
 import os
 import subprocess
@@ -157,7 +156,6 @@ class TextRunner:
 
     def _calibrate_sample_func(self, sample_func):
         stream = self._stream()
-        timer = perf.perf_counter
 
         min_dt = self.args.min_time * 0.90
         max_dt = self.args.max_time
