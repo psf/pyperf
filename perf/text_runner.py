@@ -31,36 +31,6 @@ def _json_dump(bench, args):
         stdout.flush()
 
 
-def _parse_cpu_list(cpu_list):
-    cpus = []
-    for part in cpu_list.split(','):
-        if '-' in part:
-            parts = part.split('-', 1)
-            first = int(parts[0])
-            last = int(parts[1])
-            for cpu in range(first, last+1):
-                cpus.append(cpu)
-        else:
-            cpus.append(int(part))
-    return cpus
-
-def _get_isolated_cpus():
-    path = '/sys/devices/system/cpu/isolated'
-    try:
-        fp = io.open(path, encoding='ascii')
-        with fp:
-            isolated = fp.readline().rstrip()
-    except (OSError, IOError):
-        # missing file
-        return
-
-    if not isolated:
-        # no CPU isolated
-        return
-
-    return _parse_cpu_list(isolated)
-
-
 def _bench_from_subprocess(args):
     proc = subprocess.Popen(args,
                             universal_newlines=True,
@@ -247,7 +217,7 @@ class TextRunner:
             stream = self._stream()
 
             # --affinity option is not set: detect isolated CPUs
-            cpus = _get_isolated_cpus()
+            cpus = perf._get_isolated_cpus()
             if not cpus:
                 # no isolated CPUs or unable to get the isolated CPUs
                 return

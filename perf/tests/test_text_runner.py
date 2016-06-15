@@ -6,6 +6,9 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
+BUILTIN_OPEN = 'builtins.open' if perf._PY3 else '__builtin__.open'
+
+
 def check_args(loops, a, b):
     if a != 1:
         raise ValueError
@@ -138,7 +141,7 @@ class TestTextRunner(unittest.TestCase):
             del mock_os.sched_setaffinity
 
             with mock.patch('psutil.Process') as mock_process:
-                with mock.patch('io.open') as mock_open:
+                with mock.patch(BUILTIN_OPEN) as mock_open:
                     mock_file = mock_open.return_value
                     mock_file.readline.return_value = '1-2'
                     runner._cpu_affinity()
@@ -152,7 +155,7 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args([])
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
-            with mock.patch('io.open') as mock_open:
+            with mock.patch(BUILTIN_OPEN) as mock_open:
                 mock_file = mock_open.return_value
                 mock_file.readline.return_value = '1-2'
                 runner._cpu_affinity()
@@ -164,7 +167,7 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args([])
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
-            with mock.patch('io.open') as mock_open:
+            with mock.patch(BUILTIN_OPEN) as mock_open:
                 mock_file = mock_open.return_value
                 mock_file.readline.return_value = ''
                 runner._cpu_affinity()

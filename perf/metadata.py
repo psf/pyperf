@@ -124,7 +124,11 @@ def _collect_system_metadata(metadata):
         if cpus == set(range(cpu_count)):
             cpus = None
     if cpus:
-        metadata['cpu_affinity'] = perf._format_cpu_list(cpus)
+        isolated = perf._get_isolated_cpus()
+        text = perf._format_cpu_list(cpus)
+        if isolated and set(cpus) <= set(isolated):
+            text = '%s (isolated)' % text
+        metadata['cpu_affinity'] = text
 
     # Hostname
     hostname = socket.gethostname()

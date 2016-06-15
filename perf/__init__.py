@@ -412,28 +412,6 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
         print("- %s: %s" % (key, value), file=file)
 
 
-def _format_cpu_list(cpus):
-    cpus = sorted(cpus)
-    parts = []
-    first = None
-    last = None
-    for cpu in cpus:
-        if first is None:
-            first = cpu
-        elif cpu != last+1:
-            if first != last:
-                parts.append('%s-%s' % (first, last))
-            else:
-                parts.append(str(last))
-            first = cpu
-        last = cpu
-    if first != last:
-        parts.append('%s-%s' % (first, last))
-    else:
-        parts.append(str(last))
-    return ','.join(parts)
-
-
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
 # function of the degrees of freedom. For larger degrees of freedom, we
 # approximate. While this may look less elegant than simply calculating the
@@ -534,3 +512,59 @@ def is_significant(sample1, sample2):
     critical_value = _tdist95conf_level(deg_freedom)
     t_score = _tscore(sample1, sample2)
     return (abs(t_score) >= critical_value, t_score)
+
+
+def _format_cpu_list(cpus):
+    cpus = sorted(cpus)
+    parts = []
+    first = None
+    last = None
+    for cpu in cpus:
+        if first is None:
+            first = cpu
+        elif cpu != last+1:
+            if first != last:
+                parts.append('%s-%s' % (first, last))
+            else:
+                parts.append(str(last))
+            first = cpu
+        last = cpu
+    if first != last:
+        parts.append('%s-%s' % (first, last))
+    else:
+        parts.append(str(last))
+    return ','.join(parts)
+
+
+def _parse_cpu_list(cpu_list):
+    cpus = []
+    for part in cpu_list.split(','):
+        if '-' in part:
+            parts = part.split('-', 1)
+            first = int(parts[0])
+            last = int(parts[1])
+            for cpu in range(first, last+1):
+                cpus.append(cpu)
+        else:
+            cpus.append(int(part))
+    return cpus
+
+
+def _get_isolated_cpus():
+    path = '/sys/devices/system/cpu/isolated'
+    try:
+        if _PY3:
+            fp = open(path, encoding='ascii')
+        else:
+            fp = open(path)
+        with fp:
+            isolated = fp.readline().rstrip()
+    except (OSError, IOError):
+        # missing file
+        return
+
+    if not isolated:
+        # no CPU isolated
+        return
+
+    return _parse_cpu_list(isolated)
