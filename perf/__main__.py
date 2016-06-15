@@ -156,7 +156,7 @@ def compare_results(args, results, sort_results):
     for index, changed_result in enumerate(results[1:], 1):
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.mean()
-        text = ("Average: [%s] %s -> [%s] %s"
+        text = ("Mean +- std dev: [%s] %s -> [%s] %s"
                 % (ref_result.name,
                    ref_result.format(verbose=args.verbose),
                    changed_result.name,

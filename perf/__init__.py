@@ -386,7 +386,7 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
         print(file=file)
 
     # Display the average +- stdev
-    print("Average: %s" % bench.format(verbose=verbose), file=file)
+    print("Mean +- std dev: %s" % bench.format(verbose=verbose), file=file)
 
 
 def _display_metadata(metadata, file=None, header="Metadata:"):

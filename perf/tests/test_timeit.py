@@ -44,7 +44,7 @@ class TestTimeit(unittest.TestCase):
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
-                         r'Average: (?P<avg>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms '
+                         r'Mean \+- std dev: (?P<avg>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms '
                              r'\(2 samples; 1 warmup\)\n'
                          r'$',
                          stdout)
@@ -75,7 +75,7 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         match = re.match(r'^\.\.\n'
-                         r'Average: (?P<avg>[0-9.]+) ms'
+                         r'Mean \+- std dev: (?P<avg>[0-9.]+) ms'
                              r' \+- (?P<stdev>[0-9.]+) ms'
                          r'$',
                          stdout.rstrip())
