@@ -1,4 +1,5 @@
 from __future__ import print_function
+import datetime
 import os
 import platform
 import re
@@ -145,6 +146,8 @@ def _collect_system_metadata(metadata):
 
 
 def collect_metadata(metadata):
+    date = datetime.datetime.now().isoformat()
+    metadata['date'] = date.split('.', 1)[0]
     metadata['perf_version'] = perf.__version__
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)

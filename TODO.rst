@@ -6,11 +6,6 @@ TODO
   loops is larger than 1000? perf only displays 3 digits on the average.
   Can it have an impact on the statistics?
 * Save system load to detect unstable benchmark?
-* Add int type in Benchmark.add_run() samples?
-* Metadata: "perf show" doesn't show the date
-* Metadata: add the date, it was in run metadata but ignored because different
-  at each run
-* Save the system load?
 * Save the duration? of each run? only of the total?
 * Optional dependency to boltons.statsutils or copy code for hist:
   median, median_abs_dev, skewness

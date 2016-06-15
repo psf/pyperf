@@ -207,6 +207,7 @@ Linux metadata:
 
 Other:
 
+* ``date``: date when the benchmark started, formatted as ISO 8601
 * ``perf_version``: Version of the ``perf`` module
 
 See the :func:`perf.metadata.collect_metadata` function.
