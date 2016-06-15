@@ -313,11 +313,13 @@ class Benchmark(object):
 
     def json(self):
         json = _import_json()
-        return json.dumps(self._as_json()) + '\n'
+        # set separators to produce compact JSON
+        return json.dumps(self._as_json(), separators=(',', ':')) + '\n'
 
     def json_dump_into(self, file):
         json = _import_json()
-        json.dump(self._as_json(), file)
+        # set separators to produce compact JSON
+        json.dump(self._as_json(), file, separators=(',', ':'))
         file.write('\n')
 
 
