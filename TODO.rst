@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Remove loops from metadata?
 * round(sample, 9): does it have an impact on statistics?
 * JSON size: truncate even more digits in TextRunner (round(sample, 9)) if
   loops is larger than 1000? perf only displays 3 digits on the average.

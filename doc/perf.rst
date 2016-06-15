@@ -99,30 +99,7 @@ Distribution
 ============
 
 The ``-m perf hist`` command shows an histogram of the distribution of all
-samples. Example::
-
-    $ python3 -m perf hist telco.json
-    26.2 ms:   6 ###
-    26.3 ms:  29 ###############
-    26.4 ms:  34 #################
-    26.5 ms:  61 ###############################
-    26.6 ms: 131 ##################################################################
-    26.7 ms:  93 ###############################################
-    26.8 ms:  73 #####################################
-    26.9 ms:  45 #######################
-    27.0 ms:  21 ###########
-    27.1 ms:   2 #
-    27.2 ms:   4 ##
-    27.3 ms:   0 |
-    27.4 ms:   1 #
-
-    Average 26.7 ms +- 0.2 ms: 71.6% (358/500)
-
-The distribution looks like a `gaussian curve
-<https://en.wikipedia.org/wiki/Gaussian_function>`_ with a `positive skewness
-<https://en.wikipedia.org/wiki/Skewness>`_.
-
-The "26.7 ms +- 0.2 ms" average contains 72% of samples.
+samples.
 
 See also:
 
@@ -212,3 +189,31 @@ Other:
 * ``perf_version``: Version of the ``perf`` module
 
 See the :func:`perf.metadata.collect_metadata` function.
+
+
+timeit versus perf.timeit
+=========================
+
+The timeit module of the Python standard library has multiple issues:
+
+* It displays the minimum
+* It only runs the benchmark 3 times using a single process (1 run, 3 samples)
+* It disables the garbage collector
+
+perf.timeit is more reliable and gives a result more representative of a real
+use case:
+
+* It displays the average and the standard deviation
+* It runs the benchmark in multiple processes (default: 25 runs, 3 samples)
+* By default, it uses a first sample in each process to "warmup" the benchmark
+* It does not disable the garbage collector
+
+If a benchmark is run using a single process, we get the performance for one
+specific case, whereas many parameters are random:
+
+* Since Python 3, the hash function is now randomized and so the number of
+  hash collision in dictionaries is different in each process
+* Linux uses address space layout randomization (ASLR) by default and so
+  the performance of memory accesses is different in each process
+
+See the :ref:`Minimum versus average and standard deviation <min>` section.
