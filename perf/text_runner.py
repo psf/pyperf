@@ -200,7 +200,7 @@ class TextRunner:
         if self.args.metadata:
             perf._display_metadata(run_result.metadata, file=stream)
 
-        text = run_result.format(self.args.verbose)
+        text = bench._format_run(run_result, self.args.verbose)
         nsample = perf._format_number(len(run_result.samples), 'sample')
         text = "Average: %s (%s)" % (text, nsample)
         print(text, file=self._stream())

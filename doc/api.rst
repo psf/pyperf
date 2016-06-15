@@ -148,12 +148,6 @@ RunResult
 
    Result of a single benchmark run.
 
-   Methods:
-
-   .. method:: format(verbose=False):
-
-      Format samples.
-
    Attributes:
 
    .. attribute:: metadata

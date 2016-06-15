@@ -114,7 +114,6 @@ class TestResult(unittest.TestCase):
     def test_run_result(self):
         run = perf.RunResult(samples=[1.0, 1.5, 2.0])
         self.assertEqual(run.samples, [1.0, 1.5, 2.0])
-        self.assertEqual(str(run), '1.50 sec +- 0.50 sec')
 
     def test_run_result_json(self):
         run = perf.RunResult(samples=[1.0, 1.5, 2.0], warmups=[5.0],

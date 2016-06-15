@@ -177,12 +177,6 @@ class RunResult:
         else:
             self.metadata = {}
 
-    def format(self, verbose=False):
-        return self._formatter(self.samples, verbose)
-
-    def __str__(self):
-        return self.format()
-
     def _as_json(self, ignore_metadata=None):
         metadata = self.metadata
         if ignore_metadata:
@@ -238,6 +232,9 @@ class Benchmark:
 
     def _format_sample(self, sample, verbose=False):
         return self._formatter([sample], verbose)
+
+    def _format_run(self, run, verbose=False):
+        return self._formatter(run.samples, verbose)
 
     def get_samples(self):
         samples = []
