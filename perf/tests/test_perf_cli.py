@@ -26,11 +26,11 @@ class TestPerfCLI(unittest.TestCase):
             tmp.flush()
 
             args = [sys.executable, '-m', 'perf']
+            args.extend(('show', tmp.name))
             if verbose:
                 args.append('-' + 'v' * verbose)
             if not metadata:
                 args.append('-M')
-            args.extend(('show', tmp.name))
 
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,

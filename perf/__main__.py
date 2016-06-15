@@ -10,11 +10,6 @@ import perf
 def create_parser():
     parser = argparse.ArgumentParser(description='Display benchmark results.',
                                      prog='-m perf')
-    parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help='an integer for the accumulator')
-    parser.add_argument('-M', '--no-metadata', dest='metadata', action="store_false",
-                        default=True,
-                        help="Don't show metadata.")
     subparsers = parser.add_subparsers(dest='action')
 
     show = subparsers.add_parser('show')
@@ -50,6 +45,16 @@ def create_parser():
     stats = subparsers.add_parser('stats')
     stats.add_argument('filename', type=str,
                        help='Result JSON file')
+
+    # Add arguments to multiple commands
+    for cmd in (show, compare, compare_to):
+        cmd.add_argument('-v', '--verbose', action='count', default=0,
+                         help='an integer for the accumulator')
+
+    for cmd in (show, compare, compare_to):
+        cmd.add_argument('-M', '--no-metadata', dest='metadata', action="store_false",
+                         default=True,
+                         help="Don't show metadata.")
 
     return parser
 
