@@ -150,24 +150,21 @@ Benchmark
 
    Methods:
 
-   .. method:: add_run(samples, warmups=None)
+   .. method:: add_run(samples)
 
       Add the raw result of a benchmark run.
 
       *samples* is a non-empty sequence of numbers (``float``) ``>= 0``.
       Usually, *samples* is a list of number of seconds.
 
-      *warmups* is an optional sequence of numbers (``float``) ``>= 0``, it can
-      be empty. It is similar to *samples*: samples used to "warmup" the
-      benchmark. These numbers are ignored when computing the average and
-      standard deviation.
+      *samples* must contains at least ``warmups + 1`` samples. The first
+      :attr:`warmups` samples are excluded from the :meth:`get_samples` result.
 
       Samples are raw values of all loops. The :meth:`get_samples` method
       divides samples by ``loops x inner_loops`` (see :attr:`loops` and
       :attr:`inner_loops` attributes).
 
-      All runs must have the same number of samples and the same number of
-      warmups.
+      All runs must have the same number of samples.
 
    .. method:: get_nrun()
 
@@ -175,7 +172,8 @@ Benchmark
 
    .. method:: get_runs()
 
-      Get raw samples of all runs as a list of ``(samples, warmups)`` tuples.
+      Get raw samples of all runs as a list of raw samples tuples, including
+      warmup samples.
 
       Samples are raw values of all samples: use the :meth:`get_samples` method
       to get normalized samples per loop iteration.

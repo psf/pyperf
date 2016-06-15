@@ -84,15 +84,16 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
-class Benchmark:
+class Benchmark(object):
     def __init__(self, name=None, loops=None, inner_loops=None,
-                 metadata=None):
+                 warmups=1, metadata=None):
         self.name = name
         self.loops = loops
         self.inner_loops = inner_loops
-        # list of (samples, warmups) tuples where samples and warmups are
-        # tuple. samples must be non-empty. samples and warmups tuples must
-        # only contain float >= 0. See add_run().
+        self.warmups = warmups
+
+        # list of samples where samples are a non-empty tuples
+        # of float >= 0, see add_run()
         self._runs = []
 
         self._clear_stats_cache()
@@ -106,6 +107,17 @@ class Benchmark:
 
         # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
+
+    @property
+    def warmups(self):
+        return self._warmups
+
+    @warmups.setter
+    def warmups(self, value):
+        if not(isinstance(value, int) and value >= 0):
+            raise ValueError("warmups must be an int >= 0")
+        self._clear_stats_cache()
+        self._warmups = value
 
     def _formatter(self, values, verbose=0):
         numbers = [statistics.mean(values)]
@@ -138,37 +150,29 @@ class Benchmark:
             self._mean = statistics.mean(self.get_samples())
         return self._mean
 
-    def add_run(self, samples, warmups=None):
+    def add_run(self, samples):
         if (not samples
         or any(not(isinstance(value, (int, float)) and value >= 0)
                 for value in samples)):
-            raise TypeError("samples must be a non-empty list of float >= 0 %r")
+            raise ValueError("samples must be a non-empty list "
+                             "of float >= 0")
 
-        if (warmups
-        and any(not(isinstance(value, (int, float)) and value >= 0)
-                for value in warmups)):
-            raise TypeError("warmups must be a list of float >= 0")
+        if self.warmups is not None and (len(samples) - self.warmups) < 1:
+            raise ValueError("provided %s samples, but benchmark uses "
+                             "%s warmups" % (len(samples), self.warmups))
 
-        if warmups:
-            run = (tuple(samples), tuple(warmups))
-        else:
-            # warmups can be None
-            run = (tuple(samples), ())
-
+        run = tuple(samples)
         if self._runs:
-            first_run = self._runs[0]
-            if len(run[0]) != len(first_run[0]):
+            if len(run) != len(self._runs[0]):
                 raise ValueError("different number of samples")
-            if len(run[1]) != len(first_run[1]):
-                raise ValueError("different number of warmups")
 
         self._clear_stats_cache()
         self._runs.append(run)
 
-    def _get_worker_run(self, run_bench):
+    def _get_worker_samples(self, run_bench):
         if len(run_bench._runs) != 1:
-            raise ValueError("A worker must return exactly one run")
-        for attr in 'loops inner_loops metadata'.split():
+            raise ValueError("A worker result must have exactly one run")
+        for attr in 'loops inner_loops metadata warmups'.split():
             if getattr(run_bench, attr) != getattr(self, attr):
                 raise ValueError("%s value is different" % attr)
 
@@ -203,17 +207,18 @@ class Benchmark:
             factor *= self.inner_loops
 
         samples = []
-        for run_samples, _ in self._runs:
-            for sample in run_samples:
+        for run_samples in self._runs:
+            for sample in run_samples[self.warmups:]:
                 samples.append(sample / factor)
         samples = tuple(samples)
         self._samples = samples
         return samples
 
     def _get_raw_samples(self):
+        # Exclude warmup samples
         samples = []
-        for run_samples, _ in self._runs:
-            samples.extend(run_samples)
+        for run_samples in self._runs:
+            samples.extend(run_samples[self.warmups:])
         return samples
 
     # FIXME: remove the method, use directly metadata attribute
@@ -227,7 +232,8 @@ class Benchmark:
         return metadata
 
     def format(self, verbose=0):
-        if not self._runs:
+        nrun = self.get_nrun()
+        if not nrun:
             return '<no run>'
 
         samples = self.get_samples()
@@ -236,17 +242,15 @@ class Benchmark:
             return text
 
         iterations = []
-        nrun = len(self._runs)
         if nrun > 1:
             iterations.append(_format_number(nrun, 'run'))
 
-        first_run = self._runs[0]
-        iterations.append(_format_number(len(first_run[0]), 'sample'))
+        nsample = len(self._runs[0]) - self.warmups
+        iterations.append(_format_number(nsample, 'sample'))
 
         iterations = ' x '.join(iterations)
-        nwarmup = len(first_run[1])
-        if nwarmup:
-            iterations += '; %s' % _format_number(nwarmup, 'warmup')
+        if self.warmups:
+            iterations += '; %s' % _format_number(self.warmups, 'warmup')
 
         if iterations:
             text = '%s (%s)' % (text, iterations)
@@ -270,16 +274,16 @@ class Benchmark:
             raise ValueError("JSON doesn't contain results")
 
         name = data.get('name')
-        metadata = data.get('metadata')
+        warmups = data['warmups']
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
+        metadata = data.get('metadata')
 
-        bench = cls(name=name, metadata=metadata,
-                    loops=loops, inner_loops=inner_loops)
-
+        bench = cls(name=name, warmups=warmups,
+                    loops=loops, inner_loops=inner_loops,
+                    metadata=metadata)
         for run_data in data['runs']:
-            bench.add_run(run_data['samples'],
-                          run_data.get('warmups'))
+            bench.add_run(run_data)
 
         return bench
 
@@ -296,22 +300,15 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        runs = []
-        for samples, warmups in self._runs:
-            run = {'samples': samples}
-            if warmups:
-                run['warmups'] = warmups
-            runs.append(run)
-
-        data = {'runs': runs}
+        data = {'runs': self._runs, 'warmups': self.warmups}
         if self.name:
             data['name'] = self.name
-        if self.metadata:
-            data['metadata'] = self.metadata
         if self.loops is not None:
             data['loops'] = self.loops
         if self.inner_loops is not None:
             data['inner_loops'] = self.inner_loops
+        if self.metadata:
+            data['metadata'] = self.metadata
         return {'benchmark': data, 'version': _JSON_VERSION}
 
     def json(self):
@@ -324,7 +321,10 @@ class Benchmark:
         file.write('\n')
 
 
-def _display_run(bench, index, nrun, samples, warmups, file=None):
+def _display_run(bench, index, nrun, samples, file=None):
+    warmups = samples[:bench.warmups]
+    samples = samples[bench.warmups:]
+
     text = ', '.join(bench._format_samples(samples))
     text = 'raw samples (%s): %s' % (len(samples), text)
     if warmups:
@@ -340,9 +340,8 @@ def _display_run(bench, index, nrun, samples, warmups, file=None):
 def _display_runs(result):
     runs = result.get_runs()
     nrun = len(runs)
-    for index, run in enumerate(runs, 1):
-        samples, warmups = run
-        _display_run(result, index, nrun, samples, warmups)
+    for index, samples in enumerate(runs, 1):
+        _display_run(result, index, nrun, samples)
 
 
 def _display_benchmark_avg(bench, verbose=0, file=None):

@@ -8,7 +8,7 @@ import perf
 
 class TestPerfCLI(unittest.TestCase):
     def create_bench(self, samples, **kw):
-        bench = perf.Benchmark(**kw)
+        bench = perf.Benchmark(warmups=0, **kw)
         for sample in samples:
             bench.add_run([sample])
         return bench

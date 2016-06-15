@@ -199,9 +199,9 @@ class TextRunner:
     def _range(self):
         # FIXME: use six.range
         for warmup in range(self.args.nwarmup):
-            yield (True, warmup)
+            yield (True, 1 + warmup)
         for run in range(self.args.nsample):
-            yield (False, run)
+            yield (False, 1 + run)
 
     def _display_run_result_avg(self, bench):
         stream = self._stream()
@@ -267,24 +267,20 @@ class TextRunner:
             sys.exit(1)
 
     def _worker(self, bench, sample_func):
-        warmups = []
         samples = []
-        for is_warmup, run in self._range():
+        for is_warmup, index in self._range():
             sample = sample_func(bench.loops)
-            if is_warmup:
-                warmups.append(sample)
-            else:
-                samples.append(sample)
+            samples.append(sample)
 
             if self.args.verbose:
                 text = bench._format_sample(sample)
                 if is_warmup:
-                    text = "Warmup %s: %s" % (1 + run, text)
+                    text = "Warmup %s: %s" % (index, text)
                 else:
-                    text = "Raw sample %s: %s" % (1 + run, text)
+                    text = "Raw sample %s: %s" % (index, text)
                 print(text, file=self._stream())
 
-        bench.add_run(samples, warmups)
+        bench.add_run(samples)
         self._display_run_result_avg(bench)
 
         return bench
@@ -303,6 +299,7 @@ class TextRunner:
             raise ValueError("loops must be >= 1")
 
         bench = perf.Benchmark(name=self.name,
+                               warmups=self.args.nwarmup,
                                loops=loops,
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
@@ -396,8 +393,8 @@ class TextRunner:
 
         for process in range(nprocess):
             run_bench = self._spawn_worker()
-            samples, warmups = bench._get_worker_run(run_bench)
-            bench.add_run(samples, warmups)
+            samples = bench._get_worker_samples(run_bench)
+            bench.add_run(samples)
             if verbose > 1:
                 perf._display_run(bench, 1 + process, nprocess,
                                   samples, warmups,

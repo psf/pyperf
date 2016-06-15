@@ -1,6 +1,8 @@
 TODO
 ====
 
+* JSON or TextRunner: round timings to not store "fake" precision?
+  Truncate timings to keep a precision of 1 ns?
 * Save system load to detect unstable benchmark?
 * Add int type in Benchmark.add_run() samples?
 * Add unit test on hist: need JSON data file

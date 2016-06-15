@@ -115,14 +115,8 @@ class TestTimeit(unittest.TestCase):
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 2)
-        for samples, warmups in runs:
-            self.assertEqual(len(warmups), 1)
-            self.assertEqual(len(samples), 3)
-
-            # Tolerate large differences on busy systems
-            for warmup in warmups:
-                dt = (warmup / loops) * 1e3
-                self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
+        for samples in runs:
+            self.assertEqual(len(samples), 4)
             for sample in samples:
                 dt = (sample / loops) * 1e3
                 self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
