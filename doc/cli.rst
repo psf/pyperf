@@ -208,16 +208,16 @@ Example::
 See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_.
 
 
-perf.metadata command
----------------------
+metadata command
+----------------
 
 Collect metadata::
 
-    python3 -m perf.metadata
+    python3 -m perf metadata
 
 Example::
 
-    $ python3 -m perf.metadata
+    $ python3 -m perf metadata
     aslr: enabled
     cpu_count: 4
     cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz

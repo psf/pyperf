@@ -46,6 +46,8 @@ def create_parser():
     stats.add_argument('filename', type=str,
                        help='Result JSON file')
 
+    metadata = subparsers.add_parser('metadata')
+
     # Add arguments to multiple commands
     for cmd in (show, compare, compare_to):
         cmd.add_argument('-v', '--verbose', action='count', default=0,
@@ -82,6 +84,7 @@ def parse_results(filename, default_name=None):
 def display_result(args, result):
     if args.metadata:
         perf._display_metadata(result.get_metadata())
+        print()
 
     if args.verbose > 1:
         perf._display_runs(result)
@@ -135,6 +138,7 @@ def compare_results(args, results, sort_results):
         common_metadata = _common_metadata(metadatas)
         perf._display_metadata(common_metadata,
                                header='Common metadata:')
+        print()
 
         for key in common_metadata:
             for metadata in metadatas:
@@ -143,6 +147,7 @@ def compare_results(args, results, sort_results):
         for result, metadata in zip(results, metadatas):
             perf._display_metadata(metadata,
                                    header='%s metadata:' % result.name)
+            print()
 
     # Compute means
     ref_samples = ref_result.get_samples()
@@ -280,6 +285,13 @@ def display_stats(args, result):
               % boltons.statsutils.skewness(samples))
 
 
+def collect_metadata():
+    from perf import metadata as perf_metadata
+    metadata = {}
+    perf_metadata.collect_metadata(metadata)
+    perf._display_metadata(metadata)
+
+
 def main():
     parser = create_parser()
     args = parser.parse_args()
@@ -303,6 +315,8 @@ def main():
     elif action == 'stats':
         result = parse_results(args.filename)
         display_stats(args, result)
+    elif action == 'metadata':
+        collect_metadata()
     else:
         parser.print_usage()
         sys.exit(1)

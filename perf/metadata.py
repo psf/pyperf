@@ -151,10 +151,3 @@ def collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)
-
-
-if __name__ == "__main__":
-    metadata = {}
-    collect_metadata(metadata)
-    for key, value in sorted(metadata.items()):
-        print("%s: %s" % (key, value))

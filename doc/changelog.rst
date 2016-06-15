@@ -23,6 +23,8 @@ API:
 
 Changes:
 
+* The command line interface also changed. For example, ``perf.metadata``
+  command becomes ``perf metadata``.
 * On Python 2, ``psutil`` optional dependency is now used for CPU affinity.
   It ensures that CPU affinity is set for loop calibration too.
 * On Python 2, add dependency to the backported ``statistics`` module

@@ -1,6 +1,7 @@
 TODO
 ====
 
+* add_run(): reject sample=0?
 * Remove loops from metadata?
 * round(sample, 9): does it have an impact on statistics?
 * JSON size: truncate even more digits in TextRunner (round(sample, 9)) if

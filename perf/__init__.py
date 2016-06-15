@@ -400,7 +400,6 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
     print(header, file=file)
     for key, value in sorted(metadata.items()):
         print("- %s: %s" % (key, value), file=file)
-    print(file=file)
 
 
 def _format_cpu_list(cpus):
