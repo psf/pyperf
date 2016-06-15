@@ -11,7 +11,7 @@ try:
 except ImportError:
     psutil = None
 
-import perf.metadata
+import perf
 
 
 def _json_dump(bench, args):
@@ -188,8 +188,6 @@ class TextRunner:
             return
 
         self.args = self.argparser.parse_args(args)
-        if self.args.verbose:
-            self.args.metadata = True
 
     def _stream(self):
         return sys.stderr if self.args.json else sys.stdout
