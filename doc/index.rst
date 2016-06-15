@@ -25,5 +25,6 @@ Links:
 
    perf
    cli
+   timeit
    api
    changelog
