@@ -295,6 +295,8 @@ class TextRunner:
         return bench
 
     def _main(self, sample_func):
+        start_time = perf.monotonic_clock()
+
         self.parse_args()
 
         self._cpu_affinity()
@@ -318,7 +320,7 @@ class TextRunner:
             perf_metadata.collect_metadata(bench.metadata)
 
         if not self.args.raw:
-            return self._spawn_workers(bench)
+            return self._spawn_workers(bench, start_time)
         else:
             return self._worker(bench, sample_func)
 
@@ -398,7 +400,7 @@ class TextRunner:
 
         return _bench_from_subprocess(args)
 
-    def _spawn_workers(self, bench):
+    def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose
         stream = self._stream()
         nprocess = self.args.processes
@@ -416,6 +418,13 @@ class TextRunner:
 
         if verbose <= 1:
             print(file=stream)
+
+        duration = perf.monotonic_clock() - start_time
+        mins, secs = divmod(duration, 60)
+        if mins:
+            bench.metadata['duration'] = '%.0f min %.0f sec' % (mins, secs)
+        else:
+            bench.metadata['duration'] = '%.1f sec' % secs
 
         if self.args.metadata:
             perf._display_metadata(bench.get_metadata(), file=stream)

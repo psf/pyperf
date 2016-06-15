@@ -499,7 +499,8 @@ def _tscore(sample1, sample2):
     Returns:
         The t-test score, as a float.
     """
-    assert len(sample1) == len(sample2)
+    if len(sample1) != len(sample2):
+        raise ValueError("different number of samples")
     error = _pooled_sample_variance(sample1, sample2) / len(sample1)
     return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(error * 2)
 

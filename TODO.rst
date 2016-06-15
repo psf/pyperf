@@ -6,7 +6,6 @@ TODO
   loops is larger than 1000? perf only displays 3 digits on the average.
   Can it have an impact on the statistics?
 * Save system load to detect unstable benchmark?
-* Save the duration? of each run? only of the total?
 * Optional dependency to boltons.statsutils or copy code for hist:
   median, median_abs_dev, skewness
 * Python 2: use numpy.mean() or numpy.std() when available?
