@@ -153,23 +153,6 @@ class RunResult:
         if warmups is not None:
             self.warmups.extend(warmups)
 
-    def _as_json(self):
-        # FIXME: remove 'run_result' useless layer
-        return {'run_result': {'samples': self.samples, 'warmups': self.warmups}}
-
-    @classmethod
-    def _json_load(cls, data, raw=False):
-        if not raw:
-            version = data.get('version')
-            if version != _JSON_VERSION:
-                raise ValueError("version %r not supported" % version)
-
-        # FIXME: move this inside raw
-        if 'run_result' not in data:
-            raise ValueError("JSON doesn't contain run_result")
-        data = data['run_result']
-        return cls(samples=data['samples'], warmups=data['warmups'])
-
 
 class Benchmark:
     def __init__(self, runs=None, name=None, loops=None, inner_loops=None,
@@ -294,7 +277,10 @@ class Benchmark:
         metadata = data.get('metadata')
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
-        runs = [RunResult._json_load(run, raw=True) for run in data['runs']]
+
+        runs = [RunResult(samples=run_data['samples'],
+                          warmups=run_data['warmups'])
+                for run_data in data['runs']]
 
         return cls(runs=runs, name=name, metadata=metadata,
                    loops=loops, inner_loops=inner_loops)
@@ -312,7 +298,9 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        data = {'runs': [run._as_json() for run in self.runs]}
+        runs = [{'samples': run.samples, 'warmups': run.warmups}
+                for run in self.runs]
+        data = {'runs': runs}
         if self.name:
             data['name'] = self.name
         if self.metadata:
