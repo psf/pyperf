@@ -406,8 +406,7 @@ class TextRunner:
             bench.add_run(samples)
             if verbose > 1:
                 perf._display_run(bench, 1 + process, nprocess,
-                                  samples, warmups,
-                                  file=stream)
+                                  samples, file=stream)
             else:
                 print(".", end='', file=stream)
                 stream.flush()
