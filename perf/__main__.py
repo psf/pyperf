@@ -54,9 +54,9 @@ def create_parser():
                          help='an integer for the accumulator')
 
     for cmd in (show, compare, compare_to):
-        cmd.add_argument('-M', '--no-metadata', dest='metadata', action="store_false",
-                         default=True,
-                         help="Don't show metadata.")
+        cmd.add_argument('-m', '--metadata', dest='metadata',
+                         action="store_true",
+                         help="Show metadata.")
 
     return parser
 

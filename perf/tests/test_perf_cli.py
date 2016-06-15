@@ -3,9 +3,10 @@ import subprocess
 import sys
 import tempfile
 import textwrap
-import unittest
 
 import perf
+from perf.tests.test_metadata import check_all_metadata
+from perf.tests import unittest
 
 
 TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
@@ -18,29 +19,19 @@ class TestPerfCLI(unittest.TestCase):
             bench.add_run([sample])
         return bench
 
-    def show(self, verbose=False, metadata=True):
+    def show(self, *args):
         results = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})
 
         with tempfile.NamedTemporaryFile(mode="w+") as tmp:
             results.json_dump_into(tmp)
             tmp.flush()
 
-            args = [sys.executable, '-m', 'perf']
-            args.extend(('show', tmp.name))
-            if verbose:
-                args.append('-' + 'v' * verbose)
-            if not metadata:
-                args.append('-M')
+            stdout = self.run_command('show', tmp.name, *args)
 
-            proc = subprocess.Popen(args,
-                                    stdout=subprocess.PIPE,
-                                    universal_newlines=True)
-            stdout = proc.communicate()[0]
-        self.assertEqual(proc.returncode, 0)
         return stdout
 
     def test_show(self):
-        stdout = self.show()
+        stdout = self.show('--metadata')
         expected = ('Metadata:\n'
                     '- key: value\n'
                     '\n'
@@ -53,7 +44,7 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(stdout, expected)
 
     def test_show_verbose(self):
-        stdout = self.show(verbose=2, metadata=False)
+        stdout = self.show('-vv')
         expected = ('Run 1/3: raw samples (1): 1.00 sec\n'
                     'Run 2/3: raw samples (1): 1.50 sec\n'
                     'Run 3/3: raw samples (1): 2.00 sec\n'
@@ -69,7 +60,7 @@ class TestPerfCLI(unittest.TestCase):
                         '(min: 1.00 sec, max: 2.00 sec) (3 runs x 1 sample)\n')
         self.assertEqual(stdout, expected)
 
-    def compare(self, action, ref_result, changed_result):
+    def compare(self, action, ref_result, changed_result, *args):
         with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:
             ref_result.json_dump_into(ref_tmp)
             ref_tmp.flush()
@@ -78,15 +69,8 @@ class TestPerfCLI(unittest.TestCase):
                 changed_result.json_dump_into(changed_tmp)
                 changed_tmp.flush()
 
-                args = [sys.executable, '-m', 'perf',
-                        action, ref_tmp.name, changed_tmp.name]
+                stdout = self.run_command(action, ref_tmp.name, changed_tmp.name, *args)
 
-                proc = subprocess.Popen(args,
-                                        stdout=subprocess.PIPE,
-                                        universal_newlines=True)
-                stdout = proc.communicate()[0]
-
-        self.assertEqual(proc.returncode, 0)
         return stdout
 
     def test_compare_to(self):
@@ -100,7 +84,7 @@ class TestPerfCLI(unittest.TestCase):
                                            metadata={'hostname': 'toto',
                                                      'python_version': '3.4'})
 
-        stdout = self.compare('compare_to', ref_result, changed_result)
+        stdout = self.compare('compare_to', ref_result, changed_result, '--metadata')
 
         expected = ('Reference: py2\n'
                     'Changed: py3\n'
@@ -149,15 +133,22 @@ class TestPerfCLI(unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-    def check_command(self, expected, *args, **kwargs):
+    def run_command(self, *args, **kwargs):
         cmd = [sys.executable, '-m', 'perf']
         cmd.extend(args)
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
                                 universal_newlines=True,
                                 **kwargs)
-        stdout = proc.communicate()[0]
+        stdout, stderr = proc.communicate()
 
+        self.assertEqual(stderr, '')
+        self.assertEqual(proc.returncode, 0)
+        return stdout
+
+    def check_command(self, expected, *args, **kwargs):
+        stdout = self.run_command(*args, **kwargs)
         self.assertEqual(stdout.rstrip(), textwrap.dedent(expected).strip())
 
     def test_hist(self):
@@ -206,6 +197,19 @@ class TestPerfCLI(unittest.TestCase):
             Skewness: 0.04
         """)
         self.check_command(expected, 'stats', TELCO)
+
+    def test_metadata(self):
+        stdout = self.run_command('metadata')
+        lines = stdout.splitlines()
+
+        self.assertEqual(lines[0], 'Metadata:')
+        metadata = {}
+        for line in lines[1:]:
+            self.assertTrue(line.startswith('- '), repr(line))
+            key, value = line[2:].split(': ', 1)
+            metadata[key] = value
+
+        check_all_metadata(self, metadata)
 
 
 if __name__ == "__main__":

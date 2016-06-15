@@ -3,16 +3,16 @@ perf commands
 
 General note: if a filename is ``-``, read the JSON content from stdin.
 
-show command
-------------
+show
+----
 
-Display a result file::
+Show a benchmark result::
 
-    python3 -m perf show [-v/--verbose] [-M/--no-metadata] filename.json
+    python3 -m perf show [-v/--verbose] [-m/--metadata] filename.json
 
-Display the benchmark result::
+Example with metadata::
 
-    $ python3 -m perf show run.json
+    $ python3 -m perf show --metadata run.json
     Metadata:
     - duration: 59.1 sec
     - loops: 10^7
@@ -21,16 +21,14 @@ Display the benchmark result::
 
     Average: 56.3 ns +- 2.5 ns
 
-Metadata is displayed by default, whereas perf.timeit hides them by default.
-Use ``-M`` (``--no-metadata``) to hide metadata and ``-v`` (``--verbose``) to
-enable the verbose mode::
+Example in verbose mode::
 
-    $ python3 -m perf show -M -v run.json
+    $ python3 -m perf show -v run.json
     Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
 
-Very verbose mode::
+Example in very verbose mode::
 
-    $ python3 -m perf show -M -vv run.json
+    $ python3 -m perf show -vv run.json
     Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
     Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
     (...)
@@ -41,34 +39,41 @@ Very verbose mode::
 
     Average: 56.3 ns +- 2.5 ns (min: 54.5 ns, max: 64.9 ns) (25 runs x 3 samples; 1 warmup)
 
-compare and compare_to commands
--------------------------------
 
-Compare two result files::
+compare and compare_to
+----------------------
+
+Compare benchmark results::
 
     python3 -m perf
-        [-v/--verbose] [-M/--no-metadata]
-        compare ref.json changed.json
+        [-v/--verbose] [-m/--metadata]
+        compare reference.json filename.json filename2.json [filename3.json ...]
+
+Compare benchmark results to a reference::
+
+    python3 -m perf
+        [-v/--verbose] [-m/--metadata]
+        compare_to reference.json changed.json [changed2.json ...]
 
 Example::
 
-    $ python3 -m perf compare -M py2.json py3.json
+    $ python3 -m perf compare py2.json py3.json
     Reference (best): py2
 
     Average: [py2] 46.3 ns +- 2.2 ns -> [py3] 56.3 ns +- 2.5 ns: 1.2x slower
     Significant (t=-25.90)
 
 
-stats command
--------------
+stats
+-----
 
-Display statistics::
+Compute statistics on a benchmark result::
 
-    python3 -m perf [-v/--verbose] stats result.json
+    python3 -m perf stats filename.json
 
 Example::
 
-    $ python3 -m perf stats perf/tests/telco.json
+    $ python3 -m perf stats telco.json
     Number of samples: 250
     Minimum 26.4 ms
     Maximum 27.3 ms
@@ -93,21 +98,20 @@ Values:
    The ``boltons`` optional dependency is needed for MAD and Skewness.
 
 
-hist and hist_scipy commands
-----------------------------
+hist and hist_scipy
+-------------------
 
-Display an histogram in text mode::
+Render an histogram in text mode::
 
-    python3 -m perf [-v/--verbose] hist filename.json
+    python3 -m perf hist filename.json
 
-Display an histogram in graphical mode using the ``matplotlib``, ``pylab``
-and ``scipy`` modules::
+Render an histogram in graphical mode using the ``scipy`` module::
 
-    python3 -m perf [-v/--verbose] hist_scipy filename.json
+    python3 -m perf hist_scipy filename.json
 
 Example::
 
-    $ python3 -m perf hist perf/tests/telco.json
+    $ python3 -m perf hist telco.json
     26.4 ms:  1 ##
     26.4 ms:  1 ##
     26.4 ms:  2 #####
@@ -135,11 +139,13 @@ Example::
     27.3 ms:  0 |
     27.3 ms:  1 ##
 
-See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_.
+See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
+`Probability density function (PDF)
+<https://en.wikipedia.org/wiki/Probability_density_function>`_.
 
 
-metadata command
-----------------
+metadata
+--------
 
 Collect metadata::
 
@@ -148,12 +154,14 @@ Collect metadata::
 Example::
 
     $ python3 -m perf metadata
-    aslr: enabled
-    cpu_count: 4
-    cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    date: 2016-06-09T21:39:57
-    hostname: selma
-    platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
-    python_executable: /usr/bin/python3
-    python_implementation: cpython
-    python_version: 3.4.3
+    Metadata:
+    - aslr: enabled
+    - cpu_count: 4
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - date: 2016-06-15T22:08:21
+    - hostname: selma
+    - perf_version: 0.4
+    - platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    - python_executable: /usr/bin/python3
+    - python_implementation: cpython
+    - python_version: 3.4.3

@@ -26,6 +26,7 @@ class TestTimeit(unittest.TestCase):
                 '-w', '1',
                 '-n', '2',
                 '-l', '1',
+                '--metadata',
                 '-v',
                 '-s', 'import time',
                 SLEEP]

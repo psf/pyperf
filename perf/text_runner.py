@@ -206,6 +206,7 @@ class TextRunner:
 
         if self.args.metadata:
             perf._display_metadata(bench.metadata, file=stream)
+            print(file=stream)
 
         print("Average: %s" % bench.format(self.args.verbose),
               file=self._stream())
@@ -426,6 +427,7 @@ class TextRunner:
 
         if self.args.metadata:
             perf._display_metadata(bench.get_metadata(), file=stream)
+            print(file=stream)
 
         perf._display_benchmark_avg(bench, verbose=verbose, file=stream)
 

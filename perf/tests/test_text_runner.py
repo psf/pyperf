@@ -48,7 +48,8 @@ class TestTextRunner(unittest.TestCase):
             return t
         fake_timer.value = 0
 
-        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
+        runner = self.create_text_runner(['--raw', '--json',
+                                          '--verbose', '--metadata'])
 
         with mock.patch('perf.perf_counter', fake_timer):
             with tests.capture_stdout() as stdout:
@@ -61,7 +62,8 @@ class TestTextRunner(unittest.TestCase):
         self.check_bench_result(runner, stderr, result)
 
     def test_bench_sample_func_raw(self):
-        runner = self.create_text_runner(['--raw', '--json', '--verbose'])
+        runner = self.create_text_runner(['--raw', '--json',
+                                          '--verbose', '--metadata'])
 
         with tests.capture_stdout() as stdout:
             with tests.capture_stderr() as stderr:
@@ -115,8 +117,8 @@ class TestTextRunner(unittest.TestCase):
 
     def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
-            runner = self.create_text_runner(['--raw', '-v',
-                                              '--json-file', tmp.name])
+            runner = self.create_text_runner(['--raw', '--json-file', tmp.name,
+                                              '--verbose', '--metadata'])
 
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
