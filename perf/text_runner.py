@@ -270,6 +270,15 @@ class TextRunner:
         samples = []
         for is_warmup, index in self._range():
             sample = sample_func(bench.loops)
+
+            # The most accurate time has a resolution of 1 nanosecond. We
+            # compute a difference between two timer values. When formatted to
+            # decimal, the difference can show more than 9 decimal digits after
+            # the dot. Round manually to 10^-9 to produce more compact JSON
+            # files and don't pretend to have a better resolution than 1
+            # nanosecond.
+            sample = round(sample, 9)
+
             samples.append(sample)
 
             if self.args.verbose:

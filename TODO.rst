@@ -1,12 +1,13 @@
 TODO
 ====
 
-* JSON or TextRunner: round timings to not store "fake" precision?
-  Truncate timings to keep a precision of 1 ns?
+* round(sample, 9): does it have an impact on statistics?
+* JSON size: truncate even more digits in TextRunner (round(sample, 9)) if
+  loops is larger than 1000? perf only displays 3 digits on the average.
+  Can it have an impact on the statistics?
 * Save system load to detect unstable benchmark?
 * Add int type in Benchmark.add_run() samples?
 * Add unit test on hist: need JSON data file
-* JSON files are a litle bit big
 * Metadata: "perf show" doesn't show the date
 * Metadata: add the date, it was in run metadata but ignored because different
   at each run
