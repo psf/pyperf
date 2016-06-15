@@ -5,30 +5,9 @@ bench_sample_func() example
 ---------------------------
 
 Microbenchmark using the :meth:`~perf.text_runner.TextRunner.bench_sample_func`
-method to measure the performance of ``dict[key]``::
+method to measure the performance of ``dict[key]``:
 
-    import perf.text_runner
-
-    mydict = {str(k): k for k in range(1000)}
-
-    def func(loops):
-        t0 = perf.perf_counter()
-        for loops in range(loops):
-            mydict['0']
-            mydict['100']
-            mydict['200']
-            mydict['300']
-            mydict['400']
-            mydict['500']
-            mydict['600']
-            mydict['700']
-            mydict['800']
-            mydict['900']
-        return perf.perf_counter() - t0
-
-    runner = perf.text_runner.TextRunner()
-    runner.inner_loops = 10
-    runner.bench_sample_func(func)
+.. literalinclude:: examples/bench_sample_func.py
 
 Pass ``--help`` to the script to see the command line options automatically
 added by ``perf``.
@@ -47,17 +26,9 @@ bench_func() example
 --------------------
 
 Benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func` method to
-measure the time elasped when sleeping 1 ms::
+measure the time elasped when sleeping 1 ms:
 
-    import time
-
-    import perf.text_runner
-
-    def func():
-        time.sleep(0.001)
-
-    runner = perf.text_runner.TextRunner()
-    runner.bench_func(func)
+.. literalinclude:: examples/bench_func.py
 
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
