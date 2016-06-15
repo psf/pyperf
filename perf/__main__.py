@@ -94,6 +94,23 @@ def _result_sort_key(result):
     return (statistics.mean(samples), result.name or '')
 
 
+def _common_metadata(metadatas):
+    if not metadatas:
+        return dict()
+
+    metadata = dict(metadatas[0])
+    for run_metadata in metadatas[1:]:
+        for key, run_value in run_metadata.items():
+            try:
+                value = metadata[key]
+            except KeyError:
+                pass
+            else:
+                if run_value != value:
+                    del metadata[key]
+    return metadata
+
+
 def compare_results(args, results, sort_results):
     if sort_results:
         results.sort(key=_result_sort_key)
@@ -115,7 +132,7 @@ def compare_results(args, results, sort_results):
     if args.metadata:
         metadatas = [result.get_metadata() for result in results]
 
-        common_metadata = perf._common_metadata(metadatas)
+        common_metadata = _common_metadata(metadatas)
         perf._display_metadata(common_metadata,
                                header='Common metadata:')
 

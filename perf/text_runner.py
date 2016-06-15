@@ -12,7 +12,7 @@ try:
 except ImportError:
     psutil = None
 
-import perf
+import perf.metadata
 
 
 def _json_dump(bench, args):
@@ -198,7 +198,7 @@ class TextRunner:
         stream = self._stream()
 
         if self.args.metadata:
-            perf._display_metadata(run_result.metadata, file=stream)
+            perf._display_metadata(bench.metadata, file=stream)
 
         text = bench._format_run(run_result, self.args.verbose)
         nsample = perf._format_number(len(run_result.samples), 'sample')
@@ -260,11 +260,7 @@ class TextRunner:
             sys.exit(1)
 
     def _worker(self, bench, sample_func):
-        run_result = perf.RunResult(metadata=self.metadata)
-
-        # only import metadata submodule in worker processes
-        from perf import metadata as perf_metadata
-        perf_metadata.collect_metadata(run_result.metadata)
+        run_result = perf.RunResult()
 
         for is_warmup, run in self._range():
             dt = sample_func(bench.loops)
@@ -295,7 +291,9 @@ class TextRunner:
 
         bench = perf.Benchmark(name=self.name,
                                loops=loops,
-                               inner_loops=self.inner_loops)
+                               inner_loops=self.inner_loops,
+                               metadata=self.metadata)
+        perf.metadata.collect_metadata(bench.metadata)
 
         if not self.args.raw:
             return self._spawn_workers(bench)

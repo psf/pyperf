@@ -118,23 +118,6 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
-def _common_metadata(metadatas):
-    if not metadatas:
-        return dict()
-
-    metadata = dict(metadatas[0])
-    for run_metadata in metadatas[1:]:
-        for key, run_value in run_metadata.items():
-            try:
-                value = metadata[key]
-            except KeyError:
-                pass
-            else:
-                if run_value != value:
-                    del metadata[key]
-    return metadata
-
-
 def _common_value(values):
     if not values:
         return None
@@ -151,11 +134,12 @@ def _common_value(values):
 
 
 class RunResult:
-    def __init__(self, samples=None, warmups=None, metadata=None):
+    def __init__(self, samples=None, warmups=None):
         if (samples is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in samples)):
             raise TypeError("samples must be a list of float >= 0")
+
         if (warmups is not None
         and any(not(isinstance(value, float) and value >= 0)
                 for value in warmups)):
@@ -164,28 +148,14 @@ class RunResult:
         self.samples = []
         if samples is not None:
             self.samples.extend(samples)
+
         self.warmups = []
         if warmups is not None:
             self.warmups.extend(warmups)
-        # FIXME: make the formatter configurable
-        self._formatter = _format_run_result
 
-        # Metadata dictionary: key=>value, keys and values are non-empty
-        # strings
-        if metadata is not None:
-            self.metadata = metadata
-        else:
-            self.metadata = {}
-
-    def _as_json(self, ignore_metadata=None):
-        metadata = self.metadata
-        if ignore_metadata:
-            metadata = {key:value for key, value in metadata.items()
-                        if key not in ignore_metadata}
-        data = {'samples': self.samples,
-                'warmups': self.warmups,
-                'metadata': metadata}
-        return {'run_result': data}
+    def _as_json(self):
+        # FIXME: remove 'run_result' useless layer
+        return {'run_result': {'samples': self.samples, 'warmups': self.warmups}}
 
     @classmethod
     def _json_load(cls, data, raw=False):
@@ -198,18 +168,12 @@ class RunResult:
         if 'run_result' not in data:
             raise ValueError("JSON doesn't contain run_result")
         data = data['run_result']
-
-        samples = data['samples']
-        warmups = data['warmups']
-        metadata = data.get('metadata')
-
-        run = cls(samples=samples, warmups=warmups)
-        run.metadata = metadata
-        return run
+        return cls(samples=data['samples'], warmups=data['warmups'])
 
 
 class Benchmark:
-    def __init__(self, runs=None, name=None, loops=None, inner_loops=None):
+    def __init__(self, runs=None, name=None, loops=None, inner_loops=None,
+                 metadata=None):
         if runs is not None:
             self.runs = runs
         else:
@@ -217,16 +181,24 @@ class Benchmark:
         self.name = name
         self.loops = loops
         self.inner_loops = inner_loops
+
+        # Metadata dictionary: key=>value, keys and values are non-empty
+        # strings
+        if metadata is not None:
+            self.metadata = metadata
+        else:
+            self.metadata = {}
+
         # FIXME: make the formatter configurable
         self._formatter = _format_run_result
 
     def _get_worker_run(self, run_bench):
         if len(run_bench.runs) != 1:
             raise ValueError("A worker must return exactly one run")
-        if self.loops != run_bench.loops:
-            raise ValueError("Numbers of loops value are different")
-        if self.inner_loops != run_bench.inner_loops:
-            raise ValueError("Number of inner-loops value are different")
+        for attr in 'loops inner_loops metadata'.split():
+            if getattr(run_bench, attr) != getattr(self, attr):
+                raise ValueError("%s value is different" % attr)
+        # FIXME: check the number of samples and number of warmups
 
         return run_bench.runs[0]
 
@@ -259,9 +231,9 @@ class Benchmark:
             samples.extend(self._get_result_raw_samples(run))
         return samples
 
+    # FIXME: remove the method, use directly metadata attribute
     def get_metadata(self):
-        metadatas = [run.metadata for run in self.runs]
-        metadata = _common_metadata(metadatas)
+        metadata = dict(self.metadata)
         # FIXME: don't expose loops/inner_loops as metadata
         if self.loops is not None:
             metadata['loops'] = _format_number(self.loops)
@@ -284,7 +256,7 @@ class Benchmark:
 
             # FIXME: handle the case where all samples are empty
             samples = self.get_samples()
-            text = first_run._formatter(samples, verbose)
+            text = self._formatter(samples, verbose)
 
             if verbose:
                 iterations = []
@@ -319,17 +291,12 @@ class Benchmark:
         data = data['results']
 
         name = data.get('name')
+        metadata = data.get('metadata')
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
+        runs = [RunResult._json_load(run, raw=True) for run in data['runs']]
 
-        common_metadata = data.get('common_metadata')
-        runs = [RunResult._json_load(run, raw=True)
-                for run in data['runs']]
-        if common_metadata:
-            for run in runs:
-                run.metadata.update(common_metadata)
-
-        return cls(runs=runs, name=name,
+        return cls(runs=runs, name=name, metadata=metadata,
                    loops=loops, inner_loops=inner_loops)
 
     @classmethod
@@ -345,22 +312,15 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        # FIXME: find common metadata in JSON, not in objects directly
-        # FIXME: use get_metadata()?
-        common_metadata = _common_metadata([run.metadata for run in self.runs])
-        runs = [run._as_json(ignore_metadata=set(common_metadata))
-                for run in self.runs]
-        data = {'runs': runs}
+        data = {'runs': [run._as_json() for run in self.runs]}
+        if self.name:
+            data['name'] = self.name
+        if self.metadata:
+            data['metadata'] = self.metadata
         if self.loops is not None:
             data['loops'] = self.loops
         if self.inner_loops is not None:
             data['inner_loops'] = self.inner_loops
-
-        common_attr = {}
-        if common_metadata:
-            data['common_metadata'] = common_metadata
-        if self.name:
-            data['name'] = self.name
         return {'results': data, 'version': _JSON_VERSION}
 
     def json(self):
