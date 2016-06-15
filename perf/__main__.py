@@ -182,7 +182,7 @@ def display_histogram_scipy(args, result):
     import scipy.stats as stats
 
     samples = result.get_samples()
-    samples.sort()
+    samples = sorted(samples)
 
     samples_stats = boltons.statsutils.Stats(samples)
 
