@@ -203,20 +203,6 @@ class TextRunner:
         for run in range(self.args.nsample):
             yield (False, run)
 
-    def _add(self, bench, warmups, samples, is_warmup, run, sample):
-        if is_warmup:
-            warmups.append(sample)
-        else:
-            samples.append(sample)
-
-        if self.args.verbose:
-            text = bench._format_sample(sample)
-            if is_warmup:
-                text = "Warmup %s: %s" % (1 + run, text)
-            else:
-                text = "Sample %s: %s" % (1 + run, text)
-            print(text, file=self._stream())
-
     def _display_run_result_avg(self, bench):
         stream = self._stream()
 
@@ -283,18 +269,22 @@ class TextRunner:
     def _worker(self, bench, sample_func):
         warmups = []
         samples = []
-
         for is_warmup, run in self._range():
-            dt = sample_func(bench.loops)
-            # FIXME: don't divide here but in Benchmark.samples()
-            dt = float(dt) / bench.loops
-            if bench.inner_loops is not None:
-                dt /= bench.inner_loops
-            self._add(bench, warmups, samples,
-                      is_warmup, run, dt)
+            sample = sample_func(bench.loops)
+            if is_warmup:
+                warmups.append(sample)
+            else:
+                samples.append(sample)
+
+            if self.args.verbose:
+                text = bench._format_sample(sample)
+                if is_warmup:
+                    text = "Warmup %s: %s" % (1 + run, text)
+                else:
+                    text = "Raw sample %s: %s" % (1 + run, text)
+                print(text, file=self._stream())
 
         bench.add_run(samples, warmups)
-
         self._display_run_result_avg(bench)
 
         return bench

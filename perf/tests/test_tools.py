@@ -131,11 +131,14 @@ class TestResult(unittest.TestCase):
 
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
+        raw_samples = tuple(sample * 3 * 20 for sample in samples)
         bench = perf.Benchmark(name="name", loops=20, inner_loops=3)
-        for sample in samples:
+        for sample in raw_samples:
             bench.add_run([sample], [1.0])
         bench.metadata['key'] = 'value'
 
+        self.assertEqual(bench.get_samples(), samples)
+        self.assertEqual(bench._get_raw_samples(), list(raw_samples))
         self.assertEqual(bench.get_nrun(), 3)
 
         runs = bench.get_runs()
@@ -145,7 +148,7 @@ class TestResult(unittest.TestCase):
             self.assertIsInstance(run_samples, tuple)
             self.assertIsInstance(run_warmups, tuple)
 
-        self.check_runs(bench, samples, 1.0)
+        self.check_runs(bench, raw_samples, 1.0)
 
         self.assertEqual(bench.name, "name")
         self.assertEqual(bench.loops, 20)

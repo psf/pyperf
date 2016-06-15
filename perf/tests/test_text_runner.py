@@ -29,9 +29,9 @@ class TestTextRunner(unittest.TestCase):
         self.assertRegex(stream.getvalue(),
                          r'^(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
                          r'Warmup 1: 1\.00 sec\n'
-                         r'Sample 1: 1\.00 sec\n'
-                         r'Sample 2: 1\.00 sec\n'
-                         r'Sample 3: 1\.00 sec\n'
+                         r'Raw sample 1: 1\.00 sec\n'
+                         r'Raw sample 2: 1\.00 sec\n'
+                         r'Raw sample 3: 1\.00 sec\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'

@@ -152,7 +152,7 @@ Benchmark
 
    .. method:: add_run(samples, warmups=None)
 
-      Add the result of a benchmark run.
+      Add the raw result of a benchmark run.
 
       *samples* is a non-empty sequence of numbers (``float``) ``>= 0``.
       Usually, *samples* is a list of number of seconds.
@@ -161,6 +161,10 @@ Benchmark
       be empty. It is similar to *samples*: samples used to "warmup" the
       benchmark. These numbers are ignored when computing the average and
       standard deviation.
+
+      Samples are raw values of all loops. The :meth:`get_samples` method
+      divides samples by ``loops x inner_loops`` (see :attr:`loops` and
+      :attr:`inner_loops` attributes).
 
       All runs must have the same number of samples and the same number of
       warmups.
@@ -171,11 +175,17 @@ Benchmark
 
    .. method:: get_runs()
 
-      Get runs as a list of ``(samples, warmups)`` tuples.
+      Get raw samples of all runs as a list of ``(samples, warmups)`` tuples.
+
+      Samples are raw values of all samples: use the :meth:`get_samples` method
+      to get normalized samples per loop iteration.
 
    .. method:: get_samples()
 
-      Get samples of all runs.
+      Get samples of all runs: values are normalized per loop iteration.
+
+      Raw run samples are divided by ``loops x inner_loops``: see :attr:`loops`
+      and :attr:`inner_loops` attributes.
 
    .. method:: get_metadata()
 
@@ -201,6 +211,10 @@ Benchmark
 
       Load a result from the JSON file *file* which was created by
       :meth:`json_dump_into`.
+
+   .. method:: mean()
+
+      Get the mean of :meth:`get_samples`.
 
    Attributes:
 
@@ -228,7 +242,7 @@ Benchmark
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25, metadata=None)
+.. class:: perf.text_runner.TextRunner(name=None, nsample=3, nwarmup=1, nprocess=25, nloop=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
 
    Tool to run a benchmark in text mode.
 
@@ -251,16 +265,15 @@ TextRunner
 
       Benchmark the function ``func(*args)``.
 
-      The final saved value is ``elapsed_time / loops / inner_loops`` where
-      *elapsed_time* is mesured using :func:`perf.perf_counter`. See the
-      :attr:`inner_loops` attribute.
+      The :meth:`get_samples` method will divide samples by ``loops x
+      inner_loops`` (see :attr:`~perf.Benchmark.loops` and
+      :attr:`~perf.Benchmark.inner_loops` attributes of
+      :class:`perf.Benchmark`).
 
       The design of :meth:`bench_func` has a non negligible overhead on
       microbenchmarks: each loop iteration calls ``func(*args)`` but Python
-      function calls are expensive.
-
-      The :meth:`bench_sample_func` method is recommended if ``func(*args)``
-      takes less than 1 millisecond (0.001 sec).
+      function calls are expensive. The :meth:`bench_sample_func` method is
+      recommended if ``func(*args)`` takes less than 1 millisecond (0.001 sec).
 
       Return a :class:`~perf.Benchmark` instance.
 
@@ -268,15 +281,13 @@ TextRunner
 
       Benchmark ``sample_func(loops, *args)``.
 
-      The function must return the total elapsed time (not the average time per
-      loop iteration). The total elapsed time is required to be able to
-      automatically calibrate the number of loops.
+      The function must return the total elapsed time of all loops. The
+      :meth:`get_samples` method will divide samples by ``loops x inner_loops``
+      (see :attr:`~perf.Benchmark.loops` and
+      :attr:`~perf.Benchmark.inner_loops` attributes of
+      :class:`perf.Benchmark`).
 
       :func:`perf.perf_counter` should be used to measure the elapsed time.
-
-      The final saved value is ``result / loops / inner_loops`` where *result*
-      is the output of ``sample_func(loops, *args)``. See the
-      :attr:`inner_loops` attribute.
 
       Return a :class:`~perf.Benchmark` instance.
 

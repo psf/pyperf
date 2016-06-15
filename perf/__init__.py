@@ -130,6 +130,7 @@ class Benchmark:
         return text
 
     def _clear_stats_cache(self):
+        self._samples = None
         self._mean = None
 
     def mean(self):
@@ -139,12 +140,12 @@ class Benchmark:
 
     def add_run(self, samples, warmups=None):
         if (not samples
-        or any(not(isinstance(value, float) and value >= 0)
+        or any(not(isinstance(value, (int, float)) and value >= 0)
                 for value in samples)):
-            raise TypeError("samples must be a non-empty list of float >= 0")
+            raise TypeError("samples must be a non-empty list of float >= 0 %r")
 
         if (warmups
-        and any(not(isinstance(value, float) and value >= 0)
+        and any(not(isinstance(value, (int, float)) and value >= 0)
                 for value in warmups)):
             raise TypeError("warmups must be a list of float >= 0")
 
@@ -187,26 +188,32 @@ class Benchmark:
         return list(self._runs)
 
     def get_samples(self):
-        samples = []
-        for run_samples, _ in self._runs:
-            samples.extend(run_samples)
-        return samples
+        if self._samples is not None:
+            return self._samples
 
-    def _get_result_raw_samples(self, samples):
-        factor = 1
+        factor = 1.0
         if self.loops is not None:
+            # FIXME: move these checks inside a property?
+            if self.loops <= 0:
+                raise ValueError("loops must be >=0")
             factor *= self.loops
         if self.inner_loops is not None:
+            if self.inner_loops <= 0:
+                raise ValueError("inner_loops must be >=0")
             factor *= self.inner_loops
-        if factor != 1:
-            return [sample * factor for sample in samples]
-        else:
-            return samples
+
+        samples = []
+        for run_samples, _ in self._runs:
+            for sample in run_samples:
+                samples.append(sample / factor)
+        samples = tuple(samples)
+        self._samples = samples
+        return samples
 
     def _get_raw_samples(self):
         samples = []
         for run_samples, _ in self._runs:
-            samples.extend(self._get_result_raw_samples(run_samples))
+            samples.extend(run_samples)
         return samples
 
     # FIXME: remove the method, use directly metadata attribute
@@ -223,7 +230,6 @@ class Benchmark:
         if not self._runs:
             return '<no run>'
 
-        # FIXME: handle the case where all samples are empty
         samples = self.get_samples()
         text = self._formatter(samples, verbose)
         if not verbose:
@@ -339,8 +345,9 @@ def _display_runs(result):
 
 
 def _display_benchmark_avg(bench, verbose=0, file=None):
+    if not bench.get_nrun():
+        raise ValueError("benchmark has no run")
     samples = bench.get_samples()
-    # FIXME: handle empty samples
 
     # Display a warning if the standard deviation is larger than 10%
     avg = statistics.mean(samples)

@@ -38,8 +38,8 @@ class TestTimeit(unittest.TestCase):
         match = re.match(r'^'
                          r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
                          r'Warmup 1: ([0-9.]+) ms\n'
-                         r'Sample 1: ([0-9.]+) ms\n'
-                         r'Sample 2: ([0-9.]+) ms\n'
+                         r'Raw sample 1: ([0-9.]+) ms\n'
+                         r'Raw sample 2: ([0-9.]+) ms\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
@@ -92,12 +92,13 @@ class TestTimeit(unittest.TestCase):
             tmp = tempfile.NamedTemporaryFile('w+', encoding='utf-8')
         else:
             tmp = tempfile.NamedTemporaryFile()
+        loops = 4
         with tmp:
             args = [sys.executable,
                     '-m', 'perf.timeit',
                     '-p', '2',
                     '-n', '3',
-                    '-l', '4',
+                    '-l', str(loops),
                     '--json-file', tmp.name,
                     '-s', 'import time',
                     SLEEP]
@@ -120,9 +121,11 @@ class TestTimeit(unittest.TestCase):
 
             # Tolerate large differences on busy systems
             for warmup in warmups:
-                self.assertTrue(MIN_SAMPLE <= warmup * 1e3 <= MAX_SAMPLE, warmup)
+                dt = (warmup / loops) * 1e3
+                self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
             for sample in samples:
-                self.assertTrue(MIN_SAMPLE <= sample * 1e3 <= MAX_SAMPLE, sample)
+                dt = (sample / loops) * 1e3
+                self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
 
     def test_cli_help(self):
         args = [sys.executable,
