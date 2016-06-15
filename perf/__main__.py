@@ -94,7 +94,7 @@ def display_result(args, result):
 
 
 def _result_sort_key(result):
-    return (result.mean(), result.name or '')
+    return (result.median(), result.name or '')
 
 
 def _common_metadata(metadatas):
@@ -149,13 +149,13 @@ def compare_results(args, results, sort_results):
                                    header='%s metadata:' % result.name)
             print()
 
-    # Compute means
+    # Compute medians
     ref_samples = ref_result.get_samples()
-    ref_avg = ref_result.mean()
+    ref_avg = ref_result.median()
     last_index = len(results) - 1
     for index, changed_result in enumerate(results[1:], 1):
         changed_samples = changed_result.get_samples()
-        changed_avg = changed_result.mean()
+        changed_avg = changed_result.median()
         text = ("Median +- std dev: [%s] %s -> [%s] %s"
                 % (ref_result.name,
                    ref_result.format(verbose=args.verbose),
@@ -203,7 +203,6 @@ def display_histogram_text(args, result):
     import shutil
 
     samples = result.get_samples()
-    avg = result.mean()
     if hasattr(shutil, 'get_terminal_size'):
         columns, lines = shutil.get_terminal_size()
     else:
@@ -223,7 +222,7 @@ def display_histogram_text(args, result):
     count_max = max(counter.values())
     count_width = len(str(count_max))
 
-    line = '%s: %s #' % (result._format_sample(avg), count_max)
+    line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
     width = columns - len(line)
     if not args.extend:
         width = min(width, 79)

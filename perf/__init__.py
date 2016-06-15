@@ -140,13 +140,7 @@ class Benchmark(object):
 
     def _clear_stats_cache(self):
         self._samples = None
-        self._mean = None
         self._median = None
-
-    def mean(self):
-        if self._mean is None:
-            self._mean = statistics.mean(self.get_samples())
-        return self._mean
 
     def median(self):
         if self._median is None:
@@ -350,25 +344,27 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     samples = bench.get_samples()
 
     # Display a warning if the standard deviation is larger than 10%
-    avg = bench.mean()
+    median = bench.median()
     # Avoid division by zero
-    if avg and len(samples) > 1:
-        k = statistics.stdev(samples) / avg
+    if median and len(samples) > 1:
+        k = statistics.stdev(samples) / median
         if k > 0.10:
             if k > 0.20:
                 print("ERROR: the benchmark is very unstable, the standard "
-                      "deviation is very high (%.0f%%)!" % (k * 100),
+                      "deviation is very high (stdev/median: %.0f%%)!"
+                      % (k * 100),
                       file=file)
             else:
                 print("WARNING: the benchmark seems unstable, the standard "
-                      "deviation is high (%.0f%%)" % (k * 100),
+                      "deviation is high (stdev/median: %.0f%%)"
+                      % (k * 100),
                       file=file)
             print("Try to rerun the benchmark with more runs, samples "
                   "and/or loops",
                   file=file)
             print(file=file)
         elif verbose > 1:
-            print("Standard deviation: %.0f%%" % (k * 100), file=file)
+            print("Standard deviation / median: %.0f%%" % (k * 100), file=file)
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(bench._get_raw_samples())
@@ -478,6 +474,7 @@ def _pooled_sample_variance(sample1, sample2):
         Pooled sample variance, as a float.
     """
     deg_freedom = len(sample1) + len(sample2) - 2
+    # FIXME: use median?
     mean1 = statistics.mean(sample1)
     squares1 = ((x - mean1) ** 2 for x in sample1)
     mean2 = statistics.mean(sample2)
@@ -499,6 +496,7 @@ def _tscore(sample1, sample2):
     if len(sample1) != len(sample2):
         raise ValueError("different number of samples")
     error = _pooled_sample_variance(sample1, sample2) / len(sample1)
+    # FIXME: use median?
     return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(error * 2)
 
 

@@ -7,7 +7,7 @@ Version 0.5
 Changes:
 
 * Replace mean with median
-* Add :meth:`perf.Benchmark.median` method
+* Add :meth:`perf.Benchmark.median` method, remove ``Benchmark.mean()`` method
 * ``Benchmark.get_metadata()`` method removed: use directly the
   :attr:`perf.Benchmark.metadata` attribute
 
