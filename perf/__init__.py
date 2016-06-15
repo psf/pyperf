@@ -264,9 +264,10 @@ class Benchmark:
         if version != _JSON_VERSION:
             raise ValueError("version %r not supported" % version)
 
-        if 'results' not in data:
+        try:
+            data = data['benchmark']
+        except KeyError:
             raise ValueError("JSON doesn't contain results")
-        data = data['results']
 
         name = data.get('name')
         metadata = data.get('metadata')
@@ -311,7 +312,7 @@ class Benchmark:
             data['loops'] = self.loops
         if self.inner_loops is not None:
             data['inner_loops'] = self.inner_loops
-        return {'results': data, 'version': _JSON_VERSION}
+        return {'benchmark': data, 'version': _JSON_VERSION}
 
     def json(self):
         json = _import_json()
@@ -325,7 +326,7 @@ class Benchmark:
 
 def _display_run(bench, index, nrun, samples, warmups, file=None):
     text = ', '.join(bench._format_samples(samples))
-    text = 'samples (%s): %s' % (len(samples), text)
+    text = 'raw samples (%s): %s' % (len(samples), text)
     if warmups:
         text = ('warmup (%s): %s; %s'
                 % (len(warmups),
