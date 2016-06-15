@@ -191,6 +191,7 @@ def display_histogram_scipy(args, result):
     samples = result.get_samples()
     samples = sorted(samples)
 
+    median = result.median()
     fit = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
     pylab.plot(samples, fit, '-v', label='median-stdev')
 
