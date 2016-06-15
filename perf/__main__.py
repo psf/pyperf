@@ -176,7 +176,10 @@ def compare_results(args, results, sort_results):
 
 
 def display_histogram_scipy(args, result):
-    import boltons.statsutils
+    try:
+        import boltons.statsutils
+    except ImportError:
+        boltons = None
     import matplotlib.pyplot as plt
     import pylab
     import scipy.stats as stats
@@ -184,12 +187,12 @@ def display_histogram_scipy(args, result):
     samples = result.get_samples()
     samples = sorted(samples)
 
-    samples_stats = boltons.statsutils.Stats(samples)
-
-    median = statistics.median(samples)
-    # median +- MAD
-    fit = stats.norm.pdf(samples, median, samples_stats.median_abs_dev)
-    pylab.plot(samples, fit, '-o', label='median-mad')
+    if boltons is not None:
+        # median +- MAD
+        median = statistics.median(samples)
+        mad = boltons.statsutils.Stats(samples).median_abs_dev
+        fit = stats.norm.pdf(samples, median, mad)
+        pylab.plot(samples, fit, '-o', label='median-mad')
 
     # median +- std dev
     fit2 = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
@@ -246,7 +249,10 @@ def display_histogram_text(args, result):
 
 
 def display_stats(args, result):
-    import boltons.statsutils
+    try:
+        import boltons.statsutils
+    except ImportError:
+        boltons = None
 
     fmt = result._format_sample
     samples = result.get_samples()
@@ -263,32 +269,15 @@ def display_stats(args, result):
     median = statistics.median(samples)
     print("Median +- std dev: %s +- %s"
           % perf._format_timedeltas([median, statistics.stdev(samples, median)]))
-    stats = boltons.statsutils.Stats(samples)
-    print("Median +- MAD: %s +- %s"
-          % perf._format_timedeltas([median, stats.median_abs_dev]))
-    print()
+    if boltons is not None:
+        stats = boltons.statsutils.Stats(samples)
+        print("Median +- MAD: %s +- %s"
+              % perf._format_timedeltas([median, stats.median_abs_dev]))
 
-    print("Skewness: %.2f"
-          % boltons.statsutils.skewness(samples))
-    print()
-
-    def format_count(count):
-        return ("%.1f%% (%s/%s)"
-                % (float(count) * 100 / nsample,
-                   count, nsample))
-
-    def counters(avg, stdev):
-        left = avg - stdev
-        right = avg + stdev
-        count = 0
-        for sample in samples:
-            if left <= sample <= right:
-                count += 1
-        return format_count(count)
-
-    print("Mean+stdev range buckets: %s" % counters(statistics.mean(samples), statistics.stdev(samples)))
-    print("Median+stdev range buckets: %s" % counters(median, statistics.stdev(samples, median)))
-    print("Median+mad range buckets: %s" % counters(median, stats.median_abs_dev))
+    if boltons is not None:
+        print()
+        print("Skewness: %.2f"
+              % boltons.statsutils.skewness(samples))
 
 
 def main():

@@ -14,6 +14,8 @@ On Python 2.7, the ``statistics`` dependency is installed.
 
 Optional dependencies:
 
+* ``boltons``: if available, ``hist_scipy`` and ``stats`` commands also
+  display median absolute deviation (MAD) and the skewness
 * ``psutil``: needed for CPU affinity on Python 2.7
 * The ``-m perf hist_scipy`` command requires ``scipy`` and ``matplotlib``.
   Command to install these packages on Fedora:
