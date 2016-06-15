@@ -71,20 +71,22 @@ class TestTools(unittest.TestCase):
         self.assertEqual(fmt_stdev(102e-3, 3e-3), "102 ms +- 3 ms")
 
     def test_format_run_result(self):
+        bench = perf.Benchmark()
+
         # 1 sample
-        self.assertEqual(perf._format_run_result([1.5], 0),
+        self.assertEqual(bench._format_run_samples([1.5], 0),
                          "1.50 sec")
-        self.assertEqual(perf._format_run_result([1.5], 1),
+        self.assertEqual(bench._format_run_samples([1.5], 1),
                          "1.50 sec")
-        self.assertEqual(perf._format_run_result([1.5], 2),
+        self.assertEqual(bench._format_run_samples([1.5], 2),
                          "1.50 sec (min: 1.50 sec, max: 1.50 sec)")
 
         # multiple samples with std dev
-        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 0),
+        self.assertEqual(bench._format_run_samples([1.0, 1.5, 2.0], 0),
                          "1.50 sec +- 0.50 sec")
-        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 1),
+        self.assertEqual(bench._format_run_samples([1.0, 1.5, 2.0], 1),
                          "1.50 sec +- 0.50 sec")
-        self.assertEqual(perf._format_run_result([1.0, 1.5, 2.0], 2),
+        self.assertEqual(bench._format_run_samples([1.0, 1.5, 2.0], 2),
                          "1.50 sec +- 0.50 sec (min: 1.00 sec, max: 2.00 sec)")
 
     def test_format_number(self):

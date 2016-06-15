@@ -231,7 +231,7 @@ def display_histogram_text(args, result):
     count_max = max(counter.values())
     count_width = len(str(count_max))
 
-    line = '%s: %s #' % (perf._format_timedelta(avg), count_max)
+    line = '%s: %s #' % (bench._format_sample(avg), count_max)
     width = columns - len(line)
     if not args.extend:
         width = min(width, 79)
@@ -240,7 +240,7 @@ def display_histogram_text(args, result):
     for ms in range(min(counter), max(counter)+1):
         count = counter.get(ms, 0)
         linelen = int(round(count * line_k))
-        text = perf._format_timedelta(float(ms) * sample_k)
+        text = bench._format_sample(float(ms) * sample_k)
         line = ('#' * linelen) or '|'
         print("{}: {:>{}} {}".format(text, count, count_width, line))
 
@@ -248,7 +248,7 @@ def display_histogram_text(args, result):
 def display_stats(args, result):
     import boltons.statsutils
 
-    fmt = perf._format_timedelta
+    fmt = result._format_sample
     samples = result.get_samples()
 
     nsample = len(samples)

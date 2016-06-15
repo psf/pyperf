@@ -69,31 +69,6 @@ def _format_timedelta(value):
     return _format_timedeltas((value,))[0]
 
 
-# FIXME: put this code into Benchmark, and pass _format_timedeltas as formatter
-# to Benchmark
-def _format_run_result(values, verbose=0):
-    numbers = [statistics.mean(values)]
-    with_stdev = (len(values) >= 2)
-    if with_stdev:
-        numbers.append(statistics.stdev(values))
-    if verbose > 1:
-        numbers.append(min(values))
-        numbers.append(max(values))
-
-    numbers = _format_timedeltas(numbers)
-    if verbose > 1:
-        if with_stdev:
-            text = '%s +- %s (min: %s, max: %s)' % numbers
-        else:
-            text = '%s (min: %s, max: %s)' % numbers
-    else:
-        if with_stdev:
-            text = '%s +- %s' % numbers
-        else:
-            text = numbers[0]
-    return text
-
-
 def _format_number(number, unit=None, units=None):
     plural = (abs(number) > 1)
     if number >= 10000:
@@ -129,6 +104,8 @@ class Benchmark:
         # only contain float >= 0. See add_run().
         self._runs = []
 
+        self._clear_stats_cache()
+
         # Metadata dictionary: key=>value, keys and values are non-empty
         # strings
         if metadata is not None:
@@ -136,8 +113,38 @@ class Benchmark:
         else:
             self.metadata = {}
 
-        # FIXME: make the formatter configurable
-        self._formatter = _format_run_result
+        # FIXME: add a configurable sample formatter
+        self._format_samples = _format_timedeltas
+
+    def _formatter(self, values, verbose=0):
+        numbers = [statistics.mean(values)]
+        with_stdev = (len(values) >= 2)
+        if with_stdev:
+            numbers.append(statistics.stdev(values))
+        if verbose > 1:
+            numbers.append(min(values))
+            numbers.append(max(values))
+
+        numbers = self._format_samples(numbers)
+        if verbose > 1:
+            if with_stdev:
+                text = '%s +- %s (min: %s, max: %s)' % numbers
+            else:
+                text = '%s (min: %s, max: %s)' % numbers
+        else:
+            if with_stdev:
+                text = '%s +- %s' % numbers
+            else:
+                text = numbers[0]
+        return text
+
+    def _clear_stats_cache(self):
+        self._mean = None
+
+    def mean(self):
+        if self._mean is None:
+            self._mean = statistics.mean(self.get_samples())
+        return self._mean
 
     def add_run(self, samples, warmups=None):
         if (not samples
@@ -163,6 +170,7 @@ class Benchmark:
             if len(run[1]) != len(first_run[1]):
                 raise ValueError("different number of warmups")
 
+        self._clear_stats_cache()
         self._runs.append(run)
 
     def _get_worker_run(self, run_bench):
@@ -174,11 +182,12 @@ class Benchmark:
 
         return run_bench._runs[0]
 
-    def _format_sample(self, sample, verbose=False):
-        return self._formatter([sample], verbose)
+    def _format_sample(self, sample):
+        return self._format_samples((sample,))[0]
 
-    def _format_run(self, run, verbose=False):
-        return self._formatter(run.samples, verbose)
+    # FIXME: remove it?
+    def _format_run_samples(self, samples, verbose=False):
+        return self._formatter(samples, verbose)
 
     def get_nrun(self):
         return len(self._runs)
@@ -343,13 +352,12 @@ class Benchmark:
 
 
 def _display_run(bench, index, nrun, samples, warmups, file=None):
-    # FIXME: use bench formatter
-    text = ', '.join(_format_timedeltas(samples))
+    text = ', '.join(bench._format_samples(samples))
     text = 'samples (%s): %s' % (len(samples), text)
     if warmups:
         text = ('warmup (%s): %s; %s'
                 % (len(warmups),
-                   ', '.join(_format_timedeltas(warmups)),
+                   ', '.join(bench._format_samples(warmups)),
                    text))
 
     text = "Run %s/%s: %s" % (index, nrun, text)
