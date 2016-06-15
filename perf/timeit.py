@@ -24,7 +24,7 @@ def _format_stmt(statements):
     return result
 
 
-def _main_common():
+def _create_runner():
     runner = perf.text_runner.TextRunner()
     parser = runner.argparser
     parser.add_argument('-s', '--setup', action='append', default=[],
@@ -40,6 +40,12 @@ def _main_common():
     runner.metadata['timeit_setup'] = ' '.join(repr(stmt) for stmt in runner.args.setup)
     runner.metadata['timeit_stmt'] = ' '.join(repr(stmt) for stmt in runner.args.stmt)
 
+    runner.program_args = (sys.executable, '-m', 'perf.timeit')
+    runner.prepare_subprocess_args = _prepare_args
+    return runner
+
+
+def _create_timer(runner):
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
     # directory)
@@ -56,8 +62,7 @@ def _main_common():
         except:
             timer.print_exc()
             sys.exit(1)
-
-    return (runner, timer)
+    return timer
 
 
 def _prepare_args(runner, args):
@@ -66,22 +71,25 @@ def _prepare_args(runner, args):
     args.extend(runner.args.stmt)
 
 
-def _main():
-    runner, timer  = _main_common()
-    runner.program_args = (sys.executable, '-m', 'perf.timeit')
-    runner.prepare_subprocess_args = _prepare_args
+def _sample_func(loops, timer):
+    it = itertools.repeat(None, loops)
+    return timer.inner(it, timer.timer)
 
-    def func(loops, timer):
-        it = itertools.repeat(None, loops)
-        return timer.inner(it, timer.timer)
 
+def _run_benchmark(runner, timer):
     try:
-        runner.bench_sample_func(func, timer)
+        runner.bench_sample_func(_sample_func, timer)
     except SystemExit:
         raise
     except:
         timer.print_exc()
         sys.exit(1)
+
+
+def _main():
+    runner = _create_runner()
+    timer = _create_timer(runner)
+    _run_benchmark(runner, timer)
 
 
 if __name__ == "__main__":
