@@ -352,7 +352,7 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
     samples = bench.get_samples()
 
     # Display a warning if the standard deviation is larger than 10%
-    avg = statistics.mean(samples)
+    avg = bench.mean()
     # Avoid division by zero
     if avg and len(samples) > 1:
         k = statistics.stdev(samples) / avg
