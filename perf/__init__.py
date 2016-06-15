@@ -172,7 +172,7 @@ class Benchmark(object):
     def _get_worker_samples(self, run_bench):
         if len(run_bench._runs) != 1:
             raise ValueError("A worker result must have exactly one run")
-        for attr in 'loops inner_loops metadata warmups'.split():
+        for attr in 'loops inner_loops warmups'.split():
             if getattr(run_bench, attr) != getattr(self, attr):
                 raise ValueError("%s value is different" % attr)
 

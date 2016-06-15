@@ -312,7 +312,10 @@ class TextRunner:
                                loops=loops,
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
-        perf.metadata.collect_metadata(bench.metadata)
+
+        if not self.args.raw or self.args.metadata:
+            from perf import metadata as perf_metadata
+            perf_metadata.collect_metadata(bench.metadata)
 
         if not self.args.raw:
             return self._spawn_workers(bench)
