@@ -111,6 +111,13 @@ class TestTools(unittest.TestCase):
 
 
 class TestResult(unittest.TestCase):
+    def check_runs(self, bench, samples, warmup):
+        runs = bench.get_runs()
+        self.assertEqual(len(runs), len(samples))
+        for sample, run in zip(samples, runs):
+            self.assertEqual(run[0], (sample,))
+            self.assertEqual(run[1], (warmup,))
+
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         bench = perf.Benchmark(name="name", loops=20, inner_loops=3)
@@ -118,10 +125,16 @@ class TestResult(unittest.TestCase):
             bench.add_run([sample], [1.0])
         bench.metadata['key'] = 'value'
 
-        for index, sample in enumerate(samples):
-            run = bench._runs[index]
-            self.assertEqual(run.samples, [sample])
-            self.assertEqual(run.warmups, [1.0])
+        self.assertEqual(bench.get_nrun(), 3)
+
+        runs = bench.get_runs()
+        self.assertIsInstance(runs, list)
+        self.assertEqual(len(runs), 3)
+        for run_samples, run_warmups in runs:
+            self.assertIsInstance(run_samples, tuple)
+            self.assertIsInstance(run_warmups, tuple)
+
+        self.check_runs(bench, samples, 1.0)
 
         self.assertEqual(bench.name, "name")
         self.assertEqual(bench.loops, 20)
@@ -155,10 +168,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(bench.loops, 100)
         self.assertEqual(bench.inner_loops, 20)
 
-        for index, sample in enumerate(samples):
-            run = bench._runs[index]
-            self.assertEqual(run.samples, [sample])
-            self.assertEqual(run.warmups, [3.0])
+        self.check_runs(bench, samples, 3.0)
 
 
 

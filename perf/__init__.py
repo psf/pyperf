@@ -133,19 +133,15 @@ def _common_value(values):
     return value
 
 
-# FIXME: replace _RunResult with a tuple/namedtuple?
-class _RunResult:
-    def __init__(self, samples, warmups):
-        self.samples = samples
-        self.warmups = warmups
-
-
 class Benchmark:
     def __init__(self, name=None, loops=None, inner_loops=None,
                  metadata=None):
         self.name = name
         self.loops = loops
         self.inner_loops = inner_loops
+        # list of (samples, warmups) tuples where samples and warmups are
+        # tuple. samples must be non-empty. samples and warmups tuples must
+        # only contain float >= 0. See add_run().
         self._runs = []
 
         # Metadata dictionary: key=>value, keys and values are non-empty
@@ -169,10 +165,16 @@ class Benchmark:
                 for value in warmups)):
             raise TypeError("warmups must be a list of float >= 0")
 
-        if not warmups:
-            warmups = ()
+        # FIXME: check the number of samples and number of warmups
+        # see format()
 
-        self._runs.append(_RunResult(samples, warmups))
+        if warmups:
+            run = (tuple(samples), tuple(warmups))
+        else:
+            # warmups can be None
+            run = (tuple(samples), ())
+
+        self._runs.append(run)
 
     def _get_worker_run(self, run_bench):
         if len(run_bench._runs) != 1:
@@ -180,7 +182,6 @@ class Benchmark:
         for attr in 'loops inner_loops metadata'.split():
             if getattr(run_bench, attr) != getattr(self, attr):
                 raise ValueError("%s value is different" % attr)
-        # FIXME: check the number of samples and number of warmups
 
         return run_bench._runs[0]
 
@@ -190,27 +191,33 @@ class Benchmark:
     def _format_run(self, run, verbose=False):
         return self._formatter(run.samples, verbose)
 
+    def get_nrun(self):
+        return len(self._runs)
+
+    def get_runs(self):
+        return list(self._runs)
+
     def get_samples(self):
         samples = []
-        for run in self._runs:
-            samples.extend(run.samples)
+        for run_samples, _ in self._runs:
+            samples.extend(run_samples)
         return samples
 
-    def _get_result_raw_samples(self, result):
+    def _get_result_raw_samples(self, samples):
         factor = 1
         if self.loops is not None:
             factor *= self.loops
         if self.inner_loops is not None:
             factor *= self.inner_loops
         if factor != 1:
-            return [sample * factor for sample in result.samples]
+            return [sample * factor for sample in samples]
         else:
-            return result.samples
+            return samples
 
     def _get_raw_samples(self):
         samples = []
-        for run in self._runs:
-            samples.extend(self._get_result_raw_samples(run))
+        for run_samples, _ in self._runs:
+            samples.extend(self._get_result_raw_samples(run_samples))
         return samples
 
     # FIXME: remove the method, use directly metadata attribute
@@ -224,36 +231,37 @@ class Benchmark:
         return metadata
 
     def format(self, verbose=0):
-        if self._runs:
-            first_run = self._runs[0]
-            warmup = len(first_run.warmups)
-            nsample = len(first_run.samples)
-            for run in self._runs:
-                run_nsample = len(run.samples)
-                if nsample is not None and nsample != run_nsample:
-                    nsample = None
-                run_warmup = len(run.warmups)
-                if warmup is not None and warmup != run_warmup:
-                    warmup = None
+        if not self._runs:
+            return '<no run>'
 
-            # FIXME: handle the case where all samples are empty
-            samples = self.get_samples()
-            text = self._formatter(samples, verbose)
+        first_run = self._runs[0]
+        nsample = len(first_run[0])
+        warmup = len(first_run[1])
+        for run_samples, run_warmups in self._runs:
+            run_nsample = len(run_samples)
+            if nsample is not None and nsample != run_nsample:
+                nsample = None
+            run_warmup = len(run_warmups)
+            if warmup is not None and warmup != run_warmup:
+                warmup = None
 
-            if verbose:
-                iterations = []
-                nrun = len(self._runs)
-                if nrun > 1:
-                    iterations.append(_format_number(nrun, 'run'))
-                if nsample:
-                    iterations.append(_format_number(nsample, 'sample'))
-                iterations = ' x '.join(iterations)
-                if warmup:
-                    iterations += '; %s' % _format_number(warmup, 'warmup')
-                if iterations:
-                    text = '%s (%s)' % (text, iterations)
-        else:
-            text = '<no run>'
+        # FIXME: handle the case where all samples are empty
+        samples = self.get_samples()
+        text = self._formatter(samples, verbose)
+        if not verbose:
+            return text
+
+        iterations = []
+        nrun = len(self._runs)
+        if nrun > 1:
+            iterations.append(_format_number(nrun, 'run'))
+        if nsample:
+            iterations.append(_format_number(nsample, 'sample'))
+        iterations = ' x '.join(iterations)
+        if warmup:
+            iterations += '; %s' % _format_number(warmup, 'warmup')
+        if iterations:
+            text = '%s (%s)' % (text, iterations)
         return text
 
     def __str__(self):
@@ -281,7 +289,8 @@ class Benchmark:
                     loops=loops, inner_loops=inner_loops)
 
         for run_data in data['runs']:
-            bench.add_run(run_data['samples'], run_data['warmups'])
+            bench.add_run(run_data['samples'],
+                          run_data.get('warmups'))
 
         return bench
 
@@ -298,8 +307,13 @@ class Benchmark:
         return cls._json_load(data)
 
     def _as_json(self):
-        runs = [{'samples': run.samples, 'warmups': run.warmups}
-                for run in self._runs]
+        runs = []
+        for samples, warmups in self._runs:
+            run = {'samples': samples}
+            if warmups:
+                run['warmups'] = warmups
+            runs.append(run)
+
         data = {'runs': runs}
         if self.name:
             data['name'] = self.name
@@ -346,14 +360,14 @@ class Benchmark:
         return cls.json_load(stdout)
 
 
-def _display_run(index, nrun, run, file=None):
-    # FIXME: use run.formatter
-    text = ', '.join(_format_timedeltas(run.samples))
-    text = 'samples (%s): %s' % (len(run.samples), text)
-    if run.warmups:
+def _display_run(bench, index, nrun, samples, warmups, file=None):
+    # FIXME: use bench formatter
+    text = ', '.join(_format_timedeltas(samples))
+    text = 'samples (%s): %s' % (len(samples), text)
+    if warmups:
         text = ('warmup (%s): %s; %s'
-                % (len(run.warmups),
-                   ', '.join(_format_timedeltas(run.warmups)),
+                % (len(warmups),
+                   ', '.join(_format_timedeltas(warmups)),
                    text))
 
     text = "Run %s/%s: %s" % (index, nrun, text)
@@ -361,10 +375,11 @@ def _display_run(index, nrun, run, file=None):
 
 
 def _display_runs(result):
-    runs = result._runs
+    runs = result.get_runs()
     nrun = len(runs)
     for index, run in enumerate(runs, 1):
-        _display_run(index, nrun, run)
+        samples, warmups = run
+        _display_run(result, index, nrun, samples, warmups)
 
 
 def _display_benchmark_avg(bench, verbose=0, file=None):

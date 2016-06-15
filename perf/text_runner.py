@@ -384,11 +384,12 @@ class TextRunner:
 
         for process in range(nprocess):
             run_bench = self._spawn_worker()
-            run = bench._get_worker_run(run_bench)
-            # FIXME: avoid _RunResult object
-            bench.add_run(run.samples, run.warmups)
+            samples, warmups = bench._get_worker_run(run_bench)
+            bench.add_run(samples, warmups)
             if verbose > 1:
-                perf._display_run(1 + process, nprocess, run, file=stream)
+                perf._display_run(bench, 1 + process, nprocess,
+                                  samples, warmups,
+                                  file=stream)
             else:
                 print(".", end='', file=stream)
                 stream.flush()

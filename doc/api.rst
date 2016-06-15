@@ -152,27 +152,35 @@ Benchmark
 
    .. method:: add_run(samples, warmups=None)
 
-      Add a run result.
+      Add the result of a benchmark run.
 
-      *samples* is a non-empty list of numbers (``float``). Usually, *samples*
-      is a list of number of seconds.
+      *samples* is a non-empty sequence of numbers (``float``) ``>= 0``.
+      Usually, *samples* is a list of number of seconds.
 
-      *warmups* is an optional list of numbers (``float``), it can be empty. It
-      is similar to *samples*: samples used to "warmup" the benchmark. These
-      numbers are ignored when computing the average and standard deviation.
+      *warmups* is an optional sequence of numbers (``float``) ``>= 0``, it can
+      be empty. It is similar to *samples*: samples used to "warmup" the
+      benchmark. These numbers are ignored when computing the average and
+      standard deviation.
+
+   .. method:: get_nrun()
+
+      Get the number of runs (``int``).
+
+   .. method:: get_runs()
+
+      Get runs as a list of ``(samples, warmups)`` tuples.
 
    .. method:: get_samples()
 
-      Get samples from all runs.
+      Get samples of all runs.
 
    .. method:: get_metadata()
 
-      Get metadata of all runs. Skip metadata with different values or not
-      existing in all run. Return an empty dictionary if :attr:`runs` is empty.
+      Get all metadata.
 
    .. method:: format(verbose=False)
 
-      Format runs as a string (``str``).
+      Format the result as a string (``str``).
 
    .. method:: json()
 
