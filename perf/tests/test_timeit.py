@@ -132,7 +132,7 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        self.assertIn('[-h] [-p PROCESSES] [-n NSAMPLE] [-w NWARMUP] [-l LOOPS] '
+        self.assertIn('[-h] [-p PROCESSES] [-n SAMPLES] [-w WARMUPS] [-l LOOPS] '
                       '[-v] [--json] [--json-file FILENAME] [--min-time MIN_TIME] '
                       '[--max-time MAX_TIME] [--raw] [--metadata] '
                       '[--affinity CPU_LIST] [-s SETUP] stmt [stmt ...]',
