@@ -75,27 +75,22 @@ Example::
 
     $ python3 -m perf stats telco.json
     Number of samples: 250
-    Minimum 26.4 ms
-    Maximum 27.3 ms
 
-    Mean + std dev: 26.9 ms +- 0.2 ms
-    Median +- std dev: 26.9 ms +- 0.2 ms
-    Median +- MAD: 26.9 ms +- 0.1 ms
+    Minimum: 26.4 ms (-1.8%)
+    Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
+    Maximum: 27.3 ms (+1.7%)
 
     Skewness: 0.04
 
 Values:
 
 * `Median <https://en.wikipedia.org/wiki/Median>`_
-* `Mean <https://en.wikipedia.org/wiki/Mean>`_
 * "std dev": `Standard deviation (standard error)
   <https://en.wikipedia.org/wiki/Standard_error>`_
-* "MAD": `Median Absolute Deviation
-  <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_
 * `Skewness <https://en.wikipedia.org/wiki/Skewness>`_.
 
 .. note::
-   The ``boltons`` optional dependency is needed for MAD and Skewness.
+   The ``boltons`` optional dependency is needed to compute the skewness.
 
 
 .. _hist_cmd:

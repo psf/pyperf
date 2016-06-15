@@ -187,12 +187,10 @@ class TestPerfCLI(unittest.TestCase):
     def test_stats(self):
         expected = ("""
             Number of samples: 250
-            Minimum 26.4 ms
-            Maximum 27.3 ms
 
+            Minimum: 26.4 ms (-1.8%)
             Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
-            Median +- MAD: 26.9 ms +- 0.1 ms (26.7 ms .. 27.0 ms)
-            Mean + std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
+            Maximum: 27.3 ms (+1.7%)
 
             Skewness: 0.04
         """)
