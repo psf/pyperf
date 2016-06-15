@@ -73,3 +73,29 @@ Use ``-v`` to enable the verbose mode::
 
 Use ``-vv`` (very verbose mode) to see even more details.
 
+timeit versus perf.timeit
+-------------------------
+
+The timeit module of the Python standard library has multiple issues:
+
+* It displays the minimum
+* It only runs the benchmark 3 times using a single process (1 run, 3 samples)
+* It disables the garbage collector
+
+perf.timeit is more reliable and gives a result more representative of a real
+use case:
+
+* It displays the average and the standard deviation
+* It runs the benchmark in multiple processes (default: 25 runs, 3 samples)
+* By default, it uses a first sample in each process to "warmup" the benchmark
+* It does not disable the garbage collector
+
+If a benchmark is run using a single process, we get the performance for one
+specific case, whereas many parameters are random:
+
+* Since Python 3, the hash function is now randomized and so the number of
+  hash collision in dictionaries is different in each process
+* Linux uses address space layout randomization (ASLR) by default and so
+  the performance of memory accesses is different in each process
+
+See the :ref:`Minimum versus average and standard deviation <min>` section.

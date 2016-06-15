@@ -1,8 +1,8 @@
 Examples
 ========
 
-bench_sample_func() example
----------------------------
+bench_sample_func()
+-------------------
 
 Microbenchmark using the :meth:`~perf.text_runner.TextRunner.bench_sample_func`
 method to measure the performance of ``dict[key]``:
@@ -22,8 +22,8 @@ takes less than 1 microsecond. In this case, the cost the outter loop is non
 negligible.
 
 
-bench_func() example
---------------------
+bench_func()
+------------
 
 Benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func` method to
 measure the time elasped when sleeping 1 ms:

@@ -98,6 +98,8 @@ Values:
    The ``boltons`` optional dependency is needed for MAD and Skewness.
 
 
+.. _hist_cmd:
+
 hist and hist_scipy
 -------------------
 
