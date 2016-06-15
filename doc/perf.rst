@@ -155,7 +155,8 @@ Python metadata:
 
 * ``python_implementation``: Python implementation. Examples: ``cpython``,
   ``pypy``, etc.
-* ``python_version``: Python version, ex: ``2.7.11``
+* ``python_version``: Python version, with the architecture (32 or 64 bits) if
+  available, ex: ``2.7.11 (64bit)``
 * ``python_executable``: path to the Python binary program
 * ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
   only set on Pyhon 2.7, Python 3.2 and older
@@ -179,5 +180,7 @@ Other:
 * ``date``: date when the benchmark started, formatted as ISO 8601
 * ``duration``: total duration of the benchmark
 * ``perf_version``: Version of the ``perf`` module
+* ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
+  available
 
 See the :func:`perf.metadata.collect_metadata` function.

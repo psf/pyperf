@@ -5,6 +5,7 @@ import platform
 import re
 import socket
 import sys
+import time
 
 try:
     # Optional dependency
@@ -15,17 +16,6 @@ except ImportError:
 import perf
 
 
-# FIXME: collect metadata of pybench:
-# * using timer: time.perf_counter
-# * timer: resolution=1e-09, implementation=clock_gettime(CLOCK_MONOTONIC)
-# Processor:      x86_64
-#    Python:
-#       Compiler:       GCC 5.3.1 20160406 (Red Hat 5.3.1-6)
-#       Bits:           64bit
-#       Build:          May 26 2016 12:16:43 (#default:d3d8faaaaade)
-
-
-# FIXME: move it Benchmark
 def _add(metadata, key, value):
     if value is None:
         return
@@ -51,7 +41,11 @@ def _collect_python_metadata(metadata):
         _add(metadata, 'python_implementation',
              platform.python_implementation().lower())
 
-    metadata['python_version'] = platform.python_version()
+    version = platform.python_version()
+    bits = platform.architecture()[0]
+    if bits:
+        version = '%s (%s)' % (version, bits)
+    metadata['python_version'] = version
     _add(metadata, 'python_executable', sys.executable)
 
     # Before PEP 393 (Python 3.3)
@@ -61,14 +55,6 @@ def _collect_python_metadata(metadata):
         else:
             unicode_impl = 'UCS-4'
         metadata['python_unicode'] = unicode_impl
-
-    # FIXME: add a way to hide less important metadata?
-    #try:
-    #    import sysconfig
-    #    cflags = sysconfig.get_config_var('CFLAGS')
-    #    _add(metadata, 'python_cflags', cflags)
-    #except ImportError:
-    #    pass
 
 
 def _read_proc(path):
@@ -149,5 +135,19 @@ def collect_metadata(metadata):
     date = datetime.datetime.now().isoformat()
     metadata['date'] = date.split('.', 1)[0]
     metadata['perf_version'] = perf.__version__
+
+    # perf.perf_counter() timer
+    if (hasattr(time, 'get_clock_info')
+       # check if it wasn't replaced
+       and perf.perf_counter == time.perf_counter):
+        info = time.get_clock_info('perf_counter')
+        metadata['timer'] = ('%s, resolution: %s'
+                             % (info.implementation,
+                                perf._format_timedelta(info.resolution)))
+    elif perf.perf_counter == time.clock:
+        metadata['timer'] = 'time.clock()'
+    elif perf.perf_counter == time.time:
+        metadata['timer'] = 'time.time()'
+
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)

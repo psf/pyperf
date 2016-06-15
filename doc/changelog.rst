@@ -10,6 +10,8 @@ Changes:
 * Add :meth:`perf.Benchmark.median` method, remove ``Benchmark.mean()`` method
 * ``Benchmark.get_metadata()`` method removed: use directly the
   :attr:`perf.Benchmark.metadata` attribute
+* Add ``timer`` metadata. ``python_version`` now also contains the architecture
+  (32 or 64 bits).
 
 
 Version 0.4 (2016-06-15)
