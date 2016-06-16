@@ -44,35 +44,6 @@ API
 Statistics
 ----------
 
-.. function:: perf.mean(samples)
-
-   Return the sample arithmetic mean of *samples*, a sequence or iterator of
-   real-valued numbers.
-
-   The arithmetic mean is the sum of the samples divided by the number of samples
-   points.  It is commonly called "the average", although it is only one of many
-   different mathematical averages.  It is a measure of the central location of
-   the samples.
-
-   If *samples* is empty, an exception will be raised.
-
-   On Python 3.4 and newer, it's :func:`statistics.mean`. On older versions,
-   it is implemented with ``float(sum(samples)) / len(samples)``.
-
-
-.. function:: perf.stdev(samples)
-
-   Return the sample standard deviation (the square root of the sample
-   variance).
-
-   ::
-
-      >>> perf.stdev([1.5, 2.5, 2.5, 2.75, 3.25, 4.75])
-      1.0810874155219827
-
-   On Python 3.4 and newer, it is implemented with :func:`statistics.stdev`.
-
-
 .. function:: perf.is_significant(samples1, samples2)
 
     Determine whether two samples differ significantly.
@@ -146,7 +117,7 @@ Benchmark
       Get raw samples of all runs as a list of raw samples tuples, including
       warmup samples.
 
-      Samples are raw values of all samples: use the :meth:`get_samples` method
+      Samples are raw values of all loops: use the :meth:`get_samples` method
       to get normalized samples per loop iteration.
 
    .. method:: get_samples()
@@ -181,11 +152,6 @@ Benchmark
       Load a result from the JSON file *file* which was created by
       :meth:`json_dump_into`.
 
-   .. method:: mean()
-
-      Get the `mean <https://en.wikipedia.org/wiki/Mean>`_ of
-      :meth:`get_samples`, also known as "average" or "arithmetic mean".
-
    .. method:: median()
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
@@ -205,8 +171,8 @@ Benchmark
 
    .. attribute:: metadata
 
-      Dictionary of metadata (``dict``): key=>value, where keys and values are
-      non-empty strings.
+      Dictionary of metadata (``dict``): key=>value, where keys and values must
+      be non-empty strings.
 
    .. attribute:: name
 
@@ -226,7 +192,7 @@ TextRunner
    *metadata* is passed to the :class:`~perf.Benchmark` constructor: see
    :ref:`Metadata <metadata>`.
 
-   *nsample*, *nwarmup* and *nprocess* are the default number of samples,
+   *samples*, *warmups* and *processes* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
    options.
 
@@ -237,7 +203,7 @@ TextRunner
    Samples are rounded to 9 digits using ``round(sample, 9)``. The most
    accurate clock has a precision of 1 nanosecond. But a time difference can
    produce more than 9 decimal digits after the dot, because of rounding issues
-   (time delta is stored as base 2, binary, but formatted in the base 10,
+   (time delta is stored in base 2, binary, but formatted in base 10,
    decimal).
 
    Methods:
@@ -316,8 +282,8 @@ TextRunner
       Command list arguments to call the program:
       ``(sys.executable, sys.argv[0])`` by default.
 
-      For example, "python3 -m perf.timeit" sets program_args to
-      ``('-m', 'perf.timeit')``.
+      For example, ``python3 -m perf.timeit`` sets program_args to
+      ``(sys.executable, '-m', 'perf.timeit')``.
 
 
 Metadata functions
