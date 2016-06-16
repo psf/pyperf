@@ -2,6 +2,7 @@
 perf
 ++++
 
+.. _install:
 
 Install perf
 ============
@@ -10,20 +11,21 @@ perf supports Python 2.7 and Python 3. Install perf on Python 3::
 
     python3 -m pip install perf
 
-On Python 2.7, the ``statistics`` dependency is installed.
+On Python 2.7, the ``statistics`` dependency is installed: backport of Python
+3.4 `statistics module <https://docs.python.org/dev/library/statistics.html>`_.
 
-Optional dependencies:
-
-* ``psutil``: needed for CPU affinity on Python 2.7
-* The ``-m perf hist_scipy`` command requires ``scipy`` and ``matplotlib``.
-  Command to install these packages on Fedora:
-  ``sudo dnf install -y python3-{scipy,matplotlib}``
-
-If you get the error ``'install_requires' must be a string ...``, you must
+If you get the error ``'install_requires' must be a string ...``: you must
 upgrade setuptools to support environment markers in ``install_requires`` of
 ``setup.py``. Try::
 
     python3 -m pip install -U setuptools
+
+Optional dependencies:
+
+* ``psutil``: needed for CPU affinity on Python 2.7
+* The :ref:`hist_scipy command <hist_scipy_cmd>` requires ``scipy`` and
+  ``matplotlib``.  Command to install these packages on Fedora:
+  ``sudo dnf install -y python3-{scipy,matplotlib}``
 
 
 .. _loops:

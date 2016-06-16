@@ -89,18 +89,22 @@ Values:
 
 .. _hist_cmd:
 
-hist and hist_scipy
--------------------
+hist
+----
 
 Render an histogram in text mode::
 
-    python3 -m perf hist filename.json
+    python3 -m perf hist
+        [-n BINS/--bins=BINS] [--extend]
+        filename.json [filename2.json ...]
 
-Render an histogram in graphical mode using the ``scipy`` module::
+* ``--bins`` is the number of histogram bars. By default, it renders up to 25
+  bars, or less depending on the terminal size.
+* ``--extend``: don't limit to 80 colums x 25 lines but fill the whole
+  terminal if it is wider.
 
-    python3 -m perf hist_scipy [-n BINS/--bins=BINS] filename.json
-
-* ``--bins`` is the number of histogram bars (default: 25)
+If multiple files are used, the histogram is normalized on the minimum and
+maximum of all files to be able to easily compare them.
 
 Example::
 
@@ -135,6 +139,21 @@ Example::
 See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 `Probability density function (PDF)
 <https://en.wikipedia.org/wiki/Probability_density_function>`_.
+
+
+.. _hist_scipy_cmd:
+
+hist_scipy
+----------
+
+Render an histogram in graphical mode using the ``scipy`` module::
+
+    python3 -m perf hist_scipy [-n BINS/--bins=BINS] filename.json
+
+* ``--bins`` is the number of histogram bars (default: 25)
+
+This command requires the ``scipy`` dependency: see :ref:`Install perf
+<install>`.
 
 
 metadata

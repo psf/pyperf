@@ -19,7 +19,11 @@ def create_parser():
     hist = subparsers.add_parser('hist')
     hist.add_argument('--extend', action="store_true",
                       help="Extend the histogram to fit the terminal")
-    hist.add_argument('filename', type=str,
+    hist.add_argument('-n', '--bins', type=int, default=None,
+                      help='Number of histogram bars (default: 25, or less '
+                           'depeding on the terminal size)')
+    hist.add_argument('filenames', metavar='filename',
+                      type=str, nargs='+',
                       help='Result JSON file')
 
     hist_scipy = subparsers.add_parser('hist_scipy')
@@ -61,7 +65,7 @@ def create_parser():
     return parser
 
 
-def parse_results(filename, default_name=None):
+def load_result(filename, default_name=None):
     if filename != '-':
         fp = open(filename)
     else:
@@ -201,42 +205,63 @@ def display_histogram_scipy(args, result):
     pylab.hist(samples, bins=args.bins, normed=True)
     pylab.show()
 
-def display_histogram_text(args, result):
+def display_histogram_text(args, results):
     import collections
     import shutil
 
-    samples = result.get_samples()
     if hasattr(shutil, 'get_terminal_size'):
         columns, lines = shutil.get_terminal_size()
     else:
         columns = 80
         lines = 25
 
-    bins = max(lines - 3, 3)
-    if not args.extend:
-        bins = min(bins, 25)
-    sample_k = float(max(samples) - min(samples)) / bins
+    bins = args.bins
+    if not bins:
+        bins = max(lines - 3, 3)
+        if not args.extend:
+            bins = min(bins, 25)
 
-    def bucket(value):
+    all_samples = []
+    for result in results:
+        all_samples.extend(result.get_samples())
+    all_min = min(all_samples)
+    all_max = max(all_samples)
+    sample_k = float(all_max - all_min) / bins
+    if not sample_k:
+        sample_k = 1.0
+
+    def sample_bucket(value):
         # round towards zero (ROUND_DOWN)
         return int(value / sample_k)
+    bucket_min = sample_bucket(all_min)
+    bucket_max = sample_bucket(all_max)
 
-    counter = collections.Counter([bucket(value) for value in samples])
-    count_max = max(counter.values())
-    count_width = len(str(count_max))
+    for index, result in enumerate(results):
+        if len(results) > 1:
+            print("[ %s ]" % result.name)
 
-    line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
-    width = columns - len(line)
-    if not args.extend:
-        width = min(width, 79)
-    width = max(width, 3)
-    line_k = float(width) / max(counter.values())
-    for ms in range(min(counter), max(counter)+1):
-        count = counter.get(ms, 0)
-        linelen = int(round(count * line_k))
-        text = result._format_sample(float(ms) * sample_k)
-        line = ('#' * linelen) or '|'
-        print("{}: {:>{}} {}".format(text, count, count_width, line))
+        samples = result.get_samples()
+
+        counter = collections.Counter([sample_bucket(value) for value in samples])
+        count_max = max(counter.values())
+        count_width = len(str(count_max))
+
+        line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
+        width = columns - len(line)
+        if not args.extend:
+            width = min(width, 79)
+        width = max(width, 3)
+        line_k = float(width) / max(counter.values())
+        for bucket in range(bucket_min, bucket_max + 1):
+            count = counter.get(bucket, 0)
+            linelen = int(round(count * line_k))
+            text = result._format_sample(float(bucket) * sample_k)
+            line = ('#' * linelen) or '|'
+            print("{}: {:>{}} {}".format(text, count, count_width, line))
+
+        if index != len(results) -1:
+            print()
+
 
 
 def display_stats(args, result):
@@ -278,23 +303,23 @@ def main():
     args = parser.parse_args()
     action = args.action
     if action == 'show':
-        result = parse_results(args.filename)
+        result = load_result(args.filename)
         display_result(args, result)
     elif action in ('compare', 'compare_to'):
-        ref_result = parse_results(args.ref_filename, '<file#1>')
+        ref_result = load_result(args.ref_filename, '<file#1>')
         results = [ref_result]
         for index, filename in enumerate(args.changed_filenames, 2):
-            result = parse_results(filename, '<file#%s>' % index)
+            result = load_result(filename, '<file#%s>' % index)
             results.append(result)
         compare_results(args, results, action == 'compare')
     elif action == 'hist':
-        result = parse_results(args.filename)
-        display_histogram_text(args, result)
+        results = [load_result(filename) for filename in args.filenames]
+        display_histogram_text(args, results)
     elif action == 'hist_scipy':
-        result = parse_results(args.filename)
+        result = load_result(args.filename)
         display_histogram_scipy(args, result)
     elif action == 'stats':
-        result = parse_results(args.filename)
+        result = load_result(args.filename)
         display_stats(args, result)
     elif action == 'metadata':
         collect_metadata()

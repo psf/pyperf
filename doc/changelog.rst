@@ -6,6 +6,8 @@ Version 0.5
 
 Changes:
 
+* The ``hist`` command now accepts multiple files
+* ``hist`` and ``hist_scipy`` commands got a new ``--bins`` option
 * Replace mean with median
 * Add :meth:`perf.Benchmark.median` method, remove ``Benchmark.mean()`` method
 * ``Benchmark.get_metadata()`` method removed: use directly the
