@@ -128,8 +128,24 @@ class TestPerfCLI(unittest.TestCase):
         expected = ('Reference (best): a\n'
                     '\n'
                     'Median +- std dev: [a] 1.50 sec +- 0.50 sec '
-                        '-> [b] 1.50 sec +- 0.50 sec: same speed\n'
+                        '-> [b] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
+        self.assertEqual(stdout.rstrip(),
+                         expected)
+
+    def test_compare_zero(self):
+        ref_result = self.create_bench((1.0, 1.5, 2.0), name='bench')
+        changed_result = self.create_bench((0, 0, 0), name='zero')
+
+        stdout = self.compare('compare', ref_result, changed_result)
+
+        expected = ('Reference (best): zero\n'
+                    '\n'
+                    'Median +- std dev: [zero] 0.00 ns +- 0.00 ns '
+                        '-> [bench] 1.50 sec +- 0.50 sec: '
+                        'incomparable (one result was zero)\n'
+                    # FIXME: raise an error on such corner case?
+                    'Significant (t=-5.20)')
         self.assertEqual(stdout.rstrip(),
                          expected)
 

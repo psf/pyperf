@@ -165,11 +165,13 @@ def compare_results(args, results, sort_results):
         # avoid division by zero
         if ref_avg and changed_avg:
             if changed_avg == ref_avg:
-                text = "%s: same speed" % (text,)
+                text = "%s: no change" % text
             elif changed_avg < ref_avg:
                 text = "%s: %.1fx faster" % (text, ref_avg /  changed_avg)
             else:
                 text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)
+        else:
+            text = "%s: incomparable (one result was zero)" % text
         print(text)
 
         # significant?

@@ -12,7 +12,7 @@ SLEEP = 'time.sleep(1e-3)'
 # The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
 # systems. The unit test doesn't test the system but more the output format.
 MIN_SAMPLE = 0.9 # ms
-MAX_SAMPLE = 5.0 # ms
+MAX_SAMPLE = 10.0 # ms
 MIN_MEAN = MIN_SAMPLE
 MAX_MEAN = MAX_SAMPLE / 2
 MAX_STDEV = 1.5 # ms
