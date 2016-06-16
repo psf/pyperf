@@ -155,6 +155,14 @@ Render an histogram in graphical mode using the ``scipy`` module::
 This command requires the ``scipy`` dependency: see :ref:`Install perf
 <install>`.
 
+Example::
+
+    $ python3 -m perf hist_scipy telco.json
+
+Output:
+
+.. image:: hist_scipy_telco.png
+
 
 metadata
 --------

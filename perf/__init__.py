@@ -142,6 +142,7 @@ class Benchmark(object):
     def warmups(self, value):
         if not(isinstance(value, int) and value >= 0):
             raise ValueError("warmups must be an int >= 0")
+        # FIXME: if runs is non-empty, check that warmups < len(self._runs[0])
         self._clear_stats_cache()
         self._warmups = value
 

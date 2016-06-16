@@ -199,7 +199,7 @@ def display_histogram_scipy(args, result):
 
     median = result.median()
     fit = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
-    pylab.plot(samples, fit, '-v', label='median-stdev')
+    pylab.plot(samples, fit, '-o', label='median-stdev')
 
     plt.legend(loc='upper right', shadow=True, fontsize='x-large')
     pylab.hist(samples, bins=args.bins, normed=True)
