@@ -14,7 +14,6 @@ On Python 2.7, the ``statistics`` dependency is installed.
 
 Optional dependencies:
 
-* ``boltons``: if available, ``stats`` command also computes the skewness
 * ``psutil``: needed for CPU affinity on Python 2.7
 * The ``-m perf hist_scipy`` command requires ``scipy`` and ``matplotlib``.
   Command to install these packages on Fedora:
@@ -84,7 +83,7 @@ Example of unstable benchmark because the number of loops is too low::
 Minimum versus average and standard deviation
 =============================================
 
-Articles:
+Links:
 
 * `Benchmarking: minimum vs average
   <http://blog.kevmod.com/2016/06/benchmarking-minimum-vs-average/>`_
@@ -92,6 +91,8 @@ Articles:
 * `My journey to stable benchmark, part 3 (average)
   <https://haypo.github.io/journey-to-stable-benchmark-average.html>`_
   (May 2016) by Victor Stinner
+* Median versus Meen: `perf issue #1: Use a better measures than average and
+  standard <https://github.com/haypo/perf/issues/1>`_
 
 
 Distribution

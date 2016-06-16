@@ -238,11 +238,6 @@ def display_histogram_text(args, result):
 
 
 def display_stats(args, result):
-    try:
-        import boltons.statsutils
-    except ImportError:
-        boltons = None
-
     fmt = result._format_sample
     samples = result.get_samples()
 
@@ -267,11 +262,6 @@ def display_stats(args, result):
           % fmt_stdev(median, statistics.stdev(samples, median)))
 
     print("Maximum: %s" % format_min(median, max(samples)))
-
-    if boltons is not None:
-        print()
-        print("Skewness: %.2f"
-              % boltons.statsutils.skewness(samples))
 
 
 def collect_metadata():

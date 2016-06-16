@@ -58,7 +58,7 @@ def main():
         'classifiers': CLASSIFIERS,
         'packages': ['perf', 'perf.tests'],
         'install_requires': ["statistics; python_version < '3.4'"],
-        # optional dependencies:
+        # Optional dependencies:
         # 'psutil'
         # ['matplotlib', 'scipy']
     }

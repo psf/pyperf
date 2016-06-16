@@ -80,17 +80,11 @@ Example::
     Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
     Maximum: 27.3 ms (+1.7%)
 
-    Skewness: 0.04
-
 Values:
 
 * `Median <https://en.wikipedia.org/wiki/Median>`_
 * "std dev": `Standard deviation (standard error)
   <https://en.wikipedia.org/wiki/Standard_error>`_
-* `Skewness <https://en.wikipedia.org/wiki/Skewness>`_.
-
-.. note::
-   The ``boltons`` optional dependency is needed to compute the skewness.
 
 
 .. _hist_cmd:
