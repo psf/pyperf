@@ -91,7 +91,7 @@ Links:
 * `My journey to stable benchmark, part 3 (average)
   <https://haypo.github.io/journey-to-stable-benchmark-average.html>`_
   (May 2016) by Victor Stinner
-* Median versus Meen: `perf issue #1: Use a better measures than average and
+* Median versus Mean: `perf issue #1: Use a better measures than average and
   standard <https://github.com/haypo/perf/issues/1>`_
 
 
