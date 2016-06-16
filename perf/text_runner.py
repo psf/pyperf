@@ -236,7 +236,7 @@ class TextRunner:
 
             self.args.affinity = perf._format_cpu_list(cpus)
         else:
-            cpus = _parse_cpu_list(cpus)
+            cpus = perf._parse_cpu_list(cpus)
             if self.args.verbose:
                 print("Pin process to CPUs: %s"
                       % perf._format_cpu_list(cpus),

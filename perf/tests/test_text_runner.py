@@ -6,9 +6,6 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
-BUILTIN_OPEN = 'builtins.open' if perf._PY3 else '__builtin__.open'
-
-
 def check_args(loops, a, b):
     if a != 1:
         raise ValueError
@@ -133,45 +130,39 @@ class TestTextRunner(unittest.TestCase):
             self.assertEqual(tmp.read().decode('utf-8'),
                              result.json())
 
+    def test_cpu_affinity_setaffinity_isolcpus(self):
+        runner = perf.text_runner.TextRunner()
+        runner.parse_args(['-v'])
+
+        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
+            with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
+                runner._cpu_affinity()
+        self.assertEqual(runner.args.affinity, '1-2')
+        mock_setaffinity.assert_called_once_with(0, [1, 2])
+
+    def test_cpu_affinity_setaffinity_without_isolcpus(self):
+        runner = perf.text_runner.TextRunner()
+        runner.parse_args(['-v'])
+
+        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
+            with mock.patch('perf._get_isolated_cpus', return_value=None):
+                runner._cpu_affinity()
+        self.assertEqual(mock_setaffinity.call_count, 0)
+
     def test_cpu_affinity_psutil_isolcpus(self):
         runner = perf.text_runner.TextRunner()
-        runner.parse_args([])
+        runner.parse_args(['-v'])
 
         with mock.patch('perf.text_runner.os') as mock_os:
             del mock_os.sched_setaffinity
 
-            with mock.patch('psutil.Process') as mock_process:
-                with mock.patch(BUILTIN_OPEN) as mock_open:
-                    mock_file = mock_open.return_value
-                    mock_file.readline.return_value = '1-2'
+            with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
+                with mock.patch('psutil.Process') as mock_process:
                     runner._cpu_affinity()
             self.assertEqual(runner.args.affinity, '1-2')
 
             cpu_affinity = mock_process.return_value.cpu_affinity
             cpu_affinity.assert_called_once_with([1, 2])
-
-    def test_cpu_affinity_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
-        runner.parse_args([])
-
-        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
-            with mock.patch(BUILTIN_OPEN) as mock_open:
-                mock_file = mock_open.return_value
-                mock_file.readline.return_value = '1-2'
-                runner._cpu_affinity()
-        self.assertEqual(runner.args.affinity, '1-2')
-        mock_setaffinity.assert_called_once_with(0, [1, 2])
-
-    def test_cpu_affinity_without_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
-        runner.parse_args([])
-
-        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
-            with mock.patch(BUILTIN_OPEN) as mock_open:
-                mock_file = mock_open.return_value
-                mock_file.readline.return_value = ''
-                runner._cpu_affinity()
-        self.assertEqual(mock_setaffinity.call_count, 0)
 
 
 if __name__ == "__main__":

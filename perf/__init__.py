@@ -537,8 +537,13 @@ def _format_cpu_list(cpus):
 
 
 def _parse_cpu_list(cpu_list):
+    cpu_list = cpu_list.strip()
+    if not cpu_list:
+        return
+
     cpus = []
     for part in cpu_list.split(','):
+        part = part.strip()
         if '-' in part:
             parts = part.split('-', 1)
             first = int(parts[0])
@@ -561,10 +566,6 @@ def _get_isolated_cpus():
             isolated = fp.readline().rstrip()
     except (OSError, IOError):
         # missing file
-        return
-
-    if not isolated:
-        # no CPU isolated
         return
 
     return _parse_cpu_list(isolated)

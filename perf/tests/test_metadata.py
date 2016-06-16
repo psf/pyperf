@@ -34,34 +34,45 @@ class TestMetadata(unittest.TestCase):
         perf.metadata.collect_metadata(metadata)
         check_all_metadata(self, metadata)
 
-    def test_cpu_affinity(self):
+    def test_cpu_affinity_getaffinity(self):
         # affinity=2/4 CPUs
         with mock.patch('os.sched_getaffinity',
                         return_value={2, 3}, create=True):
             with mock.patch('os.cpu_count', return_value=4, create=True):
-                metadata = {}
-                perf.metadata.collect_metadata(metadata)
+                with mock.patch('perf._get_isolated_cpus', return_value=None):
+                    metadata = {}
+                    perf.metadata.collect_metadata(metadata)
         self.assertEqual(metadata['cpu_affinity'], '2-3')
 
         # affinity=all CPUs: ignore metadata
         with mock.patch('os.sched_getaffinity',
                         return_value={0, 1}, create=True):
             with mock.patch('os.cpu_count', return_value=2, create=True):
-                metadata = {}
-                perf.metadata.collect_metadata(metadata)
+                with mock.patch('perf._get_isolated_cpus', return_value=None):
+                    metadata = {}
+                    perf.metadata.collect_metadata(metadata)
         self.assertNotIn('cpu_affinity', metadata)
 
+    def test_cpu_affinity_isolated(self):
+        with mock.patch('os.sched_getaffinity',
+                        return_value={2, 3}, create=True):
+            with mock.patch('os.cpu_count', return_value=4, create=True):
+                with mock.patch('perf._get_isolated_cpus', return_value=[2, 3]):
+                    metadata = {}
+                    perf.metadata.collect_metadata(metadata)
+        self.assertEqual(metadata['cpu_affinity'], '2-3 (isolated)')
+
     def test_cpu_affinity_psutil(self):
+        metadata = {}
         with mock.patch('perf.metadata.os') as mock_os:
             del mock_os.sched_getaffinity
             mock_os.cpu_count.return_value = 4
 
             with mock.patch('psutil.Process') as mock_process:
                 mock_process.return_value.cpu_affinity.return_value = [2, 3]
-
-                metadata = {}
-                perf.metadata.collect_metadata(metadata)
-            self.assertEqual(metadata['cpu_affinity'], '2-3')
+                with mock.patch('perf._get_isolated_cpus', return_value=None):
+                    perf.metadata.collect_metadata(metadata)
+        self.assertEqual(metadata['cpu_affinity'], '2-3')
 
 
 if __name__ == "__main__":

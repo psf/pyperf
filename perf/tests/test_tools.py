@@ -1,6 +1,7 @@
 import unittest
 
 import perf
+from perf.tests import mock
 
 
 class TestClocks(unittest.TestCase):
@@ -85,14 +86,6 @@ class TestTools(unittest.TestCase):
                          '10^4 units')
         self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
                          '10001 units')
-
-    def test_format_cpu_list(self):
-        self.assertEqual(perf._format_cpu_list([0]),
-                         '0')
-        self.assertEqual(perf._format_cpu_list([0, 1, 5, 6]),
-                         '0-1,5-6')
-        self.assertEqual(perf._format_cpu_list([1, 3, 7]),
-                         '1,3,7')
 
 
 class TestResult(unittest.TestCase):
@@ -197,6 +190,52 @@ class TestResult(unittest.TestCase):
 
         self.check_runs(bench, samples, 3.0)
 
+
+
+class CPUToolsTests(unittest.TestCase):
+    def test_parse_cpu_list(self):
+        self.assertIsNone(perf._parse_cpu_list(''))
+        self.assertEqual(perf._parse_cpu_list('0'),
+                         [0])
+        self.assertEqual(perf._parse_cpu_list('0-1,5-6'),
+                         [0, 1, 5, 6])
+        self.assertEqual(perf._parse_cpu_list('1,3,7'),
+                         [1, 3, 7])
+
+        # tolerate spaces
+        self.assertEqual(perf._parse_cpu_list(' 1 , 2 '),
+                         [1, 2])
+
+        # errors
+        self.assertRaises(ValueError, perf._parse_cpu_list, 'x')
+        self.assertRaises(ValueError, perf._parse_cpu_list, '1,')
+
+    def test_format_cpu_list(self):
+        self.assertEqual(perf._format_cpu_list([0]),
+                         '0')
+        self.assertEqual(perf._format_cpu_list([0, 1, 5, 6]),
+                         '0-1,5-6')
+        self.assertEqual(perf._format_cpu_list([1, 3, 7]),
+                         '1,3,7')
+
+    def test_get_isolated_cpus(self):
+        BUILTIN_OPEN = 'builtins.open' if perf._PY3 else '__builtin__.open'
+
+        def check_get(line):
+            with mock.patch(BUILTIN_OPEN) as mock_open:
+                mock_file = mock_open.return_value
+                mock_file.readline.return_value = line
+                return perf._get_isolated_cpus()
+
+        # no isolated CPU
+        self.assertIsNone(check_get(''))
+
+        # isolated CPUs
+        self.assertEqual(check_get('1-2'), [1, 2])
+
+        # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
+        with mock.patch(BUILTIN_OPEN, side_effect=OSError):
+            self.assertIsNone(perf._get_isolated_cpus())
 
 
 class MiscTests(unittest.TestCase):
