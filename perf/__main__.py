@@ -23,8 +23,8 @@ def create_parser():
                       help='Result JSON file')
 
     hist_scipy = subparsers.add_parser('hist_scipy')
-    hist_scipy.add_argument('--scipy', action="store_true",
-                            help="Draw the histogram using numy, scipy and pylab")
+    hist_scipy.add_argument('-n', '--bins', type=int, default=25,
+                            help="Number of histogram bars (default: 25)")
     hist_scipy.add_argument('filename', type=str,
                             help='Result JSON file')
 
@@ -198,7 +198,7 @@ def display_histogram_scipy(args, result):
     pylab.plot(samples, fit, '-v', label='median-stdev')
 
     plt.legend(loc='upper right', shadow=True, fontsize='x-large')
-    pylab.hist(samples, bins=25, normed=True)
+    pylab.hist(samples, bins=args.bins, normed=True)
     pylab.show()
 
 def display_histogram_text(args, result):

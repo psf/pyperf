@@ -98,7 +98,9 @@ Render an histogram in text mode::
 
 Render an histogram in graphical mode using the ``scipy`` module::
 
-    python3 -m perf hist_scipy filename.json
+    python3 -m perf hist_scipy [-n BINS/--bins=BINS] filename.json
+
+* ``--bins`` is the number of histogram bars (default: 25)
 
 Example::
 
