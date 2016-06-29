@@ -97,7 +97,7 @@ class Benchmark(object):
         self.warmups = warmups
 
         # list of samples where samples are a non-empty tuples
-        # of float >= 0, see add_run()
+        # of float > 0, see add_run()
         self._runs = []
 
         self._clear_stats_cache()
@@ -153,14 +153,16 @@ class Benchmark(object):
     def median(self):
         if self._median is None:
             self._median = statistics.median(self.get_samples())
+            # add_run() ensures that all samples are greater than zero
+            assert self._median != 0
         return self._median
 
     def add_run(self, samples):
         if (not samples
-        or any(not(isinstance(value, (int, float)) and value >= 0)
+        or any(not(isinstance(value, (int, float)) and value > 0)
                 for value in samples)):
             raise ValueError("samples must be a non-empty list "
-                             "of float >= 0")
+                             "of float > 0")
 
         if self.warmups is not None and (len(samples) - self.warmups) < 1:
             raise ValueError("provided %s samples, but benchmark uses "

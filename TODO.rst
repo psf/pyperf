@@ -11,7 +11,6 @@ TODO
   * use them to detect unstable benchmark
 
 * Remove min/max from very verbose but add --stats to display statistics?
-* add_run(): reject sample=0?
 * round(sample, 9): does it have an impact on statistics?
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29

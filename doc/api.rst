@@ -96,8 +96,11 @@ Benchmark
 
       Add the raw result of a benchmark run.
 
-      *samples* is a non-empty sequence of numbers (``float``) ``>= 0``.
-      Usually, *samples* is a list of number of seconds.
+      *samples* is a non-empty sequence of numbers (``float``) greater than
+      zero.  Usually, *samples* is a list of number of seconds.
+
+      Samples must not be equal to zero. If a sample is zero, use more loop
+      iterations (inner and/or outter-loops).
 
       *samples* must contains at least ``warmups + 1`` samples. The first
       :attr:`warmups` samples are excluded from the :meth:`get_samples` result.
@@ -156,6 +159,8 @@ Benchmark
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
       :meth:`get_samples`.
+
+      The median cannot be zero: :meth:`add_run` rejects null samples.
 
    Attributes:
 

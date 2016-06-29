@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.6
+-----------
+
+* :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
+
+
 Version 0.5 (2016-06-29)
 ------------------------
 
