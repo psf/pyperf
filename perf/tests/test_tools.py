@@ -249,7 +249,7 @@ class MiscTests(unittest.TestCase):
         doc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'doc')
         doc_path = os.path.realpath(doc_path)
 
-        old_path = sys.path.copy()
+        old_path = sys.path[:]
         try:
             sys.path.insert(0, doc_path)
             import conf
