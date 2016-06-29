@@ -1,3 +1,5 @@
+import os.path
+import sys
 import unittest
 
 import perf
@@ -239,9 +241,22 @@ class CPUToolsTests(unittest.TestCase):
 
 
 class MiscTests(unittest.TestCase):
-    def test_version(self):
+    def test_setup_version(self):
         import setup
         self.assertEqual(perf.__version__, setup.VERSION)
+
+    def test_doc_version(self):
+        doc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'doc')
+        doc_path = os.path.realpath(doc_path)
+
+        old_path = sys.path.copy()
+        try:
+            sys.path.insert(0, doc_path)
+            import conf
+            self.assertEqual(perf.__version__, conf.version)
+            self.assertEqual(perf.__version__, conf.release)
+        finally:
+            sys.path[:] = old_path
 
 
 if __name__ == "__main__":
