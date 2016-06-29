@@ -5,7 +5,7 @@ import sys
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 
-__version__ = '0.5'
+__version__ = '0.6'
 _PY3 = (sys.version_info >= (3,))
 _JSON_VERSION = 1
 
