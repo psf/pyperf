@@ -4,7 +4,7 @@ import sys
 
 import statistics
 
-import perf
+import perf.text_runner
 
 
 def create_parser():
@@ -87,14 +87,14 @@ def load_result(filename, default_name=None):
 
 def display_result(args, result):
     if args.metadata:
-        perf._display_metadata(result.metadata)
+        perf.text_runner._display_metadata(result.metadata)
         print()
 
     if args.verbose > 1:
-        perf._display_runs(result)
+        perf.text_runner._display_runs(result)
         print()
 
-    perf._display_benchmark_avg(result, verbose=args.verbose)
+    perf.text_runner._display_benchmark_avg(result, verbose=args.verbose)
 
 
 def _result_sort_key(result):
@@ -140,7 +140,7 @@ def compare_results(args, results, sort_results):
         metadatas = [result.metadata for result in results]
 
         common_metadata = _common_metadata(metadatas)
-        perf._display_metadata(common_metadata,
+        perf.text_runner._display_metadata(common_metadata,
                                header='Common metadata:')
         print()
 
@@ -149,7 +149,7 @@ def compare_results(args, results, sort_results):
                 metadata.pop(key, None)
 
         for result, metadata in zip(results, metadatas):
-            perf._display_metadata(metadata,
+            perf.text_runner._display_metadata(metadata,
                                    header='%s metadata:' % result.name)
             print()
 
@@ -261,38 +261,11 @@ def display_histogram_text(args, results):
 
 
 
-def display_stats(args, result):
-    fmt = result._format_sample
-    samples = result.get_samples()
-
-    nsample = len(samples)
-    print("Number of samples: %s" % perf._format_number(nsample))
-    print()
-
-    median = result.median()
-
-    def format_min(median, value):
-        return "%s (%+.1f%%)" % (fmt(value), (value - median) * 100 / median)
-
-    print("Minimum: %s" % format_min(median, min(samples)))
-
-    def fmt_stdev(value, dev):
-        left = median - dev
-        right = median + dev
-        return ("%s +- %s (%s .. %s)"
-                % perf._format_timedeltas((median, dev, left, right)))
-
-    print("Median +- std dev: %s"
-          % fmt_stdev(median, statistics.stdev(samples, median)))
-
-    print("Maximum: %s" % format_min(median, max(samples)))
-
-
 def collect_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
     perf_metadata.collect_metadata(metadata)
-    perf._display_metadata(metadata)
+    perf.text_runner._display_metadata(metadata)
 
 
 def main():
@@ -317,7 +290,7 @@ def main():
         display_histogram_scipy(args, result)
     elif action == 'stats':
         result = load_result(args.filename)
-        display_stats(args, result)
+        perf.text_runner._display_stats(result)
     elif action == 'metadata':
         collect_metadata()
     else:

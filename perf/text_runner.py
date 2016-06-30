@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+import statistics   # Python 3.4+, or backport on Python 2.7
+
 try:
     # Optional dependency
     import psutil
@@ -60,6 +62,114 @@ def _bench_from_subprocess(args):
                            % (args[0], proc.returncode))
 
     return perf.Benchmark.json_load(stdout)
+
+
+def _display_run(bench, index, nrun, samples, file=None):
+    warmups = samples[:bench.warmups]
+    samples = samples[bench.warmups:]
+
+    text = ', '.join(bench._format_samples(samples))
+    text = 'raw samples (%s): %s' % (len(samples), text)
+    if warmups:
+        text = ('warmup (%s): %s; %s'
+                % (len(warmups),
+                   ', '.join(bench._format_samples(warmups)),
+                   text))
+
+    text = "Run %s/%s: %s" % (index, nrun, text)
+    print(text, file=file)
+
+
+def _display_runs(result):
+    runs = result.get_runs()
+    nrun = len(runs)
+    for index, samples in enumerate(runs, 1):
+        _display_run(result, index, nrun, samples)
+
+
+def _display_stats(result):
+    fmt = result._format_sample
+    samples = result.get_samples()
+
+    nsample = len(samples)
+    print("Number of samples: %s" % perf._format_number(nsample))
+    print()
+
+    median = result.median()
+
+    def format_min(median, value):
+        return "%s (%+.1f%%)" % (fmt(value), (value - median) * 100 / median)
+
+    print("Minimum: %s" % format_min(median, min(samples)))
+
+    def fmt_stdev(value, dev):
+        left = median - dev
+        right = median + dev
+        return ("%s +- %s (%s .. %s)"
+                % perf._format_timedeltas((median, dev, left, right)))
+
+    print("Median +- std dev: %s"
+          % fmt_stdev(median, statistics.stdev(samples, median)))
+
+    print("Maximum: %s" % format_min(median, max(samples)))
+
+
+def _display_benchmark_avg(bench, verbose=0, file=None):
+    if not bench.get_nrun():
+        raise ValueError("benchmark has no run")
+    samples = bench.get_samples()
+
+    # Display a warning if the standard deviation is larger than 10%
+    median = bench.median()
+    # Avoid division by zero
+    if median and len(samples) > 1:
+        k = statistics.stdev(samples) / median
+        if k > 0.10:
+            if k > 0.20:
+                print("ERROR: the benchmark is very unstable, the standard "
+                      "deviation is very high (stdev/median: %.0f%%)!"
+                      % (k * 100),
+                      file=file)
+            else:
+                print("WARNING: the benchmark seems unstable, the standard "
+                      "deviation is high (stdev/median: %.0f%%)"
+                      % (k * 100),
+                      file=file)
+            print("Try to rerun the benchmark with more runs, samples "
+                  "and/or loops",
+                  file=file)
+            print(file=file)
+        elif verbose > 1:
+            print("Standard deviation / median: %.0f%%" % (k * 100), file=file)
+
+    # Check that the shortest sample took at least 1 ms
+    shortest = min(bench._get_raw_samples())
+    text = bench._format_sample(shortest)
+    if shortest < 1e-3:
+        if shortest < 1e-6:
+            print("ERROR: the benchmark may be very unstable, "
+                  "the shortest raw sample only took %s" % text)
+        else:
+            print("WARNING: the benchmark may be unstable, "
+                  "the shortest raw sample only took %s" % text)
+        print("Try to rerun the benchmark with more loops "
+              "or increase --min-time",
+              file=file)
+        print(file=file)
+    elif verbose > 1:
+        print("Shortest raw sample: %s" % text, file=file)
+        print(file=file)
+
+    # Display the average +- stdev
+    print("Median +- std dev: %s" % bench.format(verbose=verbose), file=file)
+
+
+def _display_metadata(metadata, file=None, header="Metadata:"):
+    if not metadata:
+        return
+    print(header, file=file)
+    for key, value in sorted(metadata.items()):
+        print("- %s: %s" % (key, value), file=file)
 
 
 class TextRunner:
@@ -193,7 +303,7 @@ class TextRunner:
         stream = self._stream()
 
         if self.args.metadata:
-            perf._display_metadata(bench.metadata, file=stream)
+            _display_metadata(bench.metadata, file=stream)
             print(file=stream)
 
         print("Median +- std dev: %s" % bench.format(self.args.verbose),
@@ -396,8 +506,8 @@ class TextRunner:
             samples = bench._get_worker_samples(run_bench)
             bench.add_run(samples)
             if verbose > 1:
-                perf._display_run(bench, 1 + process, nprocess,
-                                  samples, file=stream)
+                _display_run(bench, 1 + process, nprocess,
+                             samples, file=stream)
             else:
                 print(".", end='', file=stream)
                 stream.flush()
@@ -413,10 +523,10 @@ class TextRunner:
             bench.metadata['duration'] = '%.1f sec' % secs
 
         if self.args.metadata:
-            perf._display_metadata(bench.metadata, file=stream)
+            _display_metadata(bench.metadata, file=stream)
             print(file=stream)
 
-        perf._display_benchmark_avg(bench, verbose=verbose, file=stream)
+        _display_benchmark_avg(bench, verbose=verbose, file=stream)
 
         stream.flush()
         _json_dump(bench, self.args)
