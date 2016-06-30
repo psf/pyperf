@@ -169,8 +169,12 @@ def _display_histogram(results, bins=20, extend=False, file=None):
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
-        line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
-        width = columns - len(line)
+        sample_width = max([len(result._format_sample(bucket * sample_k))
+                            for bucket in range(bucket_min, bucket_max + 1)])
+        width = columns - sample_width
+
+        line = ': %s #' % count_max
+        width = columns - (sample_width + len(line))
         if not extend:
             width = min(width, 79)
         width = max(width, 3)
@@ -178,9 +182,11 @@ def _display_histogram(results, bins=20, extend=False, file=None):
         for bucket in range(bucket_min, bucket_max + 1):
             count = counter.get(bucket, 0)
             linelen = int(round(count * line_k))
-            text = result._format_sample(float(bucket) * sample_k)
+            text = result._format_sample(bucket * sample_k)
             line = ('#' * linelen) or '|'
-            print("{}: {:>{}} {}".format(text, count, count_width, line), file=file)
+            print("{:>{}}: {:>{}} {}".format(text, sample_width,
+                                             count, count_width, line),
+                  file=file)
 
         if index != len(results) -1:
             print(file=file)
