@@ -27,20 +27,12 @@ Example with metadata::
 Example in verbose mode::
 
     $ python3 -m perf show -v run.json
-    Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
-
-Example in very verbose mode::
-
-    $ python3 -m perf show -vv run.json
     Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
     Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
     (...)
     Run 25/25: warmup (1): 602 ms; raw samples (3): 649 ms, 642 ms, 607 ms
 
-    Standard deviation: 4%
-    Shortest raw sample: 545 ms
-
-    Average: 56.3 ns +- 2.5 ns (min: 54.5 ns, max: 64.9 ns) (25 runs x 3 samples; 1 warmup)
+    Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
 
 
 compare and compare_to

@@ -58,8 +58,8 @@ def create_parser():
 
     # Add arguments to multiple commands
     for cmd in (show, compare, compare_to):
-        cmd.add_argument('-v', '--verbose', action='count', default=0,
-                         help='an integer for the accumulator')
+        cmd.add_argument('-v', '--verbose', action="store_true",
+                         help='enable verbose mode')
 
     for cmd in (show, compare, compare_to):
         cmd.add_argument('-m', '--metadata', dest='metadata',
@@ -206,11 +206,11 @@ def main():
     action = args.action
     if action == 'show':
         result = load_result(args.filename)
-        perf.text_runner._display_benchmark(result, verbose=args.verbose,
+        perf.text_runner._display_benchmark(result,
                                             metadata=args.metadata,
                                             hist=args.hist,
                                             stats=args.stats,
-                                            runs=(args.verbose > 1))
+                                            runs=bool(args.verbose))
     elif action in ('compare', 'compare_to'):
         ref_result = load_result(args.ref_filename, '<file#1>')
         results = [ref_result]

@@ -29,7 +29,6 @@ explains the purpose of these parameters and how to configure them.
 Options:
 
 * ``-v`` enables verbose mode
-* ``-vv`` enables very verbose mode
 * ``--metadata`` displays metadata
 * ``--hist`` displays an histogram of samples
 * ``--stats`` displays statistics (min, max, ...)
@@ -54,27 +53,24 @@ Example::
 
     $ python3 -m perf.timeit 1+1
     .........................
-    Average: 18.3 ns +- 0.3 ns
+    Median +- std dev: 11.7 ns +- 0.1 ns
 
 Use ``-v`` to enable the verbose mode::
 
     $ python3 -m perf.timeit -v 1+1
-    .........................
-    Metadata:
-    - aslr: enabled
-    - cpu_count: 4
-    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
-    - python_executable: /usr/bin/python3
-    - python_implementation: cpython
-    - python_version: 3.4.3
-    - timeit_loops: 10^7
-    - timeit_setup: 'pass'
-    - timeit_stmt: '1+1'
+    calibration: 1 loop: 983 ns
+    calibration: 10 loops: 1.47 us
+    ...
+    calibration: 10^7 loops: 138 ms
+    calibration: use 10^7 loops
+    Run 1/25: warmup (1): 117 ms; raw samples (3): 117 ms, 119 ms, 119 ms
+    Run 2/25: warmup (1): 117 ms; raw samples (3): 118 ms, 117 ms, 116 ms
+    ...
+    Run 25/25: warmup (1): 143 ms; raw samples (3): 115 ms, 115 ms, 117 ms
 
-    Average: 18.3 ns +- 0.3 ns (25 runs x 3 samples; 1 warmup)
+    Median +- std dev: 11.7 ns +- 0.2 ns
 
-Use ``-vv`` (very verbose mode) to see even more details.
+
 
 timeit versus perf.timeit
 -------------------------

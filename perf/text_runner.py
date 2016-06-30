@@ -192,7 +192,7 @@ def _display_histogram(results, bins=20, extend=False, file=None):
             print(file=file)
 
 
-def _warn_if_bench_unstable(bench, verbose=0, file=None):
+def _warn_if_bench_unstable(bench, file=None):
     if not bench.get_nrun():
         raise ValueError("benchmark has no run")
     samples = bench.get_samples()
@@ -242,8 +242,7 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
         print("- %s: %s" % (key, value), file=file)
 
 
-def _display_benchmark(bench, verbose=0, file=None,
-                       check_unstable=True, metadata=False,
+def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
                        runs=False, stats=False, hist=False):
     if runs:
         runs = bench.get_runs()
@@ -265,7 +264,7 @@ def _display_benchmark(bench, verbose=0, file=None,
         print(file=file)
 
     if check_unstable:
-        _warn_if_bench_unstable(bench, verbose=verbose, file=file)
+        _warn_if_bench_unstable(bench, file=file)
 
     print("Median +- std dev: %s" % bench.format(), file=file)
 
@@ -325,7 +324,7 @@ class TextRunner:
                             help='number of loops per sample, 0 means '
                                  'automatic calibration (default: %s)'
                                  % loops)
-        parser.add_argument('-v', '--verbose', action='count', default=0,
+        parser.add_argument('-v', '--verbose', action="store_true",
                             help='enable verbose mode')
         parser.add_argument('--json', action='store_true',
                             help='write results encoded to JSON into stdout')
@@ -366,7 +365,7 @@ class TextRunner:
             loops = 10 ** index
 
             dt = sample_func(loops)
-            if self.args.verbose > 1:
+            if self.args.verbose:
                 print("calibration: %s: %s"
                       % (perf._format_number(loops, 'loop'),
                          perf._format_timedelta(dt)),
@@ -378,7 +377,7 @@ class TextRunner:
                 break
             if dt >= min_dt:
                 break
-        if self.args.verbose > 1:
+        if self.args.verbose:
             print("calibration: use %s" % perf._format_number(loops, 'loop'),
                   file=stream)
 
@@ -595,7 +594,6 @@ class TextRunner:
 
         # Display the average +- stdev
         _display_benchmark(bench,
-                           verbose=self.args.verbose,
                            file=stream,
                            check_unstable=check_unstable,
                            metadata=self.args.metadata,
@@ -614,7 +612,7 @@ class TextRunner:
             run_bench = self._spawn_worker()
             samples = bench._get_worker_samples(run_bench)
             bench.add_run(samples)
-            if verbose > 1:
+            if verbose:
                 _display_run(bench, 1 + process, nprocess,
                              samples, file=stream)
             else:
