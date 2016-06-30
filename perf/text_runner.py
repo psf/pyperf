@@ -107,6 +107,63 @@ def _display_stats(result, file=None):
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
 
+def _display_histogram(results, bins=10, extend=False, file=None):
+    import collections
+    import shutil
+
+    if hasattr(shutil, 'get_terminal_size'):
+        columns, lines = shutil.get_terminal_size()
+    else:
+        columns = 80
+        lines = 25
+
+    if not bins:
+        bins = max(lines - 3, 3)
+        if not extend:
+            bins = min(bins, 25)
+
+    all_samples = []
+    for result in results:
+        all_samples.extend(result.get_samples())
+    all_min = min(all_samples)
+    all_max = max(all_samples)
+    sample_k = float(all_max - all_min) / bins
+    if not sample_k:
+        sample_k = 1.0
+
+    def sample_bucket(value):
+        # round towards zero (ROUND_DOWN)
+        return int(value / sample_k)
+    bucket_min = sample_bucket(all_min)
+    bucket_max = sample_bucket(all_max)
+
+    for index, result in enumerate(results):
+        if len(results) > 1:
+            print("[ %s ]" % result.name, file=file)
+
+        samples = result.get_samples()
+
+        counter = collections.Counter([sample_bucket(value) for value in samples])
+        count_max = max(counter.values())
+        count_width = len(str(count_max))
+
+        line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
+        width = columns - len(line)
+        if not extend:
+            width = min(width, 79)
+        width = max(width, 3)
+        line_k = float(width) / max(counter.values())
+        for bucket in range(bucket_min, bucket_max + 1):
+            count = counter.get(bucket, 0)
+            linelen = int(round(count * line_k))
+            text = result._format_sample(float(bucket) * sample_k)
+            line = ('#' * linelen) or '|'
+            print("{}: {:>{}} {}".format(text, count, count_width, line), file=file)
+
+        if index != len(results) -1:
+            print(file=file)
+
+
 def _warn_if_bench_unstable(bench, verbose=0, file=None):
     if not bench.get_nrun():
         raise ValueError("benchmark has no run")
@@ -164,7 +221,7 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
 
 def _display_benchmark(bench, verbose=0, file=None,
                        check_unstable=True, metadata=False,
-                       runs=False, stats=False):
+                       runs=False, stats=False, hist=False):
     if runs:
         runs = bench.get_runs()
         nrun = len(runs)
@@ -174,6 +231,10 @@ def _display_benchmark(bench, verbose=0, file=None,
 
     if metadata:
         _display_metadata(bench.metadata, file=file)
+        print(file=file)
+
+    if hist:
+        _display_histogram([bench], file=file)
         print(file=file)
 
     if stats:
@@ -260,6 +321,8 @@ class TextRunner:
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
+        parser.add_argument('--hist', action="store_true",
+                            help='display an histogram of samples')
         parser.add_argument('--stats', action="store_true",
                             help='display statistics (min, max, ...)')
         parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
@@ -368,6 +431,8 @@ class TextRunner:
             sys.exit(1)
 
     def _worker(self, bench, sample_func):
+        stream = self._stream()
+
         samples = []
         for is_warmup, index in self._range():
             sample = sample_func(bench.loops)
@@ -388,7 +453,10 @@ class TextRunner:
                     text = "Warmup %s: %s" % (index, text)
                 else:
                     text = "Raw sample %s: %s" % (index, text)
-                print(text, file=self._stream())
+                print(text, file=stream)
+
+        if self.args.verbose:
+            print(file=stream)
 
         bench.add_run(samples)
         self._display_result(bench, check_unstable=False)
@@ -509,7 +577,8 @@ class TextRunner:
                            file=stream,
                            check_unstable=check_unstable,
                            metadata=self.args.metadata,
-                           stats=self.args.stats)
+                           stats=self.args.stats,
+                           hist=self.args.hist)
 
         stream.flush()
         _json_dump(bench, self.args)

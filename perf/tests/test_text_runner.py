@@ -30,6 +30,7 @@ class TestTextRunner(unittest.TestCase):
                          r'Raw sample 1: 1\.00 sec\n'
                          r'Raw sample 2: 1\.00 sec\n'
                          r'Raw sample 3: 1\.00 sec\n'
+                         r'\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'

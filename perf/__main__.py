@@ -190,64 +190,6 @@ def display_histogram_scipy(args, result):
     pylab.hist(samples, bins=args.bins, normed=True)
     pylab.show()
 
-def display_histogram_text(args, results):
-    import collections
-    import shutil
-
-    if hasattr(shutil, 'get_terminal_size'):
-        columns, lines = shutil.get_terminal_size()
-    else:
-        columns = 80
-        lines = 25
-
-    bins = args.bins
-    if not bins:
-        bins = max(lines - 3, 3)
-        if not args.extend:
-            bins = min(bins, 25)
-
-    all_samples = []
-    for result in results:
-        all_samples.extend(result.get_samples())
-    all_min = min(all_samples)
-    all_max = max(all_samples)
-    sample_k = float(all_max - all_min) / bins
-    if not sample_k:
-        sample_k = 1.0
-
-    def sample_bucket(value):
-        # round towards zero (ROUND_DOWN)
-        return int(value / sample_k)
-    bucket_min = sample_bucket(all_min)
-    bucket_max = sample_bucket(all_max)
-
-    for index, result in enumerate(results):
-        if len(results) > 1:
-            print("[ %s ]" % result.name)
-
-        samples = result.get_samples()
-
-        counter = collections.Counter([sample_bucket(value) for value in samples])
-        count_max = max(counter.values())
-        count_width = len(str(count_max))
-
-        line = '%s: %s #' % (result._format_sample(max(samples)), count_max)
-        width = columns - len(line)
-        if not args.extend:
-            width = min(width, 79)
-        width = max(width, 3)
-        line_k = float(width) / max(counter.values())
-        for bucket in range(bucket_min, bucket_max + 1):
-            count = counter.get(bucket, 0)
-            linelen = int(round(count * line_k))
-            text = result._format_sample(float(bucket) * sample_k)
-            line = ('#' * linelen) or '|'
-            print("{}: {:>{}} {}".format(text, count, count_width, line))
-
-        if index != len(results) -1:
-            print()
-
-
 
 def collect_metadata():
     from perf import metadata as perf_metadata
@@ -274,7 +216,8 @@ def main():
         compare_results(args, results, action == 'compare')
     elif action == 'hist':
         results = [load_result(filename) for filename in args.filenames]
-        display_histogram_text(args, results)
+        perf.text_runner._display_histogram(results, bins=args.bins,
+                                            extend=args.extend)
     elif action == 'hist_scipy':
         result = load_result(args.filename)
         display_histogram_scipy(args, result)

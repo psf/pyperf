@@ -9,7 +9,8 @@ Usage
     python3 -m perf.timeit
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
         [--affinity=CPU_LIST]
-        [--metadata] [--json [FILENAME]] [--raw]
+        [--metadata] [--hist] [--stats]
+        [--json [FILENAME]] [--raw]
         [-h/--help] [-v]
         [-s SETUP]
         stmt [stmt ...]
@@ -30,6 +31,8 @@ Options:
 * ``-v`` enables verbose mode
 * ``-vv`` enables very verbose mode
 * ``--metadata`` displays metadata
+* ``--hist`` displays an histogram of samples
+* ``--stats`` displays statistics (min, max, ...)
 * ``--raw`` runs a single process (must only be used internally)
 * ``--json`` writes result as JSON into stdout, and write other messages
   into stderr

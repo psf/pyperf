@@ -41,6 +41,7 @@ class TestTimeit(unittest.TestCase):
                          r'Warmup 1: ([0-9.]+) ms\n'
                          r'Raw sample 1: ([0-9.]+) ms\n'
                          r'Raw sample 2: ([0-9.]+) ms\n'
+                         r'\n'
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
@@ -135,7 +136,7 @@ class TestTimeit(unittest.TestCase):
         self.assertIn('[-h] [-p PROCESSES] [-n SAMPLES] [-w WARMUPS] [-l LOOPS] '
                       '[-v] [--json] [--json-file FILENAME] [--min-time MIN_TIME] '
                       '[--max-time MAX_TIME] [--raw] [--metadata] '
-                      '[--stats] [--affinity CPU_LIST] [-s SETUP] '
+                      '[--hist] [--stats] [--affinity CPU_LIST] [-s SETUP] '
                       'stmt [stmt ...]',
                       stdout)
 
