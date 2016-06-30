@@ -80,13 +80,6 @@ def _display_run(bench, index, nrun, samples, file=None):
     print(text, file=file)
 
 
-def _display_runs(result):
-    runs = result.get_runs()
-    nrun = len(runs)
-    for index, samples in enumerate(runs, 1):
-        _display_run(result, index, nrun, samples)
-
-
 def _display_stats(result):
     fmt = result._format_sample
     samples = result.get_samples()
@@ -114,7 +107,7 @@ def _display_stats(result):
     print("Maximum: %s" % format_min(median, max(samples)))
 
 
-def _display_benchmark_avg(bench, verbose=0, file=None):
+def _warn_if_bench_unstable(bench, verbose=0, file=None):
     if not bench.get_nrun():
         raise ValueError("benchmark has no run")
     samples = bench.get_samples()
@@ -160,9 +153,6 @@ def _display_benchmark_avg(bench, verbose=0, file=None):
         print("Shortest raw sample: %s" % text, file=file)
         print(file=file)
 
-    # Display the average +- stdev
-    print("Median +- std dev: %s" % bench.format(verbose=verbose), file=file)
-
 
 def _display_metadata(metadata, file=None, header="Metadata:"):
     if not metadata:
@@ -170,6 +160,27 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
     print(header, file=file)
     for key, value in sorted(metadata.items()):
         print("- %s: %s" % (key, value), file=file)
+
+
+def _display_benchmark(bench, verbose=0, file=None,
+                       check_unstable=True, metadata=False,
+                       runs=False):
+    if runs:
+        runs = bench.get_runs()
+        nrun = len(runs)
+        for index, samples in enumerate(runs, 1):
+            _display_run(bench, index, nrun, samples, file=file)
+        print(file=file)
+
+    if metadata:
+        _display_metadata(bench.metadata, file=file)
+        print(file=file)
+
+    if check_unstable:
+        _warn_if_bench_unstable(bench, verbose=verbose, file=file)
+
+    print("Median +- std dev: %s" % bench.format(verbose=verbose),
+          file=file)
 
 
 class TextRunner:
@@ -299,19 +310,6 @@ class TextRunner:
         for run in range(self.args.samples):
             yield (False, 1 + run)
 
-    def _display_run_result_avg(self, bench):
-        stream = self._stream()
-
-        if self.args.metadata:
-            _display_metadata(bench.metadata, file=stream)
-            print(file=stream)
-
-        print("Median +- std dev: %s" % bench.format(self.args.verbose),
-              file=self._stream())
-
-        stream.flush()
-        _json_dump(bench, self.args)
-
     def _cpu_affinity(self):
         # sched_setaffinity() was added to Python 3.3
         has_sched_setaffinity = hasattr(os, 'sched_setaffinity')
@@ -387,7 +385,7 @@ class TextRunner:
                 print(text, file=self._stream())
 
         bench.add_run(samples)
-        self._display_run_result_avg(bench)
+        self._display_result(bench, check_unstable=False)
 
         return bench
 
@@ -496,6 +494,19 @@ class TextRunner:
 
         return _bench_from_subprocess(args)
 
+    def _display_result(self, bench, check_unstable=True):
+        stream = self._stream()
+
+        # Display the average +- stdev
+        _display_benchmark(bench,
+                           verbose=self.args.verbose,
+                           file=stream,
+                           check_unstable=check_unstable,
+                           metadata=self.args.metadata)
+
+        stream.flush()
+        _json_dump(bench, self.args)
+
     def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose
         stream = self._stream()
@@ -522,12 +533,5 @@ class TextRunner:
         else:
             bench.metadata['duration'] = '%.1f sec' % secs
 
-        if self.args.metadata:
-            _display_metadata(bench.metadata, file=stream)
-            print(file=stream)
-
-        _display_benchmark_avg(bench, verbose=verbose, file=stream)
-
-        stream.flush()
-        _json_dump(bench, self.args)
+        self._display_result(bench)
         return bench

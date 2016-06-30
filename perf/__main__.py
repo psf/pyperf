@@ -85,18 +85,6 @@ def load_result(filename, default_name=None):
     return result
 
 
-def display_result(args, result):
-    if args.metadata:
-        perf.text_runner._display_metadata(result.metadata)
-        print()
-
-    if args.verbose > 1:
-        perf.text_runner._display_runs(result)
-        print()
-
-    perf.text_runner._display_benchmark_avg(result, verbose=args.verbose)
-
-
 def _result_sort_key(result):
     return (result.median(), result.name or '')
 
@@ -274,7 +262,9 @@ def main():
     action = args.action
     if action == 'show':
         result = load_result(args.filename)
-        display_result(args, result)
+        perf.text_runner._display_benchmark(result, verbose=args.verbose,
+                                            metadata=args.metadata,
+                                            runs=(args.verbose > 1))
     elif action in ('compare', 'compare_to'):
         ref_result = load_result(args.ref_filename, '<file#1>')
         results = [ref_result]
