@@ -13,6 +13,10 @@ def create_parser():
     subparsers = parser.add_subparsers(dest='action')
 
     show = subparsers.add_parser('show')
+    show.add_argument('--hist', action="store_true",
+                      help='display an histogram of samples')
+    show.add_argument('--stats', action="store_true",
+                      help='display statistics (min, max, ...)')
     show.add_argument('filename', type=str,
                       help='Result JSON file')
 
@@ -204,6 +208,8 @@ def main():
         result = load_result(args.filename)
         perf.text_runner._display_benchmark(result, verbose=args.verbose,
                                             metadata=args.metadata,
+                                            hist=args.hist,
+                                            stats=args.stats,
                                             runs=(args.verbose > 1))
     elif action in ('compare', 'compare_to'):
         ref_result = load_result(args.ref_filename, '<file#1>')

@@ -8,7 +8,10 @@ show
 
 Show a benchmark result::
 
-    python3 -m perf show [-v/--verbose] [-m/--metadata] filename.json
+    python3 -m perf show
+        [-v/--verbose] [-m/--metadata]
+        |--hist] [--stats]
+        filename.json
 
 Example with metadata::
 

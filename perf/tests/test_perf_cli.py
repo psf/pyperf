@@ -56,8 +56,6 @@ class TestPerfCLI(unittest.TestCase):
                     'Try to rerun the benchmark with more runs, samples '
                         'and/or loops\n'
                     '\n'
-                    'Shortest raw sample: 1.00 sec\n'
-                    '\n'
                     'Median +- std dev: 1.50 sec +- 0.50 sec\n')
         self.assertEqual(stdout, expected)
 
@@ -188,6 +186,8 @@ class TestPerfCLI(unittest.TestCase):
     def test_stats(self):
         expected = ("""
             Number of samples: 250 (50 runs x 5 samples x 10 loops; 1 warmup)
+            Standard deviation / median: 1%
+            Shortest raw sample: 264 ms
 
             Minimum: 26.4 ms (-1.8%)
             Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)

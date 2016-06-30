@@ -87,7 +87,8 @@ def _display_stats(result, file=None):
     nrun = result.get_nrun()
     nsample = len(samples)
     nsample_per_run = len(result._runs[0]) - result.warmups
-    text = "Number of samples: %s" % perf._format_number(nsample)
+    median = result.median()
+
 
     iterations = [perf._format_number(nrun, 'run'),
                   perf._format_number(nsample_per_run, 'sample')]
@@ -99,13 +100,17 @@ def _display_stats(result, file=None):
     if result.inner_loops is not None:
         iterations += '; %s' % perf._format_number(result.inner_loops, 'inner-loop')
 
+    text = "Number of samples: %s" % perf._format_number(nsample)
     if iterations:
         text = '%s (%s)' % (text, iterations)
 
     print(text, file=file)
+    percent = statistics.stdev(samples) * 100 / median
+    print("Standard deviation / median: %.0f%%" % percent, file=file)
+    shortest = min(result._get_raw_samples())
+    text = result._format_sample(shortest)
+    print("Shortest raw sample: %s" % text, file=file)
     print(file=file)
-
-    median = result.median()
 
     def format_min(median, value):
         return "%s (%+.1f%%)" % (fmt(value), (value - median) * 100 / median)
@@ -206,8 +211,6 @@ def _warn_if_bench_unstable(bench, verbose=0, file=None):
                   "and/or loops",
                   file=file)
             print(file=file)
-        elif verbose > 1:
-            print("Standard deviation / median: %.0f%%" % (k * 100), file=file)
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(bench._get_raw_samples())
@@ -222,9 +225,6 @@ def _warn_if_bench_unstable(bench, verbose=0, file=None):
         print("Try to rerun the benchmark with more loops "
               "or increase --min-time",
               file=file)
-        print(file=file)
-    elif verbose > 1:
-        print("Shortest raw sample: %s" % text, file=file)
         print(file=file)
 
 

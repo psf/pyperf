@@ -1,6 +1,7 @@
 TODO
 ====
 
+* remove very verbose mode?
 * compare: avoid duplicated benchmark names
 * Clarify run vs process in TextRunner CLI
 * Calibration: use powers of 2, not powers of 10
