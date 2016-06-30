@@ -170,11 +170,8 @@ class TestResult(unittest.TestCase):
         self.assertEqual(bench.metadata, {'key': 'value'})
         self.assertEqual(str(bench),
                          'name: 1.50 sec +- 0.50 sec')
-        self.assertEqual(bench.format(0),
+        self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
-        self.assertEqual(bench.format(1),
-                         '1.50 sec +- 0.50 sec '
-                         '(3 runs x 1 sample x 20 loops; 1 warmup; 3 inner-loops)')
 
     def test_benchmark_json(self):
         samples = (1.0, 1.5, 2.0)

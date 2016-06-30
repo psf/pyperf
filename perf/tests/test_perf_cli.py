@@ -13,6 +13,8 @@ TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
 
 
 class TestPerfCLI(unittest.TestCase):
+    maxDiff = 100 * 80
+
     def create_bench(self, samples, **kw):
         bench = perf.Benchmark(warmups=0, **kw)
         for sample in samples:
@@ -56,8 +58,7 @@ class TestPerfCLI(unittest.TestCase):
                     '\n'
                     'Shortest raw sample: 1.00 sec\n'
                     '\n'
-                    'Median +- std dev: 1.50 sec +- 0.50 sec '
-                        '(3 runs x 1 sample)\n')
+                    'Median +- std dev: 1.50 sec +- 0.50 sec\n')
         self.assertEqual(stdout, expected)
 
     def compare(self, action, ref_result, changed_result, *args):
@@ -186,7 +187,7 @@ class TestPerfCLI(unittest.TestCase):
 
     def test_stats(self):
         expected = ("""
-            Number of samples: 250
+            Number of samples: 250 (50 runs x 5 samples x 10 loops; 1 warmup)
 
             Minimum: 26.4 ms (-1.8%)
             Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)

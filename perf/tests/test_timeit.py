@@ -45,8 +45,7 @@ class TestTimeit(unittest.TestCase):
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
-                         r'Median \+- std dev: (?P<median>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms '
-                             r'\(2 samples; 1 warmup\)\n'
+                         r'Median \+- std dev: (?P<median>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms\n'
                          r'$',
                          stdout)
         self.assertIsNotNone(match, repr(stdout))

@@ -34,8 +34,7 @@ class TestTextRunner(unittest.TestCase):
                          r'Metadata:\n'
                          r'(- .*\n)+'
                          r'\n'
-                         r'Median \+- std dev: 1\.00 sec \+- 0\.00 sec '
-                             r'\(3 samples; 1 warmup\)\n$')
+                         r'Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
         # check bench_sample_func() result
         self.assertIsInstance(result, perf.Benchmark)

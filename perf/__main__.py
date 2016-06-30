@@ -149,10 +149,8 @@ def compare_results(args, results, sort_results):
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.median()
         text = ("Median +- std dev: [%s] %s -> [%s] %s"
-                % (ref_result.name,
-                   ref_result.format(verbose=args.verbose),
-                   changed_result.name,
-                   changed_result.format(verbose=args.verbose)))
+                % (ref_result.name, ref_result.format(),
+                   changed_result.name, changed_result.format()))
 
         # avoid division by zero
         if changed_avg == ref_avg:

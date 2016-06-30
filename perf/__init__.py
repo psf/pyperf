@@ -194,6 +194,13 @@ class Benchmark(object):
     def get_runs(self):
         return list(self._runs)
 
+    def get_nsample(self):
+        nrun = len(self._runs)
+        if not nrun:
+            return 0
+
+        return nrun * (len(self._runs[0]) - self.warmups)
+
     def get_samples(self):
         if self._samples is not None:
             return self._samples
@@ -219,43 +226,20 @@ class Benchmark(object):
             samples.extend(run_samples[self.warmups:])
         return samples
 
-    def format(self, verbose=0):
+    def format(self):
         nrun = self.get_nrun()
         if not nrun:
             return '<no run>'
 
-        samples = self.get_samples()
-        numbers = [self.median()]
-        with_stdev = (len(samples) >= 2)
-        if with_stdev:
+        median = self.median()
+        if self.get_nsample() >= 2:
+            samples = self.get_samples()
+            numbers = [self.median()]
             numbers.append(statistics.stdev(samples))
-
-        numbers = self._format_samples(numbers)
-        if with_stdev:
+            numbers = self._format_samples(numbers)
             text = '%s +- %s' % numbers
         else:
-            text = numbers[0]
-        if not verbose:
-            return text
-
-        iterations = []
-        if nrun > 1:
-            iterations.append(_format_number(nrun, 'run'))
-
-        nsample = len(self._runs[0]) - self.warmups
-        iterations.append(_format_number(nsample, 'sample'))
-
-        if self.loops is not None and self.loops > 1:
-            iterations.append(_format_number(self.loops, 'loop'))
-
-        iterations = ' x '.join(iterations)
-        if self.warmups:
-            iterations += '; %s' % _format_number(self.warmups, 'warmup')
-        if self.inner_loops:
-            iterations += '; %s' % _format_number(self.inner_loops, 'inner-loop')
-
-        if iterations:
-            text = '%s (%s)' % (text, iterations)
+            text = self._format_sample(self.median())
         return text
 
     def __str__(self):

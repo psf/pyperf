@@ -84,8 +84,25 @@ def _display_stats(result, file=None):
     fmt = result._format_sample
     samples = result.get_samples()
 
+    nrun = result.get_nrun()
     nsample = len(samples)
-    print("Number of samples: %s" % perf._format_number(nsample), file=file)
+    nsample_per_run = len(result._runs[0]) - result.warmups
+    text = "Number of samples: %s" % perf._format_number(nsample)
+
+    iterations = [perf._format_number(nrun, 'run'),
+                  perf._format_number(nsample_per_run, 'sample')]
+    if result.loops is not None:
+        iterations.append(perf._format_number(result.loops, 'loop'))
+
+    iterations = ' x '.join(iterations)
+    iterations += '; %s' % perf._format_number(result.warmups or 0, 'warmup')
+    if result.inner_loops is not None:
+        iterations += '; %s' % perf._format_number(result.inner_loops, 'inner-loop')
+
+    if iterations:
+        text = '%s (%s)' % (text, iterations)
+
+    print(text, file=file)
     print(file=file)
 
     median = result.median()
@@ -244,8 +261,7 @@ def _display_benchmark(bench, verbose=0, file=None,
     if check_unstable:
         _warn_if_bench_unstable(bench, verbose=verbose, file=file)
 
-    print("Median +- std dev: %s" % bench.format(verbose=verbose),
-          file=file)
+    print("Median +- std dev: %s" % bench.format(), file=file)
 
 
 class TextRunner:
