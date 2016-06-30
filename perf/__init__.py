@@ -229,21 +229,12 @@ class Benchmark(object):
         with_stdev = (len(samples) >= 2)
         if with_stdev:
             numbers.append(statistics.stdev(samples))
-        if verbose > 1:
-            numbers.append(min(samples))
-            numbers.append(max(samples))
 
         numbers = self._format_samples(numbers)
-        if verbose > 1:
-            if with_stdev:
-                text = '%s +- %s (min: %s, max: %s)' % numbers
-            else:
-                text = '%s (min: %s, max: %s)' % numbers
+        if with_stdev:
+            text = '%s +- %s' % numbers
         else:
-            if with_stdev:
-                text = '%s +- %s' % numbers
-            else:
-                text = numbers[0]
+            text = numbers[0]
         if not verbose:
             return text
 

@@ -57,7 +57,7 @@ class TestPerfCLI(unittest.TestCase):
                     'Shortest raw sample: 1.00 sec\n'
                     '\n'
                     'Median +- std dev: 1.50 sec +- 0.50 sec '
-                        '(min: 1.00 sec, max: 2.00 sec) (3 runs x 1 sample)\n')
+                        '(3 runs x 1 sample)\n')
         self.assertEqual(stdout, expected)
 
     def compare(self, action, ref_result, changed_result, *args):

@@ -599,8 +599,7 @@ class TextRunner:
                 print(".", end='', file=stream)
                 stream.flush()
 
-        if verbose <= 1:
-            print(file=stream)
+        print(file=stream)
 
         duration = perf.monotonic_clock() - start_time
         mins, secs = divmod(duration, 60)
