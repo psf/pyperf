@@ -80,20 +80,20 @@ def _display_run(bench, index, nrun, samples, file=None):
     print(text, file=file)
 
 
-def _display_stats(result):
+def _display_stats(result, file=None):
     fmt = result._format_sample
     samples = result.get_samples()
 
     nsample = len(samples)
-    print("Number of samples: %s" % perf._format_number(nsample))
-    print()
+    print("Number of samples: %s" % perf._format_number(nsample), file=file)
+    print(file=file)
 
     median = result.median()
 
     def format_min(median, value):
         return "%s (%+.1f%%)" % (fmt(value), (value - median) * 100 / median)
 
-    print("Minimum: %s" % format_min(median, min(samples)))
+    print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
     def fmt_stdev(value, dev):
         left = median - dev
@@ -102,9 +102,9 @@ def _display_stats(result):
                 % perf._format_timedeltas((median, dev, left, right)))
 
     print("Median +- std dev: %s"
-          % fmt_stdev(median, statistics.stdev(samples, median)))
+          % fmt_stdev(median, statistics.stdev(samples, median)), file=file)
 
-    print("Maximum: %s" % format_min(median, max(samples)))
+    print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
 
 def _warn_if_bench_unstable(bench, verbose=0, file=None):
@@ -164,7 +164,7 @@ def _display_metadata(metadata, file=None, header="Metadata:"):
 
 def _display_benchmark(bench, verbose=0, file=None,
                        check_unstable=True, metadata=False,
-                       runs=False):
+                       runs=False, stats=False):
     if runs:
         runs = bench.get_runs()
         nrun = len(runs)
@@ -174,6 +174,10 @@ def _display_benchmark(bench, verbose=0, file=None,
 
     if metadata:
         _display_metadata(bench.metadata, file=file)
+        print(file=file)
+
+    if stats:
+        _display_stats(bench)
         print(file=file)
 
     if check_unstable:
@@ -256,6 +260,8 @@ class TextRunner:
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
+        parser.add_argument('--stats', action="store_true",
+                            help='display statistics (min, max, ...)')
         parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
                             help="Specify CPU affinity for worker processes. "
                                  "This way, benchmarks can be forced to run "
@@ -502,7 +508,8 @@ class TextRunner:
                            verbose=self.args.verbose,
                            file=stream,
                            check_unstable=check_unstable,
-                           metadata=self.args.metadata)
+                           metadata=self.args.metadata,
+                           stats=self.args.stats)
 
         stream.flush()
         _json_dump(bench, self.args)

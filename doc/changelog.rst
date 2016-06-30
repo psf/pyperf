@@ -4,6 +4,7 @@ Changelog
 Version 0.6
 -----------
 
+* add ``--stats`` command line option to TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 
 

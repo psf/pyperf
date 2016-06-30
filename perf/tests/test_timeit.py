@@ -135,7 +135,8 @@ class TestTimeit(unittest.TestCase):
         self.assertIn('[-h] [-p PROCESSES] [-n SAMPLES] [-w WARMUPS] [-l LOOPS] '
                       '[-v] [--json] [--json-file FILENAME] [--min-time MIN_TIME] '
                       '[--max-time MAX_TIME] [--raw] [--metadata] '
-                      '[--affinity CPU_LIST] [-s SETUP] stmt [stmt ...]',
+                      '[--stats] [--affinity CPU_LIST] [-s SETUP] '
+                      'stmt [stmt ...]',
                       stdout)
 
     def test_cli_snippet_error(self):
