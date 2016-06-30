@@ -129,7 +129,7 @@ def _display_stats(result, file=None):
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
 
-def _display_histogram(results, bins=10, extend=False, file=None):
+def _display_histogram(results, bins=20, extend=False, file=None):
     import collections
     import shutil
 
