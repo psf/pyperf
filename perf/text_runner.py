@@ -258,7 +258,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
         print(file=file)
 
     if stats:
-        _display_stats(bench)
+        _display_stats(bench, file=file)
         print(file=file)
 
     if check_unstable:
