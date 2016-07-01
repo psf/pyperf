@@ -117,14 +117,8 @@ def _display_stats(result, file=None):
 
     print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
-    def fmt_stdev(value, dev):
-        left = median - dev
-        right = median + dev
-        return ("%s +- %s (%s .. %s)"
-                % perf._format_timedeltas((median, dev, left, right)))
-
-    print("Median +- std dev: %s"
-          % fmt_stdev(median, statistics.stdev(samples, median)), file=file)
+    print("Median +- std dev: %s +- %s"
+          % perf._format_timedeltas((median, statistics.stdev(samples, median))), file=file)
 
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
@@ -342,11 +336,11 @@ class TextRunner:
                                  'loops (default: 1 sec)')
         parser.add_argument('--raw', action="store_true",
                             help='run a single process')
-        parser.add_argument('--metadata', action="store_true",
+        parser.add_argument('--metadata', '-m', action="store_true",
                             help='show metadata')
-        parser.add_argument('-g', '--hist', action="store_true",
+        parser.add_argument('--hist', '-g', action="store_true",
                             help='display an histogram of samples')
-        parser.add_argument('-t', '--stats', action="store_true",
+        parser.add_argument('--stats', '-t', action="store_true",
                             help='display statistics (min, max, ...)')
         parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
                             help="Specify CPU affinity for worker processes. "

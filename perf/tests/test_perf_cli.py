@@ -190,7 +190,7 @@ class TestPerfCLI(unittest.TestCase):
             Shortest raw sample: 264 ms
 
             Minimum: 26.4 ms (-1.8%)
-            Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
+            Median +- std dev: 26.9 ms +- 0.2 ms
             Maximum: 27.3 ms (+1.7%)
         """)
         self.check_command(expected, 'stats', TELCO)
