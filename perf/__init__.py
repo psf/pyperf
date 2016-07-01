@@ -85,11 +85,12 @@ class Benchmark(object):
     def __init__(self, name=None, loops=None, inner_loops=None,
                  warmups=1, metadata=None):
         if loops is not None:
+            # use loops property setter
             self.loops = loops
         else:
             self._loops = None
         if inner_loops is not None:
-            # check done by the property
+            # use inner_loops property setter
             self.inner_loops = inner_loops
         else:
             self._inner_loops = None

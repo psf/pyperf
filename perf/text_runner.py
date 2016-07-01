@@ -89,26 +89,31 @@ def _display_stats(result, file=None):
     nsample_per_run = len(result._runs[0]) - result.warmups
     median = result.median()
 
-
+    # Number of samples
     iterations = [perf._format_number(nrun, 'run'),
                   perf._format_number(nsample_per_run, 'sample')]
-    if result.loops is not None:
-        iterations.append(perf._format_number(result.loops, 'loop'))
-
     iterations = ' x '.join(iterations)
-    iterations += '; %s' % perf._format_number(result.warmups or 0, 'warmup')
-    if result.inner_loops is not None:
-        iterations += '; %s' % perf._format_number(result.inner_loops, 'inner-loop')
+    iterations += '; %s' % perf._format_number(result.warmups, 'warmup')
 
     text = "Number of samples: %s" % perf._format_number(nsample)
     if iterations:
         text = '%s (%s)' % (text, iterations)
-
     print(text, file=file)
+
+    # Standard deviation / median
     percent = statistics.stdev(samples) * 100 / median
     print("Standard deviation / median: %.0f%%" % percent, file=file)
+
+    # Shortest raw sample (loops)
     shortest = min(result._get_raw_samples())
     text = result._format_sample(shortest)
+    iterations = []
+    if result.loops:
+        iterations.append(perf._format_number(result.loops, 'loop'))
+    if result.inner_loops is not None:
+        iterations.append(perf._format_number(result.inner_loops, 'inner-loop'))
+    if iterations:
+        text = '%s (%s)' % (text, '; '.join(iterations))
     print("Shortest raw sample: %s" % text, file=file)
     print(file=file)
 
