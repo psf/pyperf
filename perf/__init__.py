@@ -244,9 +244,7 @@ class Benchmark(object):
 
     def __str__(self):
         text = self.format()
-        if self.name:
-            text = '%s: %s' % (self.name, text)
-        return text
+        return 'Median +- std dev: %s' % text
 
     @classmethod
     def _json_load(cls, data):

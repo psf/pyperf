@@ -134,9 +134,15 @@ Benchmark
 
       Get all metadata.
 
-   .. method:: format(verbose=False)
+   .. method:: format()
 
-      Format the result as a string (``str``).
+      Format the result as ``... +- ...`` (median +- standard deviation) string
+      (``str``).
+
+   .. method:: __str__()
+
+      Format the result as ``Median +- std dev: ... +- ...`` (median +-
+      standard deviation) a string (``str``).
 
    .. method:: json()
 

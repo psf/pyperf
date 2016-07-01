@@ -117,8 +117,7 @@ def _display_stats(result, file=None):
 
     print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
-    print("Median +- std dev: %s +- %s"
-          % perf._format_timedeltas((median, statistics.stdev(samples, median))), file=file)
+    print(str(result), file=file)
 
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
@@ -260,7 +259,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
     if check_unstable:
         _warn_if_bench_unstable(bench, file=file)
 
-    print("Median +- std dev: %s" % bench.format(), file=file)
+    print(str(bench), file=file)
 
 
 class TextRunner:
