@@ -1,6 +1,9 @@
 TODO
 ====
 
+* add function to add new runs to an existing JSON file
+* "merge" two JSON files: cumulate benchmarks, add runs if two files have the
+  same benchmark, etc.
 * compare: avoid duplicated benchmark names
 * Clarify run vs process in TextRunner CLI
 * Calibration: use powers of 2, not powers of 10
