@@ -11,7 +11,7 @@ Usage
         [--affinity=CPU_LIST]
         [--metadata] [--hist] [--stats]
         [--json [FILENAME]] [--raw]
-        [-h/--help] [-v]
+        [-h/--help] [-v/--verbose] [-q/--quiet]
         [-s SETUP]
         stmt [stmt ...]
 
@@ -28,7 +28,8 @@ explains the purpose of these parameters and how to configure them.
 
 Options:
 
-* ``-v`` enables verbose mode
+* ``--verbose`` enables verbose mode
+* ``--verbose`` enables quiet mode
 * ``--metadata`` displays metadata
 * ``--hist`` displays an histogram of samples
 * ``--stats`` displays statistics (min, max, ...)

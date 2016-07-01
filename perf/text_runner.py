@@ -326,6 +326,8 @@ class TextRunner:
                                  % loops)
         parser.add_argument('-v', '--verbose', action="store_true",
                             help='enable verbose mode')
+        parser.add_argument('-q', '--quiet', action="store_true",
+                            help='enable quiet mode')
         parser.add_argument('--json', action='store_true',
                             help='write results encoded to JSON into stdout')
         parser.add_argument('--json-file', metavar='FILENAME',
@@ -389,6 +391,8 @@ class TextRunner:
             return
 
         self.args = self.argparser.parse_args(args)
+        if self.args.quiet:
+            self.args.verbose = False
 
     def _stream(self):
         return sys.stderr if self.args.json else sys.stdout
@@ -593,6 +597,8 @@ class TextRunner:
         stream = self._stream()
 
         # Display the average +- stdev
+        if self.args.quiet:
+            check_unstable = False
         _display_benchmark(bench,
                            file=stream,
                            check_unstable=check_unstable,
@@ -605,6 +611,7 @@ class TextRunner:
 
     def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose
+        quiet = self.args.quiet
         stream = self._stream()
         nprocess = self.args.processes
 
@@ -615,11 +622,12 @@ class TextRunner:
             if verbose:
                 _display_run(bench, 1 + process, nprocess,
                              samples, file=stream)
-            else:
+            elif not quiet:
                 print(".", end='', file=stream)
                 stream.flush()
 
-        print(file=stream)
+        if not quiet:
+            print(file=stream)
 
         duration = perf.monotonic_clock() - start_time
         mins, secs = divmod(duration, 60)
