@@ -13,9 +13,9 @@ def create_parser():
     subparsers = parser.add_subparsers(dest='action')
 
     show = subparsers.add_parser('show')
-    show.add_argument('--hist', action="store_true",
+    show.add_argument('-g', '--hist', action="store_true",
                       help='display an histogram of samples')
-    show.add_argument('--stats', action="store_true",
+    show.add_argument('-t', '--stats', action="store_true",
                       help='display statistics (min, max, ...)')
     show.add_argument('filename', type=str,
                       help='Result JSON file')

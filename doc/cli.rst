@@ -10,7 +10,7 @@ Show a benchmark result::
 
     python3 -m perf show
         [-v/--verbose] [-m/--metadata]
-        |--hist] [--stats]
+        |-g/--hist] [-t/--stats]
         filename.json
 
 Example with metadata::

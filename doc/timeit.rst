@@ -9,7 +9,7 @@ Usage
     python3 -m perf.timeit
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
         [--affinity=CPU_LIST]
-        [--metadata] [--hist] [--stats]
+        [--metadata] [-g/--hist] [-t/--stats]
         [--json [FILENAME]] [--raw]
         [-h/--help] [-v/--verbose] [-q/--quiet]
         [-s SETUP]

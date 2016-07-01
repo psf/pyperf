@@ -344,9 +344,9 @@ class TextRunner:
                             help='run a single process')
         parser.add_argument('--metadata', action="store_true",
                             help='show metadata')
-        parser.add_argument('--hist', action="store_true",
+        parser.add_argument('-g', '--hist', action="store_true",
                             help='display an histogram of samples')
-        parser.add_argument('--stats', action="store_true",
+        parser.add_argument('-t', '--stats', action="store_true",
                             help='display statistics (min, max, ...)')
         parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
                             help="Specify CPU affinity for worker processes. "

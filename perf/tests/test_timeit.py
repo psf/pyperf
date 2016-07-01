@@ -121,24 +121,6 @@ class TestTimeit(unittest.TestCase):
                 dt = (sample / loops) * 1e3
                 self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
 
-    def test_cli_help(self):
-        args = [sys.executable,
-                '-m', 'perf.timeit', '--help']
-        env = dict(os.environ, COLUMNS='1000')
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True,
-                                env=env)
-        stdout = proc.communicate()[0]
-        self.assertEqual(proc.returncode, 0)
-
-        self.assertIn('[-h] [-p PROCESSES] [-n SAMPLES] [-w WARMUPS] [-l LOOPS] '
-                      '[-v] [-q] [--json] [--json-file FILENAME] [--min-time MIN_TIME] '
-                      '[--max-time MAX_TIME] [--raw] [--metadata] '
-                      '[--hist] [--stats] [--affinity CPU_LIST] [-s SETUP] '
-                      'stmt [stmt ...]',
-                      stdout)
-
     def test_cli_snippet_error(self):
         args = [sys.executable,
                 '-m', 'perf.timeit', 'x+1']
