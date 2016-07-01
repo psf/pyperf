@@ -129,7 +129,10 @@ def compare_results(args, results, sort_results):
     print()
 
     if args.metadata:
-        metadatas = [result.metadata for result in results]
+        metadatas = [dict(result.metadata) for result in results]
+        for metadata in metadatas:
+            # don't display name as metadata, it's already displayed
+            metadata.pop('name', None)
 
         common_metadata = _common_metadata(metadatas)
         perf.text_runner._display_metadata(common_metadata,

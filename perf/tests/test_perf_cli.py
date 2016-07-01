@@ -16,6 +16,8 @@ class TestPerfCLI(unittest.TestCase):
     maxDiff = 100 * 80
 
     def create_bench(self, samples, **kw):
+        if 'name' not in kw:
+            kw['name'] = 'bench'
         bench = perf.Benchmark(warmups=0, **kw)
         for sample in samples:
             bench.add_run([sample])
@@ -36,6 +38,7 @@ class TestPerfCLI(unittest.TestCase):
         stdout = self.show('--metadata')
         expected = ('Metadata:\n'
                     '- key: value\n'
+                    '- name: bench\n'
                     '\n'
                     'ERROR: the benchmark is very unstable, the standard '
                         'deviation is very high (stdev/median: 33%)!\n'

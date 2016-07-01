@@ -84,7 +84,6 @@ def _format_number(number, unit=None, units=None):
 class Benchmark(object):
     def __init__(self, name=None, loops=None, inner_loops=None,
                  warmups=1, metadata=None):
-        self.name = name
         if loops is not None:
             self.loops = loops
         else:
@@ -108,9 +107,28 @@ class Benchmark(object):
             self.metadata = metadata
         else:
             self.metadata = {}
+        if name:
+            self.metadata['name'] = name
 
         # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
+
+    @property
+    def name(self):
+        return self.metadata.get('name', None)
+
+    @name.setter
+    def name(self, value):
+        if not(value is None or isinstance(value, str)):
+            raise TypeError("name must be a string or None")
+
+        if value:
+            value = value.strip()
+
+        if value:
+            self.metadata['name'] = value
+        else:
+            self.metadata.pop('name', None)
 
     @property
     def inner_loops(self):
@@ -257,13 +275,12 @@ class Benchmark(object):
         except KeyError:
             raise ValueError("JSON doesn't contain results")
 
-        name = data.get('name')
         warmups = data['warmups']
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
 
-        bench = cls(name=name, warmups=warmups,
+        bench = cls(warmups=warmups,
                     loops=loops, inner_loops=inner_loops,
                     metadata=metadata)
         for run_data in data['runs']:
@@ -285,8 +302,6 @@ class Benchmark(object):
 
     def _as_json(self):
         data = {'runs': self._runs, 'warmups': self.warmups}
-        if self.name:
-            data['name'] = self.name
         if self.loops is not None:
             data['loops'] = self.loops
         if self.inner_loops is not None:

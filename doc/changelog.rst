@@ -7,6 +7,7 @@ Version 0.6
 * add ``--quiet``, ``--hist`` and ``--stats`` command line options to
   TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
+* Benchmark.name becomes a property and is now stored in metadata
 
 
 Version 0.5 (2016-06-29)
