@@ -7,12 +7,13 @@ perf
 Install perf
 ============
 
-perf supports Python 2.7 and Python 3. Install perf on Python 3::
+perf supports Python 2.7 and Python 3. To install perf on Python 3::
 
     python3 -m pip install perf
 
-On Python 2.7, the ``statistics`` dependency is installed: backport of Python
-3.4 `statistics module <https://docs.python.org/dev/library/statistics.html>`_.
+It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
+dependency is installed: backport of Python 3.4 `statistics module
+<https://docs.python.org/dev/library/statistics.html>`_.
 
 If you get the error ``'install_requires' must be a string ...``: you must
 upgrade setuptools to support environment markers in ``install_requires`` of

@@ -4,6 +4,7 @@ Changelog
 Version 0.6
 -----------
 
+* add a dependency to the ``six`` module
 * add ``--quiet``, ``--hist`` and ``--stats`` command line options to
   TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.

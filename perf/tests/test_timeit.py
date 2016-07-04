@@ -4,6 +4,8 @@ import sys
 import tempfile
 import unittest
 
+import six
+
 import perf
 
 
@@ -88,7 +90,7 @@ class TestTimeit(unittest.TestCase):
         self.assertLessEqual(stdev, MAX_STDEV)
 
     def test_json_file(self):
-        if perf._PY3:
+        if six.PY3:
             tmp = tempfile.NamedTemporaryFile('w+', encoding='utf-8')
         else:
             tmp = tempfile.NamedTemporaryFile()

@@ -2,11 +2,11 @@ from __future__ import print_function
 import math
 import sys
 
+import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 
 __version__ = '0.6'
-_PY3 = (sys.version_info >= (3,))
 _JSON_VERSION = 1
 
 
@@ -469,7 +469,7 @@ def _parse_cpu_list(cpu_list):
 def _get_isolated_cpus():
     path = '/sys/devices/system/cpu/isolated'
     try:
-        if _PY3:
+        if six.PY3:
             fp = open(path, encoding='ascii')
         else:
             fp = open(path)

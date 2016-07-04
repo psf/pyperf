@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 try:
@@ -18,7 +19,7 @@ import perf
 def _json_dump(bench, args):
     if args.json_file:
         # --json-file=FILENAME
-        if perf._PY3:
+        if six.PY3:
             fp = open(args.json_file, "w", encoding="utf-8")
         else:
             fp = open(args.json_file, "wb")
@@ -39,7 +40,7 @@ def _bench_from_subprocess(args):
                             stderr=subprocess.PIPE)
 
     try:
-        if perf._PY3:
+        if six.PY3:
             with proc:
                 stdout, stderr = proc.communicate()
         else:
@@ -399,10 +400,9 @@ class TextRunner:
         return sys.stderr if self.args.json else sys.stdout
 
     def _range(self):
-        # FIXME: use six.range
-        for warmup in range(self.args.warmups):
+        for warmup in six.moves.xrange(self.args.warmups):
             yield (True, 1 + warmup)
-        for run in range(self.args.samples):
+        for run in six.moves.xrange(self.args.samples):
             yield (False, 1 + run)
 
     def _cpu_affinity(self):

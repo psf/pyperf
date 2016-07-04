@@ -2,6 +2,8 @@ import os.path
 import sys
 import unittest
 
+import six
+
 import perf
 from perf.tests import mock
 
@@ -228,7 +230,7 @@ class CPUToolsTests(unittest.TestCase):
                          '1,3,7')
 
     def test_get_isolated_cpus(self):
-        BUILTIN_OPEN = 'builtins.open' if perf._PY3 else '__builtin__.open'
+        BUILTIN_OPEN = 'builtins.open' if six.PY3 else '__builtin__.open'
 
         def check_get(line):
             with mock.patch(BUILTIN_OPEN) as mock_open:

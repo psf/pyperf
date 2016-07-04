@@ -7,6 +7,7 @@ import socket
 import sys
 import time
 
+import six
 try:
     # Optional dependency
     import psutil
@@ -59,7 +60,7 @@ def _collect_python_metadata(metadata):
 
 def _read_proc(path):
     try:
-        if perf._PY3:
+        if six.PY3:
             fp = open(path, encoding="utf-8")
         else:
             fp = open("/proc/cpuinfo")
