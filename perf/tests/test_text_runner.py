@@ -63,7 +63,7 @@ class TestTextRunner(unittest.TestCase):
                     result = runner.bench_func(check_args, None, 1, 2)
 
         self.assertEqual(stdout.getvalue(),
-                         result.json())
+                         tests.benchmark_as_json(result))
 
         self.check_bench_result(runner, stderr, result)
 
@@ -76,7 +76,7 @@ class TestTextRunner(unittest.TestCase):
                 result = runner.bench_sample_func(check_args, 1, 2)
 
         self.assertEqual(stdout.getvalue(),
-                         result.json())
+                         tests.benchmark_as_json(result))
 
         self.check_bench_result(runner, stderr, result)
 
@@ -148,7 +148,7 @@ class TestTextRunner(unittest.TestCase):
 
             tmp.seek(0)
             self.assertEqual(tmp.read().decode('utf-8'),
-                             result.json())
+                             tests.benchmark_as_json(result))
 
     def test_cpu_affinity_setaffinity_isolcpus(self):
         runner = perf.text_runner.TextRunner()

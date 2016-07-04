@@ -1,6 +1,7 @@
 import contextlib
 import io
 import sys
+import tempfile
 
 try:
     from unittest import mock   # Python 3.3
@@ -10,6 +11,8 @@ try:
     import unittest2 as unittest   # Python 2.7
 except ImportError:
     import unittest   # noqa
+
+import perf
 
 
 @contextlib.contextmanager
@@ -32,3 +35,10 @@ def capture_stdout():
 
 def capture_stderr():
     return _capture_stream('stderr')
+
+
+def benchmark_as_json(benchmark):
+    with tempfile.NamedTemporaryFile('r') as tmp:
+        perf.dump_benchmark(benchmark, tmp.name)
+        tmp.seek(0)
+        return tmp.read()

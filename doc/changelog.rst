@@ -4,6 +4,14 @@ Changelog
 Version 0.6
 -----------
 
+* add new functions to load/dump benchmarks:
+
+  * :func:`load_benchmarks`
+  * :func:`load_benchmark`
+  * :func:`dump_benchmarks`
+  * :func:`dump_benchmark`
+  * Remove json methods from the :class:`perf.Benchmark` class
+
 * add a dependency to the ``six`` module
 * add ``--quiet``, ``--hist`` and ``--stats`` command line options to
   TextRunner

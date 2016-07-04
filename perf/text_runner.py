@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import io
 import os
 import subprocess
 import sys
@@ -19,18 +20,10 @@ import perf
 def _json_dump(bench, args):
     if args.json_file:
         # --json-file=FILENAME
-        if six.PY3:
-            fp = open(args.json_file, "w", encoding="utf-8")
-        else:
-            fp = open(args.json_file, "wb")
-        with fp:
-            bench.json_dump_into(fp)
-            fp.flush()
+        perf.dump_benchmark(bench, args.json_file)
     elif args.json:
         # --json
-        stdout = sys.stdout
-        bench.json_dump_into(stdout)
-        stdout.flush()
+        perf.dump_benchmark(bench, sys.stdout)
 
 
 def _bench_from_subprocess(args):
@@ -61,7 +54,11 @@ def _bench_from_subprocess(args):
         raise RuntimeError("%s failed with exit code %s"
                            % (args[0], proc.returncode))
 
-    return perf.Benchmark.json_load(stdout)
+    if six.PY3:
+        fileobj = io.StringIO(stdout)
+    else:
+        fileobj = io.BytesIO(stdout)
+    return perf.load_benchmark(fileobj)
 
 
 def _display_run(bench, index, nrun, samples, file=None):

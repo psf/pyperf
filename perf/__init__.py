@@ -7,7 +7,10 @@ import statistics   # Python 3.4+, or backport on Python 2.7
 
 
 __version__ = '0.6'
-_JSON_VERSION = 1
+# Format format history:
+# 2 - support multiple benchmarks per file
+# 1 - first version
+_JSON_VERSION = 2
 
 
 # Clocks
@@ -267,15 +270,6 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data):
-        version = data.get('version')
-        if version != _JSON_VERSION:
-            raise ValueError("version %r not supported" % version)
-
-        try:
-            data = data['benchmark']
-        except KeyError:
-            raise ValueError("JSON doesn't contain results")
-
         warmups = data['warmups']
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
@@ -286,20 +280,7 @@ class Benchmark(object):
                     metadata=metadata)
         for run_data in data['runs']:
             bench.add_run(run_data)
-
         return bench
-
-    @classmethod
-    def json_load_from(cls, file):
-        json = _import_json()
-        data = json.load(file)
-        return cls._json_load(data)
-
-    @classmethod
-    def json_load(cls, text):
-        json = _import_json()
-        data = json.loads(text)
-        return cls._json_load(data)
 
     def _as_json(self):
         data = {'runs': self._runs, 'warmups': self.warmups}
@@ -309,18 +290,72 @@ class Benchmark(object):
             data['inner_loops'] = self.inner_loops
         if self.metadata:
             data['metadata'] = self.metadata
-        return {'benchmark': data, 'version': _JSON_VERSION}
+        return data
 
-    def json(self):
-        json = _import_json()
-        # set separators to produce compact JSON
-        return json.dumps(self._as_json(), separators=(',', ':')) + '\n'
 
-    def json_dump_into(self, file):
-        json = _import_json()
-        # set separators to produce compact JSON
-        json.dump(self._as_json(), file, separators=(',', ':'))
-        file.write('\n')
+def load_benchmarks(file):
+    json = _import_json()
+
+    if isinstance(file, (bytes, six.text_type)):
+        if file != '-':
+            if six.PY3:
+                fp = open(file, "r", encoding="utf-8")
+            else:
+                fp = open(file, "rb")
+            with fp:
+                bench_file = json.load(fp)
+        else:
+            bench_file = json.load(sys.stdin)
+    else:
+        # file is a file object
+        bench_file = json.load(file)
+
+    version = bench_file.get('version')
+    if version != _JSON_VERSION:
+        raise ValueError("file format version %r not supported" % version)
+
+    benchmarks = []
+    for bench_data in bench_file['benchmarks']:
+        bench = Benchmark._json_load(bench_data)
+        benchmarks.append(bench)
+
+    return benchmarks
+
+
+def load_benchmark(file):
+    benchmarks = load_benchmarks(file)
+    if len(benchmarks) != 1:
+        raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
+    return benchmarks[0]
+
+
+def dump_benchmarks(benchmarks, file):
+    json = _import_json()
+
+    benchmarks_json = []
+    for benchmark in benchmarks:
+        benchmarks_json.append(benchmark._as_json())
+    data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
+
+    # set separators to produce compact JSON
+    separators = (',', ':')
+
+    if isinstance(file, (bytes, six.text_type)):
+        if six.PY3:
+            fp = open(file, "w", encoding="utf-8")
+        else:
+            fp = open(file, "wb")
+        with fp:
+            json.dump(data, fp, separators=separators)
+            fp.flush()
+    else:
+        # file is a file object
+        json.dump(data, file, separators=separators)
+        file.flush()
+
+
+def dump_benchmark(benchmark, file):
+    dump_benchmarks((benchmark,), file)
 
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a

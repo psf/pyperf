@@ -83,6 +83,34 @@ Clocks
    information on Python clocks.
 
 
+Load/dump benchmarks
+--------------------
+
+.. function:: load_benchmarks(file) -> List[Benchmark]
+
+   Load benchmarks from a JSON file which was created by
+   :func:`dump_benchmarks`. Return a list of :class:`Benchmark` objects.
+
+   *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`, or
+   an open file object.
+
+.. function:: load_benchmark(file) -> Benchmark
+
+   Similar to :func:`load_benchmarks`, but load exactly one benchmark.
+
+   Return a :class:`Benchmark` objects.
+
+.. function:: dump_benchmarks(benchmarks: List[Benchmark], file)
+
+   Dump a list of :class:`Benchmark` objects as JSON into *file*.
+
+   *file* can be a filename, or an open file object.
+
+.. function:: dump_benchmark(benchmark: Benchmark, file)
+
+   Similar to :func:`dump_benchmarks`, but dump a single benchmark.
+
+
 Benchmark
 ---------
 
@@ -143,23 +171,6 @@ Benchmark
 
       Format the result as ``Median +- std dev: ... +- ...`` (median +-
       standard deviation) a string (``str``).
-
-   .. method:: json()
-
-      Encode the result as a JSON string (``str``).
-
-   .. classmethod:: json_load(text)
-
-      Load a result from a JSON string (``str``) which was encoded by :meth:`json`.
-
-   .. method:: json_dump_into(file)
-
-      Encode the result as JSON into the *file*.
-
-   .. classmethod:: json_load_from(file)
-
-      Load a result from the JSON file *file* which was created by
-      :meth:`json_dump_into`.
 
    .. method:: median()
 

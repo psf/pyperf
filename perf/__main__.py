@@ -70,12 +70,7 @@ def create_parser():
 
 
 def load_result(filename, default_name=None):
-    if filename != '-':
-        fp = open(filename)
-    else:
-        fp = sys.stdin
-    with fp:
-        result = perf.Benchmark.json_load_from(fp)
+    result = perf.load_benchmark(filename)
 
     if not result.name and filename != "-":
         name = filename

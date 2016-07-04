@@ -27,9 +27,7 @@ class TestPerfCLI(unittest.TestCase):
         results = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})
 
         with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-            results.json_dump_into(tmp)
-            tmp.flush()
-
+            perf.dump_benchmark(results, tmp.name)
             stdout = self.run_command('show', tmp.name, *args)
 
         return stdout
@@ -64,12 +62,10 @@ class TestPerfCLI(unittest.TestCase):
 
     def compare(self, action, ref_result, changed_result, *args):
         with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:
-            ref_result.json_dump_into(ref_tmp)
-            ref_tmp.flush()
+            perf.dump_benchmark(ref_result, ref_tmp)
 
             with tempfile.NamedTemporaryFile(mode="w+") as changed_tmp:
-                changed_result.json_dump_into(changed_tmp)
-                changed_tmp.flush()
+                perf.dump_benchmark(changed_result, changed_tmp)
 
                 stdout = self.run_command(action, ref_tmp.name, changed_tmp.name, *args)
 

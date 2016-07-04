@@ -1,5 +1,6 @@
 import os.path
 import sys
+import tempfile
 import unittest
 
 import six
@@ -193,7 +194,10 @@ class TestResult(unittest.TestCase):
         for sample in samples:
             bench.add_run([3.0, sample])
 
-        bench = perf.Benchmark.json_load(bench.json())
+        with tempfile.NamedTemporaryFile() as tmp:
+            perf.dump_benchmark(bench, tmp.name)
+            bench = perf.load_benchmark(tmp.name)
+
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
         self.assertEqual(bench.loops, 100)
