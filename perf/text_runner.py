@@ -21,6 +21,13 @@ def _json_dump(bench, args):
     if args.json_file:
         # --json-file=FILENAME
         perf.dump_benchmark(bench, args.json_file)
+    if args.json_append:
+        if os.path.exists(args.json_append):
+            benchmarks = perf.load_benchmarks(args.json_append)
+        else:
+            benchmarks = []
+        benchmarks.append(bench)
+        perf.dump_benchmarks(benchmarks, args.json_append)
     elif args.json:
         # --json
         perf.dump_benchmark(bench, sys.stdout)
@@ -327,6 +334,8 @@ class TextRunner:
                             help='write results encoded to JSON into stdout')
         parser.add_argument('--json-file', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
+        parser.add_argument('--json-append', metavar='FILENAME',
+                            help='append results encoded to JSON into FILENAME')
         parser.add_argument('--min-time', type=float, default=0.1,
                             help='Minimum duration in seconds of a single '
                                  'sample, used to calibrate the number of '

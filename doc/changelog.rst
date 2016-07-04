@@ -14,8 +14,8 @@ Version 0.6
   * Remove json methods from the :class:`perf.Benchmark` class
 
 * add a dependency to the ``six`` module
-* add ``--quiet``, ``--hist`` and ``--stats`` command line options to
-  TextRunner
+* add ``--quiet``, ``--hist``, ``--stats`` and ``--json-append`` command line
+  options to TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the

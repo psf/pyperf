@@ -324,6 +324,9 @@ def load_benchmarks(file):
         bench = Benchmark._json_load(bench_data)
         benchmarks.append(bench)
 
+    if not benchmarks:
+        raise ValueError("file don't contain any benchmark")
+
     return benchmarks
 
 

@@ -10,7 +10,10 @@ Usage
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
         [--affinity=CPU_LIST]
         [--metadata] [-g/--hist] [-t/--stats]
-        [--json [FILENAME]] [--raw]
+        [--json]
+        [--json-file=FILENAME]
+        [--json-append=FILENAME]
+        [--raw]
         [-h/--help] [-v/--verbose] [-q/--quiet]
         [-s SETUP]
         stmt [stmt ...]
@@ -38,6 +41,8 @@ Options:
   into stderr
 * ``--json-file=FILENAME`` writes result as JSON into *FILENAME*, and write
   other messages into stdout
+* ``--json-file=FILENAME`` appends benchmark result as JSON into *FILENAME*,
+  and write other messages into stdout. Create the file if it doesn't exist.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if
