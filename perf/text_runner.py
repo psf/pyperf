@@ -61,6 +61,8 @@ def _bench_from_subprocess(args):
         raise RuntimeError("%s failed with exit code %s"
                            % (args[0], proc.returncode))
 
+    # FIXME: put following code in a function?
+    # it is used by runner.py of the CPython benchmark suite
     if six.PY3:
         fileobj = io.StringIO(stdout)
     else:
