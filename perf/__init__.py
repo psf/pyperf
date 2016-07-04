@@ -250,7 +250,6 @@ class Benchmark(object):
         if not nrun:
             return '<no run>'
 
-        median = self.median()
         if self.get_nsample() >= 2:
             samples = self.get_samples()
             numbers = [self.median()]

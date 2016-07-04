@@ -54,7 +54,7 @@ def create_parser():
     stats.add_argument('filename', type=str,
                        help='Result JSON file')
 
-    metadata = subparsers.add_parser('metadata')
+    subparsers.add_parser('metadata')
 
     # Add arguments to multiple commands
     for cmd in (show, compare, compare_to):
