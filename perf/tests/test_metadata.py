@@ -3,6 +3,10 @@ import sys
 import perf.metadata
 from perf.tests import mock
 from perf.tests import unittest
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 MANDATORY_METADATA = [
@@ -62,17 +66,27 @@ class TestMetadata(unittest.TestCase):
                     perf.metadata.collect_metadata(metadata)
         self.assertEqual(metadata['cpu_affinity'], '2-3 (isolated)')
 
+    @unittest.skipIf(psutil is None, 'need psutil')
     def test_cpu_affinity_psutil(self):
-        metadata = {}
         with mock.patch('perf.metadata.os') as mock_os:
             del mock_os.sched_getaffinity
             mock_os.cpu_count.return_value = 4
 
-            with mock.patch('psutil.Process') as mock_process:
-                mock_process.return_value.cpu_affinity.return_value = [2, 3]
-                with mock.patch('perf._get_isolated_cpus', return_value=None):
+            with mock.patch('perf._get_isolated_cpus', return_value=None):
+                with mock.patch('psutil.Process') as mock_process:
+                    mock_affinity = mock_process.return_value.cpu_affinity
+
+                    # affinity=2/4 CPUs
+                    mock_affinity.return_value = [2, 3]
+                    metadata = {}
                     perf.metadata.collect_metadata(metadata)
-        self.assertEqual(metadata['cpu_affinity'], '2-3')
+                    self.assertEqual(metadata['cpu_affinity'], '2-3')
+
+                    # affinity=all CPUs: ignore metadata
+                    mock_affinity.return_value = [0, 1, 2, 3]
+                    metadata = {}
+                    perf.metadata.collect_metadata(metadata)
+                    self.assertNotIn('cpu_affinity', metadata)
 
 
 if __name__ == "__main__":

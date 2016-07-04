@@ -121,7 +121,7 @@ def _collect_system_metadata(metadata):
     else:
         cpus = None
     if cpus is not None and cpu_count is not None and cpu_count >= 1:
-        if cpus == set(range(cpu_count)):
+        if set(cpus) == set(range(cpu_count)):
             cpus = None
     if cpus:
         isolated = perf._get_isolated_cpus()
