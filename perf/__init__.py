@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 import math
 import sys
 
@@ -25,15 +26,6 @@ except ImportError:
         perf_counter = time.clock
     else:
         perf_counter = time.time
-
-
-def _import_json():
-    """Import json module on demand."""
-    global json
-    if json is None:
-        import json
-    return json
-json = None
 
 
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
@@ -294,8 +286,6 @@ class Benchmark(object):
 
 
 def load_benchmarks(file):
-    json = _import_json()
-
     if isinstance(file, (bytes, six.text_type)):
         if file != '-':
             if six.PY3:
@@ -338,8 +328,6 @@ def load_benchmark(file):
 
 
 def dump_benchmarks(benchmarks, file):
-    json = _import_json()
-
     benchmarks_json = []
     for benchmark in benchmarks:
         benchmarks_json.append(benchmark._as_json())
