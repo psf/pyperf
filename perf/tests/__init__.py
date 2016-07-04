@@ -5,11 +5,11 @@ import sys
 try:
     from unittest import mock   # Python 3.3
 except ImportError:
-    import mock
+    import mock   # noqa
 try:
     import unittest2 as unittest   # Python 2.7
 except ImportError:
-    import unittest
+    import unittest   # noqa
 
 
 @contextlib.contextmanager
