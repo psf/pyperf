@@ -203,12 +203,21 @@ def main():
     args = parser.parse_args()
     action = args.action
     if action == 'show':
-        result = load_result(args.filename)
-        perf.text_runner._display_benchmark(result,
-                                            metadata=args.metadata,
-                                            hist=args.hist,
-                                            stats=args.stats,
-                                            runs=bool(args.verbose))
+        benchmarks = perf.load_benchmarks(args.filename)
+        for index, benchmark in enumerate(benchmarks, 1):
+            if not benchmark.name:
+                benchmark.name = "<benchmark #%s>" % index
+            if len(benchmarks) > 1:
+                print("[%s]" % benchmark.name)
+
+            perf.text_runner._display_benchmark(benchmark,
+                                                metadata=args.metadata,
+                                                hist=args.hist,
+                                                stats=args.stats,
+                                                runs=bool(args.verbose))
+            if len(benchmarks) > 1 and index != len(benchmarks):
+                print()
+
     elif action in ('compare', 'compare_to'):
         ref_result = load_result(args.ref_filename, '<file#1>')
         results = [ref_result]
