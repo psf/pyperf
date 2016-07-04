@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import io
 import os
 import subprocess
 import sys
@@ -384,13 +383,11 @@ class TextRunner:
         return loops
 
     def parse_args(self, args=None):
-        if self.args is not None:
-            # arguments already parsed
-            return
-
-        self.args = self.argparser.parse_args(args)
-        if self.args.quiet:
-            self.args.verbose = False
+        if self.args is None:
+            self.args = self.argparser.parse_args(args)
+            if self.args.quiet:
+                self.args.verbose = False
+        return self.args
 
     def _stream(self):
         return sys.stderr if self.args.json else sys.stdout

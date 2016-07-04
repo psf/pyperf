@@ -254,6 +254,8 @@ TextRunner
       Parse command line arguments using :attr:`argparser` and put the result
       into :attr:`args`.
 
+      Return arguments.
+
    Attributes:
 
    .. attribute:: args
