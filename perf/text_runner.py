@@ -359,9 +359,9 @@ class TextRunner:
 
         min_dt = self.args.min_time * 0.90
         max_dt = self.args.max_time
-        for index in range(0, 10):
+        for index in range(0, 33):
             # FIXME: add a check to detect bugs in sample_func(): put a limit?
-            loops = 10 ** index
+            loops = 2 ** index
 
             dt = sample_func(loops)
             if self.args.verbose:
@@ -372,7 +372,7 @@ class TextRunner:
 
             if dt >= max_dt:
                 index = max(index - 1, 0)
-                loops = 10 ** index
+                loops = 2 ** index
                 break
             if dt >= min_dt:
                 break

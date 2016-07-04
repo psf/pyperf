@@ -6,7 +6,6 @@ TODO
   same benchmark, etc.
 * compare: avoid duplicated benchmark names
 * Clarify run vs process in TextRunner CLI
-* Calibration: use powers of 2, not powers of 10
 * Metrics measured before and/or after each run:
 
   * CPU frequency, system load

@@ -1,4 +1,5 @@
 import tempfile
+import textwrap
 
 import perf.text_runner
 from perf import tests
@@ -86,16 +87,31 @@ class TestTextRunner(unittest.TestCase):
             with tests.capture_stderr() as stderr:
                 result = runner.bench_sample_func(sample_func)
 
-        self.assertEqual(runner.args.loops, 10 ** 5)
-        self.assertEqual(result.loops, 10 ** 5)
+        self.assertEqual(runner.args.loops, 2 ** 17)
+        self.assertEqual(result.loops, 2 ** 17)
 
-        self.assertIn('calibration: 1 loop: 1.00 us\n'
-                      'calibration: 10 loops: 10.00 us\n'
-                      'calibration: 100 loops: 100.0 us\n'
-                      'calibration: 1000 loops: 1.00 ms\n'
-                      'calibration: 10^4 loops: 10.0 ms\n'
-                      'calibration: 10^5 loops: 100.0 ms\n'
-                      'calibration: use 10^5 loops\n',
+
+        self.assertIn(textwrap.dedent('''
+            calibration: 1 loop: 1.00 us
+            calibration: 2 loops: 2.00 us
+            calibration: 4 loops: 4.00 us
+            calibration: 8 loops: 8.00 us
+            calibration: 16 loops: 16.0 us
+            calibration: 32 loops: 32.0 us
+            calibration: 64 loops: 64.0 us
+            calibration: 128 loops: 128 us
+            calibration: 256 loops: 256 us
+            calibration: 512 loops: 512 us
+            calibration: 1024 loops: 1.02 ms
+            calibration: 2048 loops: 2.05 ms
+            calibration: 4096 loops: 4.10 ms
+            calibration: 8192 loops: 8.19 ms
+            calibration: 16384 loops: 16.4 ms
+            calibration: 32768 loops: 32.8 ms
+            calibration: 65536 loops: 65.5 ms
+            calibration: 131072 loops: 131 ms
+            calibration: use 131072 loops
+                      ''').strip(),
                       stdout.getvalue())
         self.assertEqual(stderr.getvalue(), '')
 
@@ -111,8 +127,8 @@ class TestTextRunner(unittest.TestCase):
             with tests.capture_stderr():
                 result = runner.bench_sample_func(sample_func)
 
-        self.assertEqual(runner.args.loops, 10 ** 3)
-        self.assertEqual(result.loops, 10 ** 3)
+        self.assertEqual(runner.args.loops, 2 ** 10)
+        self.assertEqual(result.loops, 2 ** 10)
 
     def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:

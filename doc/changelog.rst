@@ -8,6 +8,8 @@ Version 0.6
   TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
+* TextRunner uses powers of 2, rather than powers of 10, to calibrate the
+  number of loops
 
 
 Version 0.5 (2016-06-29)
