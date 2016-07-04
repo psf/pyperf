@@ -25,7 +25,7 @@ def _format_stmt(statements):
 
 
 def _create_runner():
-    runner = perf.text_runner.TextRunner()
+    runner = perf.text_runner.TextRunner('timeit')
     parser = runner.argparser
     parser.add_argument('-s', '--setup', action='append', default=[],
                         help='setup statements')

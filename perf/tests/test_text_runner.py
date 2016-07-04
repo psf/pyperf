@@ -22,7 +22,7 @@ def check_args(loops, a, b):
 
 class TestTextRunner(unittest.TestCase):
     def create_text_runner(self, args):
-        runner = perf.text_runner.TextRunner(name='test_runner')
+        runner = perf.text_runner.TextRunner('bench')
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -44,7 +44,7 @@ class TestTextRunner(unittest.TestCase):
 
         # check bench_sample_func() result
         self.assertIsInstance(result, perf.Benchmark)
-        self.assertEqual(result.name, 'test_runner')
+        self.assertEqual(result.name, 'bench')
         self.assertEqual(result.get_nrun(), 1)
 
     def test_bench_func_raw(self):
@@ -151,7 +151,7 @@ class TestTextRunner(unittest.TestCase):
                              tests.benchmark_as_json(result))
 
     def test_cpu_affinity_setaffinity_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
@@ -161,7 +161,7 @@ class TestTextRunner(unittest.TestCase):
         mock_setaffinity.assert_called_once_with(0, [1, 2])
 
     def test_cpu_affinity_setaffinity_without_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
@@ -171,7 +171,7 @@ class TestTextRunner(unittest.TestCase):
 
     @unittest.skipIf(psutil is None, 'need psutil')
     def test_cpu_affinity_psutil_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
         with mock.patch('perf.text_runner.os') as mock_os:

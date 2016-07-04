@@ -4,6 +4,8 @@ Changelog
 Version 0.6
 -----------
 
+* name is now mandatory: it must be a non-empty string in Benchmark
+  and TextRunner.
 * A single JSON file can now contain multiple benchmarks
 * add new functions to load/dump benchmarks:
 

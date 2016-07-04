@@ -274,9 +274,11 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 
 
 class TextRunner:
-    def __init__(self, name=None, samples=3, warmups=1, processes=25,
+    def __init__(self, name, samples=3, warmups=1, processes=25,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None):
+        if not name:
+            raise ValueError("name must be a non-empty string")
         self.name = name
         if metadata is not None:
             self.metadata = metadata

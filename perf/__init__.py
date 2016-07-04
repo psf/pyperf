@@ -78,7 +78,7 @@ def _format_number(number, unit=None, units=None):
 
 
 class Benchmark(object):
-    def __init__(self, name=None, loops=None, inner_loops=None,
+    def __init__(self, name, loops=None, inner_loops=None,
                  warmups=1, metadata=None):
         if loops is not None:
             # use loops property setter
@@ -104,8 +104,8 @@ class Benchmark(object):
             self.metadata = metadata
         else:
             self.metadata = {}
-        if name:
-            self.metadata['name'] = name
+        # use name property setter
+        self.name = name
 
         # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
@@ -116,16 +116,14 @@ class Benchmark(object):
 
     @name.setter
     def name(self, value):
-        if not(value is None or isinstance(value, str)):
-            raise TypeError("name must be a string or None")
+        if not isinstance(value, six.string_types):
+            raise TypeError("name must be a non-empty string")
 
-        if value:
-            value = value.strip()
+        value = value.strip()
+        if not value:
+            raise TypeError("name must be a non-empty string")
 
-        if value:
-            self.metadata['name'] = value
-        else:
-            self.metadata.pop('name', None)
+        self.metadata['name'] = value
 
     @property
     def inner_loops(self):
@@ -266,8 +264,10 @@ class Benchmark(object):
         loops = data.get('loops')
         inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
+        name = metadata.get('name')
 
-        bench = cls(warmups=warmups,
+        bench = cls(name,
+                    warmups=warmups,
                     loops=loops, inner_loops=inner_loops,
                     metadata=metadata)
         for run_data in data['runs']:
@@ -305,7 +305,10 @@ def load_benchmarks(file):
         benchmarks_json = bench_file['benchmarks']
     elif version == 1:
         # Backward compatibility with perf 0.5
-        benchmarks_json = [bench_file['benchmark']]
+        bench_data = bench_file['benchmark']
+        if 'name' not in bench_data['metadata']:
+            bench_data['metadata']['name'] = bench_data['name']
+        benchmarks_json = [bench_data]
     else:
         raise ValueError("file format version %r not supported" % version)
 

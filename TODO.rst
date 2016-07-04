@@ -1,7 +1,6 @@
 TODO
 ====
 
-* make name mandatory?
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds
 * remove --raw option: use raw method for -p1 or when -p is missing
@@ -19,3 +18,5 @@ TODO
 * round(sample, 9): does it have an impact on statistics?
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29
+* support multiple units, or remove _format_samples.
+  Track memory usage in CPython benchmark suite?
