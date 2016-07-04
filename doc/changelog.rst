@@ -4,6 +4,7 @@ Changelog
 Version 0.6
 -----------
 
+* A single JSON file can now contain multiple benchmarks
 * add new functions to load/dump benchmarks:
 
   * :func:`load_benchmarks`
@@ -17,7 +18,7 @@ Version 0.6
   TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
-* TextRunner uses powers of 2, rather than powers of 10, to calibrate the
+* TextRunner now uses powers of 2, rather than powers of 10, to calibrate the
   number of loops
 
 

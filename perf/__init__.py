@@ -311,11 +311,16 @@ def load_benchmarks(file):
         bench_file = json.load(file)
 
     version = bench_file.get('version')
-    if version != _JSON_VERSION:
+    if version == _JSON_VERSION:
+        benchmarks_json = bench_file['benchmarks']
+    elif version == 1:
+        # Backward compatibility with perf 0.5
+        benchmarks_json = [bench_file['benchmark']]
+    else:
         raise ValueError("file format version %r not supported" % version)
 
     benchmarks = []
-    for bench_data in bench_file['benchmarks']:
+    for bench_data in benchmarks_json:
         bench = Benchmark._json_load(bench_data)
         benchmarks.append(bench)
 
