@@ -89,6 +89,16 @@ class TestTools(unittest.TestCase):
         self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
                          '10001 units')
 
+        # powers of 10
+        self.assertEqual(perf._format_number(2 ** 10, 'unit'),
+                         '1024 units')
+        self.assertEqual(perf._format_number(2 ** 15, 'unit'),
+                         '2^15 units')
+        self.assertEqual(perf._format_number(2 ** 15),
+                         '2^15')
+        self.assertEqual(perf._format_number(2 ** 10 + 1, 'unit'),
+                         '1025 units')
+
 
 class TestResult(unittest.TestCase):
     def check_runs(self, bench, samples, warmup):

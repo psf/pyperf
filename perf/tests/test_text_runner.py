@@ -5,6 +5,10 @@ import perf.text_runner
 from perf import tests
 from perf.tests import mock
 from perf.tests import unittest
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 def check_args(loops, a, b):
@@ -90,8 +94,7 @@ class TestTextRunner(unittest.TestCase):
         self.assertEqual(runner.args.loops, 2 ** 17)
         self.assertEqual(result.loops, 2 ** 17)
 
-
-        self.assertIn(textwrap.dedent('''
+        expected = textwrap.dedent('''
             calibration: 1 loop: 1.00 us
             calibration: 2 loops: 2.00 us
             calibration: 4 loops: 4.00 us
@@ -106,13 +109,13 @@ class TestTextRunner(unittest.TestCase):
             calibration: 2048 loops: 2.05 ms
             calibration: 4096 loops: 4.10 ms
             calibration: 8192 loops: 8.19 ms
-            calibration: 16384 loops: 16.4 ms
-            calibration: 32768 loops: 32.8 ms
-            calibration: 65536 loops: 65.5 ms
-            calibration: 131072 loops: 131 ms
-            calibration: use 131072 loops
-                      ''').strip(),
-                      stdout.getvalue())
+            calibration: 2^14 loops: 16.4 ms
+            calibration: 2^15 loops: 32.8 ms
+            calibration: 2^16 loops: 65.5 ms
+            calibration: 2^17 loops: 131 ms
+            calibration: use 2^17 loops
+        ''').strip()
+        self.assertIn(expected, stdout.getvalue())
         self.assertEqual(stderr.getvalue(), '')
 
     def test_loops_calibration_min_max_time(self):
@@ -166,6 +169,7 @@ class TestTextRunner(unittest.TestCase):
                 runner._cpu_affinity()
         self.assertEqual(mock_setaffinity.call_count, 0)
 
+    @unittest.skipIf(psutil is None, 'need psutil')
     def test_cpu_affinity_psutil_isolcpus(self):
         runner = perf.text_runner.TextRunner()
         runner.parse_args(['-v'])

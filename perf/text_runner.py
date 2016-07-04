@@ -359,9 +359,12 @@ class TextRunner:
 
         min_dt = self.args.min_time * 0.90
         max_dt = self.args.max_time
-        for index in range(0, 33):
-            # FIXME: add a check to detect bugs in sample_func(): put a limit?
-            loops = 2 ** index
+        max_loops = 2 ** 32
+
+        loops = 1
+        while 1:
+            if loops > max_loops:
+                raise ValueError("unable to calibrate: loops=%s" % loops)
 
             dt = sample_func(loops)
             if self.args.verbose:
@@ -371,11 +374,14 @@ class TextRunner:
                       file=stream)
 
             if dt >= max_dt:
-                index = max(index - 1, 0)
-                loops = 2 ** index
+                # get the previous number of loops
+                loops = max(loops // 2, 1)
                 break
             if dt >= min_dt:
                 break
+
+            loops *= 2
+
         if self.args.verbose:
             print("calibration: use %s" % perf._format_number(loops, 'loop'),
                   file=stream)
