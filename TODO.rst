@@ -1,6 +1,9 @@
 TODO
 ====
 
+* use the calibration at the first warmup sample in raw mode
+* limit the number of processes when a single sample takes 5 seconds
+* remove --raw option: use raw method for -p1 or when -p is missing
 * add function to add new runs to an existing JSON file
 * "merge" two JSON files: cumulate benchmarks, add runs if two files have the
   same benchmark, etc.
