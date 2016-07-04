@@ -105,6 +105,25 @@ def _common_metadata(metadatas):
     return metadata
 
 
+def _display_common_metadata(benchmarks):
+    metadatas = [dict(result.metadata) for result in benchmarks]
+    for metadata in metadatas:
+        # don't display name as metadata, it's already displayed
+        metadata.pop('name', None)
+
+    common_metadata = _common_metadata(metadatas)
+    if common_metadata:
+        perf.text_runner._display_metadata(common_metadata,
+                               header='Common metadata:')
+        print()
+
+    for key in common_metadata:
+        for metadata in metadatas:
+            metadata.pop(key, None)
+
+    return metadatas
+
+
 def compare_results(args, results, sort_results):
     if sort_results:
         results.sort(key=_result_sort_key)
@@ -124,19 +143,7 @@ def compare_results(args, results, sort_results):
     print()
 
     if args.metadata:
-        metadatas = [dict(result.metadata) for result in results]
-        for metadata in metadatas:
-            # don't display name as metadata, it's already displayed
-            metadata.pop('name', None)
-
-        common_metadata = _common_metadata(metadatas)
-        perf.text_runner._display_metadata(common_metadata,
-                               header='Common metadata:')
-        print()
-
-        for key in common_metadata:
-            for metadata in metadatas:
-                metadata.pop(key, None)
+        metadatas = _display_common_metadata(results)
 
         for result, metadata in zip(results, metadatas):
             perf.text_runner._display_metadata(metadata,
@@ -198,26 +205,42 @@ def collect_metadata():
     perf.text_runner._display_metadata(metadata)
 
 
+def cmd_show(args):
+    benchmarks = perf.load_benchmarks(args.filename)
+    many_benchmarks = (len(benchmarks) > 1)
+
+    if args.metadata:
+        if many_benchmarks:
+            metadatas = _display_common_metadata(benchmarks)
+        else:
+            metadatas = [benchmarks[0].metadata]
+
+    for index, benchmark in enumerate(benchmarks):
+        if not benchmark.name:
+            benchmark.name = "<benchmark #%s>" % (1 + index)
+
+        if many_benchmarks:
+            print("[%s]" % benchmark.name)
+
+        if args.metadata:
+            metadata = metadatas[index]
+            perf.text_runner._display_metadata(metadata)
+            print()
+
+        perf.text_runner._display_benchmark(benchmark,
+                                            hist=args.hist,
+                                            stats=args.stats,
+                                            runs=bool(args.verbose))
+        if many_benchmarks and index != len(benchmarks) - 1:
+            print()
+
+
 def main():
     parser = create_parser()
     args = parser.parse_args()
     action = args.action
     if action == 'show':
-        benchmarks = perf.load_benchmarks(args.filename)
-        for index, benchmark in enumerate(benchmarks, 1):
-            if not benchmark.name:
-                benchmark.name = "<benchmark #%s>" % index
-            if len(benchmarks) > 1:
-                print("[%s]" % benchmark.name)
-
-            perf.text_runner._display_benchmark(benchmark,
-                                                metadata=args.metadata,
-                                                hist=args.hist,
-                                                stats=args.stats,
-                                                runs=bool(args.verbose))
-            if len(benchmarks) > 1 and index != len(benchmarks):
-                print()
-
+        cmd_show(args)
     elif action in ('compare', 'compare_to'):
         ref_result = load_result(args.ref_filename, '<file#1>')
         results = [ref_result]
