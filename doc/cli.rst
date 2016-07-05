@@ -11,6 +11,7 @@ Show a benchmark result::
     python3 -m perf show
         [-v/--verbose] [-m/--metadata]
         |-g/--hist] [-t/--stats]
+        [-b NAME/--name NAME]
         filename.json
 
 * ``--verbose`` enables the verbose mode
@@ -20,6 +21,7 @@ Show a benchmark result::
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
+* ``--name NAME`` only displays the benchmark called ``NAME``
 
 .. _show_cmd_metadata:
 

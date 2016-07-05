@@ -12,13 +12,21 @@ def create_parser():
                                      prog='-m perf')
     subparsers = parser.add_subparsers(dest='action')
 
-    show = subparsers.add_parser('show')
-    show.add_argument('-g', '--hist', action="store_true",
-                      help='display an histogram of samples')
-    show.add_argument('-t', '--stats', action="store_true",
-                      help='display statistics (min, max, ...)')
-    show.add_argument('filename', type=str,
-                      help='Result JSON file')
+    cmd = subparsers.add_parser('show')
+    cmd.add_argument('-v', '--verbose', action="store_true",
+                     help='enable verbose mode')
+    cmd.add_argument('-m', '--metadata', dest='metadata',
+                     action="store_true",
+                     help="Show metadata.")
+    cmd.add_argument('-g', '--hist', action="store_true",
+                     help='display an histogram of samples')
+    cmd.add_argument('-t', '--stats', action="store_true",
+                     help='display statistics (min, max, ...)')
+    cmd.add_argument('-b', '--name',
+                     help='only display the benchmark called NAME '
+                          '(defaut: display all benchmarks of a suite)')
+    cmd.add_argument('filename', type=str,
+                     help='Result JSON file')
 
     hist = subparsers.add_parser('hist')
     hist.add_argument('--extend', action="store_true",
@@ -36,42 +44,35 @@ def create_parser():
     hist_scipy.add_argument('filename', type=str,
                             help='Result JSON file')
 
-    compare = subparsers.add_parser('compare')
-    compare.add_argument('ref_filename', type=str,
-                         help='Reference JSON file')
-    compare.add_argument('changed_filenames', metavar="changed_filename",
-                         type=str, nargs='+',
-                         help='Changed JSON file')
+    # compare, compare_to
+    for command in ('compare', 'compare_to'):
+        cmd= subparsers.add_parser(command)
+        cmd.add_argument('-v', '--verbose', action="store_true",
+                         help='enable verbose mode')
+        cmd.add_argument('-m', '--metadata', dest='metadata',
+                         action="store_true",
+                         help="Show metadata.")
+        cmd.add_argument('ref_filename', type=str,
+                             help='Reference JSON file')
+        cmd.add_argument('changed_filenames', metavar="changed_filename",
+                             type=str, nargs='+',
+                             help='Changed JSON file')
 
-    compare_to = subparsers.add_parser('compare_to')
-    compare_to.add_argument('ref_filename', type=str,
-                            help='Reference JSON file')
-    compare_to.add_argument('changed_filenames', metavar="changed_filename",
-                            type=str, nargs='+',
-                            help='Changed JSON file')
-
+    # stats
     stats = subparsers.add_parser('stats')
     stats.add_argument('filename', type=str,
                        help='Result JSON file')
 
+    # metadata
     subparsers.add_parser('metadata')
 
+    # timeit
     cmd = subparsers.add_parser('timeit')
     timeit_runner = perf.text_runner.TextRunner(name='timeit', _argparser=cmd)
     cmd.add_argument('-s', '--setup', action='append', default=[],
                      help='setup statements')
     cmd.add_argument('stmt', nargs='+',
                      help='executed statements')
-
-    # Add arguments to multiple commands
-    for cmd in (show, compare, compare_to):
-        cmd.add_argument('-v', '--verbose', action="store_true",
-                         help='enable verbose mode')
-
-    for cmd in (show, compare, compare_to):
-        cmd.add_argument('-m', '--metadata', dest='metadata',
-                         action="store_true",
-                         help="Show metadata.")
 
     return parser, timeit_runner
 
@@ -214,7 +215,16 @@ def cmd_metadata():
 
 def cmd_show(args):
     suite = perf.BenchmarkSuite.load(args.filename)
-    benchmarks = suite.get_benchmarks()
+    if args.name:
+        try:
+            benchmark = suite[args.name]
+        except KeyError:
+            print("ERROR: %s does not contain a callback called %r"
+                  % (suite.filename, args.name))
+            sys.exit(1)
+        benchmarks = (benchmark,)
+    else:
+        benchmarks = suite.get_benchmarks()
     many_benchmarks = (len(benchmarks) > 1)
 
     if args.metadata:
