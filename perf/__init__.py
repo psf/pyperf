@@ -309,6 +309,12 @@ class BenchmarkSuite(object):
         self.filename = filename
         self._benchmarks = {}
 
+    def __getitem__(self, name):
+        return self._benchmarks[name]
+
+    def __len__(self):
+        return len(self._benchmarks)
+
     def get_benchmarks(self):
         # FIXME: use the benchmark names stored _benchmarks?
         return sorted(self._benchmarks.values(),

@@ -103,7 +103,7 @@ class TestTools(unittest.TestCase):
                          '1025 units')
 
 
-class TestResult(unittest.TestCase):
+class TestBenchmark(unittest.TestCase):
     def check_runs(self, bench, samples, warmup):
         runs = bench.get_runs()
         self.assertEqual(len(runs), len(samples))
@@ -186,7 +186,7 @@ class TestResult(unittest.TestCase):
         self.assertEqual(str(bench),
                          'Median +- std dev: 1.50 sec +- 0.50 sec')
 
-    def test_benchmark_json(self):
+    def test_json(self):
         samples = (1.0, 1.5, 2.0)
         bench = perf.Benchmark("mybench", warmups=1,
                                loops=100, inner_loops=20,
@@ -195,7 +195,7 @@ class TestResult(unittest.TestCase):
             bench.add_run([3.0, sample])
 
         with tempfile.NamedTemporaryFile() as tmp:
-            perf.Benchmark.dump(bench, tmp.name)
+            bench.dump(tmp.name)
             bench = perf.Benchmark.load(tmp.name)
 
         self.assertEqual(bench.name, "mybench")
@@ -251,6 +251,44 @@ class CPUToolsTests(unittest.TestCase):
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
         with mock.patch(BUILTIN_OPEN, side_effect=OSError):
             self.assertIsNone(perf._get_isolated_cpus())
+
+
+class TestBenchmarkSuite(unittest.TestCase):
+    def benchmark(self, name):
+        bench = perf.Benchmark(name)
+        bench.add_run([1.0, 1.5, 2.0])
+        return bench
+
+    def test_suite(self):
+        suite = perf.BenchmarkSuite()
+        telco = self.benchmark('telco')
+        suite.add_benchmark(telco)
+        go = self.benchmark('go')
+        suite.add_benchmark(go)
+
+        self.assertIsNone(suite.filename)
+        self.assertEqual(len(suite), 2)
+        self.assertEqual(suite.get_benchmarks(), [go, telco])
+        self.assertEqual(suite['go'], go)
+        with self.assertRaises(KeyError):
+            suite['non_existent']
+
+    def test_json(self):
+        suite = perf.BenchmarkSuite()
+        suite.add_benchmark(self.benchmark('telco'))
+        suite.add_benchmark(self.benchmark('go'))
+
+        with tempfile.NamedTemporaryFile() as tmp:
+            filename = tmp.name
+            suite.dump(filename)
+            suite = perf.BenchmarkSuite.load(filename)
+
+        self.assertEqual(suite.filename, filename)
+
+        benchmarks = suite.get_benchmarks()
+        self.assertEqual(len(benchmarks), 2)
+        self.assertEqual(benchmarks[0].name, 'go')
+        self.assertEqual(benchmarks[1].name, 'telco')
 
 
 class MiscTests(unittest.TestCase):
