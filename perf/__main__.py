@@ -206,8 +206,8 @@ def collect_metadata():
 
 
 def cmd_show(args):
-    # FIXME: use the BenchmarkSuite object, not a list
-    benchmarks = list(perf.BenchmarkSuite.load(args.filename))
+    benchmarks = perf.BenchmarkSuite.load(args.filename)
+    benchmarks = sorted(benchmarks, key=lambda bench: bench.name)
     many_benchmarks = (len(benchmarks) > 1)
 
     if args.metadata:
