@@ -20,17 +20,17 @@ import perf
 def _json_dump(bench, args):
     if args.json_file:
         # --json-file=FILENAME
-        perf.dump_benchmark(bench, args.json_file)
+        bench.dump(args.json_file)
     if args.json_append:
         if os.path.exists(args.json_append):
-            benchmarks = perf.load_benchmarks(args.json_append)
+            suite = perf.BenchmarkSuite.load(args.json_append)
         else:
-            benchmarks = []
-        benchmarks.append(bench)
-        perf.dump_benchmarks(benchmarks, args.json_append)
+            suite = perf.BenchmarkSuite()
+        suite.add_benchmark(bench)
+        suite.dump(args.json_append)
     elif args.json:
         # --json
-        perf.dump_benchmark(bench, sys.stdout)
+        bench.dump(sys.stdout)
 
 
 def _bench_from_subprocess(args):
@@ -61,13 +61,7 @@ def _bench_from_subprocess(args):
         raise RuntimeError("%s failed with exit code %s"
                            % (args[0], proc.returncode))
 
-    # FIXME: put following code in a function?
-    # it is used by runner.py of the CPython benchmark suite
-    if six.PY3:
-        fileobj = io.StringIO(stdout)
-    else:
-        fileobj = io.BytesIO(stdout)
-    return perf.load_benchmark(fileobj)
+    return perf.Benchmark.loads(stdout)
 
 
 def _display_run(bench, index, nrun, samples, file=None):

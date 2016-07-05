@@ -70,7 +70,7 @@ def create_parser():
 
 
 def load_result(filename, default_name=None):
-    result = perf.load_benchmark(filename)
+    result = perf.Benchmark.load(filename)
 
     if not result.name and filename != "-":
         name = filename
@@ -206,7 +206,8 @@ def collect_metadata():
 
 
 def cmd_show(args):
-    benchmarks = perf.load_benchmarks(args.filename)
+    # FIXME: use the BenchmarkSuite object, not a list
+    benchmarks = list(perf.BenchmarkSuite.load(args.filename))
     many_benchmarks = (len(benchmarks) > 1)
 
     if args.metadata:

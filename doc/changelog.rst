@@ -4,19 +4,12 @@ Changelog
 Version 0.6
 -----------
 
+* Add :class:`perf.BenchmarkSuite` class
 * name is now mandatory: it must be a non-empty string in Benchmark
   and TextRunner.
 * A single JSON file can now contain multiple benchmarks
-* add new functions to load/dump benchmarks:
-
-  * :func:`load_benchmarks`
-  * :func:`load_benchmark`
-  * :func:`dump_benchmarks`
-  * :func:`dump_benchmark`
-  * Remove json methods from the :class:`perf.Benchmark` class
-
-* add a dependency to the ``six`` module
-* add ``--quiet``, ``--hist``, ``--stats`` and ``--json-append`` command line
+* Add a dependency to the ``six`` module
+* Add ``--quiet``, ``--hist``, ``--stats`` and ``--json-append`` command line
   options to TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata

@@ -110,7 +110,7 @@ class TestTimeit(unittest.TestCase):
             proc.communicate()
             self.assertEqual(proc.returncode, 0)
 
-            bench = perf.load_benchmark(tmp.name)
+            bench = perf.Benchmark.load(tmp.name)
 
         self.assertEqual(bench.loops, 4)
 

@@ -83,34 +83,6 @@ Clocks
    information on Python clocks.
 
 
-Load/dump benchmarks
---------------------
-
-.. function:: load_benchmarks(file) -> List[Benchmark]
-
-   Load benchmarks from a JSON file which was created by
-   :func:`dump_benchmarks`. Return a list of :class:`Benchmark` objects.
-
-   *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`, or
-   an open file object.
-
-.. function:: load_benchmark(file) -> Benchmark
-
-   Similar to :func:`load_benchmarks`, but load exactly one benchmark.
-
-   Return a :class:`Benchmark` objects.
-
-.. function:: dump_benchmarks(benchmarks: List[Benchmark], file)
-
-   Dump a list of :class:`Benchmark` objects as JSON into *file*.
-
-   *file* can be a filename, or an open file object.
-
-.. function:: dump_benchmark(benchmark: Benchmark, file)
-
-   Similar to :func:`dump_benchmarks`, but dump a single benchmark.
-
-
 Benchmark
 ---------
 
@@ -139,6 +111,17 @@ Benchmark
 
       All runs must have the same number of samples.
 
+   .. method:: dump(file)
+
+      Dump the benchmark as JSON into *file*.
+
+      *file* can be a filename, or an open file object.
+
+   .. method:: format()
+
+      Format the result as ``... +- ...`` (median +- standard deviation) string
+      (``str``).
+
    .. method:: get_nrun()
 
       Get the number of runs (``int``).
@@ -158,19 +141,16 @@ Benchmark
       Raw run samples are divided by ``loops x inner_loops``: see :attr:`loops`
       and :attr:`inner_loops` attributes.
 
-   .. method:: get_metadata()
+   .. classmethod:: load(file) -> Benchmark
 
-      Get all metadata.
+      Load a benchmark from a JSON file which was created by :meth:`dump`.
 
-   .. method:: format()
+      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      or an open file object.
 
-      Format the result as ``... +- ...`` (median +- standard deviation) string
-      (``str``).
+   .. classmethod:: loads(string) -> Benchmark
 
-   .. method:: __str__()
-
-      Format the result as ``Median +- std dev: ... +- ...`` (median +-
-      standard deviation) a string (``str``).
+      Load a benchmark from a JSON string.
 
    .. method:: median()
 
@@ -178,6 +158,11 @@ Benchmark
       :meth:`get_samples`.
 
       The median cannot be zero: :meth:`add_run` rejects null samples.
+
+   .. method:: __str__()
+
+      Format the result as ``Median +- std dev: ... +- ...`` (median +-
+      standard deviation) a string (``str``).
 
    Attributes:
 
@@ -200,6 +185,31 @@ Benchmark
 
       Benchmark name (``str`` or ``None``).
 
+
+BenchmarkSuite
+--------------
+
+.. class:: perf.BenchmarkSuite
+
+   Benchmark suite.
+
+   .. method:: add_benchmark(benchmark)
+
+      Add a :class:`perf.Benchmark` object.
+
+   .. function:: dump(file)
+
+      Dump the benchmark suite as JSON into *file*.
+
+      *file* can be a filename, or an open file object.
+
+   .. classmethod:: load(file)
+
+      Load a benchmark suite from a JSON file which was created by
+      :meth:`dump`.
+
+      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      or an open file object.
 
 
 TextRunner

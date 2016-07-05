@@ -195,8 +195,8 @@ class TestResult(unittest.TestCase):
             bench.add_run([3.0, sample])
 
         with tempfile.NamedTemporaryFile() as tmp:
-            perf.dump_benchmark(bench, tmp.name)
-            bench = perf.load_benchmark(tmp.name)
+            perf.Benchmark.dump(bench, tmp.name)
+            bench = perf.Benchmark.load(tmp.name)
 
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})

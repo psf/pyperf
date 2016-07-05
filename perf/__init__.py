@@ -110,6 +110,7 @@ class Benchmark(object):
         # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
 
+    # FIXME: remove name? store it only in the benchmark suite?
     @property
     def name(self):
         return self.metadata.get('name', None)
@@ -284,77 +285,117 @@ class Benchmark(object):
             data['metadata'] = self.metadata
         return data
 
+    @staticmethod
+    def load(file):
+        suite = BenchmarkSuite.load(file)
+        benchmarks = list(suite)
+        if len(benchmarks) != 1:
+            raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
+        return benchmarks[0]
 
-def load_benchmarks(file):
-    if isinstance(file, (bytes, six.text_type)):
-        if file != '-':
-            if six.PY3:
-                fp = open(file, "r", encoding="utf-8")
+    @staticmethod
+    def loads(string):
+        suite = BenchmarkSuite._loads(string)
+        benchmarks = list(suite)
+        if len(benchmarks) != 1:
+            raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
+        return benchmarks[0]
+
+    def dump(self, file):
+        suite = BenchmarkSuite()
+        suite.add_benchmark(self)
+        suite.dump(file)
+
+
+class BenchmarkSuite(object):
+    def __init__(self, filename=None):
+        self.filename = filename
+        self._benchmarks = {}
+
+    def __iter__(self):
+        return iter(self._benchmarks.values())
+
+    def _add_benchmark(self, name, benchmark):
+        if name in self._benchmarks:
+            raise ValueError("duplicate benchmark name: %r" % name)
+        self._benchmarks[name] = benchmark
+
+    # FIXME: remove Benchmark.name attr?
+    def add_benchmark(self, benchmark):
+        self._add_benchmark(benchmark.name, benchmark)
+
+    @classmethod
+    def _load_json(cls, filename, bench_file):
+        version = bench_file.get('version')
+        if version == _JSON_VERSION:
+            benchmarks_json = bench_file['benchmarks']
+        elif version == 1:
+            # Backward compatibility with perf 0.5
+            bench_data = bench_file['benchmark']
+            name = bench_data['name'] or "benchmark"
+            if 'name' not in bench_data['metadata']:
+                bench_data['metadata']['name'] = name
+            benchmarks_json = {name: bench_data}
+        else:
+            raise ValueError("file format version %r not supported" % version)
+
+        suite = cls(filename)
+        for name, bench_data in benchmarks_json.items():
+            benchmark = Benchmark._json_load(bench_data)
+            suite._add_benchmark(name, benchmark)
+
+        if not suite._benchmarks:
+            raise ValueError("the file doesn't contain any benchmark")
+
+        return suite
+
+    @classmethod
+    def load(cls, file):
+        if isinstance(file, (bytes, six.text_type)):
+            if file != '-':
+                filename = file
+                if six.PY3:
+                    fp = open(file, "r", encoding="utf-8")
+                else:
+                    fp = open(file, "rb")
+                with fp:
+                    bench_file = json.load(fp)
             else:
-                fp = open(file, "rb")
+                filename = '<stdin>'
+                bench_file = json.load(sys.stdin)
+        else:
+            # file is a file object
+            filename = getattr(file, 'name', None)
+            bench_file = json.load(file)
+
+        return cls._load_json(filename, bench_file)
+
+    @classmethod
+    def _loads(cls, string):
+        bench_file = json.loads(string)
+        return cls._load_json(None, bench_file)
+
+    def dump(self, file):
+        benchmarks_json = {}
+        for name, benchmark in self._benchmarks.items():
+            benchmarks_json[name] = benchmark._as_json()
+        data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
+
+        # set separators to produce compact JSON
+        separators = (',', ':')
+
+        if isinstance(file, (bytes, six.text_type)):
+            if six.PY3:
+                fp = open(file, "w", encoding="utf-8")
+            else:
+                fp = open(file, "wb")
             with fp:
-                bench_file = json.load(fp)
+                json.dump(data, fp, separators=separators)
+                fp.flush()
         else:
-            bench_file = json.load(sys.stdin)
-    else:
-        # file is a file object
-        bench_file = json.load(file)
-
-    version = bench_file.get('version')
-    if version == _JSON_VERSION:
-        benchmarks_json = bench_file['benchmarks']
-    elif version == 1:
-        # Backward compatibility with perf 0.5
-        bench_data = bench_file['benchmark']
-        if 'name' not in bench_data['metadata']:
-            bench_data['metadata']['name'] = bench_data['name']
-        benchmarks_json = [bench_data]
-    else:
-        raise ValueError("file format version %r not supported" % version)
-
-    benchmarks = []
-    for bench_data in benchmarks_json:
-        bench = Benchmark._json_load(bench_data)
-        benchmarks.append(bench)
-
-    if not benchmarks:
-        raise ValueError("file don't contain any benchmark")
-
-    return benchmarks
-
-
-def load_benchmark(file):
-    benchmarks = load_benchmarks(file)
-    if len(benchmarks) != 1:
-        raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
-    return benchmarks[0]
-
-
-def dump_benchmarks(benchmarks, file):
-    benchmarks_json = []
-    for benchmark in benchmarks:
-        benchmarks_json.append(benchmark._as_json())
-    data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
-
-    # set separators to produce compact JSON
-    separators = (',', ':')
-
-    if isinstance(file, (bytes, six.text_type)):
-        if six.PY3:
-            fp = open(file, "w", encoding="utf-8")
-        else:
-            fp = open(file, "wb")
-        with fp:
-            json.dump(data, fp, separators=separators)
-            fp.flush()
-    else:
-        # file is a file object
-        json.dump(data, file, separators=separators)
-        file.flush()
-
-
-def dump_benchmark(benchmark, file):
-    dump_benchmarks((benchmark,), file)
+            # file is a file object
+            json.dump(data, file, separators=separators)
+            file.flush()
 
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
