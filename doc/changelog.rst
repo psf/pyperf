@@ -4,6 +4,7 @@ Changelog
 Version 0.6
 -----------
 
+* New ``perf convert`` command to convert or modify a benchmark suite
 * Remove ``perf hist_scipy`` command, replaced with an example in the doc
 * Add back "Mean +- Std dev" to the stats command
 * Add get_loops() method to Benchmark

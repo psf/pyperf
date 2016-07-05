@@ -72,6 +72,24 @@ def create_parser():
     cmd.add_argument('stmt', nargs='+',
                      help='executed statements')
 
+    # convert
+    cmd = subparsers.add_parser('convert')
+    cmd.add_argument('input_filename',
+                     help='Filename of the input benchmark suite')
+    cmd.add_argument('-o', '--output', metavar='OUTPUT_FILENAME',
+                     dest='output_filename',
+                     help='Filename where the output benchmark suite '
+                          'is written',
+                     required=True)
+    cmd.add_argument('--include-benchmark', metavar='NAME',
+                     help='Only keep benchmark called NAME')
+    cmd.add_argument('--exclude-benchmark', metavar='NAME',
+                     help='Remove the benchmark called NAMED')
+    cmd.add_argument('--include-runs',
+                     help='Only keep benchmark runs RUNS')
+    cmd.add_argument('--exclude-runs',
+                     help='Remove specified benchmark runs')
+
     return parser, timeit_runner
 
 
@@ -210,9 +228,7 @@ def cmd_show(args):
             try:
                 benchmark = suite[args.name]
             except KeyError:
-                print("ERROR: %s does not contain a callback called %r"
-                      % (filename, args.name))
-                sys.exit(1)
+                fatal_missing_benchmark(suite, args.name)
             benchmarks.append((filename, benchmark))
         else:
             benchmarks.extend([(filename, benchmark)
@@ -300,6 +316,67 @@ def cmd_hist(args):
                                         extend=args.extend)
 
 
+def fatal_missing_benchmark(suite, name):
+    print("ERROR: The benchmark suite %s doesn't contain "
+          "a benchmark called %r"
+          % (suite.filename, name))
+    sys.exit(1)
+
+
+def cmd_convert(args):
+    suite = perf.BenchmarkSuite.load(args.input_filename)
+
+    if args.include_benchmark:
+        remove = set(suite)
+        name = args.include_benchmark
+        try:
+            remove.remove(name)
+        except KeyError:
+            fatal_missing_benchmark(suite, name)
+        for name in remove:
+            del suite[name]
+
+    elif args.exclude_benchmark:
+        name = args.exclude_benchmark
+        try:
+            del suite[name]
+        except KeyError:
+            fatal_missing_benchmark(suite, name)
+
+    if args.include_runs or args.exclude_runs:
+        if args.include_runs:
+            runs = args.include_runs
+            include = True
+        else:
+            runs = args.exclude_runs
+            include = False
+        try:
+            only_runs = perf._parse_run_list(runs)
+        except ValueError as exc:
+            print("ERROR: %s (runs: %r)" % (exc, runs))
+            sys.exit(1)
+        for benchmark in suite.values():
+            if include:
+                old_runs = benchmark._runs
+                max_index = len(old_runs) - 1
+                runs = []
+                for index in only_runs:
+                    if index <= max_index:
+                        runs.append(old_runs[index])
+            else:
+                runs = benchmark._runs
+                max_index = len(runs) - 1
+                for index in reversed(only_runs):
+                    if index <= max_index:
+                        del runs[index]
+            if not runs:
+                print("ERROR: Benchmark %r has no more run" % benchmark.name)
+                sys.exit(1)
+            benchmark._runs = runs
+
+    suite.dump(args.output_filename)
+
+
 def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
@@ -316,6 +393,8 @@ def main():
         cmd_metadata()
     elif action == 'timeit':
         cmd_timeit(args, timeit_runner)
+    elif action == 'convert':
+        cmd_convert(args)
     else:
         parser.print_usage()
         sys.exit(1)

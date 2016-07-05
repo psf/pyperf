@@ -156,6 +156,28 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 <https://en.wikipedia.org/wiki/Probability_density_function>`_.
 
 
+convert
+-------
+
+Convert or modify a benchmark suite::
+
+    python3 -m perf convert
+        [--include-benchmark=NAME]
+        [--exclude-benchmark=NAME]
+        [--include-runs=RUNS]
+        input_filename.json
+        -o output_filename.json/--output=output_filename.json
+
+Options:
+
+* ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``
+* ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``
+* ``--include-runs=RUNS`` only keeps benchmark runs ``RUNS``. ``RUNS`` is a
+  list of runs separated by commas, it can include a range using format
+  ``first-last`` which includes ``first`` and ``last`` values. Example:
+  ``1-3,7`` (1, 2, 3, 7).
+
+
 metadata
 --------
 

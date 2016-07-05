@@ -292,6 +292,27 @@ class TestBenchmarkSuite(unittest.TestCase):
 
 
 class MiscTests(unittest.TestCase):
+    def test_parse_run_list(self):
+        with self.assertRaises(ValueError):
+            perf._parse_run_list('')
+        with self.assertRaises(ValueError):
+            perf._parse_run_list('0')
+        self.assertEqual(perf._parse_run_list('1'),
+                         [0])
+        self.assertEqual(perf._parse_run_list('1-2,5-6'),
+                         [0, 1, 4, 5])
+        self.assertEqual(perf._parse_run_list('1,3,7'),
+                         [0, 2, 6])
+
+        # tolerate spaces
+        self.assertEqual(perf._parse_run_list(' 1 , 2 '),
+                         [0, 1])
+
+        # errors
+        self.assertRaises(ValueError, perf._parse_run_list, 'x')
+        self.assertRaises(ValueError, perf._parse_run_list, '1,')
+
+
     def test_setup_version(self):
         import setup
         self.assertEqual(perf.__version__, setup.VERSION)

@@ -521,6 +521,33 @@ def _format_cpu_list(cpus):
     return ','.join(parts)
 
 
+def _parse_run_list(run_list):
+    run_list = run_list.strip()
+
+    runs = []
+    for part in run_list.split(','):
+        part = part.strip()
+        try:
+            if '-' in part:
+                parts = part.split('-', 1)
+                first = int(parts[0])
+                last = int(parts[1])
+                for run in range(first, last+1):
+                    runs.append(run)
+            else:
+                runs.append(int(part))
+        except ValueError:
+            raise ValueError("invalid list of runs")
+
+    if not runs:
+        raise ValueError("empty list of runs")
+
+    if min(runs) < 1:
+        raise ValueError("number of runs starts at 1")
+
+    return [run-1 for run in runs]
+
+
 def _parse_cpu_list(cpu_list):
     cpu_list = cpu_list.strip()
     if not cpu_list:
