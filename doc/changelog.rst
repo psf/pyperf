@@ -5,6 +5,7 @@ Version 0.6
 -----------
 
 * Add back "Mean +- Std dev" to the stats command
+* Add get_loops() method to Benchmark
 * Replace ``python3 -m perf.timeit`` (with dot) CLI with ``-m perf timeit``
   (without dot)
 * Add :class:`perf.BenchmarkSuite` class

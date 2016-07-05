@@ -78,18 +78,12 @@ def _format_number(number, unit=None, units=None):
 
 
 class Benchmark(object):
-    def __init__(self, name, loops=None, inner_loops=None,
+    def __init__(self, name, loops=1, inner_loops=None,
                  warmups=1, metadata=None):
-        if loops is not None:
-            # use loops property setter
-            self.loops = loops
-        else:
-            self._loops = None
-        if inner_loops is not None:
-            # use inner_loops property setter
-            self.inner_loops = inner_loops
-        else:
-            self._inner_loops = None
+        # use loops property setter
+        self.loops = loops
+        # use inner_loops property setter
+        self.inner_loops = inner_loops
         self.warmups = warmups
 
         # list of samples where samples are a non-empty tuples
@@ -132,8 +126,8 @@ class Benchmark(object):
 
     @inner_loops.setter
     def inner_loops(self, value):
-        if not(isinstance(value, int) and value >= 0):
-            raise ValueError("inner_loops must be an int >= 0")
+        if not((isinstance(value, int) and value >= 1) or value is None):
+            raise ValueError("inner_loops must be an int >= 1 or None")
         self._clear_stats_cache()
         self._inner_loops = value
 
@@ -143,8 +137,8 @@ class Benchmark(object):
 
     @loops.setter
     def loops(self, value):
-        if not(isinstance(value, int) and value >= 0):
-            raise ValueError("loops must be an int >= 0")
+        if not(isinstance(value, int) and value >= 1):
+            raise ValueError("loops must be an int >= 1")
         self._clear_stats_cache()
         self._loops = value
 
@@ -215,20 +209,23 @@ class Benchmark(object):
 
         return nrun * (len(self._runs[0]) - self.warmups)
 
+    def get_loops(self):
+        loops = self.loops
+        if not loops:
+            raise ValueError("loops is zero")
+        if self.inner_loops is not None:
+            loops *= self.inner_loops
+        return loops
+
     def get_samples(self):
         if self._samples is not None:
             return self._samples
 
-        factor = 1.0
-        if self.loops is not None:
-            factor *= self.loops
-        if self.inner_loops is not None:
-            factor *= self.inner_loops
-
+        loops = self.get_loops()
         samples = []
         for run_samples in self._runs:
             for sample in run_samples[self.warmups:]:
-                samples.append(sample / factor)
+                samples.append(sample / loops)
         samples = tuple(samples)
         self._samples = samples
         return samples
@@ -262,7 +259,7 @@ class Benchmark(object):
     @classmethod
     def _json_load(cls, data):
         warmups = data['warmups']
-        loops = data.get('loops')
+        loops = data.get('loops', 1)
         inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
         name = metadata.get('name')

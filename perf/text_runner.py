@@ -114,22 +114,23 @@ def _display_stats(bench, file=None):
     print("Standard deviation / median: %.0f%%" % percent, file=file)
 
     # Shortest raw sample (loops)
-    iterations = []
-    if bench.loops:
-        iterations.append(perf._format_number(bench.loops, 'loop'))
     if bench.inner_loops is not None:
+        iterations = []
+        iterations.append(perf._format_number(bench.loops, 'outter-loop'))
         iterations.append(perf._format_number(bench.inner_loops, 'inner-loop'))
 
-    raw_samples = bench._get_raw_samples()
-    text = bench._format_sample(min(raw_samples))
-    if iterations:
-        text = '%s (%s)' % (text, '; '.join(iterations))
-    print("Shortest raw sample: %s" % text, file=file)
+        text = perf._format_number(bench.get_loops())
+        text = '%s (%s)' % (text, ' x '.join(iterations))
+    else:
+        text = perf._format_number(bench.get_loops())
+    print("Loop iterations per sample: %s" % text, file=file)
 
-    text = bench._format_sample(max(raw_samples))
-    if iterations:
-        text = '%s (%s)' % (text, '; '.join(iterations))
-    print("Longest raw sample: %s" % text, file=file)
+    # Shortest/Longest raw sample
+    raw_samples = bench._get_raw_samples()
+    print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),
+          file=file)
+    print("Raw sample maximum: %s" % bench._format_sample(max(raw_samples)),
+          file=file)
     print(file=file)
 
     def format_min(median, value):

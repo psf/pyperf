@@ -142,7 +142,7 @@ class TestResult(unittest.TestCase):
 
     def test_benchmark_loops_property(self):
         bench = perf.Benchmark('bench')
-        self.assertIsNone(bench.loops)
+        self.assertEqual(bench.loops, 1)
         with self.assertRaises(ValueError):
             bench.loops = -1
         with self.assertRaises(ValueError):

@@ -88,26 +88,27 @@ Benchmark
 
 .. class:: perf.Benchmark(name=None, loops=None, inner_loops=None, metadata=None)
 
-   A benchmark is made of multiple run results.
+   A benchmark is made of multiple run results, and each run is made of
+   multiple samples.
 
    Methods:
 
-   .. method:: add_run(samples)
+   .. method:: add_run(raw_samples)
 
-      Add the raw result of a benchmark run.
+      Add the raw samples of a benchmark run.
 
-      *samples* is a non-empty sequence of numbers (``float``) greater than
-      zero.  Usually, *samples* is a list of number of seconds.
+      *raw_samples* must be a non-empty sequence of numbers (``float``) greater
+      than zero.  Usually, *raw_samples* is a list of number of seconds.
 
       Samples must not be equal to zero. If a sample is zero, use more loop
-      iterations (inner and/or outter-loops).
+      iterations: see :ref:`Runs, samples, warmups, outter and inner loops
+      <loops>`.
 
-      *samples* must contains at least ``warmups + 1`` samples. The first
+      *raw_samples* must contains at least ``warmups + 1`` samples. The first
       :attr:`warmups` samples are excluded from the :meth:`get_samples` result.
 
       Samples are raw values of all loops. The :meth:`get_samples` method
-      divides samples by ``loops x inner_loops`` (see :attr:`loops` and
-      :attr:`inner_loops` attributes).
+      divides raw samples by :meth:`get_loops`.
 
       All runs must have the same number of samples.
 
@@ -121,6 +122,11 @@ Benchmark
 
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
+
+   .. method:: get_loops()
+
+      Get the total number of loops per sample (``int``):
+      :attr:`loops` x :attr:`inner_loops`.
 
    .. method:: get_nrun()
 
@@ -169,12 +175,12 @@ Benchmark
    .. attribute:: inner_loops
 
       Number of inner-loop iterations of the benchmark samples
-      (``int``, default: ``None``).
+      (``int >= 1`` or ``None``). Default: ``None``.
 
    .. attribute:: loops
 
       Number of outter-loop iterations of the benchmark samples
-      (``int``, default: ``None``).
+      (``int >= 1``). Default: ``1``.
 
    .. attribute:: metadata
 
@@ -191,7 +197,7 @@ BenchmarkSuite
 
 .. class:: perf.BenchmarkSuite
 
-   Benchmark suite.
+   A benchmark suite is made of :class:`perf.Benchmark` objects.
 
    .. method:: add_benchmark(benchmark)
 
