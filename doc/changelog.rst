@@ -11,8 +11,14 @@ Version 0.6
   and TextRunner.
 * A single JSON file can now contain multiple benchmarks
 * Add a dependency to the ``six`` module
-* Add ``--quiet``, ``--hist``, ``--stats`` and ``--json-append`` command line
-  options to TextRunner
+* Add new command line options to TextRunner:
+
+  * ``--fast``, ``--rigorous``
+  * ``--hist``, ``--stats``
+  * ``--json-append``
+  * ``--quiet``
+
+* Remove ``--max-time`` option of TextRunner
 * :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the

@@ -105,16 +105,22 @@ def _display_stats(result, file=None):
     print("Standard deviation / median: %.0f%%" % percent, file=file)
 
     # Shortest raw sample (loops)
-    shortest = min(result._get_raw_samples())
-    text = result._format_sample(shortest)
     iterations = []
     if result.loops:
         iterations.append(perf._format_number(result.loops, 'loop'))
     if result.inner_loops is not None:
         iterations.append(perf._format_number(result.inner_loops, 'inner-loop'))
+
+    raw_samples = result._get_raw_samples()
+    text = result._format_sample(min(raw_samples))
     if iterations:
         text = '%s (%s)' % (text, '; '.join(iterations))
     print("Shortest raw sample: %s" % text, file=file)
+
+    text = result._format_sample(max(raw_samples))
+    if iterations:
+        text = '%s (%s)' % (text, '; '.join(iterations))
+    print("Longest raw sample: %s" % text, file=file)
     print(file=file)
 
     def format_min(median, value):
@@ -268,7 +274,9 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 
 
 class TextRunner:
-    def __init__(self, name, samples=3, warmups=1, processes=25,
+    # Default parameters are chosen to have approximatively a run of 0.5 second
+    # and so a total duration of 5 seconds by default
+    def __init__(self, name, samples=3, warmups=1, processes=10,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None, _argparser=None):
         if not name:
@@ -313,6 +321,11 @@ class TextRunner:
         else:
             parser = argparse.ArgumentParser()
         parser.description = 'Benchmark'
+        parser.add_argument('--rigorous', action="store_true",
+                            help='Spend longer running tests to get more '
+                                 'accurate results')
+        parser.add_argument('--fast', action="store_true",
+                            help='Get rough answers quickly')
         parser.add_argument('-p', '--processes', type=strictly_positive, default=processes,
                             help='number of processes used to run benchmarks (default: %s)'
                                  % processes)
@@ -342,10 +355,6 @@ class TextRunner:
                             help='Minimum duration in seconds of a single '
                                  'sample, used to calibrate the number of '
                                  'loops (default: 100 ms)')
-        parser.add_argument('--max-time', type=float, default=1.0,
-                            help='Maximum duration in seconds of a single '
-                                 'sample, used to calibrate the number of '
-                                 'loops (default: 1 sec)')
         parser.add_argument('--raw', action="store_true",
                             help='run a single process')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -367,7 +376,6 @@ class TextRunner:
         stream = self._stream()
 
         min_dt = self.args.min_time * 0.90
-        max_dt = self.args.max_time
         max_loops = 2 ** 32
 
         loops = 1
@@ -382,10 +390,6 @@ class TextRunner:
                          perf._format_timedelta(dt)),
                       file=stream)
 
-            if dt >= max_dt:
-                # get the previous number of loops
-                loops = max(loops // 2, 1)
-                break
             if dt >= min_dt:
                 break
 
@@ -400,6 +404,17 @@ class TextRunner:
     def _process_args(self):
         if self.args.quiet:
             self.args.verbose = False
+
+        nprocess = self.argparser.get_default('processes')
+        nsamples = self.argparser.get_default('samples')
+        if self.args.rigorous:
+            self.args.processes = nprocess * 2
+            self.args.samples = nsamples * 5 // 3
+        elif self.args.fast:
+            # use at least 3 processes to bencharmk 3 different (randomized)
+            # hash functions
+            self.args.processes = max(nprocess // 2, 3)
+            self.args.samples = max(nsamples * 2 // 3, 2)
 
     def parse_args(self, args=None):
         if self.args is None:

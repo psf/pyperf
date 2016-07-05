@@ -1,6 +1,8 @@
 TODO
 ====
 
+* rework parameters (processes, samples, loops) depending on max time,
+  not hardcoded parameters
 * perf CLI: support suites, not only benchmarks
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds

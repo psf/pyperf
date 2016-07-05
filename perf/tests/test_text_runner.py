@@ -114,14 +114,13 @@ class TestTextRunner(unittest.TestCase):
         self.assertIn(expected, stdout.getvalue())
         self.assertEqual(stderr.getvalue(), '')
 
-    def test_loops_calibration_min_max_time(self):
+    def test_loops_calibration_min_time(self):
         def sample_func(loops):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
         runner = self.create_text_runner(['--raw', '-vv',
-                                          '--min-time', '0.001',
-                                          '--max-time', '1.0'])
+                                          '--min-time', '0.001'])
         with tests.capture_stdout():
             with tests.capture_stderr():
                 result = runner.bench_sample_func(sample_func)
