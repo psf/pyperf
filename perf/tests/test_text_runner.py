@@ -50,7 +50,7 @@ class TestTextRunner(unittest.TestCase):
             return t
         fake_timer.value = 0
 
-        runner = self.create_text_runner(['--worker', '--json',
+        runner = self.create_text_runner(['--worker', '--stdout',
                                           '--verbose', '--metadata'])
 
         with mock.patch('perf.perf_counter', fake_timer):
@@ -64,7 +64,7 @@ class TestTextRunner(unittest.TestCase):
         self.check_bench_result(runner, stderr, result)
 
     def test_bench_sample_func_raw(self):
-        runner = self.create_text_runner(['--worker', '--json',
+        runner = self.create_text_runner(['--worker', '--stdout',
                                           '--verbose', '--metadata'])
 
         with tests.capture_stdout() as stdout:

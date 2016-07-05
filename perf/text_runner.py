@@ -19,17 +19,16 @@ import perf
 
 def _json_dump(bench, args):
     if args.json_file:
-        # --json-file=FILENAME
         bench.dump(args.json_file)
-    if args.json_append:
+    elif args.json_append:
         if os.path.exists(args.json_append):
             suite = perf.BenchmarkSuite.load(args.json_append)
         else:
             suite = perf.BenchmarkSuite()
         suite.add_benchmark(bench)
         suite.dump(args.json_append)
-    elif args.json:
-        # --json
+
+    if args.stdout:
         bench.dump(sys.stdout)
 
 
@@ -361,7 +360,7 @@ class TextRunner:
                             help='enable verbose mode')
         parser.add_argument('-q', '--quiet', action="store_true",
                             help='enable quiet mode')
-        parser.add_argument('--json', action='store_true',
+        parser.add_argument('--stdout', action='store_true',
                             help='write results encoded to JSON into stdout')
         parser.add_argument('--json-file', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
@@ -439,7 +438,7 @@ class TextRunner:
         return self.args
 
     def _stream(self):
-        return sys.stderr if self.args.json else sys.stdout
+        return sys.stderr if self.args.stdout else sys.stdout
 
     def _range(self):
         for warmup in six.moves.xrange(self.args.warmups):
@@ -622,7 +621,7 @@ class TextRunner:
     def _spawn_worker(self):
         args = []
         args.extend(self.program_args)
-        args.extend(('--worker', '--json',
+        args.extend(('--worker', '--stdout',
                      '--samples', str(self.args.samples),
                      '--warmups', str(self.args.warmups),
                      '--loops', str(self.args.loops)))

@@ -167,7 +167,8 @@ Convert or modify a benchmark suite::
         [--include-runs=RUNS]
         [--remove-outliers]
         input_filename.json
-        -o output_filename.json/--output=output_filename.json
+        (-o output_filename.json/--output=output_filename.json
+        | --stdout)
 
 Options:
 
@@ -180,6 +181,7 @@ Options:
 * ``--remove-outliers`` removes "outlier runs", runs which contains at least
   one sample which is not in the range ``[median - 5%; median + 5%]``.
   See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
+* ``--stdout`` writes the result encoded as JSON into stdout
 
 
 metadata

@@ -79,11 +79,13 @@ def create_parser():
     cmd = subparsers.add_parser('convert')
     cmd.add_argument('input_filename',
                      help='Filename of the input benchmark suite')
-    cmd.add_argument('-o', '--output', metavar='OUTPUT_FILENAME',
+    output = cmd.add_mutually_exclusive_group(required=True)
+    output.add_argument('-o', '--output', metavar='OUTPUT_FILENAME',
                      dest='output_filename',
                      help='Filename where the output benchmark suite '
-                          'is written',
-                     required=True)
+                          'is written')
+    output.add_argument('--stdout', action='store_true',
+                        help='Write benchmark encoded to JSON into stdout')
     cmd.add_argument('--include-benchmark', metavar='NAME',
                      help='Only keep benchmark called NAME')
     cmd.add_argument('--exclude-benchmark', metavar='NAME',
@@ -438,7 +440,10 @@ def cmd_convert(args):
                 sys.exit(1)
             benchmark._runs[:] = new_runs
 
-    suite.dump(args.output_filename)
+    if args.output_filename:
+        suite.dump(args.output_filename)
+    else:
+        suite.dump(sys.stdout)
 
 
 def main():
