@@ -6,14 +6,17 @@ General note: if a filename is ``-``, read the JSON content from stdin.
 show
 ----
 
-Show a benchmark result::
+Show benchmarks of one or multiple benchmark suites::
 
     python3 -m perf show
-        [-v/--verbose] [-m/--metadata]
+        [-q/--quiet]
+        [-v/--verbose]
+        [-m/--metadata]
         |-g/--hist] [-t/--stats]
         [-b NAME/--name NAME]
-        filename.json
+        filename.json [filename2.json ...]
 
+* ``--quiet`` enables the quiet mode
 * ``--verbose`` enables the verbose mode
 * ``--metadata`` displays metadata: see :ref:`perf show metadata
   <show_cmd_metadata>` command

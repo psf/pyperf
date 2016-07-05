@@ -337,6 +337,7 @@ class BenchmarkSuite(object):
         elif version == 1:
             # Backward compatibility with perf 0.5
             bench_data = bench_file['benchmark']
+            # name must be non-empty
             name = bench_data['name'] or "benchmark"
             if 'name' not in bench_data['metadata']:
                 bench_data['metadata']['name'] = name

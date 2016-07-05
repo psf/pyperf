@@ -208,9 +208,13 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
             print(file=file)
 
 
-def _warn_if_bench_unstable(bench, file=None):
+def _warn_if_bench_unstable(bench):
+    # FIXME: modify Benchmark constructor to avoid this annoying case?
     if not bench.get_nrun():
         raise ValueError("benchmark has no run")
+
+    warnings = []
+    warn = warnings.append
     samples = bench.get_samples()
 
     # Display a warning if the standard deviation is larger than 10%
@@ -220,34 +224,32 @@ def _warn_if_bench_unstable(bench, file=None):
         k = statistics.stdev(samples) / median
         if k > 0.10:
             if k > 0.20:
-                print("ERROR: the benchmark is very unstable, the standard "
+                warn("ERROR: the benchmark is very unstable, the standard "
                       "deviation is very high (stdev/median: %.0f%%)!"
-                      % (k * 100),
-                      file=file)
+                      % (k * 100))
             else:
-                print("WARNING: the benchmark seems unstable, the standard "
+                warn("WARNING: the benchmark seems unstable, the standard "
                       "deviation is high (stdev/median: %.0f%%)"
-                      % (k * 100),
-                      file=file)
-            print("Try to rerun the benchmark with more runs, samples "
-                  "and/or loops",
-                  file=file)
-            print(file=file)
+                      % (k * 100))
+            warn("Try to rerun the benchmark with more runs, samples "
+                  "and/or loops")
+            warn("")
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(bench._get_raw_samples())
     text = bench._format_sample(shortest)
     if shortest < 1e-3:
         if shortest < 1e-6:
-            print("ERROR: the benchmark may be very unstable, "
-                  "the shortest raw sample only took %s" % text)
+            warn("ERROR: the benchmark may be very unstable, "
+                 "the shortest raw sample only took %s" % text)
         else:
-            print("WARNING: the benchmark may be unstable, "
-                  "the shortest raw sample only took %s" % text)
-        print("Try to rerun the benchmark with more loops "
-              "or increase --min-time",
-              file=file)
-        print(file=file)
+            warn("WARNING: the benchmark may be unstable, "
+                 "the shortest raw sample only took %s" % text)
+        warn("Try to rerun the benchmark with more loops "
+             "or increase --min-time")
+        warn("")
+
+    return warnings
 
 
 def _display_metadata(metadata, file=None, header="Metadata:"):
@@ -280,7 +282,9 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
         print(file=file)
 
     if check_unstable:
-        _warn_if_bench_unstable(bench, file=file)
+        warnings = _warn_if_bench_unstable(bench)
+        for line in warnings:
+            print(line, file=file)
 
     print(str(bench), file=file)
 

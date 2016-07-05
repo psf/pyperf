@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import os.path
 import sys
 
 import statistics
@@ -13,6 +14,8 @@ def create_parser():
     subparsers = parser.add_subparsers(dest='action')
 
     cmd = subparsers.add_parser('show')
+    cmd.add_argument('-q', '--quiet', action="store_true",
+                     help='enable quiet mode')
     cmd.add_argument('-v', '--verbose', action="store_true",
                      help='enable verbose mode')
     cmd.add_argument('-m', '--metadata', dest='metadata',
@@ -25,18 +28,19 @@ def create_parser():
     cmd.add_argument('-b', '--name',
                      help='only display the benchmark called NAME '
                           '(defaut: display all benchmarks of a suite)')
-    cmd.add_argument('filename', type=str,
+    cmd.add_argument('filenames', metavar='filename',
+                     type=str, nargs='+',
                      help='Result JSON file')
 
-    hist = subparsers.add_parser('hist')
-    hist.add_argument('--extend', action="store_true",
-                      help="Extend the histogram to fit the terminal")
-    hist.add_argument('-n', '--bins', type=int, default=None,
-                      help='Number of histogram bars (default: 25, or less '
-                           'depeding on the terminal size)')
-    hist.add_argument('filenames', metavar='filename',
-                      type=str, nargs='+',
-                      help='Result JSON file')
+    cmd = subparsers.add_parser('hist')
+    cmd.add_argument('--extend', action="store_true",
+                     help="Extend the histogram to fit the terminal")
+    cmd.add_argument('-n', '--bins', type=int, default=None,
+                     help='Number of histogram bars (default: 25, or less '
+                          'depeding on the terminal size)')
+    cmd.add_argument('filenames', metavar='filename',
+                     type=str, nargs='+',
+                     help='Result JSON file')
 
     # compare, compare_to
     for command in ('compare', 'compare_to'):
@@ -53,9 +57,9 @@ def create_parser():
                              help='Changed JSON file')
 
     # stats
-    stats = subparsers.add_parser('stats')
-    stats.add_argument('filename', type=str,
-                       help='Result JSON file')
+    cmd = subparsers.add_parser('stats')
+    cmd.add_argument('filename', type=str,
+                     help='Result JSON file')
 
     # metadata
     subparsers.add_parser('metadata')
@@ -104,8 +108,7 @@ def _common_metadata(metadatas):
     return metadata
 
 
-def _display_common_metadata(benchmarks):
-    metadatas = [dict(result.metadata) for result in benchmarks]
+def _display_common_metadata(metadatas):
     for metadata in metadatas:
         # don't display name as metadata, it's already displayed
         metadata.pop('name', None)
@@ -120,20 +123,18 @@ def _display_common_metadata(benchmarks):
         for metadata in metadatas:
             metadata.pop(key, None)
 
-    return metadatas
 
+def compare_results(args, benchmarks, sort_benchmarks):
+    if sort_benchmarks:
+        benchmarks.sort(key=_result_sort_key)
 
-def compare_results(args, results, sort_results):
-    if sort_results:
-        results.sort(key=_result_sort_key)
+    ref_result = benchmarks[0]
 
-    ref_result = results[0]
-
-    if sort_results:
+    if sort_benchmarks:
         print("Reference (best): %s" % ref_result.name)
     else:
         print("Reference: %s" % ref_result.name)
-        for index, result in enumerate(results[1:], 1):
+        for index, result in enumerate(benchmarks[1:], 1):
             if index > 1:
                 prefix = 'Changed #%s' % index
             else:
@@ -142,9 +143,10 @@ def compare_results(args, results, sort_results):
     print()
 
     if args.metadata:
-        metadatas = _display_common_metadata(results)
+        metadatas = [dict(benchmark.metadata) for benchmark in benchmarks]
+        _display_common_metadata(metadatas)
 
-        for result, metadata in zip(results, metadatas):
+        for result, metadata in zip(benchmarks, metadatas):
             perf.text_runner._display_metadata(metadata,
                                    header='%s metadata:' % result.name)
             print()
@@ -152,8 +154,8 @@ def compare_results(args, results, sort_results):
     # Compute medians
     ref_samples = ref_result.get_samples()
     ref_avg = ref_result.median()
-    last_index = len(results) - 1
-    for index, changed_result in enumerate(results[1:], 1):
+    last_index = len(benchmarks) - 1
+    for index, changed_result in enumerate(benchmarks[1:], 1):
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.median()
         text = ("Median +- std dev: [%s] %s -> [%s] %s"
@@ -188,43 +190,84 @@ def cmd_metadata():
 
 
 def cmd_show(args):
-    suite = perf.BenchmarkSuite.load(args.filename)
-    if args.name:
-        try:
-            benchmark = suite[args.name]
-        except KeyError:
-            print("ERROR: %s does not contain a callback called %r"
-                  % (suite.filename, args.name))
-            sys.exit(1)
-        benchmarks = (benchmark,)
+    suites = []
+    for filename in args.filenames:
+        suite = perf.BenchmarkSuite.load(filename)
+        suites.append(suite)
+
+    filenames = {os.path.basename(suite.filename) for suite in suites}
+    if len(filenames) == len(suites):
+        format_filename = os.path.basename
     else:
-        benchmarks = suite.get_benchmarks()
+        # FIXME: try harder: try to get differente names by keeping only
+        # the parent directory?
+        format_filename = lambda filename: filename
+
+    benchmarks = []
+    for suite in suites:
+        filename = format_filename(suite.filename)
+        if args.name:
+            try:
+                benchmark = suite[args.name]
+            except KeyError:
+                print("ERROR: %s does not contain a callback called %r"
+                      % (filename, args.name))
+                sys.exit(1)
+            benchmarks.append((filename, benchmark))
+        else:
+            benchmarks.extend([(filename, benchmark)
+                               for benchmark in suite.get_benchmarks()])
+
     many_benchmarks = (len(benchmarks) > 1)
+    show_filename = (len(suites) > 1)
 
     if args.metadata:
         if many_benchmarks:
-            metadatas = _display_common_metadata(benchmarks)
+            metadatas = [dict(benchmark.metadata)
+                         for filename, benchmark in benchmarks]
+            _display_common_metadata(metadatas)
         else:
-            metadatas = [benchmarks[0].metadata]
+            metadatas = [benchmarks[0][1].metadata]
 
-    for index, benchmark in enumerate(benchmarks):
-        if not benchmark.name:
-            benchmark.name = "<benchmark #%s>" % (1 + index)
+    if args.metadata or args.hist or args.stats or args.verbose:
+        for index, item in enumerate(benchmarks):
+            filename, benchmark = item
 
-        if many_benchmarks:
-            print("[%s]" % benchmark.name)
+            if many_benchmarks:
+                title = benchmark.name
+                if show_filename:
+                    title = "%s:%s" % (filename, title)
+                print(title)
+                print("=" * len(title))
+                print()
 
-        if args.metadata:
-            metadata = metadatas[index]
-            perf.text_runner._display_metadata(metadata)
-            print()
+            if args.metadata:
+                metadata = metadatas[index]
+                perf.text_runner._display_metadata(metadata)
+                print()
 
-        perf.text_runner._display_benchmark(benchmark,
-                                            hist=args.hist,
-                                            stats=args.stats,
-                                            runs=bool(args.verbose))
-        if many_benchmarks and index != len(benchmarks) - 1:
-            print()
+            perf.text_runner._display_benchmark(benchmark,
+                                                hist=args.hist,
+                                                stats=args.stats,
+                                                runs=bool(args.verbose),
+                                                check_unstable=not args.quiet)
+            if many_benchmarks and index != len(benchmarks) - 1:
+                print()
+    else:
+        # simple output: one line
+        for filename, benchmark in benchmarks:
+            prefix = ''
+            if many_benchmarks:
+                prefix = '%s: ' % benchmark.name
+                if show_filename:
+                    prefix = "%s:%s" % (filename, prefix)
+
+            if not args.quiet:
+                warnings = perf.text_runner._warn_if_bench_unstable(benchmark)
+                for line in warnings:
+                    print(prefix + line)
+
+            print("%s%s" % (prefix, benchmark))
 
 
 def cmd_timeit(args, timeit_runner):
