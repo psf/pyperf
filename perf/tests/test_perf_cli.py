@@ -187,10 +187,11 @@ class TestPerfCLI(unittest.TestCase):
             Number of samples: 250 (50 runs x 5 samples; 1 warmup)
             Standard deviation / median: 1%
             Shortest raw sample: 264 ms (10 loops)
+            Longest raw sample: 273 ms (10 loops)
 
-            Minimum: 26.4 ms (-1.8%)
+            Minimum: 26.4 ms (-2%)
             Median +- std dev: 26.9 ms +- 0.2 ms
-            Maximum: 27.3 ms (+1.7%)
+            Maximum: 27.3 ms (+2%)
         """)
         self.check_command(expected, 'stats', TELCO)
 

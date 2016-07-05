@@ -118,7 +118,7 @@ def _display_stats(result, file=None):
     print(file=file)
 
     def format_min(median, value):
-        return "%s (%+.1f%%)" % (fmt(value), (value - median) * 100 / median)
+        return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100 / median)
 
     print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
