@@ -185,7 +185,6 @@ class TestPerfCLI(unittest.TestCase):
     def test_stats(self):
         expected = ("""
             Number of samples: 250 (50 runs x 5 samples; 1 warmup)
-            Standard deviation / median: 1%
             Loop iterations per sample: 10
             Raw sample minimum: 264 ms
             Raw sample maximum: 273 ms

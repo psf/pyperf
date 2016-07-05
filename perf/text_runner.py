@@ -109,10 +109,6 @@ def _display_stats(bench, file=None):
         text = '%s (%s)' % (text, iterations)
     print(text, file=file)
 
-    # Standard deviation / median
-    percent = statistics.stdev(samples) * 100 / median
-    print("Standard deviation / median: %.0f%%" % percent, file=file)
-
     # Shortest raw sample (loops)
     if bench.inner_loops is not None:
         iterations = []

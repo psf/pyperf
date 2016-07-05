@@ -13,6 +13,14 @@ Show a benchmark result::
         |-g/--hist] [-t/--stats]
         filename.json
 
+* ``--verbose`` enables the verbose mode
+* ``--metadata`` displays metadata: see :ref:`perf show metadata
+  <show_cmd_metadata>` command
+* ``--hist`` displays an histogram of samples, see :ref:`perf hist <hist_cmd>`
+  command
+* ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
+  <stats_cmd>` command
+
 .. _show_cmd_metadata:
 
 Example with metadata::
@@ -72,11 +80,15 @@ Compute statistics on a benchmark result::
 Example::
 
     $ python3 -m perf stats telco.json
-    Number of samples: 250
+    Number of samples: 250 (50 runs x 5 samples; 1 warmup)
+    Loop iterations per sample: 10
+    Raw sample minimum: 264 ms
+    Raw sample maximum: 273 ms
 
-    Minimum: 26.4 ms (-1.8%)
-    Median +- std dev: 26.9 ms +- 0.2 ms (26.7 ms .. 27.0 ms)
-    Maximum: 27.3 ms (+1.7%)
+    Minimum: 26.4 ms (-2%)
+    Median +- std dev: 26.9 ms +- 0.2 ms
+    Mean +- std dev: 26.9 ms +- 0.2 ms
+    Maximum: 27.3 ms (+2%)
 
 Values:
 
