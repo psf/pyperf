@@ -102,10 +102,8 @@ class Benchmark(object):
         # use name property setter
         self.name = name
 
-        # FIXME: add a configurable sample formatter
         self._format_samples = _format_timedeltas
 
-    # FIXME: remove name? store it only in the benchmark suite?
     @property
     def name(self):
         return self.metadata.get('name', None)
@@ -318,7 +316,6 @@ class BenchmarkSuite(dict):
             raise ValueError("duplicate benchmark name: %r" % name)
         self[name] = benchmark
 
-    # FIXME: remove Benchmark.name attr?
     def add_benchmark(self, benchmark):
         self._add_benchmark(benchmark.name, benchmark)
 
