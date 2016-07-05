@@ -75,11 +75,12 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(r'^\.\.\n'
-                         r'Median \+- std dev: (?P<median>[0-9.]+) ms'
-                             r' \+- (?P<stdev>[0-9.]+) ms'
-                         r'$',
-                         stdout.rstrip())
+        # ignore lines before to ignore random warnings like
+        # "ERROR: the benchmark is very unstable"
+        match = re.search(r'Median \+- std dev: (?P<median>[0-9.]+) ms'
+                          r' \+- (?P<stdev>[0-9.]+) ms'
+                          r'$',
+                          stdout.rstrip())
         self.assertIsNotNone(match, repr(stdout))
 
         # Tolerate large differences on busy systems
