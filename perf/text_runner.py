@@ -127,7 +127,7 @@ def _display_stats(result, file=None):
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
 
-def _display_histogram(results, bins=20, extend=False, file=None):
+def _display_histogram(benchmarks, bins=20, extend=False, file=None):
     import collections
     import shutil
 
@@ -143,8 +143,8 @@ def _display_histogram(results, bins=20, extend=False, file=None):
             bins = min(bins, 25)
 
     all_samples = []
-    for result in results:
-        all_samples.extend(result.get_samples())
+    for bench in benchmarks:
+        all_samples.extend(bench.get_samples())
     all_min = min(all_samples)
     all_max = max(all_samples)
     sample_k = float(all_max - all_min) / bins
@@ -157,17 +157,17 @@ def _display_histogram(results, bins=20, extend=False, file=None):
     bucket_min = sample_bucket(all_min)
     bucket_max = sample_bucket(all_max)
 
-    for index, result in enumerate(results):
-        if len(results) > 1:
-            print("[ %s ]" % result.name, file=file)
+    for index, bench in enumerate(benchmarks):
+        if len(benchmarks) > 1:
+            print("[ %s ]" % bench.name, file=file)
 
-        samples = result.get_samples()
+        samples = bench.get_samples()
 
         counter = collections.Counter([sample_bucket(value) for value in samples])
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
-        sample_width = max([len(result._format_sample(bucket * sample_k))
+        sample_width = max([len(bench._format_sample(bucket * sample_k))
                             for bucket in range(bucket_min, bucket_max + 1)])
         width = columns - sample_width
 
@@ -180,13 +180,13 @@ def _display_histogram(results, bins=20, extend=False, file=None):
         for bucket in range(bucket_min, bucket_max + 1):
             count = counter.get(bucket, 0)
             linelen = int(round(count * line_k))
-            text = result._format_sample(bucket * sample_k)
+            text = bench._format_sample(bucket * sample_k)
             line = ('#' * linelen) or '|'
             print("{:>{}}: {:>{}} {}".format(text, sample_width,
                                              count, count_width, line),
                   file=file)
 
-        if index != len(results) -1:
+        if index != len(benchmarks) -1:
             print(file=file)
 
 

@@ -211,6 +211,11 @@ BenchmarkSuite
       *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or an open file object.
 
+   .. attribute:: filename
+
+      Name of the file from which the benchmark suite was loaded.
+      It can be ``None``.
+
 
 TextRunner
 ----------

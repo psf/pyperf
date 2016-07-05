@@ -181,15 +181,15 @@ def compare_results(args, results, sort_results):
             print()
 
 
-def display_histogram_scipy(args, result):
+def display_histogram_scipy(args, bench):
     import matplotlib.pyplot as plt
     import pylab
     import scipy.stats as stats
 
-    samples = result.get_samples()
+    samples = bench.get_samples()
     samples = sorted(samples)
 
-    median = result.median()
+    median = bench.median()
     fit = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
     pylab.plot(samples, fit, '-o', label='median-stdev')
 
@@ -250,15 +250,16 @@ def main():
             results.append(result)
         compare_results(args, results, action == 'compare')
     elif action == 'hist':
-        results = [load_result(filename) for filename in args.filenames]
-        perf.text_runner._display_histogram(results, bins=args.bins,
+        benchmarks = [perf.Benchmark.load(filename)
+                      for filename in args.filenames]
+        perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                             extend=args.extend)
     elif action == 'hist_scipy':
-        result = load_result(args.filename)
-        display_histogram_scipy(args, result)
+        bench = perf.Benchmark.load(args.filename)
+        display_histogram_scipy(args, bench)
     elif action == 'stats':
-        result = load_result(args.filename)
-        perf.text_runner._display_stats(result)
+        bench = perf.Benchmark.load(args.filename)
+        perf.text_runner._display_stats(bench)
     elif action == 'metadata':
         collect_metadata()
     else:
