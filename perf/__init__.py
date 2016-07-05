@@ -1,6 +1,7 @@
 from __future__ import print_function
 import json
 import math
+import operator
 import sys
 
 import six
@@ -304,26 +305,18 @@ class Benchmark(object):
         suite.dump(file)
 
 
-class BenchmarkSuite(object):
+class BenchmarkSuite(dict):
     def __init__(self, filename=None):
+        super(BenchmarkSuite, self).__init__()
         self.filename = filename
-        self._benchmarks = {}
-
-    def __getitem__(self, name):
-        return self._benchmarks[name]
-
-    def __len__(self):
-        return len(self._benchmarks)
 
     def get_benchmarks(self):
-        # FIXME: use the benchmark names stored _benchmarks?
-        return sorted(self._benchmarks.values(),
-                      key=lambda bench: bench.name)
+        return sorted(self.values(), key=operator.attrgetter('name'))
 
     def _add_benchmark(self, name, benchmark):
-        if name in self._benchmarks:
+        if name in self:
             raise ValueError("duplicate benchmark name: %r" % name)
-        self._benchmarks[name] = benchmark
+        self[name] = benchmark
 
     # FIXME: remove Benchmark.name attr?
     def add_benchmark(self, benchmark):
@@ -350,7 +343,7 @@ class BenchmarkSuite(object):
             benchmark = Benchmark._json_load(bench_data)
             suite._add_benchmark(name, benchmark)
 
-        if not suite._benchmarks:
+        if not suite:
             raise ValueError("the file doesn't contain any benchmark")
 
         return suite
@@ -383,7 +376,7 @@ class BenchmarkSuite(object):
 
     def dump(self, file):
         benchmarks_json = {}
-        for name, benchmark in self._benchmarks.items():
+        for name, benchmark in self.items():
             benchmarks_json[name] = benchmark._as_json()
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
 
