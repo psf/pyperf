@@ -1,9 +1,12 @@
 TODO
 ====
 
+* compare: support benchmark suites
+* convert: save operations in metadata?
+* Fix hist command for a benchmark suite with multiple benchmarks: don't
+  use the same scale for unrelated benchmarks
 * rework parameters (processes, samples, loops) depending on max time,
   not hardcoded parameters
-* perf CLI: support suites, not only benchmarks
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds
 * remove --raw option: use raw method for -p1 or when -p is missing

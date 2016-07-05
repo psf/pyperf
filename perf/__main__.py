@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import collections
 import os.path
 import sys
 
@@ -13,6 +14,15 @@ def create_parser():
                                      prog='-m perf')
     subparsers = parser.add_subparsers(dest='action')
 
+
+    def input_filenames(cmd):
+        cmd.add_argument('-b', '--name',
+                         help='only display the benchmark called NAME')
+        cmd.add_argument('filenames', metavar='file.json',
+                         type=str, nargs='+',
+                         help='Benchmark file')
+
+    # show
     cmd = subparsers.add_parser('show')
     cmd.add_argument('-q', '--quiet', action="store_true",
                      help='enable quiet mode')
@@ -25,26 +35,20 @@ def create_parser():
                      help='display an histogram of samples')
     cmd.add_argument('-t', '--stats', action="store_true",
                      help='display statistics (min, max, ...)')
-    cmd.add_argument('-b', '--name',
-                     help='only display the benchmark called NAME '
-                          '(defaut: display all benchmarks of a suite)')
-    cmd.add_argument('filenames', metavar='filename',
-                     type=str, nargs='+',
-                     help='Result JSON file')
+    input_filenames(cmd)
 
+    # hist
     cmd = subparsers.add_parser('hist')
     cmd.add_argument('--extend', action="store_true",
                      help="Extend the histogram to fit the terminal")
     cmd.add_argument('-n', '--bins', type=int, default=None,
                      help='Number of histogram bars (default: 25, or less '
                           'depeding on the terminal size)')
-    cmd.add_argument('filenames', metavar='filename',
-                     type=str, nargs='+',
-                     help='Result JSON file')
+    input_filenames(cmd)
 
     # compare, compare_to
     for command in ('compare', 'compare_to'):
-        cmd= subparsers.add_parser(command)
+        cmd = subparsers.add_parser(command)
         cmd.add_argument('-v', '--verbose', action="store_true",
                          help='enable verbose mode')
         cmd.add_argument('-m', '--metadata', dest='metadata',
@@ -58,8 +62,7 @@ def create_parser():
 
     # stats
     cmd = subparsers.add_parser('stats')
-    cmd.add_argument('filename', type=str,
-                     help='Result JSON file')
+    input_filenames(cmd)
 
     # metadata
     subparsers.add_parser('metadata')
@@ -129,6 +132,9 @@ def _common_metadata(metadatas):
 
 
 def _display_common_metadata(metadatas):
+    if len(metadatas) < 2:
+        return
+
     for metadata in metadatas:
         # don't display name as metadata, it's already displayed
         metadata.pop('name', None)
@@ -209,83 +215,114 @@ def cmd_metadata():
     perf.text_runner._display_metadata(metadata)
 
 
-def cmd_show(args):
-    suites = []
-    for filename in args.filenames:
-        suite = perf.BenchmarkSuite.load(filename)
-        suites.append(suite)
+DataItem = collections.namedtuple('DataItem', 'benchmark title is_last')
 
-    filenames = {os.path.basename(suite.filename) for suite in suites}
-    if len(filenames) == len(suites):
-        format_filename = os.path.basename
-    else:
-        # FIXME: try harder: try to get differente names by keeping only
-        # the parent directory?
-        format_filename = lambda filename: filename
 
-    benchmarks = []
-    for suite in suites:
-        filename = format_filename(suite.filename)
-        if args.name:
-            try:
-                benchmark = suite[args.name]
-            except KeyError:
-                fatal_missing_benchmark(suite, args.name)
-            benchmarks.append((filename, benchmark))
+class Benchmarks:
+    def __init__(self):
+        self.suites = []
+
+    def load_benchmark_suites(self, filenames):
+        for filename in filenames:
+            suite = perf.BenchmarkSuite.load(filename)
+            self.suites.append(suite)
+
+    # FIXME: move this method to BenchmarkSuite?
+    def include_benchmark(self, name):
+        for suite in self.suites:
+            if name not in suite:
+                fatal_missing_benchmark(suite, name)
+            for key in list(suite):
+                if key != name:
+                    del suite[key]
+
+    def __len__(self):
+        return sum(len(suite) for suite in self.suites)
+
+    def __iter__(self):
+        filenames = {os.path.basename(suite.filename) for suite in self.suites}
+        if len(filenames) == len(self.suites):
+            format_filename = os.path.basename
         else:
-            benchmarks.extend([(filename, benchmark)
-                               for benchmark in suite.get_benchmarks()])
+            # FIXME: try harder: try to get differente names by keeping only
+            # the parent directory?
+            format_filename = lambda filename: filename
 
-    many_benchmarks = (len(benchmarks) > 1)
-    show_filename = (len(suites) > 1)
+        show_name = (len(self) > 1)
+        show_filename = (len(self.suites) > 1)
+
+        for suite_index, suite in enumerate(self.suites):
+            filename = format_filename(suite.filename)
+            last_suite = (suite_index == (len(self.suites) - 1))
+
+            benchmarks = suite.get_benchmarks()
+            for bench_index, benchmark in enumerate(benchmarks):
+                if show_name:
+                    title = benchmark.name
+                    if show_filename:
+                        title = "%s:%s" % (filename, title)
+                else:
+                    title = None
+                last_benchmark = (bench_index == (len(benchmarks) - 1))
+                is_last = (last_suite and last_benchmark)
+
+                yield DataItem(benchmark, title, is_last)
+
+
+def display_title(title):
+    print(title)
+    print("=" * len(title))
+    print()
+
+
+def load_benchmarks(args):
+    data = Benchmarks()
+    data.load_benchmark_suites(args.filenames)
+    if args.name:
+        data.include_benchmark(args.name)
+    return data
+
+
+def cmd_show(args):
+    data = load_benchmarks(args)
+
+    many_benchmarks = (len(data) > 1)
 
     if args.metadata:
-        if many_benchmarks:
-            metadatas = [dict(benchmark.metadata)
-                         for filename, benchmark in benchmarks]
-            _display_common_metadata(metadatas)
-        else:
-            metadatas = [benchmarks[0][1].metadata]
+        metadatas = [dict(item.benchmark.metadata) for item in data]
+        _display_common_metadata(metadatas)
 
     if args.metadata or args.hist or args.stats or args.verbose:
-        for index, item in enumerate(benchmarks):
-            filename, benchmark = item
-
-            if many_benchmarks:
-                title = benchmark.name
-                if show_filename:
-                    title = "%s:%s" % (filename, title)
-                print(title)
-                print("=" * len(title))
-                print()
+        for index, item in enumerate(data):
+            if item.title:
+                display_title(item.title)
 
             if args.metadata:
                 metadata = metadatas[index]
                 perf.text_runner._display_metadata(metadata)
                 print()
 
-            perf.text_runner._display_benchmark(benchmark,
+            perf.text_runner._display_benchmark(item.benchmark,
                                                 hist=args.hist,
                                                 stats=args.stats,
                                                 runs=bool(args.verbose),
                                                 check_unstable=not args.quiet)
-            if many_benchmarks and index != len(benchmarks) - 1:
+            if not item.is_last:
                 print()
     else:
         # simple output: one line
-        for filename, benchmark in benchmarks:
-            prefix = ''
-            if many_benchmarks:
-                prefix = '%s: ' % benchmark.name
-                if show_filename:
-                    prefix = "%s:%s" % (filename, prefix)
+        for item in data:
+            if item.title:
+                prefix = '%s: ' % item.title
+            else:
+                prefix = ''
 
             if not args.quiet:
-                warnings = perf.text_runner._warn_if_bench_unstable(benchmark)
+                warnings = perf.text_runner._warn_if_bench_unstable(item.benchmark)
                 for line in warnings:
                     print(prefix + line)
 
-            print("%s%s" % (prefix, benchmark))
+            print("%s%s" % (prefix, item.benchmark))
 
 
 def cmd_timeit(args, timeit_runner):
@@ -296,8 +333,14 @@ def cmd_timeit(args, timeit_runner):
 
 
 def cmd_stats(args):
-    bench = perf.Benchmark.load(args.filename)
-    perf.text_runner._display_stats(bench)
+    data = load_benchmarks(args)
+
+    for item in data:
+        if item.title:
+            display_title(item.title)
+        perf.text_runner._display_stats(item.benchmark)
+        if not item.is_last:
+            print()
 
 
 def cmd_compare(args):
@@ -310,10 +353,9 @@ def cmd_compare(args):
 
 
 def cmd_hist(args):
-    benchmarks = []
-    for filename in args.filenames:
-        suite = perf.BenchmarkSuite.load(filename)
-        benchmarks.extend(suite.get_benchmarks())
+    data = load_benchmarks(args)
+    benchmarks = [item.benchmark for item in data]
+
     perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                         extend=args.extend)
 
