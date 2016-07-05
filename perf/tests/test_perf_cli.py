@@ -191,6 +191,7 @@ class TestPerfCLI(unittest.TestCase):
 
             Minimum: 26.4 ms (-2%)
             Median +- std dev: 26.9 ms +- 0.2 ms
+            Mean +- std dev: 26.9 ms +- 0.2 ms
             Maximum: 27.3 ms (+2%)
         """)
         self.check_command(expected, 'stats', TELCO)

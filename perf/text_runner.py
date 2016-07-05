@@ -137,7 +137,13 @@ def _display_stats(bench, file=None):
 
     print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
+    # Median +- std dev
     print(str(bench), file=file)
+
+    mean = statistics.mean(samples)
+    stdev = statistics.stdev(samples, mean)
+    print("Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
+          file=file)
 
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
