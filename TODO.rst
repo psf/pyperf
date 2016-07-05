@@ -1,6 +1,7 @@
 TODO
 ====
 
+* perf CLI: support suites, not only benchmarks
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds
 * remove --raw option: use raw method for -p1 or when -p is missing
