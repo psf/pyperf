@@ -165,6 +165,7 @@ Convert or modify a benchmark suite::
         [--include-benchmark=NAME]
         [--exclude-benchmark=NAME]
         [--include-runs=RUNS]
+        [--remove-outliers]
         input_filename.json
         -o output_filename.json/--output=output_filename.json
 
@@ -176,6 +177,9 @@ Options:
   list of runs separated by commas, it can include a range using format
   ``first-last`` which includes ``first`` and ``last`` values. Example:
   ``1-3,7`` (1, 2, 3, 7).
+* ``--remove-outliers`` removes "outlier runs", runs which contains at least
+  one sample which is not in the range ``[median - 5%; median + 5%]``.
+  See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 
 
 metadata

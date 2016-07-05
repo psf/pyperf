@@ -89,6 +89,8 @@ def create_parser():
                      help='Only keep benchmark runs RUNS')
     cmd.add_argument('--exclude-runs',
                      help='Remove specified benchmark runs')
+    cmd.add_argument('--remove-outliers', action='store_true',
+                     help='Remove outlier runs')
 
     return parser, timeit_runner
 
@@ -373,6 +375,26 @@ def cmd_convert(args):
                 print("ERROR: Benchmark %r has no more run" % benchmark.name)
                 sys.exit(1)
             benchmark._runs = runs
+
+    if args.remove_outliers:
+        for benchmark in suite.values():
+            warmups = benchmark.warmups
+            raw_samples = benchmark._get_raw_samples()
+
+            median = statistics.median(raw_samples)
+            min_sample = median * 0.95
+            max_sample = median * 1.05
+
+            new_runs = []
+            for run in benchmark._runs:
+                if all(min_sample <= sample <= max_sample
+                       for sample in run[warmups:]):
+                    new_runs.append(run)
+            if not new_runs:
+                print("ERROR: Benchmark %r has no more run after removing "
+                      "outliers" % benchmark.name)
+                sys.exit(1)
+            benchmark._runs[:] = new_runs
 
     suite.dump(args.output_filename)
 
