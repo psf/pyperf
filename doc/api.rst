@@ -237,6 +237,8 @@ TextRunner
    warmup samples and processes. These values can be changed with command line
    options.
 
+   See :ref:`TextRunner CLI <textrunner_cli>` for command line options.
+
    If isolated CPUs are detected, the CPU affinity is automatically
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
    <pin-cpu>`.

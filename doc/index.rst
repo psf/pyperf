@@ -27,6 +27,6 @@ Table Of Content:
 
    perf
    cli
-   timeit
+   text_runner
    api
    changelog
