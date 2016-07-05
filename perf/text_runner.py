@@ -64,11 +64,20 @@ def _bench_from_subprocess(args):
     return perf.Benchmark.loads(stdout)
 
 
-def _display_run(bench, index, nrun, samples, file=None):
+def _display_run(bench, index, nrun, samples, median=None, file=None):
     warmups = samples[:bench.warmups]
     samples = samples[bench.warmups:]
+    median = statistics.median(bench._get_raw_samples())
 
-    text = ', '.join(bench._format_samples(samples))
+    text = []
+    max_delta = median * 0.05
+    for sample in samples:
+        item = bench._format_sample(sample)
+        delta = sample - median
+        if abs(delta) > max_delta:
+            item += ' (%+.0f%%)' % (delta * 100 / median)
+        text.append(item)
+    text = ', '.join(text)
     text = 'raw samples (%s): %s' % (len(samples), text)
     if warmups:
         text = ('warmup (%s): %s; %s'
@@ -80,20 +89,20 @@ def _display_run(bench, index, nrun, samples, file=None):
     print(text, file=file)
 
 
-def _display_stats(result, file=None):
-    fmt = result._format_sample
-    samples = result.get_samples()
+def _display_stats(bench, file=None):
+    fmt = bench._format_sample
+    samples = bench.get_samples()
 
-    nrun = result.get_nrun()
+    nrun = bench.get_nrun()
     nsample = len(samples)
-    nsample_per_run = len(result._runs[0]) - result.warmups
-    median = result.median()
+    nsample_per_run = len(bench._runs[0]) - bench.warmups
+    median = bench.median()
 
     # Number of samples
     iterations = [perf._format_number(nrun, 'run'),
                   perf._format_number(nsample_per_run, 'sample')]
     iterations = ' x '.join(iterations)
-    iterations += '; %s' % perf._format_number(result.warmups, 'warmup')
+    iterations += '; %s' % perf._format_number(bench.warmups, 'warmup')
 
     text = "Number of samples: %s" % perf._format_number(nsample)
     if iterations:
@@ -106,18 +115,18 @@ def _display_stats(result, file=None):
 
     # Shortest raw sample (loops)
     iterations = []
-    if result.loops:
-        iterations.append(perf._format_number(result.loops, 'loop'))
-    if result.inner_loops is not None:
-        iterations.append(perf._format_number(result.inner_loops, 'inner-loop'))
+    if bench.loops:
+        iterations.append(perf._format_number(bench.loops, 'loop'))
+    if bench.inner_loops is not None:
+        iterations.append(perf._format_number(bench.inner_loops, 'inner-loop'))
 
-    raw_samples = result._get_raw_samples()
-    text = result._format_sample(min(raw_samples))
+    raw_samples = bench._get_raw_samples()
+    text = bench._format_sample(min(raw_samples))
     if iterations:
         text = '%s (%s)' % (text, '; '.join(iterations))
     print("Shortest raw sample: %s" % text, file=file)
 
-    text = result._format_sample(max(raw_samples))
+    text = bench._format_sample(max(raw_samples))
     if iterations:
         text = '%s (%s)' % (text, '; '.join(iterations))
     print("Longest raw sample: %s" % text, file=file)
@@ -128,7 +137,7 @@ def _display_stats(result, file=None):
 
     print("Minimum: %s" % format_min(median, min(samples)), file=file)
 
-    print(str(result), file=file)
+    print(str(bench), file=file)
 
     print("Maximum: %s" % format_min(median, max(samples)), file=file)
 
