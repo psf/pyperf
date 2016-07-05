@@ -67,12 +67,12 @@ JSON output
 Options::
 
     [--stdout]
-    [--json-file=FILENAME]
+    [--json=FILENAME]
     [--json-append=FILENAME]
 
 * ``--stdout`` writes the benchmark as JSON into stdout
-* ``--json-file=FILENAME`` writes the benchmark result as JSON into *FILENAME*,
-* ``--json-file=FILENAME`` appends the benchmark result as JSON into
+* ``--json=FILENAME`` writes the benchmark result as JSON into *FILENAME*,
+* ``--json-append=FILENAME`` appends the benchmark result as JSON into
   *FILENAME*. The file is created if it doesn't exist.
 
 If ``--stdout`` is used, other messages are written into stderr rather than

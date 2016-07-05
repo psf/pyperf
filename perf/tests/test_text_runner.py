@@ -130,7 +130,7 @@ class TestTextRunner(unittest.TestCase):
 
     def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
-            runner = self.create_text_runner(['--worker', '--json-file', tmp.name,
+            runner = self.create_text_runner(['--worker', '--json', tmp.name,
                                               '--verbose', '--metadata'])
 
             with tests.capture_stdout() as stdout:

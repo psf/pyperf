@@ -18,8 +18,8 @@ import perf
 
 
 def _json_dump(bench, args):
-    if args.json_file:
-        bench.dump(args.json_file)
+    if args.json:
+        bench.dump(args.json)
     elif args.json_append:
         if os.path.exists(args.json_append):
             suite = perf.BenchmarkSuite.load(args.json_append)
@@ -362,7 +362,7 @@ class TextRunner:
                             help='enable quiet mode')
         parser.add_argument('--stdout', action='store_true',
                             help='write results encoded to JSON into stdout')
-        parser.add_argument('--json-file', metavar='FILENAME',
+        parser.add_argument('--json', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
         parser.add_argument('--json-append', metavar='FILENAME',
                             help='append results encoded to JSON into FILENAME')

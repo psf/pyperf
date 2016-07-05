@@ -28,6 +28,8 @@ Version 0.6
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the
   number of loops
 * Replace ``--raw`` option with ``--worker``
+* Replace ``--json`` with ``--stdout``
+* Replace ``--json-file`` with ``--json``
 
 
 Version 0.5 (2016-06-29)
