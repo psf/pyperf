@@ -1,6 +1,8 @@
 TODO
 ====
 
+* make perf/timeit.py private and move CLI to "-m perf timeit ..."
+* cpu_count metadata: use psutil.cpu_count(logical=True)
 * perf CLI: support suites, not only benchmarks
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds

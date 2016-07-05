@@ -32,7 +32,7 @@ explains the purpose of these parameters and how to configure them.
 Options:
 
 * ``--verbose`` enables verbose mode
-* ``--verbose`` enables quiet mode
+* ``--quiet`` enables quiet mode
 * ``--metadata`` displays metadata
 * ``--hist`` displays an histogram of samples
 * ``--stats`` displays statistics (min, max, ...)
