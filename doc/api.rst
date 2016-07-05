@@ -203,6 +203,10 @@ BenchmarkSuite
 
       *file* can be a filename, or an open file object.
 
+   .. method:: get_benchmarks()
+
+      Get the list of benchmarks sorted by their name.
+
    .. classmethod:: load(file)
 
       Load a benchmark suite from a JSON file which was created by

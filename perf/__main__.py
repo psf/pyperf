@@ -206,8 +206,8 @@ def collect_metadata():
 
 
 def cmd_show(args):
-    benchmarks = perf.BenchmarkSuite.load(args.filename)
-    benchmarks = sorted(benchmarks, key=lambda bench: bench.name)
+    suite = perf.BenchmarkSuite.load(args.filename)
+    benchmarks = suite.get_benchmarks()
     many_benchmarks = (len(benchmarks) > 1)
 
     if args.metadata:
@@ -250,8 +250,10 @@ def main():
             results.append(result)
         compare_results(args, results, action == 'compare')
     elif action == 'hist':
-        benchmarks = [perf.Benchmark.load(filename)
-                      for filename in args.filenames]
+        benchmarks = []
+        for filename in args.filenames:
+            suite = perf.BenchmarkSuite.load(filename)
+            benchmarks.extend(suite.get_benchmarks())
         perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                             extend=args.extend)
     elif action == 'hist_scipy':

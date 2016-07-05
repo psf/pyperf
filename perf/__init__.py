@@ -288,7 +288,7 @@ class Benchmark(object):
     @staticmethod
     def load(file):
         suite = BenchmarkSuite.load(file)
-        benchmarks = list(suite)
+        benchmarks = suite.get_benchmarks()
         if len(benchmarks) != 1:
             raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
         return benchmarks[0]
@@ -296,7 +296,7 @@ class Benchmark(object):
     @staticmethod
     def loads(string):
         suite = BenchmarkSuite._loads(string)
-        benchmarks = list(suite)
+        benchmarks = suite.get_benchmarks()
         if len(benchmarks) != 1:
             raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
         return benchmarks[0]
@@ -312,8 +312,10 @@ class BenchmarkSuite(object):
         self.filename = filename
         self._benchmarks = {}
 
-    def __iter__(self):
-        return iter(self._benchmarks.values())
+    def get_benchmarks(self):
+        # FIXME: use the benchmark names stored _benchmarks?
+        return sorted(self._benchmarks.values(),
+                      key=lambda bench: bench.name)
 
     def _add_benchmark(self, name, benchmark):
         if name in self._benchmarks:
