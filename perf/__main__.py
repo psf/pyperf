@@ -96,14 +96,11 @@ def _common_metadata(metadatas):
 
     metadata = dict(metadatas[0])
     for run_metadata in metadatas[1:]:
-        for key, run_value in run_metadata.items():
-            try:
-                value = metadata[key]
-            except KeyError:
-                pass
-            else:
-                if run_value != value:
-                    del metadata[key]
+        for key in set(metadata) - set(run_metadata):
+            del metadata[key]
+        for key in set(run_metadata) & set(metadata):
+            if run_metadata[key] != metadata[key]:
+                del metadata[key]
     return metadata
 
 
