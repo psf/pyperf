@@ -56,6 +56,13 @@ def create_parser():
 
     subparsers.add_parser('metadata')
 
+    cmd = subparsers.add_parser('timeit')
+    timeit_runner = perf.text_runner.TextRunner(name='timeit', _argparser=cmd)
+    cmd.add_argument('-s', '--setup', action='append', default=[],
+                     help='setup statements')
+    cmd.add_argument('stmt', nargs='+',
+                     help='executed statements')
+
     # Add arguments to multiple commands
     for cmd in (show, compare, compare_to):
         cmd.add_argument('-v', '--verbose', action="store_true",
@@ -66,7 +73,7 @@ def create_parser():
                          action="store_true",
                          help="Show metadata.")
 
-    return parser
+    return parser, timeit_runner
 
 
 def load_result(filename, default_name=None):
@@ -198,7 +205,7 @@ def display_histogram_scipy(args, bench):
     pylab.show()
 
 
-def collect_metadata():
+def cmd_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
     perf_metadata.collect_metadata(metadata)
@@ -236,8 +243,20 @@ def cmd_show(args):
             print()
 
 
+def cmd_timeit(args, timeit_runner):
+    import perf._timeit
+    timeit_runner.args = args
+    timeit_runner._process_args()
+    perf._timeit.main(timeit_runner)
+
+
+def cmd_stats(args):
+    bench = perf.Benchmark.load(args.filename)
+    perf.text_runner._display_stats(bench)
+
+
 def main():
-    parser = create_parser()
+    parser, timeit_runner = create_parser()
     args = parser.parse_args()
     action = args.action
     if action == 'show':
@@ -260,10 +279,11 @@ def main():
         bench = perf.Benchmark.load(args.filename)
         display_histogram_scipy(args, bench)
     elif action == 'stats':
-        bench = perf.Benchmark.load(args.filename)
-        perf.text_runner._display_stats(bench)
+        cmd_stats(args)
     elif action == 'metadata':
-        collect_metadata()
+        cmd_metadata()
+    elif action == 'timeit':
+        cmd_timeit(args, timeit_runner)
     else:
         parser.print_usage()
         sys.exit(1)

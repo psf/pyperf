@@ -270,7 +270,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 class TextRunner:
     def __init__(self, name, samples=3, warmups=1, processes=25,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 inner_loops=None):
+                 inner_loops=None, _argparser=None):
         if not name:
             raise ValueError("name must be a non-empty string")
         self.name = name
@@ -308,7 +308,11 @@ class TextRunner:
                 raise ValueError("value must be >= 0")
             return value
 
-        parser = argparse.ArgumentParser(description='Benchmark')
+        if _argparser is not None:
+            parser = _argparser
+        else:
+            parser = argparse.ArgumentParser()
+        parser.description = 'Benchmark'
         parser.add_argument('-p', '--processes', type=strictly_positive, default=processes,
                             help='number of processes used to run benchmarks (default: %s)'
                                  % processes)
@@ -393,11 +397,14 @@ class TextRunner:
 
         return loops
 
+    def _process_args(self):
+        if self.args.quiet:
+            self.args.verbose = False
+
     def parse_args(self, args=None):
         if self.args is None:
             self.args = self.argparser.parse_args(args)
-            if self.args.quiet:
-                self.args.verbose = False
+            self._process_args()
         return self.args
 
     def _stream(self):

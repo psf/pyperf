@@ -1,12 +1,12 @@
-perf.timeit command
+perf timeit command
 ===================
 
 Usage
 -----
 
-``perf.timeit`` usage::
+``perf timeit`` usage::
 
-    python3 -m perf.timeit
+    python3 -m perf timeit
         [-p PROCESSES] [-n SAMPLES] [-l LOOPS] [-w WARMUPS]
         [--affinity=CPU_LIST]
         [--metadata] [-g/--hist] [-t/--stats]
@@ -50,20 +50,20 @@ Options:
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
-   ``-n`` (runs) in perf.timeit.
+   ``-n`` (runs) in perf timeit.
 
 Example
 -------
 
 Example::
 
-    $ python3 -m perf.timeit 1+1
+    $ python3 -m perf timeit 1+1
     .........................
     Median +- std dev: 11.7 ns +- 0.1 ns
 
 Use ``-v`` to enable the verbose mode::
 
-    $ python3 -m perf.timeit -v 1+1
+    $ python3 -m perf timeit -v 1+1
     calibration: 1 loop: 983 ns
     calibration: 10 loops: 1.47 us
     ...
@@ -78,7 +78,7 @@ Use ``-v`` to enable the verbose mode::
 
 
 
-timeit versus perf.timeit
+timeit versus perf timeit
 -------------------------
 
 The timeit module of the Python standard library has multiple issues:
@@ -87,7 +87,7 @@ The timeit module of the Python standard library has multiple issues:
 * It only runs the benchmark 3 times using a single process (1 run, 3 samples)
 * It disables the garbage collector
 
-perf.timeit is more reliable and gives a result more representative of a real
+perf timeit is more reliable and gives a result more representative of a real
 use case:
 
 * It displays the average and the standard deviation

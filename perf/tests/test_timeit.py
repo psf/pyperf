@@ -22,7 +22,7 @@ MAX_STDEV = 1.5 # ms
 class TestTimeit(unittest.TestCase):
     def test_raw_verbose(self):
         args = [sys.executable,
-                '-m', 'perf.timeit',
+                '-m', 'perf', 'timeit',
                 '--raw',
                 '-w', '1',
                 '-n', '2',
@@ -63,7 +63,7 @@ class TestTimeit(unittest.TestCase):
 
     def test_cli(self):
         args = [sys.executable,
-                '-m', 'perf.timeit',
+                '-m', 'perf', 'timeit',
                 '-p', '2',
                 '-n', '3',
                 '-l', '4',
@@ -98,7 +98,7 @@ class TestTimeit(unittest.TestCase):
         loops = 4
         with tmp:
             args = [sys.executable,
-                    '-m', 'perf.timeit',
+                    '-m', 'perf', 'timeit',
                     '-p', '2',
                     '-n', '3',
                     '-l', str(loops),
@@ -125,7 +125,7 @@ class TestTimeit(unittest.TestCase):
 
     def test_cli_snippet_error(self):
         args = [sys.executable,
-                '-m', 'perf.timeit', 'x+1']
+                '-m', 'perf', 'timeit', 'x+1']
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,

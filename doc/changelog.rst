@@ -4,6 +4,8 @@ Changelog
 Version 0.6
 -----------
 
+* Replace ``python3 -m perf.timeit`` (with dot) CLI with ``-m perf timeit``
+  (without dot)
 * Add :class:`perf.BenchmarkSuite` class
 * name is now mandatory: it must be a non-empty string in Benchmark
   and TextRunner.
