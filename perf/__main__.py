@@ -242,6 +242,24 @@ def cmd_stats(args):
     perf.text_runner._display_stats(bench)
 
 
+def cmd_compare(args):
+    ref_result = load_result(args.ref_filename, '<file#1>')
+    results = [ref_result]
+    for index, filename in enumerate(args.changed_filenames, 2):
+        result = load_result(filename, '<file#%s>' % index)
+        results.append(result)
+    compare_results(args, results, args.action == 'compare')
+
+
+def cmd_hist(args):
+    benchmarks = []
+    for filename in args.filenames:
+        suite = perf.BenchmarkSuite.load(filename)
+        benchmarks.extend(suite.get_benchmarks())
+    perf.text_runner._display_histogram(benchmarks, bins=args.bins,
+                                        extend=args.extend)
+
+
 def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
@@ -249,19 +267,9 @@ def main():
     if action == 'show':
         cmd_show(args)
     elif action in ('compare', 'compare_to'):
-        ref_result = load_result(args.ref_filename, '<file#1>')
-        results = [ref_result]
-        for index, filename in enumerate(args.changed_filenames, 2):
-            result = load_result(filename, '<file#%s>' % index)
-            results.append(result)
-        compare_results(args, results, action == 'compare')
+        cmd_compare(args)
     elif action == 'hist':
-        benchmarks = []
-        for filename in args.filenames:
-            suite = perf.BenchmarkSuite.load(filename)
-            benchmarks.extend(suite.get_benchmarks())
-        perf.text_runner._display_histogram(benchmarks, bins=args.bins,
-                                            extend=args.extend)
+        cmd_hist(args)
     elif action == 'stats':
         cmd_stats(args)
     elif action == 'metadata':
