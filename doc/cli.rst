@@ -153,29 +153,6 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 <https://en.wikipedia.org/wiki/Probability_density_function>`_.
 
 
-.. _hist_scipy_cmd:
-
-hist_scipy
-----------
-
-Render an histogram in graphical mode using the ``scipy`` module::
-
-    python3 -m perf hist_scipy [-n BINS/--bins=BINS] filename.json
-
-* ``--bins`` is the number of histogram bars (default: 25)
-
-This command requires the ``scipy`` dependency: see :ref:`Install perf
-<install>`.
-
-Example::
-
-    $ python3 -m perf hist_scipy telco.json
-
-Output:
-
-.. image:: hist_scipy_telco.png
-
-
 metadata
 --------
 

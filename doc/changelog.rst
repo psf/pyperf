@@ -4,6 +4,7 @@ Changelog
 Version 0.6
 -----------
 
+* Remove ``perf hist_scipy`` command, replaced with an example in the doc
 * Add back "Mean +- Std dev" to the stats command
 * Add get_loops() method to Benchmark
 * Replace ``python3 -m perf.timeit`` (with dot) CLI with ``-m perf timeit``

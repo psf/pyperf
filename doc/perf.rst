@@ -24,9 +24,6 @@ upgrade setuptools to support environment markers in ``install_requires`` of
 Optional dependencies:
 
 * ``psutil``: needed for CPU affinity on Python 2.7
-* The :ref:`hist_scipy command <hist_scipy_cmd>` requires ``scipy`` and
-  ``matplotlib``.  Command to install these packages on Fedora:
-  ``sudo dnf install -y python3-{scipy,matplotlib}``
 
 
 .. _loops:

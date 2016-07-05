@@ -38,12 +38,6 @@ def create_parser():
                       type=str, nargs='+',
                       help='Result JSON file')
 
-    hist_scipy = subparsers.add_parser('hist_scipy')
-    hist_scipy.add_argument('-n', '--bins', type=int, default=25,
-                            help="Number of histogram bars (default: 25)")
-    hist_scipy.add_argument('filename', type=str,
-                            help='Result JSON file')
-
     # compare, compare_to
     for command in ('compare', 'compare_to'):
         cmd= subparsers.add_parser(command)
@@ -189,23 +183,6 @@ def compare_results(args, results, sort_results):
             print()
 
 
-def display_histogram_scipy(args, bench):
-    import matplotlib.pyplot as plt
-    import pylab
-    import scipy.stats as stats
-
-    samples = bench.get_samples()
-    samples = sorted(samples)
-
-    median = bench.median()
-    fit = stats.norm.pdf(samples, median, statistics.stdev(samples, median))
-    pylab.plot(samples, fit, '-o', label='median-stdev')
-
-    plt.legend(loc='upper right', shadow=True, fontsize='x-large')
-    pylab.hist(samples, bins=args.bins, normed=True)
-    pylab.show()
-
-
 def cmd_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
@@ -285,9 +262,6 @@ def main():
             benchmarks.extend(suite.get_benchmarks())
         perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                             extend=args.extend)
-    elif action == 'hist_scipy':
-        bench = perf.Benchmark.load(args.filename)
-        display_histogram_scipy(args, bench)
     elif action == 'stats':
         cmd_stats(args)
     elif action == 'metadata':

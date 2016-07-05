@@ -38,6 +38,33 @@ recommended if ``func()`` takes less than 1 ms. The
 overhead on microbenchmarks.
 
 
+.. _hist_scipy_cmd:
+
+hist_scipy
+----------
+
+Example to render an histogram in graphical mode using the ``scipy`` module:
+
+.. literalinclude:: examples/hist_scipy.py
+
+Usage::
+
+    python3 hist_scipy.py [-n BINS/--bins=BINS] filename.json
+
+* ``--bins`` is the number of histogram bars (default: 25)
+
+This command requires the ``scipy`` dependency: see :ref:`Install perf
+<install>`.
+
+Example::
+
+    $ python3 -m perf hist_scipy telco.json
+
+Output:
+
+.. image:: hist_scipy_telco.png
+
+
 API
 ===
 
