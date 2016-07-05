@@ -1,15 +1,10 @@
 TODO
 ====
 
-* convert --remove-outliers: more serious algorithm? or configurable percent?
 * compare: support benchmark suites
 * convert: save operations in metadata?
 * Fix hist command for a benchmark suite with multiple benchmarks: don't
   use the same scale for unrelated benchmarks
-* rework parameters (processes, samples, loops) depending on max time,
-  not hardcoded parameters
-* use the calibration at the first warmup sample in raw mode
-* limit the number of processes when a single sample takes 5 seconds
 * "smart" JSON append:
 
   - add new runs to an existing JSON file. rerun exactly the same benchmark
@@ -32,13 +27,18 @@ Blocker for perf 1.0 (stable API)
 Low priority
 ============
 
+* convert --remove-outliers: more serious algorithm? or configurable percent?
 * support multiple units, or remove _format_samples.
   Track memory usage in CPython benchmark suite?
+* use the calibration at the first warmup sample in raw mode
 
 
 Ideas
 =====
 
+* limit the number of processes when a single sample takes 5 seconds
+* rework parameters (processes, samples, loops) depending on max time,
+  not hardcoded parameters
 * Metrics measured before and/or after each run:
 
   * CPU frequency, system load
