@@ -92,11 +92,14 @@ def _collect_system_metadata(metadata):
         _collect_linux_metadata(metadata)
 
     # CPU count
-    cpu_count = None
-    if hasattr(os, 'cpu_count'):
+    if psutil is not None:
+        # Number of logical CPUs
+        cpu_count = psutil.cpu_count()
+    elif hasattr(os, 'cpu_count'):
         # Python 3.4
         cpu_count = os.cpu_count()
     else:
+        cpu_count = None
         try:
             import multiprocessing
         except ImportError:

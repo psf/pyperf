@@ -5,10 +5,6 @@ import perf.text_runner
 from perf import tests
 from perf.tests import mock
 from perf.tests import unittest
-try:
-    import psutil
-except ImportError:
-    psutil = None
 
 
 def check_args(loops, a, b):
@@ -156,8 +152,12 @@ class TestTextRunner(unittest.TestCase):
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
             with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
-                runner._cpu_affinity()
+                with tests.capture_stdout() as stdout:
+                    runner._cpu_affinity()
+
         self.assertEqual(runner.args.affinity, '1-2')
+        self.assertEqual(stdout.getvalue(),
+                         'Pin process to isolated CPUs: 1-2\n')
         mock_setaffinity.assert_called_once_with(0, [1, 2])
 
     def test_cpu_affinity_setaffinity_without_isolcpus(self):
@@ -169,7 +169,6 @@ class TestTextRunner(unittest.TestCase):
                 runner._cpu_affinity()
         self.assertEqual(mock_setaffinity.call_count, 0)
 
-    @unittest.skipIf(psutil is None, 'need psutil')
     def test_cpu_affinity_psutil_isolcpus(self):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
@@ -178,12 +177,16 @@ class TestTextRunner(unittest.TestCase):
             del mock_os.sched_setaffinity
 
             with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
-                with mock.patch('psutil.Process') as mock_process:
-                    runner._cpu_affinity()
-            self.assertEqual(runner.args.affinity, '1-2')
+                with mock.patch('perf.text_runner.psutil') as mock_psutil:
+                    with tests.capture_stdout() as stdout:
+                        runner._cpu_affinity()
 
-            cpu_affinity = mock_process.return_value.cpu_affinity
-            cpu_affinity.assert_called_once_with([1, 2])
+        self.assertEqual(runner.args.affinity, '1-2')
+        self.assertEqual(stdout.getvalue(),
+                         'Pin process to isolated CPUs: 1-2\n')
+
+        cpu_affinity = mock_psutil.Process.return_value.cpu_affinity
+        cpu_affinity.assert_called_once_with([1, 2])
 
 
 if __name__ == "__main__":
