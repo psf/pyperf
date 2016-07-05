@@ -10,7 +10,6 @@ TODO
   not hardcoded parameters
 * use the calibration at the first warmup sample in raw mode
 * limit the number of processes when a single sample takes 5 seconds
-* remove --raw option: use raw method for -p1 or when -p is missing
 * "smart" JSON append:
 
   - add new runs to an existing JSON file. rerun exactly the same benchmark

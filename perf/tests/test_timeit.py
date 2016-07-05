@@ -23,7 +23,7 @@ class TestTimeit(unittest.TestCase):
     def test_raw_verbose(self):
         args = [sys.executable,
                 '-m', 'perf', 'timeit',
-                '--raw',
+                '--worker',
                 '-w', '1',
                 '-n', '2',
                 '-l', '1',

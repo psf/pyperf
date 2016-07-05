@@ -50,7 +50,7 @@ class TestTextRunner(unittest.TestCase):
             return t
         fake_timer.value = 0
 
-        runner = self.create_text_runner(['--raw', '--json',
+        runner = self.create_text_runner(['--worker', '--json',
                                           '--verbose', '--metadata'])
 
         with mock.patch('perf.perf_counter', fake_timer):
@@ -64,7 +64,7 @@ class TestTextRunner(unittest.TestCase):
         self.check_bench_result(runner, stderr, result)
 
     def test_bench_sample_func_raw(self):
-        runner = self.create_text_runner(['--raw', '--json',
+        runner = self.create_text_runner(['--worker', '--json',
                                           '--verbose', '--metadata'])
 
         with tests.capture_stdout() as stdout:
@@ -81,7 +81,7 @@ class TestTextRunner(unittest.TestCase):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
-        runner = self.create_text_runner(['--raw', '-vv'])
+        runner = self.create_text_runner(['--worker', '-vv'])
 
         with tests.capture_stdout() as stdout:
             with tests.capture_stderr() as stderr:
@@ -119,7 +119,7 @@ class TestTextRunner(unittest.TestCase):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
-        runner = self.create_text_runner(['--raw', '-vv',
+        runner = self.create_text_runner(['--worker', '-vv',
                                           '--min-time', '0.001'])
         with tests.capture_stdout():
             with tests.capture_stderr():
@@ -130,7 +130,7 @@ class TestTextRunner(unittest.TestCase):
 
     def test_json_file_raw(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
-            runner = self.create_text_runner(['--raw', '--json-file', tmp.name,
+            runner = self.create_text_runner(['--worker', '--json-file', tmp.name,
                                               '--verbose', '--metadata'])
 
             with tests.capture_stdout() as stdout:

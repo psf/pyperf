@@ -371,8 +371,8 @@ class TextRunner:
                             help='Minimum duration in seconds of a single '
                                  'sample, used to calibrate the number of '
                                  'loops (default: 100 ms)')
-        parser.add_argument('--raw', action="store_true",
-                            help='run a single process')
+        parser.add_argument('--worker', action="store_true",
+                            help='worker process, run the benchmark')
         parser.add_argument('--metadata', '-m', action="store_true",
                             help='show metadata')
         parser.add_argument('--hist', '-g', action="store_true",
@@ -547,12 +547,12 @@ class TextRunner:
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
 
-        if not self.args.raw or self.args.metadata:
+        if not self.args.worker or self.args.metadata:
             from perf import metadata as perf_metadata
             perf_metadata.collect_metadata(bench.metadata)
 
         try:
-            if not self.args.raw:
+            if not self.args.worker:
                 return self._spawn_workers(bench, start_time)
             else:
                 return self._worker(bench, sample_func)
@@ -622,7 +622,7 @@ class TextRunner:
     def _spawn_worker(self):
         args = []
         args.extend(self.program_args)
-        args.extend(('--raw', '--json',
+        args.extend(('--worker', '--json',
                      '--samples', str(self.args.samples),
                      '--warmups', str(self.args.warmups),
                      '--loops', str(self.args.loops)))

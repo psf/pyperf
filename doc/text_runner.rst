@@ -85,10 +85,11 @@ Misc
 Option::
 
     [-h/--help]
-    [--raw]
+    [--worker]
     [--affinity=CPU_LIST]
 
-* ``--raw`` runs a single process (must only be used internally)
+* ``--worker``: a worker process, run the benchmark. This option should only
+  be used internally.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if

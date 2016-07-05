@@ -27,6 +27,7 @@ Version 0.6
 * Benchmark.name becomes a property and is now stored in metadata
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the
   number of loops
+* Replace ``--raw`` option with ``--worker``
 
 
 Version 0.5 (2016-06-29)
