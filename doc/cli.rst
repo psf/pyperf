@@ -166,6 +166,7 @@ Convert or modify a benchmark suite::
         [--exclude-benchmark=NAME]
         [--include-runs=RUNS]
         [--remove-outliers]
+        [--indent]
         input_filename.json
         (-o output_filename.json/--output=output_filename.json
         | --stdout)
@@ -181,6 +182,7 @@ Options:
 * ``--remove-outliers`` removes "outlier runs", runs which contains at least
   one sample which is not in the range ``[median - 5%; median + 5%]``.
   See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
+* ``--indent``: Indent JSON (rather using compact JSON)
 * ``--stdout`` writes the result encoded as JSON into stdout
 
 

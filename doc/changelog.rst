@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7
+-----------
+
+* ``convert`` command: add ``--indent`` option
+
 Version 0.6 (2016-07-06)
 ------------------------
 

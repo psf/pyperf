@@ -94,6 +94,8 @@ def create_parser():
                      help='Remove specified benchmark runs')
     cmd.add_argument('--remove-outliers', action='store_true',
                      help='Remove outlier runs')
+    cmd.add_argument('--indent', action='store_true',
+                     help='Indent JSON (rather using compact JSON)')
 
     return parser, timeit_runner
 
@@ -505,10 +507,11 @@ def cmd_convert(args):
                 sys.exit(1)
             benchmark._runs[:] = new_runs
 
+    compact = not(args.indent)
     if args.output_filename:
-        suite.dump(args.output_filename)
+        suite.dump(args.output_filename, compact=compact)
     else:
-        suite.dump(sys.stdout)
+        suite.dump(sys.stdout, compact=compact)
 
 
 def main():

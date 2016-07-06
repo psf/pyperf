@@ -14,7 +14,7 @@
 #  - git tag VERSION
 #  - git push --tags
 #  - python3 setup.py register sdist bdist_wheel upload
-#    (need wheel: sudo python3 -m pip install wheel)
+#    (need wheel: sudo python3 -m pip install -U setuptools wheel)
 #
 # After the release:
 #
@@ -22,7 +22,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '0.6'
+VERSION = '0.7'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [

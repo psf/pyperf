@@ -8,7 +8,7 @@ import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 
-__version__ = '0.6'
+__version__ = '0.7'
 # Format format history:
 # 2 - support multiple benchmarks per file
 # 1 - first version
@@ -371,14 +371,19 @@ class BenchmarkSuite(dict):
         bench_file = json.loads(string)
         return cls._load_json(None, bench_file)
 
-    def dump(self, file):
+    def dump(self, file, compact=True):
         benchmarks_json = {}
         for name, benchmark in self.items():
             benchmarks_json[name] = benchmark._as_json()
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
 
-        # set separators to produce compact JSON
-        separators = (',', ':')
+        def dump(data, fp, compact):
+            if compact:
+                json.dump(data, fp, separators=(',', ':'))
+            else:
+                json.dump(data, fp, indent=4)
+            fp.write("\n")
+            fp.flush()
 
         if isinstance(file, (bytes, six.text_type)):
             if six.PY3:
@@ -386,12 +391,10 @@ class BenchmarkSuite(dict):
             else:
                 fp = open(file, "wb")
             with fp:
-                json.dump(data, fp, separators=separators)
-                fp.flush()
+                dump(data, fp, compact)
         else:
             # file is a file object
-            json.dump(data, file, separators=separators)
-            file.flush()
+            dump(data, file, compact)
 
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
