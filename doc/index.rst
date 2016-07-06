@@ -2,14 +2,6 @@
 Python perf
 +++++++++++
 
-.. image:: https://img.shields.io/pypi/v/perf.svg
-   :alt: Latest release on the Python Cheeseshop (PyPI)
-   :target: https://pypi.python.org/pypi/perf
-
-.. image:: https://travis-ci.org/haypo/perf.svg?branch=master
-   :alt: Build status of perf on Travis CI
-   :target: https://travis-ci.org/haypo/perf
-
 The Python ``perf`` module is a toolkit to write, run, analyze and modify
 benchmarks.
 
