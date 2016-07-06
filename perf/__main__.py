@@ -22,7 +22,7 @@ def create_parser():
                          help='Benchmark file')
 
     # show
-    cmd = subparsers.add_parser('show')
+    cmd = subparsers.add_parser('show', help='Display a benchmark')
     cmd.add_argument('-q', '--quiet', action="store_true",
                      help='enable quiet mode')
     cmd.add_argument('-v', '--verbose', action="store_true",
@@ -37,7 +37,7 @@ def create_parser():
     input_filenames(cmd)
 
     # hist
-    cmd = subparsers.add_parser('hist')
+    cmd = subparsers.add_parser('hist', help='Render an histogram')
     cmd.add_argument('--extend', action="store_true",
                      help="Extend the histogram to fit the terminal")
     cmd.add_argument('-n', '--bins', type=int, default=None,
@@ -47,7 +47,7 @@ def create_parser():
 
     # compare, compare_to
     for command in ('compare', 'compare_to'):
-        cmd = subparsers.add_parser(command)
+        cmd = subparsers.add_parser(command, help='Compare benchmarks')
         cmd.add_argument('-q', '--quiet', action="store_true",
                          help='enable quiet mode')
         cmd.add_argument('-v', '--verbose', action="store_true",
@@ -59,14 +59,14 @@ def create_parser():
                              help='Changed JSON file')
 
     # stats
-    cmd = subparsers.add_parser('stats')
+    cmd = subparsers.add_parser('stats', help='Compute statistics')
     input_filenames(cmd)
 
     # metadata
     subparsers.add_parser('metadata')
 
     # timeit
-    cmd = subparsers.add_parser('timeit')
+    cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
     timeit_runner = perf.text_runner.TextRunner(name='timeit', _argparser=cmd)
     cmd.add_argument('-s', '--setup', action='append', default=[],
                      help='setup statements')
@@ -74,7 +74,7 @@ def create_parser():
                      help='executed statements')
 
     # convert
-    cmd = subparsers.add_parser('convert')
+    cmd = subparsers.add_parser('convert', help='Modify benchmarks')
     cmd.add_argument('input_filename',
                      help='Filename of the input benchmark suite')
     output = cmd.add_mutually_exclusive_group(required=True)

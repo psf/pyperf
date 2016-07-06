@@ -1,6 +1,7 @@
 TODO
 ====
 
+* fix hist if benchmark only contains one sample
 * reimplement metdata for compare?
 * convert: save operations in metadata?
 * Fix hist command for a benchmark suite with multiple benchmarks: don't
