@@ -1,7 +1,6 @@
 TODO
 ====
 
-* compare: support benchmark suites
 * convert: save operations in metadata?
 * Fix hist command for a benchmark suite with multiple benchmarks: don't
   use the same scale for unrelated benchmarks

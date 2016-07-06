@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,6 +23,23 @@ class TestPerfCLI(unittest.TestCase):
         for sample in samples:
             bench.add_run([sample])
         return bench
+
+    def run_command(self, *args, **kwargs):
+        cmd = [sys.executable, '-m', 'perf']
+        cmd.extend(args)
+        proc = subprocess.Popen(cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True,
+                                **kwargs)
+        stdout, stderr = proc.communicate()
+
+        self.assertEqual(stderr, '')
+        if proc.returncode != 0:
+            print(cmd)
+            input("CTRL+c")
+        self.assertEqual(proc.returncode, 0)
+        return stdout
 
     def show(self, *args):
         bench = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})
@@ -60,90 +78,116 @@ class TestPerfCLI(unittest.TestCase):
                     'Median +- std dev: 1.50 sec +- 0.50 sec\n')
         self.assertEqual(stdout, expected)
 
+    def test_show_common_metadata(self):
+        bench1 = self.create_bench((1.0, 1.5, 2.0),
+                                       name='py2',
+                                       metadata={'hostname': 'toto',
+                                                 'python_version': '2.7'})
+        bench2 = self.create_bench((1.5, 2.0, 2.5),
+                                           name='py3',
+                                           metadata={'hostname': 'toto',
+                                                     'python_version': '3.4'})
+        suite = perf.BenchmarkSuite()
+        suite.add_benchmark(bench1)
+        suite.add_benchmark(bench2)
+
+        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
+            suite.dump(tmp.name)
+            stdout = self.run_command('show', '--metadata', tmp.name)
+
+        expected = textwrap.dedent("""
+            Common metadata:
+            - hostname: toto
+
+            py2
+            ===
+
+            Metadata:
+            - python_version: 2.7
+
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
+            Try to rerun the benchmark with more runs, samples and/or loops
+
+            Median +- std dev: 1.50 sec +- 0.50 sec
+
+            py3
+            ===
+
+            Metadata:
+            - python_version: 3.4
+
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
+            Try to rerun the benchmark with more runs, samples and/or loops
+
+            Median +- std dev: 2.00 sec +- 0.50 sec
+        """).strip()
+        self.assertEqual(stdout.rstrip(),
+                         expected)
+
     def compare(self, action, ref_result, changed_result, *args):
-        with tempfile.NamedTemporaryFile(mode="w+") as ref_tmp:
-            ref_result.dump(ref_tmp)
+        tmpdir = tempfile.mkdtemp()
+        try:
+            ref_name = os.path.join(tmpdir, 'ref.json')
+            changed_name = os.path.join(tmpdir, 'changed.json')
 
-            with tempfile.NamedTemporaryFile(mode="w+") as changed_tmp:
-                changed_result.dump(changed_tmp)
+            ref_result.dump(ref_name)
+            changed_result.dump(changed_name)
 
-                stdout = self.run_command(action, ref_tmp.name, changed_tmp.name, *args)
+            stdout = self.run_command(action, ref_name, changed_name, *args)
+        finally:
+            shutil.rmtree(tmpdir)
 
         return stdout
 
     def test_compare_to(self):
         ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       name='py2',
-                                       metadata={'hostname': 'toto',
-                                                 'python_version': '2.7'})
+                                       name='telco')
 
         changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           name='py3',
-                                           metadata={'hostname': 'toto',
-                                                     'python_version': '3.4'})
+                                           name='telco')
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '--metadata')
+        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
-        expected = ('Reference: py2\n'
-                    'Changed: py3\n'
-                    '\n'
-                    'Common metadata:\n'
-                    '- hostname: toto\n'
-                    '\n'
-                    'py2 metadata:\n'
-                    '- python_version: 2.7\n'
-                    '\n'
-                    'py3 metadata:\n'
-                    '- python_version: 3.4\n'
-                    '\n'
-                    'Median +- std dev: [py2] 1.50 sec +- 0.50 sec '
-                        '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+        expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
+                        '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-    def test_compare(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0), name='py2')
-        changed_result = self.create_bench((1.5, 2.0, 2.5), name='py3')
+    def test_compare_not_significant(self):
+        ref_result = self.create_bench((1.0, 1.5, 2.0), name='name')
+        changed_result = self.create_bench((1.5, 2.0, 2.5), name='name')
 
         stdout = self.compare('compare', ref_result, changed_result)
 
-        expected = ('Reference (best): py2\n'
-                    '\n'
-                    'Median +- std dev: [py2] 1.50 sec +- 0.50 sec '
-                        '-> [py3] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+        expected = 'Benchmark hidden because not significant (1): name'
+        self.assertEqual(stdout.rstrip(),
+                         expected)
+
+    def test_compare(self):
+        ref_result = self.create_bench((1.0, 1.5, 2.0), name='name')
+        changed_result = self.create_bench((1.5, 2.0, 2.5), name='name')
+
+        stdout = self.compare('compare', ref_result, changed_result, '-v')
+
+        expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
+                        '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
 
     def test_compare_same(self):
         samples = (1.0, 1.5, 2.0)
-        ref_result = self.create_bench(samples, name='b')
-        changed_result = self.create_bench(samples, name='a')
+        ref_result = self.create_bench(samples, name='name')
+        changed_result = self.create_bench(samples, name='name')
 
-        stdout = self.compare('compare', ref_result, changed_result)
+        stdout = self.compare('compare', ref_result, changed_result, '-v')
 
-        expected = ('Reference (best): a\n'
-                    '\n'
-                    'Median +- std dev: [a] 1.50 sec +- 0.50 sec '
-                        '-> [b] 1.50 sec +- 0.50 sec: no change\n'
+        expected = ('Median +- std dev: [changed] 1.50 sec +- 0.50 sec '
+                        '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
-
-    def run_command(self, *args, **kwargs):
-        cmd = [sys.executable, '-m', 'perf']
-        cmd.extend(args)
-        proc = subprocess.Popen(cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True,
-                                **kwargs)
-        stdout, stderr = proc.communicate()
-
-        self.assertEqual(stderr, '')
-        self.assertEqual(proc.returncode, 0)
-        return stdout
 
     def check_command(self, expected, *args, **kwargs):
         stdout = self.run_command(*args, **kwargs)

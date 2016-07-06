@@ -4,6 +4,24 @@ Changelog
 Version 0.6
 -----------
 
+Major change: perf now supports benchmark suites. A benchmark suite is made
+of multiple benchmarks. perf commands now accepts benchmark suites as well.
+
+New features:
+
+* Add new command line options to TextRunner:
+
+  * ``--fast``, ``--rigorous``
+  * ``--hist``, ``--stats``
+  * ``--json-append``
+  * ``--quiet``
+
+Changes:
+
+* Remove ``--max-time`` option of TextRunner
+* Replace ``--raw`` option with ``--worker``
+* Replace ``--json`` with ``--stdout``
+* Replace ``--json-file`` with ``--json``
 * New ``perf convert`` command to convert or modify a benchmark suite
 * Remove ``perf hist_scipy`` command, replaced with an example in the doc
 * Add back "Mean +- Std dev" to the stats command
@@ -15,21 +33,10 @@ Version 0.6
   and TextRunner.
 * A single JSON file can now contain multiple benchmarks
 * Add a dependency to the ``six`` module
-* Add new command line options to TextRunner:
-
-  * ``--fast``, ``--rigorous``
-  * ``--hist``, ``--stats``
-  * ``--json-append``
-  * ``--quiet``
-
-* Remove ``--max-time`` option of TextRunner
-* :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
+  :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the
   number of loops
-* Replace ``--raw`` option with ``--worker``
-* Replace ``--json`` with ``--stdout``
-* Replace ``--json-file`` with ``--json``
 
 
 Version 0.5 (2016-06-29)

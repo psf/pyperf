@@ -49,11 +49,10 @@ def create_parser():
     # compare, compare_to
     for command in ('compare', 'compare_to'):
         cmd = subparsers.add_parser(command)
+        cmd.add_argument('-q', '--quiet', action="store_true",
+                         help='enable quiet mode')
         cmd.add_argument('-v', '--verbose', action="store_true",
                          help='enable verbose mode')
-        cmd.add_argument('-m', '--metadata', dest='metadata',
-                         action="store_true",
-                         help="Show metadata.")
         cmd.add_argument('ref_filename', type=str,
                              help='Reference JSON file')
         cmd.add_argument('changed_filenames', metavar="changed_filename",
@@ -152,37 +151,19 @@ def _display_common_metadata(metadatas):
             metadata.pop(key, None)
 
 
-def compare_results(args, benchmarks, sort_benchmarks):
+def compare_benchmarks(benchmarks, sort_benchmarks, args):
     if sort_benchmarks:
         benchmarks.sort(key=_result_sort_key)
 
     ref_result = benchmarks[0]
 
-    if sort_benchmarks:
-        print("Reference (best): %s" % ref_result.name)
-    else:
-        print("Reference: %s" % ref_result.name)
-        for index, result in enumerate(benchmarks[1:], 1):
-            if index > 1:
-                prefix = 'Changed #%s' % index
-            else:
-                prefix = 'Changed'
-            print("%s: %s" % (prefix, result.name))
-    print()
-
-    if args.metadata:
-        metadatas = [dict(benchmark.metadata) for benchmark in benchmarks]
-        _display_common_metadata(metadatas)
-
-        for result, metadata in zip(benchmarks, metadatas):
-            perf.text_runner._display_metadata(metadata,
-                                   header='%s metadata:' % result.name)
-            print()
-
     # Compute medians
     ref_samples = ref_result.get_samples()
     ref_avg = ref_result.median()
     last_index = len(benchmarks) - 1
+    lines = []
+    print = lines.append
+    all_significant = False
     for index, changed_result in enumerate(benchmarks[1:], 1):
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.median()
@@ -202,12 +183,84 @@ def compare_results(args, benchmarks, sort_benchmarks):
         # significant?
         significant, t_score = perf.is_significant(ref_samples, changed_samples)
         if significant:
-            print("Significant (t=%.2f)" % t_score)
+            if args.verbose:
+                print("Significant (t=%.2f)" % t_score)
+            all_significant = True
         else:
             print("Not significant!")
 
         if index != last_index:
-            print()
+            print("")
+
+    return (all_significant, lines)
+
+
+def compare_suites(suites, sort_benchmarks, args):
+    ref_suite = suites[0]
+    format_filename = format_filename_func(suites)
+
+    names = set(suites[0])
+    for suite in suites[1:]:
+        names &= set(suite)
+    if not names:
+        print("ERROR: Benchmark suites have no benchmark in common",
+              file=sys.stderr)
+        sys.exit(1)
+    sorted_names = sorted(names)
+
+    show_name = (len(names) > 1)
+
+    not_significant = []
+    for index, name in enumerate(sorted_names):
+
+        benchmarks = []
+        for suite in suites:
+            benchmark = suite[name]
+            benchmark.name = format_filename(suite.filename)
+            benchmarks.append(benchmark)
+        significant, lines = compare_benchmarks(benchmarks, sort_benchmarks, args)
+
+        if not(significant or args.verbose):
+            not_significant.append(name)
+            continue
+
+        if show_name:
+            title = name
+        else:
+            title = None
+
+        if len(lines) != 1:
+            if title:
+                display_title(title)
+            for line in lines:
+                print(line)
+            if index != len(sorted_names) - 1:
+                print()
+        else:
+            text = lines[0]
+            if title:
+                text = '%s: %s' % (title, text)
+            print(text)
+
+    if not_significant:
+        print("Benchmark hidden because not significant (%s): %s"
+              % (len(not_significant), ', '.join(not_significant)))
+
+    if not args.quiet:
+        for suite in suites:
+            hidden = set(suite) - names
+            if not hidden:
+                continue
+            print("Ignored benchmarks (%s) of %s: %s"
+                  % (len(hidden), suite.filename, ', '.join(sorted(hidden))))
+
+def cmd_compare(args):
+    suite = perf.BenchmarkSuite.load(args.ref_filename)
+    suites = [suite]
+    for  filename in args.changed_filenames:
+        suite = perf.BenchmarkSuite.load(filename)
+        suites.append(suite)
+    compare_suites(suites, args.action == 'compare', args)
 
 
 def cmd_metadata():
@@ -218,6 +271,28 @@ def cmd_metadata():
 
 
 DataItem = collections.namedtuple('DataItem', 'benchmark title is_last')
+
+
+def format_filename_func(suites):
+    filenames = [suite.filename for suite in suites]
+
+    base_filenames = {os.path.basename(filename) for filename in filenames}
+    if len(base_filenames) != len(filenames):
+        # FIXME: try harder: try to get differente names by keeping only
+        # the parent directory?
+        return lambda filename: filename
+
+    noext_filenames = {os.path.splitext(filename)[0]
+                       for filename in base_filenames}
+    if len(noext_filenames) != len(base_filenames):
+        return os.path.basename
+
+    def format_filename(filename):
+        filename = os.path.basename(filename)
+        filename = os.path.splitext(filename)[0]
+        return filename
+
+    return format_filename
 
 
 class Benchmarks:
@@ -242,13 +317,7 @@ class Benchmarks:
         return sum(len(suite) for suite in self.suites)
 
     def __iter__(self):
-        filenames = {os.path.basename(suite.filename) for suite in self.suites}
-        if len(filenames) == len(self.suites):
-            format_filename = os.path.basename
-        else:
-            # FIXME: try harder: try to get differente names by keeping only
-            # the parent directory?
-            format_filename = lambda filename: filename
+        format_filename = format_filename_func(self.suites)
 
         show_name = (len(self) > 1)
         show_filename = (len(self.suites) > 1)
@@ -345,15 +414,6 @@ def cmd_stats(args):
             print()
 
 
-def cmd_compare(args):
-    ref_result = load_result(args.ref_filename, '<file#1>')
-    results = [ref_result]
-    for index, filename in enumerate(args.changed_filenames, 2):
-        result = load_result(filename, '<file#%s>' % index)
-        results.append(result)
-    compare_results(args, results, args.action == 'compare')
-
-
 def cmd_hist(args):
     data = load_benchmarks(args)
     benchmarks = [item.benchmark for item in data]
@@ -365,7 +425,8 @@ def cmd_hist(args):
 def fatal_missing_benchmark(suite, name):
     print("ERROR: The benchmark suite %s doesn't contain "
           "a benchmark called %r"
-          % (suite.filename, name))
+          % (suite.filename, name),
+          file=sys.stderr)
     sys.exit(1)
 
 
@@ -399,7 +460,7 @@ def cmd_convert(args):
         try:
             only_runs = perf._parse_run_list(runs)
         except ValueError as exc:
-            print("ERROR: %s (runs: %r)" % (exc, runs))
+            print("ERROR: %s (runs: %r)" % (exc, runs), file=sys.stderr)
             sys.exit(1)
         for benchmark in suite.values():
             if include:
@@ -416,7 +477,8 @@ def cmd_convert(args):
                     if index <= max_index:
                         del runs[index]
             if not runs:
-                print("ERROR: Benchmark %r has no more run" % benchmark.name)
+                print("ERROR: Benchmark %r has no more run" % benchmark.name,
+                      file=sys.stderr)
                 sys.exit(1)
             benchmark._runs = runs
 
@@ -436,7 +498,8 @@ def cmd_convert(args):
                     new_runs.append(run)
             if not new_runs:
                 print("ERROR: Benchmark %r has no more run after removing "
-                      "outliers" % benchmark.name)
+                      "outliers" % benchmark.name,
+                      file=sys.stderr)
                 sys.exit(1)
             benchmark._runs[:] = new_runs
 
