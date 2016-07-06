@@ -96,6 +96,8 @@ def create_parser():
                      help='Remove outlier runs')
     cmd.add_argument('--indent', action='store_true',
                      help='Indent JSON (rather using compact JSON)')
+    cmd.add_argument('--remove-warmups', action='store_true',
+                     help='Remove warmup samples')
 
     return parser, timeit_runner
 
@@ -485,6 +487,15 @@ def cmd_convert(args):
                       file=sys.stderr)
                 sys.exit(1)
             benchmark._runs = runs
+
+    if args.remove_warmups:
+        for benchmark in suite.values():
+            warmups = benchmark.warmups
+            if not warmups:
+                continue
+
+            benchmark._runs = [run[warmups:] for run in benchmark._runs]
+            benchmark.warmups = 0
 
     if args.remove_outliers:
         for benchmark in suite.values():

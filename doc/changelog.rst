@@ -4,7 +4,7 @@ Changelog
 Version 0.7
 -----------
 
-* ``convert`` command: add ``--indent`` option
+* ``convert`` command: add ``--indent`` and ``--remove-warmups`` options
 
 Version 0.6 (2016-07-06)
 ------------------------
