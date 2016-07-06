@@ -257,7 +257,7 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data):
-        warmups = data['warmups']
+        warmups = data.get('warmups', 0)
         loops = data.get('loops', 1)
         inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
@@ -272,7 +272,9 @@ class Benchmark(object):
         return bench
 
     def _as_json(self):
-        data = {'runs': self._runs, 'warmups': self.warmups}
+        data = {'runs': self._runs}
+        if self.warmups:
+            data['warmups'] = self.warmups
         if self.loops is not None:
             data['loops'] = self.loops
         if self.inner_loops is not None:
@@ -379,9 +381,9 @@ class BenchmarkSuite(dict):
 
         def dump(data, fp, compact):
             if compact:
-                json.dump(data, fp, separators=(',', ':'))
+                json.dump(data, fp, separators=(',', ':'), sort_keys=True)
             else:
-                json.dump(data, fp, indent=4)
+                json.dump(data, fp, indent=4, sort_keys=True)
             fp.write("\n")
             fp.flush()
 
