@@ -14,7 +14,6 @@ def create_parser():
                                      prog='-m perf')
     subparsers = parser.add_subparsers(dest='action')
 
-
     def input_filenames(cmd):
         cmd.add_argument('-b', '--name',
                          help='only display the benchmark called NAME')
