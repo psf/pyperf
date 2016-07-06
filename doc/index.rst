@@ -30,3 +30,10 @@ Table Of Content:
    text_runner
    api
    changelog
+
+See also:
+
+* `pytest-benchmark
+  <https://github.com/ionelmc/pytest-benchmark/>`_
+* `boltons.statsutils
+  <http://boltons.readthedocs.io/en/latest/statsutils.html>`_

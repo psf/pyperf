@@ -179,17 +179,20 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
         else:
             text= "%s: %.1fx slower" % (text, changed_avg / ref_avg)
         print(text)
+        two_lines = False
 
         # significant?
         significant, t_score = perf.is_significant(ref_samples, changed_samples)
         if significant:
             if args.verbose:
                 print("Significant (t=%.2f)" % t_score)
+                two_lines = True
             all_significant = True
         else:
             print("Not significant!")
+            two_lines = True
 
-        if index != last_index:
+        if index != last_index and two_lines:
             print("")
 
     return (all_significant, lines)
