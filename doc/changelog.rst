@@ -1,14 +1,15 @@
 Changelog
 =========
 
-Version 0.6
------------
+Version 0.6 (2016-07-06)
+------------------------
 
 Major change: perf now supports benchmark suites. A benchmark suite is made
 of multiple benchmarks. perf commands now accepts benchmark suites as well.
 
 New features:
 
+* New ``convert`` command
 * Add new command line options to TextRunner:
 
   * ``--fast``, ``--rigorous``
