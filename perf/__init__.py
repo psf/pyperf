@@ -302,10 +302,10 @@ class Benchmark(object):
             raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
         return benchmarks[0]
 
-    def dump(self, file):
+    def dump(self, file, compact=True):
         suite = BenchmarkSuite()
         suite.add_benchmark(self)
-        suite.dump(file)
+        suite.dump(file, compact=compact)
 
 
 class BenchmarkSuite(dict):

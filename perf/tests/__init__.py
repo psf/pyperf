@@ -37,8 +37,14 @@ def capture_stderr():
     return _capture_stream('stderr')
 
 
-def benchmark_as_json(benchmark):
+def benchmark_as_json(benchmark, compact=True):
     with tempfile.NamedTemporaryFile('r') as tmp:
-        perf.Benchmark.dump(benchmark, tmp.name)
+        benchmark.dump(tmp.name, compact=compact)
         tmp.seek(0)
         return tmp.read()
+
+
+def compare_benchmarks(testcase, bench1, bench2):
+    json1 = benchmark_as_json(bench1, compact=False)
+    json2 = benchmark_as_json(bench2, compact=False)
+    testcase.assertEqual(json1, json2)

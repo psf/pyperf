@@ -139,11 +139,13 @@ Benchmark
 
       All runs must have the same number of samples.
 
-   .. method:: dump(file)
+   .. method:: dump(file, compact=True)
 
       Dump the benchmark as JSON into *file*.
 
       *file* can be a filename, or an open file object.
+
+      If *compact* is true, generate small file. Otherwise, indent JSON.
 
    .. method:: format()
 
@@ -233,11 +235,13 @@ BenchmarkSuite
 
       Add a :class:`perf.Benchmark` object.
 
-   .. function:: dump(file)
+   .. function:: dump(file, compact=True)
 
       Dump the benchmark suite as JSON into *file*.
 
       *file* can be a filename, or an open file object.
+
+      If *compact* is true, generate small file. Otherwise, indent JSON.
 
    .. method:: get_benchmarks()
 
