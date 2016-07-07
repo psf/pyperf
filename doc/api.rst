@@ -255,6 +255,10 @@ BenchmarkSuite
       *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or an open file object.
 
+   .. classmethod:: loads(string) -> Benchmark
+
+      Load a benchmark suite from a JSON string.
+
    .. attribute:: filename
 
       Name of the file from which the benchmark suite was loaded.

@@ -296,7 +296,7 @@ class Benchmark(object):
 
     @staticmethod
     def loads(string):
-        suite = BenchmarkSuite._loads(string)
+        suite = BenchmarkSuite.loads(string)
         benchmarks = suite.get_benchmarks()
         if len(benchmarks) != 1:
             raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
@@ -372,7 +372,7 @@ class BenchmarkSuite(dict):
         return cls._load_json(filename, bench_file)
 
     @classmethod
-    def _loads(cls, string):
+    def loads(cls, string):
         bench_file = json.loads(string)
         return cls._load_json(None, bench_file)
 

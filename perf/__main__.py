@@ -369,6 +369,7 @@ def cmd_show(args):
         metadatas = [dict(item.benchmark.metadata) for item in data]
         _display_common_metadata(metadatas)
 
+    # FIXME: merge again the two code paths
     if args.metadata or args.hist or args.stats or args.verbose:
         for index, item in enumerate(data):
             if item.title:
