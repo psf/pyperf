@@ -438,6 +438,7 @@ class TextRunner:
             self.args.processes = 1
             self.args.warmups = 0
             self.args.samples = 1
+            self.args.loops = 1
 
     def parse_args(self, args=None):
         if self.args is None:
