@@ -253,7 +253,10 @@ class Benchmark(object):
 
     def __str__(self):
         text = self.format()
-        return 'Median +- std dev: %s' % text
+        if self.get_nsample() >= 2:
+            return 'Median +- std dev: %s' % text
+        else:
+            return 'Median: %s' % text
 
     @classmethod
     def _json_load(cls, data):

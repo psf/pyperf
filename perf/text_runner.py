@@ -341,6 +341,8 @@ class TextRunner:
                                  'accurate results')
         parser.add_argument('--fast', action="store_true",
                             help='Get rough answers quickly')
+        parser.add_argument("--debug-single-sample", action="store_true",
+                            help="Debug mode, only collect a single sample")
         parser.add_argument('-p', '--processes', type=strictly_positive, default=processes,
                             help='number of processes used to run benchmarks (default: %s)'
                                  % processes)
@@ -419,6 +421,8 @@ class TextRunner:
     def _process_args(self):
         if self.args.quiet:
             self.args.verbose = False
+        if self.args.debug_single_sample:
+            self.args.worker = True
 
         nprocess = self.argparser.get_default('processes')
         nsamples = self.argparser.get_default('samples')
@@ -430,6 +434,10 @@ class TextRunner:
             # hash functions
             self.args.processes = max(nprocess // 2, 3)
             self.args.samples = max(nsamples * 2 // 3, 2)
+        elif self.args.debug_single_sample:
+            self.args.processes = 1
+            self.args.warmups = 0
+            self.args.samples = 1
 
     def parse_args(self, args=None):
         if self.args is None:
@@ -551,10 +559,10 @@ class TextRunner:
             perf_metadata.collect_metadata(bench.metadata)
 
         try:
-            if not self.args.worker:
-                return self._spawn_workers(bench, start_time)
-            else:
+            if self.args.worker or self.args.debug_single_sample:
                 return self._worker(bench, sample_func)
+            else:
+                return self._spawn_workers(bench, start_time)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)

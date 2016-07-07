@@ -85,12 +85,23 @@ Misc
 Option::
 
     [-h/--help]
-    [--worker]
     [--affinity=CPU_LIST]
 
-* ``--worker``: a worker process, run the benchmark. This option should only
-  be used internally.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if
   isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+
+
+Internal usage only
+-------------------
+
+The following options are used internally by perf and should not be used
+explicitly::
+
+    [--worker]
+    [--debug-single-sample]
+
+* ``--worker``: a worker process, run the benchmark
+* ``--debug-single-sample``: Debug mode, only collect a single sample
+
