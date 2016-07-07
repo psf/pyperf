@@ -32,7 +32,7 @@ def _json_dump(bench, args):
         bench.dump(sys.stdout)
 
 
-def _bench_from_subprocess(args):
+def _bench_suite_from_subprocess(args):
     proc = subprocess.Popen(args,
                             universal_newlines=True,
                             stdout=subprocess.PIPE,
@@ -60,7 +60,7 @@ def _bench_from_subprocess(args):
         raise RuntimeError("%s failed with exit code %s"
                            % (args[0], proc.returncode))
 
-    return perf.Benchmark.loads(stdout)
+    return perf.BenchmarkSuite.loads(stdout)
 
 
 def _display_run(bench, index, nrun, samples, median=None, file=None):
@@ -636,6 +636,7 @@ class TextRunner:
                      '--samples', str(self.args.samples),
                      '--warmups', str(self.args.warmups),
                      '--loops', str(self.args.loops)))
+        # FIXME: pass --min-time?
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
         if self.args.affinity:
@@ -644,7 +645,7 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, args)
 
-        return _bench_from_subprocess(args)
+        return _bench_suite_from_subprocess(args)
 
     def _display_result(self, bench, check_unstable=True):
         stream = self._stream()
@@ -669,7 +670,16 @@ class TextRunner:
         nprocess = self.args.processes
 
         for process in range(nprocess):
-            run_bench = self._spawn_worker()
+            run_suite = self._spawn_worker()
+
+            run_benchmarks = run_suite.get_benchmarks()
+            if len(run_benchmarks) != 1:
+                raise ValueError("worker produced %s benchmarks instead of 1"
+                                 % len(run_benchmarks))
+            run_bench = run_benchmarks[0]
+
+            # FIXME: make sure that the benchmark is compatible
+            # FIXME: compare metadata except date?
             samples = bench._get_worker_samples(run_bench)
             bench.add_run(samples)
             if verbose:

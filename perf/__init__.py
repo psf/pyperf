@@ -313,6 +313,22 @@ class BenchmarkSuite(dict):
         super(BenchmarkSuite, self).__init__()
         self.filename = filename
 
+    def _add_benchmark_run(self, benchmark):
+        try:
+            existing = self[benchmark.name]
+        except KeyError:
+            self.add_benchmark(benchmark)
+            return
+
+        # FIXME: compare metadata ot make sure that benchmarks are compatible
+
+        nrun = benchmark.get_nrun()
+        if nrun != 1:
+            raise ValueError("benchmark has %s runs, only 1 expected" % nruns)
+
+        for raw_samples in benchmark._runs:
+            existing.add_run(raw_samples)
+
     def get_benchmarks(self):
         return sorted(self.values(), key=operator.attrgetter('name'))
 

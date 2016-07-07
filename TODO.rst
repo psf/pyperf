@@ -1,6 +1,7 @@
 TODO
 ====
 
+* support --fast + -p1
 * configurable clock? see pybench
 * metadata: sys.getcheckinterval? GC enabled? Python3: GIL milliseconds
 * fix hist if benchmark only contains one sample
