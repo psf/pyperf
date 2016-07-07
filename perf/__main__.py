@@ -377,8 +377,9 @@ def cmd_show(args):
 
             if args.metadata:
                 metadata = metadatas[index]
-                perf.text_runner._display_metadata(metadata)
-                print()
+                if metadata:
+                    perf.text_runner._display_metadata(metadata)
+                    print()
 
             perf.text_runner._display_benchmark(item.benchmark,
                                                 hist=args.hist,
