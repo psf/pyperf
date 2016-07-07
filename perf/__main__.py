@@ -185,21 +185,25 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
         two_lines = False
 
         # significant?
-        try:
-            significant, t_score = perf.is_significant(ref_samples, changed_samples)
-        except Exception as exc:
-            # FIXME: don't call is_significant() with a single sample
-            print("ERROR when testing if samples are significant")
-            all_significant = True
-        else:
-            if significant:
-                if args.verbose:
-                    print("Significant (t=%.2f)" % t_score)
-                    two_lines = True
+        if len(ref_samples) != 1 and len(changed_samples) != 1:
+            try:
+                significant, t_score = perf.is_significant(ref_samples, changed_samples)
+            except Exception as exc:
+                print("ERROR when testing if samples are significant")
                 all_significant = True
             else:
-                print("Not significant!")
-                two_lines = True
+                if significant:
+                    if args.verbose:
+                        print("Significant (t=%.2f)" % t_score)
+                        two_lines = True
+                    all_significant = True
+                else:
+                    print("Not significant!")
+                    two_lines = True
+        else:
+            # FIXME: is it ok to consider that comparison between two samples
+            # is significant?
+            all_significant = True
 
         if index != last_index and two_lines:
             print("")
