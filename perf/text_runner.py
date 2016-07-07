@@ -368,10 +368,11 @@ class TextRunner:
                             help='write results encoded to JSON into FILENAME')
         parser.add_argument('--json-append', metavar='FILENAME',
                             help='append results encoded to JSON into FILENAME')
-        parser.add_argument('--min-time', type=float, default=0.1,
+        parser.add_argument('--min-time', type=float, default=min_time,
                             help='Minimum duration in seconds of a single '
                                  'sample, used to calibrate the number of '
-                                 'loops (default: 100 ms)')
+                                 'loops (default: %s)'
+                                 % perf._format_timedelta(min_time))
         parser.add_argument('--worker', action="store_true",
                             help='worker process, run the benchmark')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -439,6 +440,7 @@ class TextRunner:
             self.args.warmups = 0
             self.args.samples = 1
             self.args.loops = 1
+            self.args.min_time = 1e-9
 
     def parse_args(self, args=None):
         if self.args is None:
