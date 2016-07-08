@@ -48,10 +48,13 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, index, nrun, samples, median=None, file=None):
+def _display_run(bench, index, nrun, raw_samples, median=None, file=None):
+    loops = bench.get_loops()
+    samples = [sample / loops for sample in raw_samples]
+
     warmups = samples[:bench.warmups]
     samples = samples[bench.warmups:]
-    median = statistics.median(bench._get_raw_samples())
+    median = bench.median()
 
     text = []
     max_delta = median * 0.05
@@ -62,7 +65,7 @@ def _display_run(bench, index, nrun, samples, median=None, file=None):
             item += ' (%+.0f%%)' % (delta * 100 / median)
         text.append(item)
     text = ', '.join(text)
-    text = 'raw samples (%s): %s' % (len(samples), text)
+    text = 'samples (%s): %s' % (len(samples), text)
     if warmups:
         text = ('warmup (%s): %s; %s'
                 % (len(warmups),
@@ -249,8 +252,8 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
     if runs:
         runs = bench.get_runs()
         nrun = len(runs)
-        for index, samples in enumerate(runs, 1):
-            _display_run(bench, index, nrun, samples, file=file)
+        for index, raw_samples in enumerate(runs, 1):
+            _display_run(bench, index, nrun, raw_samples, file=file)
         print(file=file)
 
     if metadata:
@@ -677,11 +680,11 @@ class TextRunner:
 
             # FIXME: make sure that the benchmark is compatible
             # FIXME: compare metadata except date?
-            samples = bench._get_worker_samples(run_bench)
-            bench.add_run(samples)
+            raw_samples = bench._get_worker_samples(run_bench)
+            bench.add_run(raw_samples)
             if verbose:
                 _display_run(bench, 1 + process, nprocess,
-                             samples, file=stream)
+                             raw_samples, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
                 stream.flush()

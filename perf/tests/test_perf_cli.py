@@ -66,9 +66,9 @@ class TestPerfCLI(unittest.TestCase):
 
     def test_show_verbose(self):
         stdout = self.show('-vv')
-        expected = ('Run 1/3: raw samples (1): 1.00 sec (-33%)\n'
-                    'Run 2/3: raw samples (1): 1.50 sec\n'
-                    'Run 3/3: raw samples (1): 2.00 sec (+33%)\n'
+        expected = ('Run 1/3: samples (1): 1.00 sec (-33%)\n'
+                    'Run 2/3: samples (1): 1.50 sec\n'
+                    'Run 3/3: samples (1): 2.00 sec (+33%)\n'
                     '\n'
                     'ERROR: the benchmark is very unstable, the standard '
                         'deviation is very high (stdev/median: 33%)!\n'
