@@ -149,7 +149,7 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
             bins = min(bins, 25)
 
     all_samples = []
-    for bench in benchmarks:
+    for bench, title in benchmarks:
         all_samples.extend(bench.get_samples())
     all_min = min(all_samples)
     all_max = max(all_samples)
@@ -163,9 +163,10 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
     bucket_min = sample_bucket(all_min)
     bucket_max = sample_bucket(all_max)
 
-    for index, bench in enumerate(benchmarks):
-        if len(benchmarks) > 1:
-            print("[ %s ]" % bench.name, file=file)
+    for index, item in enumerate(benchmarks):
+        bench, title = item
+        if title:
+            print("[ %s ]" % title, file=file)
 
         samples = bench.get_samples()
 
@@ -192,8 +193,10 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
                                              count, count_width, line),
                   file=file)
 
-        if index != len(benchmarks) -1:
-            print(file=file)
+        # FIXME: optimize newline
+        #if index != len(benchmarks) -1:
+        #    print(file=file)
+        print()
 
 
 def _warn_if_bench_unstable(bench):

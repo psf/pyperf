@@ -466,11 +466,19 @@ def cmd_stats(args):
 
 def cmd_hist(args):
     data = load_benchmarks(args)
-    benchmarks = [item.benchmark for item in data]
 
-    # FIXME: use item.title
-    perf.text_runner._display_histogram(benchmarks, bins=args.bins,
-                                        extend=args.extend)
+    for name, benchmarks in data.group_by_name():
+        display_title(name)
+
+        perf.text_runner._display_histogram(benchmarks, bins=args.bins,
+                                            extend=args.extend)
+
+    for suite, ignored in data.group_by_name_ignored():
+        for name in ignored:
+            bench = suite[name]
+            print("[ %s ]" % name)
+            perf.text_runner._display_histogram([name], bins=args.bins,
+                                                extend=args.extend)
 
 
 def fatal_missing_benchmark(suite, name):
