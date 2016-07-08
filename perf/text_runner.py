@@ -17,21 +17,6 @@ except ImportError:
 import perf
 
 
-def _json_dump(bench, args):
-    if args.json:
-        bench.dump(args.json)
-    elif args.json_append:
-        if os.path.exists(args.json_append):
-            suite = perf.BenchmarkSuite.load(args.json_append)
-        else:
-            suite = perf.BenchmarkSuite()
-        suite.add_benchmark(bench)
-        suite.dump(args.json_append)
-
-    if args.stdout:
-        bench.dump(sys.stdout)
-
-
 def _bench_suite_from_subprocess(args):
     proc = subprocess.Popen(args,
                             universal_newlines=True,
@@ -291,7 +276,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 class TextRunner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, name, samples=3, warmups=1, processes=10,
+    def __init__(self, name, samples=3, warmups=1, processes=20,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None, _argparser=None):
         if not name:
@@ -429,9 +414,9 @@ class TextRunner:
         nsamples = self.argparser.get_default('samples')
         if self.args.rigorous:
             self.args.processes = nprocess * 2
-            self.args.samples = nsamples * 5 // 3
+            #self.args.samples = nsamples * 5 // 3
         elif self.args.fast:
-            # use at least 3 processes to bencharmk 3 different (randomized)
+            # use at least 3 processes to benchmark 3 different (randomized)
             # hash functions
             self.args.processes = max(nprocess // 2, 3)
             self.args.samples = max(nsamples * 2 // 3, 2)
@@ -649,6 +634,7 @@ class TextRunner:
 
     def _display_result(self, bench, check_unstable=True):
         stream = self._stream()
+        args = self.args
 
         # Display the average +- stdev
         if self.args.quiet:
@@ -656,12 +642,23 @@ class TextRunner:
         _display_benchmark(bench,
                            file=stream,
                            check_unstable=check_unstable,
-                           metadata=self.args.metadata,
-                           stats=self.args.stats,
-                           hist=self.args.hist)
+                           metadata=args.metadata,
+                           stats=args.stats,
+                           hist=args.hist)
 
         stream.flush()
-        _json_dump(bench, self.args)
+        if args.json:
+            bench.dump(args.json)
+        elif args.json_append:
+            if os.path.exists(args.json_append):
+                suite = perf.BenchmarkSuite.load(args.json_append)
+            else:
+                suite = perf.BenchmarkSuite()
+            suite.add_benchmark(bench)
+            suite.dump(args.json_append)
+
+        if args.stdout:
+            bench.dump(sys.stdout)
 
     def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose
