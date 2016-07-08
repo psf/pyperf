@@ -334,7 +334,7 @@ class BenchmarkSuite(dict):
 
         nrun = benchmark.get_nrun()
         if nrun != 1:
-            raise ValueError("benchmark has %s runs, only 1 expected" % nruns)
+            raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
 
         for raw_samples in benchmark._runs:
             existing.add_run(raw_samples)

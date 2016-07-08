@@ -1,6 +1,5 @@
 from __future__ import print_function
 import argparse
-import io
 import os
 import subprocess
 import sys
@@ -241,7 +240,7 @@ def _warn_if_bench_unstable(bench):
     return warnings
 
 
-def _display_metadata(metadata, file=None, header="Metadata:"):
+def _display_metadata(metadata, header="Metadata:", file=None):
     if not metadata:
         return
     print(header, file=file)
@@ -263,7 +262,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
         print(file=file)
 
     if hist:
-        _display_histogram([bench], file=file)
+        _display_histogram([(bench, None)], file=file)
         print(file=file)
 
     if stats:

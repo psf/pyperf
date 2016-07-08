@@ -415,14 +415,22 @@ def load_benchmarks(args):
 def cmd_show(args):
     data = load_benchmarks(args)
 
-    many_benchmarks = (len(data) > 1)
-
     if args.metadata:
         metadatas = [dict(item.benchmark.metadata) for item in data]
         _display_common_metadata(metadatas)
 
-    # FIXME: merge again the two code paths
-    if args.metadata or args.hist or args.stats or args.verbose:
+    if args.hist or args.stats or args.verbose:
+        use_title = True
+    else:
+        use_title = False
+        if not args.quiet:
+            for index, item in enumerate(data):
+                warnings = perf.text_runner._warn_if_bench_unstable(item.benchmark)
+                if warnings:
+                    use_title = True
+                    break
+
+    if use_title:
         for index, item in enumerate(data):
             if item.title:
                 display_title(item.title)
@@ -438,22 +446,15 @@ def cmd_show(args):
                                                 stats=args.stats,
                                                 runs=bool(args.verbose),
                                                 check_unstable=not args.quiet)
+
             if not item.is_last:
                 print()
     else:
-        # simple output: one line
-        for item in data:
+        for index, item in enumerate(data):
+            line = str(item.benchmark)
             if item.title:
-                prefix = '%s: ' % item.title
-            else:
-                prefix = ''
-
-            if not args.quiet:
-                warnings = perf.text_runner._warn_if_bench_unstable(item.benchmark)
-                for line in warnings:
-                    print(prefix + line)
-
-            print("%s%s" % (prefix, item.benchmark))
+                line = '%s: %s' % (item.title, line)
+            print(line)
 
 
 def cmd_timeit(args, timeit_runner):
@@ -498,7 +499,6 @@ def cmd_hist(args):
 
     for suite, ignored in ignored:
         for name in ignored:
-            bench = suite[name]
             print("[ %s ]" % name)
             perf.text_runner._display_histogram([name], bins=args.bins,
                                                 extend=args.extend)
