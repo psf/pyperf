@@ -52,11 +52,7 @@ def create_parser():
                          help='enable quiet mode')
         cmd.add_argument('-v', '--verbose', action="store_true",
                          help='enable verbose mode')
-        cmd.add_argument('ref_filename', type=str,
-                             help='Reference JSON file')
-        cmd.add_argument('changed_filenames', metavar="changed_filename",
-                             type=str, nargs='+',
-                             help='Changed JSON file')
+        input_filenames(cmd)
 
     # stats
     cmd = subparsers.add_parser('stats', help='Compute statistics')
@@ -157,9 +153,8 @@ def _display_common_metadata(metadatas):
 def compare_benchmarks(benchmarks, sort_benchmarks, args):
     # FIXME: remove this, use directly benchmarks
     new_benchmarks = []
-    for benchmark, title in benchmarks:
-        if title:
-            benchmark.name = title
+    for benchmark, title, filename in benchmarks:
+        benchmark.name = filename
         new_benchmarks.append(benchmark)
     benchmarks = new_benchmarks
 
@@ -230,36 +225,37 @@ def compare_suites(benchmarks, sort_benchmarks, args):
     not_significant = []
     # FIXME: add "is_last" to grouped_by_name
     for index, item in enumerate(grouped_by_name):
-        name, cmp_benchmarks = item
+        # FIXME: use namedtuple()
+        name, cmp_benchmarks, is_last = item
         significant, lines = compare_benchmarks(cmp_benchmarks, sort_benchmarks, args)
+
+        if len(grouped_by_name) > 1:
+            title = name
+        else:
+            title = None
 
         if not(significant or args.verbose):
             not_significant.append(name)
             continue
 
-        #if show_name:
-        #    title = name
-        #else:
-        #    title = None
-
         if len(lines) != 1:
-            #if title:
-            #    display_title(title)
+            if title:
+                display_title(title)
             for line in lines:
                 print(line)
             if index != len(grouped_by_name) - 1:
                 print()
         else:
             text = lines[0]
-            #if title:
-            #    text = '%s: %s' % (title, text)
+            if title:
+                text = '%s: %s' % (title, text)
             print(text)
 
-    if not_significant:
-        print("Benchmark hidden because not significant (%s): %s"
-              % (len(not_significant), ', '.join(not_significant)))
-
     if not args.quiet:
+        if not_significant:
+            print("Benchmark hidden because not significant (%s): %s"
+                  % (len(not_significant), ', '.join(not_significant)))
+
         for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
@@ -267,11 +263,12 @@ def compare_suites(benchmarks, sort_benchmarks, args):
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden))))
 
 def cmd_compare(args):
-    benchmarks = Benchmarks()
-    benchmarks.load_benchmark_suite(args.ref_filename)
-    for  filename in args.changed_filenames:
-        benchmarks.load_benchmark_suite(filename)
-    compare_suites(benchmarks, args.action == 'compare', args)
+    data = load_benchmarks(args)
+    if data.get_nsuite() < 2:
+        print("ERROR: need at least two benchmark files")
+        sys.exit(1)
+
+    compare_suites(data, args.action == 'compare', args)
 
 
 def cmd_metadata():
@@ -327,6 +324,9 @@ class Benchmarks:
                 if key != name:
                     del suite[key]
 
+    def get_nsuite(self):
+        return len(self.suites)
+
     def __len__(self):
         return sum(len(suite) for suite in self.suites)
 
@@ -334,7 +334,7 @@ class Benchmarks:
         format_filename = format_filename_func(self.suites)
 
         show_name = (len(self) > 1)
-        show_filename = (len(self.suites) > 1)
+        show_filename = (self.get_nsuite() > 1)
 
         for suite_index, suite in enumerate(self.suites):
             filename = format_filename(suite.filename)
@@ -362,23 +362,29 @@ class Benchmarks:
     def group_by_name(self):
         format_filename = format_filename_func(self.suites)
 
-        show_filename = (len(self.suites) > 1)
+        show_filename = (self.get_nsuite() > 1)
 
         names = self._group_by_name_names()
         names = sorted(names)
         show_name = (len(names) > 1)
-        for name in names:
+
+        for index, name in enumerate(names):
             benchmarks = []
             for suite in self.suites:
                 benchmark = suite[name]
                 filename = format_filename(suite.filename)
                 if show_name:
-                    title = "%s:%s" % (filename, name)
+                    if not show_filename:
+                        title = name
+                    else:
+                        # name is displayed in the group title
+                        title = filename
                 else:
-                    title = filename
-                benchmarks.append((benchmark, title))
+                    title = None
+                benchmarks.append((benchmark, title, filename))
 
-            yield (name, benchmarks)
+            is_last = (index == (len(names) - 1))
+            yield (name, benchmarks, is_last)
 
     def group_by_name_ignored(self):
         names = self._group_by_name_names()
@@ -467,13 +473,23 @@ def cmd_stats(args):
 def cmd_hist(args):
     data = load_benchmarks(args)
 
-    for name, benchmarks in data.group_by_name():
-        display_title(name)
+    ignored = list(data.group_by_name_ignored())
+
+    show_name = (data.get_nsuite() > 1)
+    for name, benchmarks, is_last in data.group_by_name():
+        if show_name:
+            display_title(name)
+
+        benchmarks = [(benchmark, title)
+                      for benchmark, title, filename in benchmarks]
 
         perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                             extend=args.extend)
 
-    for suite, ignored in data.group_by_name_ignored():
+        if not(is_last or ignored):
+            print()
+
+    for suite, ignored in ignored:
         for name in ignored:
             bench = suite[name]
             print("[ %s ]" % name)

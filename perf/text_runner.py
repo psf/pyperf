@@ -193,10 +193,8 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
                                              count, count_width, line),
                   file=file)
 
-        # FIXME: optimize newline
-        #if index != len(benchmarks) -1:
-        #    print(file=file)
-        print()
+        if index != len(benchmarks) - 1:
+            print(file=file)
 
 
 def _warn_if_bench_unstable(bench):
