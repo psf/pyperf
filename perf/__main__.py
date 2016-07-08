@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import collections
+import errno
 import os.path
 import sys
 
@@ -605,23 +606,28 @@ def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
     action = args.action
-    if action == 'show':
-        cmd_show(args)
-    elif action in ('compare', 'compare_to'):
-        cmd_compare(args)
-    elif action == 'hist':
-        cmd_hist(args)
-    elif action == 'stats':
-        cmd_stats(args)
-    elif action == 'metadata':
-        cmd_metadata()
-    elif action == 'timeit':
-        cmd_timeit(args, timeit_runner)
-    elif action == 'convert':
-        cmd_convert(args)
-    else:
-        parser.print_usage()
-        sys.exit(1)
+    try:
+        if action == 'show':
+            cmd_show(args)
+        elif action in ('compare', 'compare_to'):
+            cmd_compare(args)
+        elif action == 'hist':
+            cmd_hist(args)
+        elif action == 'stats':
+            cmd_stats(args)
+        elif action == 'metadata':
+            cmd_metadata()
+        elif action == 'timeit':
+            cmd_timeit(args, timeit_runner)
+        elif action == 'convert':
+            cmd_convert(args)
+        else:
+            parser.print_usage()
+            sys.exit(1)
+    except IOError as exc:
+        if exc.errno != errno.EPIPE:
+            raise
+        # ignore broken pipe error
 
 
 main()
