@@ -155,6 +155,14 @@ def _display_common_metadata(metadatas):
 
 
 def compare_benchmarks(benchmarks, sort_benchmarks, args):
+    # FIXME: remove this, use directly benchmarks
+    new_benchmarks = []
+    for benchmark, title in benchmarks:
+        if title:
+            benchmark.name = title
+        new_benchmarks.append(benchmark)
+    benchmarks = new_benchmarks
+
     if sort_benchmarks:
         benchmarks.sort(key=_result_sort_key)
 
@@ -211,51 +219,40 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
     return (all_significant, lines)
 
 
-def compare_suites(suites, sort_benchmarks, args):
-    ref_suite = suites[0]
-    format_filename = format_filename_func(suites)
-
-    names = set(suites[0])
-    for suite in suites[1:]:
-        names &= set(suite)
-    if not names:
+def compare_suites(benchmarks, sort_benchmarks, args):
+    grouped_by_name = list(benchmarks.group_by_name())
+    # FIXME: remove if and use the iterator?
+    if not grouped_by_name:
         print("ERROR: Benchmark suites have no benchmark in common",
               file=sys.stderr)
         sys.exit(1)
-    sorted_names = sorted(names)
-
-    show_name = (len(names) > 1)
 
     not_significant = []
-    for index, name in enumerate(sorted_names):
-
-        benchmarks = []
-        for suite in suites:
-            benchmark = suite[name]
-            benchmark.name = format_filename(suite.filename)
-            benchmarks.append(benchmark)
-        significant, lines = compare_benchmarks(benchmarks, sort_benchmarks, args)
+    # FIXME: add "is_last" to grouped_by_name
+    for index, item in enumerate(grouped_by_name):
+        name, cmp_benchmarks = item
+        significant, lines = compare_benchmarks(cmp_benchmarks, sort_benchmarks, args)
 
         if not(significant or args.verbose):
             not_significant.append(name)
             continue
 
-        if show_name:
-            title = name
-        else:
-            title = None
+        #if show_name:
+        #    title = name
+        #else:
+        #    title = None
 
         if len(lines) != 1:
-            if title:
-                display_title(title)
+            #if title:
+            #    display_title(title)
             for line in lines:
                 print(line)
-            if index != len(sorted_names) - 1:
+            if index != len(grouped_by_name) - 1:
                 print()
         else:
             text = lines[0]
-            if title:
-                text = '%s: %s' % (title, text)
+            #if title:
+            #    text = '%s: %s' % (title, text)
             print(text)
 
     if not_significant:
@@ -263,20 +260,18 @@ def compare_suites(suites, sort_benchmarks, args):
               % (len(not_significant), ', '.join(not_significant)))
 
     if not args.quiet:
-        for suite in suites:
-            hidden = set(suite) - names
+        for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden))))
 
 def cmd_compare(args):
-    suite = perf.BenchmarkSuite.load(args.ref_filename)
-    suites = [suite]
+    benchmarks = Benchmarks()
+    benchmarks.load_benchmark_suite(args.ref_filename)
     for  filename in args.changed_filenames:
-        suite = perf.BenchmarkSuite.load(filename)
-        suites.append(suite)
-    compare_suites(suites, args.action == 'compare', args)
+        benchmarks.load_benchmark_suite(filename)
+    compare_suites(benchmarks, args.action == 'compare', args)
 
 
 def cmd_metadata():
@@ -315,10 +310,13 @@ class Benchmarks:
     def __init__(self):
         self.suites = []
 
+    def load_benchmark_suite(self, filename):
+        suite = perf.BenchmarkSuite.load(filename)
+        self.suites.append(suite)
+
     def load_benchmark_suites(self, filenames):
         for filename in filenames:
-            suite = perf.BenchmarkSuite.load(filename)
-            self.suites.append(suite)
+            self.load_benchmark_suite(filename)
 
     # FIXME: move this method to BenchmarkSuite?
     def include_benchmark(self, name):
@@ -354,6 +352,40 @@ class Benchmarks:
                 is_last = (last_suite and last_benchmark)
 
                 yield DataItem(benchmark, title, is_last)
+
+    def _group_by_name_names(self):
+        names = set(self.suites[0])
+        for suite in self.suites[1:]:
+            names &= set(suite)
+        return names
+
+    def group_by_name(self):
+        format_filename = format_filename_func(self.suites)
+
+        show_filename = (len(self.suites) > 1)
+
+        names = self._group_by_name_names()
+        names = sorted(names)
+        show_name = (len(names) > 1)
+        for name in names:
+            benchmarks = []
+            for suite in self.suites:
+                benchmark = suite[name]
+                filename = format_filename(suite.filename)
+                if show_name:
+                    title = "%s:%s" % (filename, name)
+                else:
+                    title = filename
+                benchmarks.append((benchmark, title))
+
+            yield (name, benchmarks)
+
+    def group_by_name_ignored(self):
+        names = self._group_by_name_names()
+        for suite in self.suites:
+            ignored = set(suite) - names
+            if ignored:
+                yield (suite, ignored)
 
 
 def display_title(title):
@@ -436,6 +468,7 @@ def cmd_hist(args):
     data = load_benchmarks(args)
     benchmarks = [item.benchmark for item in data]
 
+    # FIXME: use item.title
     perf.text_runner._display_histogram(benchmarks, bins=args.bins,
                                         extend=args.extend)
 
