@@ -1,6 +1,7 @@
 TODO
 ====
 
+* support 2^15 and/or 2**15 syntax for --loops
 * support --fast + -p1
 * configurable clock? see pybench
 * metadata: sys.getcheckinterval? GC enabled? Python3: GIL milliseconds

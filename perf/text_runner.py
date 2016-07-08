@@ -48,31 +48,32 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, index, nrun, raw_samples, median=None, file=None):
+def _display_run(bench, run, nrun, raw_samples, median=None, file=None):
     loops = bench.get_loops()
     samples = [sample / loops for sample in raw_samples]
 
-    warmups = samples[:bench.warmups]
-    samples = samples[bench.warmups:]
-    median = bench.median()
+    samples_str = list(bench._format_samples(samples))
 
-    text = []
+    median = bench.median()
     max_delta = median * 0.05
-    for sample in samples:
-        item = bench._format_sample(sample)
+    for index, sample in enumerate(samples):
         delta = sample - median
         if abs(delta) > max_delta:
-            item += ' (%+.0f%%)' % (delta * 100 / median)
-        text.append(item)
-    text = ', '.join(text)
-    text = 'samples (%s): %s' % (len(samples), text)
-    if warmups:
-        text = ('warmup (%s): %s; %s'
-                % (len(warmups),
-                   ', '.join(bench._format_samples(warmups)),
-                   text))
+            samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
 
-    text = "Run %s/%s: %s" % (index, nrun, text)
+    nwarmup = bench.warmups
+    if nwarmup:
+        warmups = samples_str[:nwarmup]
+        samples = samples_str[nwarmup:]
+    else:
+        samples = samples_str
+
+    text = 'samples (%s): %s' % (len(samples), ', '.join(samples))
+    if nwarmup:
+        text = ('warmup (%s): %s; %s'
+                % (len(warmups), ', '.join(warmups), text))
+
+    text = "Run %s/%s: %s" % (run, nrun, text)
     print(text, file=file)
 
 
