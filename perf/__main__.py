@@ -215,7 +215,7 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
 
 
 def compare_suites(benchmarks, sort_benchmarks, args):
-    grouped_by_name = list(benchmarks.group_by_name())
+    grouped_by_name = benchmarks.group_by_name()
     # FIXME: remove if and use the iterator?
     if not grouped_by_name:
         print("ERROR: Benchmark suites have no benchmark in common",
@@ -368,6 +368,7 @@ class Benchmarks:
         names = sorted(names)
         show_name = (len(names) > 1)
 
+        groups = []
         for index, name in enumerate(names):
             benchmarks = []
             for suite in self.suites:
@@ -384,7 +385,10 @@ class Benchmarks:
                 benchmarks.append((benchmark, title, filename))
 
             is_last = (index == (len(names) - 1))
-            yield (name, benchmarks, is_last)
+            group = (name, benchmarks, is_last)
+            groups.append(group)
+
+        return groups
 
     def group_by_name_ignored(self):
         names = self._group_by_name_names()
@@ -475,12 +479,15 @@ def cmd_hist(args):
 
     ignored = list(data.group_by_name_ignored())
 
-    show_name = (data.get_nsuite() > 1)
-    for name, benchmarks, is_last in data.group_by_name():
-        if show_name:
+    groups = data.group_by_name()
+    show_filename = (data.get_nsuite() > 1)
+    show_group_name = (len(groups) > 1)
+
+    for name, benchmarks, is_last in groups:
+        if show_group_name:
             display_title(name)
 
-        benchmarks = [(benchmark, title)
+        benchmarks = [(benchmark, filename if show_filename else None)
                       for benchmark, title, filename in benchmarks]
 
         perf.text_runner._display_histogram(benchmarks, bins=args.bins,
