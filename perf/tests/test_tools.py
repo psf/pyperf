@@ -95,6 +95,7 @@ class TestTools(unittest.TestCase):
         self.assertEqual(perf._format_number(0, 'unit'), '0 unit')
         self.assertEqual(perf._format_number(1, 'unit'), '1 unit')
         self.assertEqual(perf._format_number(2, 'unit'), '2 units')
+        self.assertEqual(perf._format_number(123, 'unit'), '123 units')
 
         # powers of 10
         self.assertEqual(perf._format_number(10 ** 3, 'unit'),
@@ -103,6 +104,8 @@ class TestTools(unittest.TestCase):
                          '10^4 units')
         self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
                          '10001 units')
+        self.assertEqual(perf._format_number(33 * 10 ** 4, 'unit'),
+                         '330000 units')
 
         # powers of 10
         self.assertEqual(perf._format_number(2 ** 10, 'unit'),

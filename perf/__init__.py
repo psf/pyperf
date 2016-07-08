@@ -55,17 +55,27 @@ def _format_timedelta(value):
 
 def _format_number(number, unit=None, units=None):
     plural = (abs(number) > 1)
-    if number >= 10000 and not(number % 10):
+    if number >= 10000:
         pow10 = 0
         x = number
         while x >= 10:
-            x //= 10
+            x, r = divmod(x, 10)
             pow10 += 1
-        number = '10^%s' % pow10
+            if r:
+                break
+        if not r:
+            number = '10^%s' % pow10
 
-    elif number > 8192 and not(number % 2):
-        pow2 = number.bit_length() - 1
-        number = '2^%s' % pow2
+    if isinstance(number, int) and number > 8192:
+        pow2 = 0
+        x = number
+        while x >= 2:
+            x, r = divmod(x, 2)
+            pow2 += 1
+            if r:
+                break
+        if not r:
+            number = '2^%s' % pow2
 
     if not unit:
         return str(number)
