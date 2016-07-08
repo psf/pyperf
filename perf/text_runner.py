@@ -431,6 +431,11 @@ class TextRunner:
             self.args.loops = 1
             self.args.min_time = 1e-9
 
+        filename = self.args.json
+        if filename and os.path.exists(filename):
+            print("ERROR: The JSON file %r already exists" % filename)
+            sys.exit(1)
+
     def parse_args(self, args=None):
         if self.args is None:
             self.args = self.argparser.parse_args(args)
@@ -651,9 +656,7 @@ class TextRunner:
                            hist=args.hist)
 
         stream.flush()
-        if args.json:
-            bench.dump(args.json)
-        elif args.json_append:
+        if args.json_append:
             if os.path.exists(args.json_append):
                 suite = perf.BenchmarkSuite.load(args.json_append)
             else:
@@ -663,6 +666,10 @@ class TextRunner:
 
         if args.stdout:
             bench.dump(sys.stdout)
+
+        if args.json:
+            bench.dump(args.json)
+
 
     def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose

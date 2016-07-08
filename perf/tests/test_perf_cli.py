@@ -1,11 +1,11 @@
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
 import textwrap
 
 import perf
+from perf import tests
 from perf.tests.test_metadata import check_all_metadata
 from perf.tests import unittest
 
@@ -125,8 +125,7 @@ class TestPerfCLI(unittest.TestCase):
                          expected)
 
     def compare(self, action, ref_result, changed_result, *args):
-        tmpdir = tempfile.mkdtemp()
-        try:
+        with tests.temporary_directory() as tmpdir:
             ref_name = os.path.join(tmpdir, 'ref.json')
             changed_name = os.path.join(tmpdir, 'changed.json')
 
@@ -134,8 +133,6 @@ class TestPerfCLI(unittest.TestCase):
             changed_result.dump(changed_name)
 
             stdout = self.run_command(action, ref_name, changed_name, *args)
-        finally:
-            shutil.rmtree(tmpdir)
 
         return stdout
 

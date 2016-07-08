@@ -1,4 +1,5 @@
 import collections
+import os.path
 import tempfile
 import textwrap
 
@@ -69,6 +70,20 @@ class TestRunTextRunner(unittest.TestCase):
         self.assertEqual(result.stdout,
                          tests.benchmark_as_json(result.bench))
 
+    def test_json_exists(self):
+        with tempfile.NamedTemporaryFile('wb+') as tmp:
+
+            runner = perf.text_runner.TextRunner('bench')
+            with tests.capture_stdout() as stdout:
+                try:
+                    runner.parse_args(['--worker', '--json', tmp.name])
+                except SystemExit as exc:
+                    self.assertEqual(exc.code, 1)
+
+            self.assertEqual('ERROR: The JSON file %r already exists'
+                             % tmp.name,
+                             stdout.getvalue().rstrip())
+
     def test_verbose_metadata(self):
         result = self.run_text_runner('--worker', '--verbose', '--metadata')
         self.assertRegex(result.stdout,
@@ -129,9 +144,12 @@ class TestRunTextRunner(unittest.TestCase):
         self.assertEqual(result.bench.loops, 2 ** 10)
 
     def test_json_file(self):
-        with tempfile.NamedTemporaryFile('wb+') as tmp:
-            result = self.run_text_runner('--worker', '--json', tmp.name)
-            loaded = perf.Benchmark.load(tmp.name)
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+
+            result = self.run_text_runner('--worker', '--json', filename)
+
+            loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
 
 

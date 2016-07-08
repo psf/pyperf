@@ -1,3 +1,4 @@
+import os.path
 import re
 import subprocess
 import sys
@@ -7,6 +8,7 @@ import unittest
 import six
 
 import perf
+from perf import tests
 
 
 SLEEP = 'time.sleep(1e-3)'
@@ -91,18 +93,15 @@ class TestTimeit(unittest.TestCase):
         self.assertLessEqual(stdev, MAX_STDEV)
 
     def test_json_file(self):
-        if six.PY3:
-            tmp = tempfile.NamedTemporaryFile('w+', encoding='utf-8')
-        else:
-            tmp = tempfile.NamedTemporaryFile()
         loops = 4
-        with tmp:
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
             args = [sys.executable,
                     '-m', 'perf', 'timeit',
                     '-p', '2',
                     '-n', '3',
                     '-l', str(loops),
-                    '--json', tmp.name,
+                    '--json', filename,
                     '-s', 'import time',
                     SLEEP]
             proc = subprocess.Popen(args,
@@ -111,7 +110,7 @@ class TestTimeit(unittest.TestCase):
             proc.communicate()
             self.assertEqual(proc.returncode, 0)
 
-            bench = perf.Benchmark.load(tmp.name)
+            bench = perf.Benchmark.load(filename)
 
         self.assertEqual(bench.loops, 4)
 

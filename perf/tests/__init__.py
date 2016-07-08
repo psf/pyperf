@@ -1,5 +1,6 @@
 import contextlib
 import io
+import shutil
 import sys
 import tempfile
 
@@ -48,3 +49,12 @@ def compare_benchmarks(testcase, bench1, bench2):
     json1 = benchmark_as_json(bench1, compact=False)
     json2 = benchmark_as_json(bench2, compact=False)
     testcase.assertEqual(json1, json2)
+
+
+@contextlib.contextmanager
+def temporary_directory():
+    tmpdir = tempfile.mkdtemp()
+    try:
+        yield tmpdir
+    finally:
+        shutil.rmtree(tmpdir)
