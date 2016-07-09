@@ -546,54 +546,26 @@ def cmd_convert(args):
             print("ERROR: %s (runs: %r)" % (exc, runs), file=sys.stderr)
             sys.exit(1)
         for benchmark in suite.values():
-            if include:
-                old_runs = benchmark._runs
-                max_index = len(old_runs) - 1
-                runs = []
-                for index in only_runs:
-                    if index <= max_index:
-                        runs.append(old_runs[index])
-            else:
-                runs = benchmark._runs
-                max_index = len(runs) - 1
-                for index in reversed(only_runs):
-                    if index <= max_index:
-                        del runs[index]
-            if not runs:
+            try:
+                benchmark._filter_runs(include, only_runs)
+            except ValueError:
                 print("ERROR: Benchmark %r has no more run" % benchmark.name,
                       file=sys.stderr)
                 sys.exit(1)
-            benchmark._runs = runs
 
     if args.remove_warmups:
         for benchmark in suite.values():
-            warmups = benchmark.warmups
-            if not warmups:
-                continue
-
-            benchmark._runs = [run[warmups:] for run in benchmark._runs]
-            benchmark.warmups = 0
+            benchmark._remove_warmups()
 
     if args.remove_outliers:
         for benchmark in suite.values():
-            warmups = benchmark.warmups
-            raw_samples = benchmark._get_raw_samples()
-
-            median = statistics.median(raw_samples)
-            min_sample = median * 0.95
-            max_sample = median * 1.05
-
-            new_runs = []
-            for run in benchmark._runs:
-                if all(min_sample <= sample <= max_sample
-                       for sample in run[warmups:]):
-                    new_runs.append(run)
-            if not new_runs:
+            try:
+                benchmark._remove_outliers()
+            except ValueError:
                 print("ERROR: Benchmark %r has no more run after removing "
                       "outliers" % benchmark.name,
                       file=sys.stderr)
                 sys.exit(1)
-            benchmark._runs[:] = new_runs
 
     compact = not(args.indent)
     if args.output_filename:

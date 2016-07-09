@@ -321,6 +321,49 @@ class Benchmark(object):
         suite.add_benchmark(self)
         suite.dump(file, compact=compact)
 
+    def _filter_runs(self, include, only_runs):
+        if include:
+            old_runs = self._runs
+            max_index = len(old_runs) - 1
+            runs = []
+            for index in only_runs:
+                if index <= max_index:
+                    runs.append(old_runs[index])
+        else:
+            runs = self._runs
+            max_index = len(runs) - 1
+            for index in reversed(only_runs):
+                if index <= max_index:
+                    del runs[index]
+        if not runs:
+            raise ValueError("no more runs")
+        self._runs = runs
+
+    def _remove_warmups(self):
+        warmups = self.warmups
+        if not warmups:
+            return
+
+        self._runs = [run[warmups:] for run in self._runs]
+        self.warmups = 0
+
+    def _remove_outliers(self):
+        warmups = self.warmups
+        raw_samples = self._get_raw_samples()
+
+        median = statistics.median(raw_samples)
+        min_sample = median * 0.95
+        max_sample = median * 1.05
+
+        new_runs = []
+        for run in self._runs:
+            if all(min_sample <= sample <= max_sample
+                   for sample in run[warmups:]):
+                new_runs.append(run)
+        if not new_runs:
+            raise ValueError("no more runs")
+        self._runs[:] = new_runs
+
 
 class BenchmarkSuite(dict):
     def __init__(self, filename=None):
