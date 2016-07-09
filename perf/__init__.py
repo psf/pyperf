@@ -364,6 +364,19 @@ class Benchmark(object):
             raise ValueError("no more runs")
         self._runs[:] = new_runs
 
+    def _add_benchmark_run(self, benchmark):
+        if benchmark is self:
+            raise ValueError("cannot add a benchmark to itself")
+
+        # FIXME: compare metadata to make sure that benchmarks are compatible
+
+        nrun = benchmark.get_nrun()
+        if nrun != 1:
+            raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
+
+        for raw_samples in benchmark._runs:
+            self.add_run(raw_samples)
+
 
 class BenchmarkSuite(dict):
     def __init__(self, filename=None):
@@ -377,17 +390,7 @@ class BenchmarkSuite(dict):
             self.add_benchmark(benchmark)
             return
 
-        if benchmark is existing:
-            raise ValueError("cannot add a benchmark to itself")
-
-        # FIXME: compare metadata ot make sure that benchmarks are compatible
-
-        nrun = benchmark.get_nrun()
-        if nrun != 1:
-            raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
-
-        for raw_samples in benchmark._runs:
-            existing.add_run(raw_samples)
+        existing._add_benchmark_run(benchmark)
 
     def get_benchmarks(self):
         return sorted(self.values(), key=operator.attrgetter('name'))
