@@ -505,9 +505,9 @@ class TextRunner:
     def _worker(self, bench, sample_func):
         stream = self._stream()
 
-        samples = []
+        raw_samples = []
         for is_warmup, index in self._range():
-            sample = sample_func(bench.loops)
+            raw_sample = sample_func(bench.loops)
 
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
@@ -515,12 +515,12 @@ class TextRunner:
             # the dot. Round manually to 10^-9 to produce more compact JSON
             # files and don't pretend to have a better resolution than 1
             # nanosecond.
-            sample = round(sample, 9)
+            raw_sample = round(raw_sample, 9)
 
-            samples.append(sample)
+            raw_samples.append(raw_sample)
 
             if self.args.verbose:
-                text = bench._format_sample(sample)
+                text = bench._format_sample(raw_sample)
                 if is_warmup:
                     text = "Warmup %s: %s" % (index, text)
                 else:
@@ -530,7 +530,7 @@ class TextRunner:
         if self.args.verbose:
             print(file=stream)
 
-        bench.add_run(samples)
+        bench.add_run(raw_samples)
         self._display_result(bench, check_unstable=False)
 
         return bench

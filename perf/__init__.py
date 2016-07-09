@@ -174,21 +174,21 @@ class Benchmark(object):
             assert self._median != 0
         return self._median
 
-    def add_run(self, samples):
-        if (not samples
+    def add_run(self, raw_samples):
+        if (not raw_samples
         or any(not(isinstance(value, (int, float)) and value > 0)
-                for value in samples)):
-            raise ValueError("samples must be a non-empty list "
+                for value in raw_samples)):
+            raise ValueError("raw_samples must be a non-empty list "
                              "of float > 0")
 
-        if self.warmups is not None and (len(samples) - self.warmups) < 1:
-            raise ValueError("provided %s samples, but benchmark uses "
-                             "%s warmups" % (len(samples), self.warmups))
+        if self.warmups is not None and (len(raw_samples) - self.warmups) < 1:
+            raise ValueError("provided %s raw_samples, but benchmark uses "
+                             "%s warmups" % (len(raw_samples), self.warmups))
 
-        run = tuple(samples)
+        run = tuple(raw_samples)
         if self._runs:
             if len(run) != len(self._runs[0]):
-                raise ValueError("different number of samples")
+                raise ValueError("different number of raw_samples")
 
         self._clear_stats_cache()
         self._runs.append(run)
@@ -280,8 +280,8 @@ class Benchmark(object):
                     warmups=warmups,
                     loops=loops, inner_loops=inner_loops,
                     metadata=metadata)
-        for run_data in data['runs']:
-            bench.add_run(run_data)
+        for raw_samples in data['runs']:
+            bench.add_run(raw_samples)
         return bench
 
     def _as_json(self):
