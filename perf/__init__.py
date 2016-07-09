@@ -377,6 +377,9 @@ class BenchmarkSuite(dict):
             self.add_benchmark(benchmark)
             return
 
+        if benchmark is existing:
+            raise ValueError("cannot add a benchmark to itself")
+
         # FIXME: compare metadata ot make sure that benchmarks are compatible
 
         nrun = benchmark.get_nrun()

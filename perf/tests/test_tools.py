@@ -221,7 +221,6 @@ class TestBenchmark(unittest.TestCase):
         self.check_runs(bench, samples, 3.0)
 
 
-
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
         self.assertIsNone(perf._parse_cpu_list(''))
@@ -304,6 +303,22 @@ class TestBenchmarkSuite(unittest.TestCase):
         self.assertEqual(len(benchmarks), 2)
         self.assertEqual(benchmarks[0].name, 'go')
         self.assertEqual(benchmarks[1].name, 'telco')
+
+    def test__add_benchmark_run(self):
+        # bench 1
+        samples = (1.0, 2.0, 3.0)
+        bench1 = perf.Benchmark("bench", warmups=0)
+        bench1.add_run(samples)
+        suite = perf.BenchmarkSuite()
+        suite.add_benchmark(bench1)
+
+        # bench 2
+        samples2 = (4.0, 5.0, 6.0)
+        bench2 = perf.Benchmark("bench", warmups=0)
+        bench2.add_run(samples2)
+        suite._add_benchmark_run(bench2)
+
+        self.assertEqual(suite['bench'].get_samples(), samples + samples2)
 
 
 class MiscTests(unittest.TestCase):
