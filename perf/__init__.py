@@ -239,11 +239,12 @@ class Benchmark(object):
         self._samples = samples
         return samples
 
-    def _get_raw_samples(self):
-        # Exclude warmup samples
+    def _get_raw_samples(self, warmups=False):
         samples = []
-        for run_samples in self._runs:
-            samples.extend(run_samples[self.warmups:])
+        for raw_samples in self._runs:
+            if not warmups:
+                raw_samples = raw_samples[self.warmups:]
+            samples.extend(raw_samples)
         return samples
 
     def format(self):

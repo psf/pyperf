@@ -13,13 +13,12 @@ from perf.tests import unittest
 TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
 
 
-class TestPerfCLI(unittest.TestCase):
+class BaseTestCase(object):
     maxDiff = 100 * 80
 
     def create_bench(self, samples, **kw):
-        if 'name' not in kw:
-            kw['name'] = 'bench'
-        bench = perf.Benchmark(warmups=0, **kw)
+        name = kw.pop('name', 'bench')
+        bench = perf.Benchmark(warmups=0, name=name, **kw)
         for sample in samples:
             bench.add_run([sample])
         return bench
@@ -35,12 +34,11 @@ class TestPerfCLI(unittest.TestCase):
         stdout, stderr = proc.communicate()
 
         self.assertEqual(stderr, '')
-        if proc.returncode != 0:
-            print(cmd)
-            input("CTRL+c")
         self.assertEqual(proc.returncode, 0)
         return stdout
 
+
+class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def show(self, *args):
         bench = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})
 
@@ -249,6 +247,129 @@ class TestPerfCLI(unittest.TestCase):
             metadata[key] = value
 
         check_all_metadata(self, metadata)
+
+
+class TestConvert(BaseTestCase, unittest.TestCase):
+    def test_stdout(self):
+        bench = self.create_bench((1.0, 1.5, 2.0))
+
+        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
+            bench.dump(tmp.name)
+            stdout = self.run_command('convert', tmp.name, '--stdout')
+
+        self.assertEqual(stdout,
+                         tests.benchmark_as_json(bench))
+
+    def test_indent(self):
+        bench = self.create_bench((1.0, 1.5, 2.0))
+
+        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
+            bench.dump(tmp.name)
+            stdout = self.run_command('convert', tmp.name,
+                                      '--indent', '--stdout')
+
+        self.assertEqual(stdout,
+                         tests.benchmark_as_json(bench, compact=False))
+
+    def test_indent(self):
+        bench = perf.Benchmark.load(TELCO)
+
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            self.run_command('convert', TELCO, '-o', filename)
+
+            bench2 = perf.Benchmark.load(filename)
+
+        tests.compare_benchmarks(self, bench2, bench)
+
+    def test_filter_benchmarks(self):
+        samples = (1.0, 1.5, 2.0)
+        suite = perf.BenchmarkSuite()
+        for name in ("call_simple", "go", "telco"):
+            suite.add_benchmark(self.create_bench(samples, name=name))
+
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            suite.dump(filename)
+
+            stdout = self.run_command('convert', filename,
+                                      '--include-benchmark', 'go', '--stdout')
+            suite2 = perf.BenchmarkSuite.loads(stdout)
+
+            stdout = self.run_command('convert', filename,
+                                      '--exclude-benchmark', 'go', '--stdout')
+            suite3 = perf.BenchmarkSuite.loads(stdout)
+
+        def get_benchmark_names(suite):
+            return [bench.name
+                    for bench in suite.get_benchmarks()]
+
+        self.assertEqual(get_benchmark_names(suite2),
+                         ['go'])
+
+        self.assertEqual(get_benchmark_names(suite3),
+                         ['call_simple', 'telco'])
+
+    def test_remove_outliers(self):
+        samples = (100.0,) * 100 + (99, 101)
+        outliers = (90.0, 110.0)
+        bench = self.create_bench(samples + outliers)
+
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            bench.dump(filename)
+
+            stdout = self.run_command('convert', filename,
+                                      '--remove-outliers', '--stdout')
+            bench2 = perf.Benchmark.loads(stdout)
+
+        self.assertEqual(bench2.get_samples(),
+                         samples)
+
+    def test_remove_warmups(self):
+        raw_samples = [5.0, 1.0, 2.0, 3.0]
+        bench = perf.Benchmark('bench', warmups=1)
+        bench.add_run(raw_samples)
+
+        self.assertEqual(bench._get_raw_samples(warmups=True),
+                         raw_samples)
+
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            bench.dump(filename)
+
+            stdout = self.run_command('convert', filename,
+                                      '--remove-warmups', '--stdout')
+            bench2 = perf.Benchmark.loads(stdout)
+
+        self.assertEqual(bench2._get_raw_samples(warmups=True),
+                         raw_samples[1:])
+
+    def test_filter_runs(self):
+        runs = (1.0, 2.0, 3.0, 4.0, 5.0)
+        bench = self.create_bench(runs)
+
+        self.assertEqual(bench.get_samples(), runs)
+
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            bench.dump(filename)
+
+            stdout = self.run_command('convert', filename,
+                                      '--include-runs', '4', '--stdout')
+            bench2 = perf.Benchmark.loads(stdout)
+
+            stdout = self.run_command('convert', filename,
+                                      '--include-runs', '1-3,5', '--stdout')
+            bench3 = perf.Benchmark.loads(stdout)
+
+            stdout = self.run_command('convert', filename,
+                                      '--exclude-runs', '2,4', '--stdout')
+            bench4 = perf.Benchmark.loads(stdout)
+
+        self.assertEqual(bench2.get_samples(), (4.0,))
+        self.assertEqual(bench3.get_samples(), (1.0, 2.0, 3.0, 5.0))
+        self.assertEqual(bench4.get_samples(), (1.0, 3.0, 5.0))
 
 
 if __name__ == "__main__":
