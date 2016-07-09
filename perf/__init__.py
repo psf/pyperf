@@ -163,6 +163,9 @@ class Benchmark(object):
         self._clear_stats_cache()
         self._warmups = value
 
+    def _get_nsample_per_run(self):
+        return len(self._runs[0]) - self.warmups
+
     def _clear_stats_cache(self):
         self._samples = None
         self._median = None

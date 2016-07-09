@@ -82,7 +82,7 @@ def _display_stats(bench, file=None):
 
     nrun = bench.get_nrun()
     nsample = len(samples)
-    nsample_per_run = len(bench._runs[0]) - bench.warmups
+    nsample_per_run = bench._get_nsample_per_run()
     median = bench.median()
 
     # Number of samples
