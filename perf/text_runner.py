@@ -77,6 +77,12 @@ def _display_run(bench, run_index, nrun, run, median=None, file=None):
     text = "Run %s/%s: %s" % (run_index, nrun, text)
     print(text, file=file)
 
+    # FIXME: only in very verbose mode?
+    info = ['', 'loops=%s' % perf._format_number(run.loops)]
+    if run.inner_loops:
+        info.append('inner_loops=%s' % perf._format_number(run.inner_loops))
+    print(' '.join(info), file=file)
+
 
 def _display_stats(bench, file=None):
     fmt = bench._format_sample
