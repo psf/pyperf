@@ -88,6 +88,12 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
+class Run(object):
+    def __init__(self, raw_samples):
+        # non-empty tuple of float > 0
+        self._raw_samples = raw_samples
+
+
 class Benchmark(object):
     def __init__(self, name, loops=1, inner_loops=None,
                  warmups=1, metadata=None):
@@ -97,8 +103,7 @@ class Benchmark(object):
         self.inner_loops = inner_loops
         self.warmups = warmups
 
-        # list of samples where samples are a non-empty tuples
-        # of float > 0, see add_run()
+        # list of Run objects
         self._runs = []
 
         self._clear_stats_cache()
@@ -159,12 +164,12 @@ class Benchmark(object):
     def warmups(self, value):
         if not(isinstance(value, int) and value >= 0):
             raise ValueError("warmups must be an int >= 0")
-        # FIXME: if runs is non-empty, check that warmups < len(self._runs[0])
+        # FIXME: if runs is non-empty, check that warmups < len(self._runs[0]._raw_samples)
         self._clear_stats_cache()
         self._warmups = value
 
     def _get_nsample_per_run(self):
-        return len(self._runs[0]) - self.warmups
+        return len(self._runs[0]._raw_samples) - self.warmups
 
     def _clear_stats_cache(self):
         self._samples = None
@@ -188,10 +193,11 @@ class Benchmark(object):
             raise ValueError("provided %s raw_samples, but benchmark uses "
                              "%s warmups" % (len(raw_samples), self.warmups))
 
-        run = tuple(raw_samples)
+        raw_samples = tuple(raw_samples)
         if self._runs:
-            if len(run) != len(self._runs[0]):
+            if len(raw_samples) != len(self._runs[0]._raw_samples):
                 raise ValueError("different number of raw_samples")
+        run = Run(raw_samples)
 
         self._clear_stats_cache()
         self._runs.append(run)
@@ -203,7 +209,7 @@ class Benchmark(object):
             if getattr(run_bench, attr) != getattr(self, attr):
                 raise ValueError("%s value is different" % attr)
 
-        return run_bench._runs[0]
+        return run_bench._runs[0]._raw_samples
 
     def _format_sample(self, sample):
         return self._format_samples((sample,))[0]
@@ -211,15 +217,16 @@ class Benchmark(object):
     def get_nrun(self):
         return len(self._runs)
 
+    # FIXME: remove get_runs? return directly Run objects?
     def get_runs(self):
-        return list(self._runs)
+        return [run._raw_samples for run in self._runs]
 
     def get_nsample(self):
         nrun = len(self._runs)
         if not nrun:
             return 0
 
-        return nrun * (len(self._runs[0]) - self.warmups)
+        return nrun * (len(self._runs[0]._raw_samples) - self.warmups)
 
     def get_loops(self):
         loops = self.loops
@@ -235,8 +242,8 @@ class Benchmark(object):
 
         loops = self.get_loops()
         samples = []
-        for run_samples in self._runs:
-            for sample in run_samples[self.warmups:]:
+        for run in self._runs:
+            for sample in run._raw_samples[self.warmups:]:
                 samples.append(sample / loops)
         samples = tuple(samples)
         self._samples = samples
@@ -244,7 +251,8 @@ class Benchmark(object):
 
     def _get_raw_samples(self, warmups=False):
         samples = []
-        for raw_samples in self._runs:
+        for run in self._runs:
+            raw_samples = run._raw_samples
             if not warmups:
                 raw_samples = raw_samples[self.warmups:]
             samples.extend(raw_samples)
@@ -289,7 +297,7 @@ class Benchmark(object):
         return bench
 
     def _as_json(self):
-        data = {'runs': self._runs}
+        data = {'runs': [run._raw_samples for run in self._runs]}
         if self.warmups:
             data['warmups'] = self.warmups
         if self.loops is not None:
@@ -344,7 +352,7 @@ class Benchmark(object):
         if not warmups:
             return
 
-        self._runs = [run[warmups:] for run in self._runs]
+        self._runs = [Run(run._raw_samples[warmups:]) for run in self._runs]
         self.warmups = 0
 
     def _remove_outliers(self):
@@ -358,7 +366,7 @@ class Benchmark(object):
         new_runs = []
         for run in self._runs:
             if all(min_sample <= sample <= max_sample
-                   for sample in run[warmups:]):
+                   for sample in run._raw_samples[warmups:]):
                 new_runs.append(run)
         if not new_runs:
             raise ValueError("no more runs")
@@ -374,8 +382,8 @@ class Benchmark(object):
         if nrun != 1:
             raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
 
-        for raw_samples in benchmark._runs:
-            self.add_run(raw_samples)
+        for run in benchmark._runs:
+            self.add_run(run._raw_samples)
 
 
 class BenchmarkSuite(dict):
