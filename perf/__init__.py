@@ -105,6 +105,15 @@ class Run(object):
         "Get the number of samples, excluding wamrup samples."
         return (len(self._raw_samples) - self._warmups)
 
+    # FIXME: remove loops arg
+    def _get_samples(self, loops):
+        return [sample / loops for sample in self._get_raw_samples()]
+
+    def _get_raw_samples(self, warmups=False):
+        if warmups or not self._warmups:
+            return self._raw_samples
+        return self._raw_samples[self._warmups:]
+
 
 class Benchmark(object):
     def __init__(self, name, loops=1, inner_loops=None,
@@ -270,20 +279,16 @@ class Benchmark(object):
         loops = self.get_loops()
         samples = []
         for run in self._runs:
-            for sample in run._raw_samples[self.warmups:]:
-                samples.append(sample / loops)
+            samples.extend(run._get_samples(loops))
         samples = tuple(samples)
         self._samples = samples
         return samples
 
     def _get_raw_samples(self, warmups=False):
-        samples = []
+        raw_samples = []
         for run in self._runs:
-            raw_samples = run._raw_samples
-            if not warmups:
-                raw_samples = raw_samples[self.warmups:]
-            samples.extend(raw_samples)
-        return samples
+            raw_samples.extend(run._get_raw_samples(warmups))
+        return raw_samples
 
     def format(self):
         nrun = self.get_nrun()

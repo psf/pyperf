@@ -118,6 +118,15 @@ class TestTools(unittest.TestCase):
                          '1025 units')
 
 
+class RunTests(unittest.TestCase):
+    def test_run(self):
+        run = perf.Run(1, (1.0, 2.0, 3.0))
+        self.assertEqual(run._get_nsample(), 2)
+        self.assertEqual(run._get_samples(1), [2.0, 3.0])
+        self.assertEqual(run._get_raw_samples(), (2.0, 3.0))
+        self.assertEqual(run._get_raw_samples(warmups=True), (1.0, 2.0, 3.0))
+
+
 class BenchmarkTests(unittest.TestCase):
     def check_runs(self, bench, samples, warmup):
         runs = bench.get_runs()
