@@ -82,19 +82,31 @@ def _display_stats(bench, file=None):
 
     nrun = bench.get_nrun()
     nsample = len(samples)
-    nsample_per_run = bench._get_nsample_per_run()
     median = bench.median()
 
-    # Number of samples
-    iterations = [perf._format_number(nrun, 'run'),
-                  perf._format_number(nsample_per_run, 'sample')]
-    iterations = ' x '.join(iterations)
-    iterations += '; %s' % perf._format_number(bench.warmups, 'warmup')
+    # Shortest/Longest raw sample
+    raw_samples = bench._get_raw_samples()
+    print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),
+          file=file)
+    print("Raw sample maximum: %s" % bench._format_sample(max(raw_samples)),
+          file=file)
+    print(file=file)
 
-    text = "Number of samples: %s" % perf._format_number(nsample)
-    if iterations:
-        text = '%s (%s)' % (text, iterations)
-    print(text, file=file)
+    # Number of samples
+    print("Number of runs: %s" % perf._format_number(nrun), file=file)
+    print("Total number of samples: %s" % perf._format_number(nsample), file=file)
+
+    nsample_per_run = bench._get_nsample_per_run()
+    text = perf._format_number(nsample_per_run)
+    if isinstance(nsample_per_run, float):
+        text += ' (average)'
+    print('Number of samples per run: %s' % text, file=file)
+
+    warmups = bench.warmups
+    text = perf._format_number(warmups)
+    if isinstance(warmups, float):
+        text += ' (average)'
+    print('Number of warmups per run: %s' % text, file=file)
 
     # Shortest raw sample (loops)
     if bench.inner_loops is not None:
@@ -107,19 +119,13 @@ def _display_stats(bench, file=None):
     else:
         text = perf._format_number(bench.get_loops())
     print("Loop iterations per sample: %s" % text, file=file)
-
-    # Shortest/Longest raw sample
-    raw_samples = bench._get_raw_samples()
-    print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),
-          file=file)
-    print("Raw sample maximum: %s" % bench._format_sample(max(raw_samples)),
-          file=file)
     print(file=file)
 
-    def format_min(median, value):
+    # Minimum
+    def format_limit(median, value):
         return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100 / median)
 
-    print("Minimum: %s" % format_min(median, min(samples)), file=file)
+    print("Minimum: %s" % format_limit(median, min(samples)), file=file)
 
     # Median +- std dev
     print(str(bench), file=file)
@@ -129,7 +135,8 @@ def _display_stats(bench, file=None):
     print("Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
           file=file)
 
-    print("Maximum: %s" % format_min(median, max(samples)), file=file)
+    # Maximum
+    print("Maximum: %s" % format_limit(median, max(samples)), file=file)
 
 
 def _display_histogram(benchmarks, bins=20, extend=False, file=None):
@@ -669,7 +676,6 @@ class TextRunner:
 
         if args.json:
             bench.dump(args.json)
-
 
     def _spawn_workers(self, bench, start_time):
         verbose = self.args.verbose
