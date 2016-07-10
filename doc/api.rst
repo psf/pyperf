@@ -110,13 +110,20 @@ Clocks
    information on Python clocks.
 
 
+Run
+---
+
+.. class:: perf.Run
+
+   A benchmark run result is made of multiple samples
+
+
 Benchmark
 ---------
 
 .. class:: perf.Benchmark(name=None, loops=None, inner_loops=None, metadata=None)
 
-   A benchmark is made of multiple run results, and each run is made of
-   multiple samples.
+   A benchmark is made of multiple :class:`Run` objects.
 
    Methods:
 
@@ -175,6 +182,13 @@ Benchmark
 
       Raw run samples are divided by ``loops x inner_loops``: see :attr:`loops`
       and :attr:`inner_loops` attributes.
+
+   .. method:: get_warmups()
+
+      Get the number of warmup samples per run.
+
+      Return an ``int`` if all runs use the same number of warmups, or return
+      the average as a ``float``.
 
    .. classmethod:: load(file) -> Benchmark
 

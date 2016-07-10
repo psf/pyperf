@@ -92,6 +92,11 @@ class Run(object):
     def __init__(self, warmups, raw_samples):
         if not(isinstance(warmups, int) and warmups >= 0):
             raise ValueError("warmups must be an int >= 0")
+
+        if (len(raw_samples) - warmups) < 1:
+            raise ValueError("provided %s raw_samples, but run uses "
+                             "%s warmups" % (len(raw_samples), warmups))
+
         self._warmups = warmups
         # non-empty tuple of float > 0
         self._raw_samples = raw_samples
@@ -176,6 +181,18 @@ class Benchmark(object):
         self._clear_stats_cache()
         self._warmups = value
 
+    def get_warmups(self):
+        # FIXME: move this check to Benchmark constructor?
+        if not self._runs:
+            raise ValueError("no run")
+
+        values = [run._warmups for run in self._runs]
+        if len(set(values)) == 1:
+            return values[0]
+
+        # Compute the mean (float)
+        return float(sum(values)) / len(values)
+
     def _get_nsample_per_run(self):
         # FIXME: move this check to Benchmark constructor?
         if not self._runs:
@@ -199,19 +216,18 @@ class Benchmark(object):
             assert self._median != 0
         return self._median
 
-    def add_run(self, raw_samples):
+    def add_run(self, raw_samples, warmups=None):
         if (not raw_samples
         or any(not(isinstance(value, (int, float)) and value > 0)
                 for value in raw_samples)):
             raise ValueError("raw_samples must be a non-empty list "
                              "of float > 0")
 
-        if self.warmups is not None and (len(raw_samples) - self.warmups) < 1:
-            raise ValueError("provided %s raw_samples, but benchmark uses "
-                             "%s warmups" % (len(raw_samples), self.warmups))
+        if warmups is None:
+            warmups = self.warmups
 
         raw_samples = tuple(raw_samples)
-        run = Run(self.warmups, raw_samples)
+        run = Run(warmups, raw_samples)
 
         self._clear_stats_cache()
         self._runs.append(run)

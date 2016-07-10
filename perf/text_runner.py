@@ -102,7 +102,7 @@ def _display_stats(bench, file=None):
         text += ' (average)'
     print('Number of samples per run: %s' % text, file=file)
 
-    warmups = bench.warmups
+    warmups = bench.get_warmups()
     text = perf._format_number(warmups)
     if isinstance(warmups, float):
         text += ' (average)'
