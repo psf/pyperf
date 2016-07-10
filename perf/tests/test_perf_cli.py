@@ -20,7 +20,7 @@ class BaseTestCase(object):
         name = kw.pop('name', 'bench')
         bench = perf.Benchmark(name=name, **kw)
         for sample in samples:
-            bench._add_run(perf.Run(0, [sample]))
+            bench.add_run(perf.Run(0, [sample]))
         return bench
 
     def run_command(self, *args, **kwargs):
@@ -333,7 +333,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_remove_warmups(self):
         raw_samples = [5.0, 1.0, 2.0, 3.0]
         bench = perf.Benchmark('bench')
-        bench._add_run(perf.Run(1, raw_samples))
+        bench.add_run(perf.Run(1, raw_samples))
 
         self.assertEqual(bench._get_raw_samples(warmups=True),
                          raw_samples)

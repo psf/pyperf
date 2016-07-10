@@ -540,7 +540,7 @@ class TextRunner:
             print(file=stream)
 
         run = perf.Run(self.args.warmups, raw_samples)
-        bench._add_run(run)
+        bench.add_run(run)
         self._display_result(bench, check_unstable=False)
 
         return bench
@@ -697,7 +697,7 @@ class TextRunner:
             # FIXME: make sure that the benchmark is compatible
             # FIXME: compare metadata except date?
             run = bench._get_worker_run(run_bench)
-            bench._add_run(run)
+            bench.add_run(run)
             if verbose:
                 _display_run(bench, 1 + process, nprocess, run, file=stream)
             elif not quiet:

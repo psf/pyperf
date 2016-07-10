@@ -236,7 +236,7 @@ class Benchmark(object):
             assert self._median != 0
         return self._median
 
-    def _add_run(self, run):
+    def add_run(self, run):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
         self._clear_stats_cache()
@@ -331,7 +331,7 @@ class Benchmark(object):
 
             for run_data in data['runs']:
                 run = Run._json_load(run_data)
-                bench._add_run(run)
+                bench.add_run(run)
         else:
             warmups = data.get('warmups', 0)
 
@@ -343,7 +343,7 @@ class Benchmark(object):
             # version 1 and 2
             for raw_samples in data['runs']:
                 run = Run(warmups, raw_samples)
-                bench._add_run(run)
+                bench.add_run(run)
         return bench
 
     def _as_json(self):
@@ -425,7 +425,7 @@ class Benchmark(object):
             raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
 
         for run in benchmark._runs:
-            self._add_run(run)
+            self.add_run(run)
 
 
 class BenchmarkSuite(dict):

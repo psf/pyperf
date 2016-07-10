@@ -117,6 +117,20 @@ Run
 
    A benchmark run result is made of multiple samples
 
+   *raw_samples* must be a non-empty sequence of numbers (``float``) greater
+   than zero. Usually, *raw_samples* is a list of number of seconds.
+
+   Raw samples must not be equal to zero. If a raw sample is zero, use more
+   loop iterations: see :ref:`Runs, samples, warmups, outter and inner loops
+   <loops>`.
+
+   *raw_samples* must contains at least ``warmups + 1`` samples. The first
+   :attr:`warmups` samples are excluded from the :meth:`Benchmark.get_samples`
+   result.
+
+   Raw samples are total for all loops. The :meth:`get_samples` method divides
+   raw samples by :meth:`get_loops`.
+
 
 Benchmark
 ---------
@@ -127,24 +141,9 @@ Benchmark
 
    Methods:
 
-   .. method:: add_run(raw_samples)
+   .. method:: add_run(run: Run)
 
-      Add the raw samples of a benchmark run.
-
-      *raw_samples* must be a non-empty sequence of numbers (``float``) greater
-      than zero.  Usually, *raw_samples* is a list of number of seconds.
-
-      Samples must not be equal to zero. If a sample is zero, use more loop
-      iterations: see :ref:`Runs, samples, warmups, outter and inner loops
-      <loops>`.
-
-      *raw_samples* must contains at least ``warmups + 1`` samples. The first
-      :attr:`warmups` samples are excluded from the :meth:`get_samples` result.
-
-      Samples are raw values of all loops. The :meth:`get_samples` method
-      divides raw samples by :meth:`get_loops`.
-
-      All runs must have the same number of samples.
+      Add a run: *run* must a :class:`Run` object.
 
    .. method:: dump(file, compact=True)
 
