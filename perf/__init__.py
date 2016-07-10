@@ -92,7 +92,7 @@ def _format_number(number, unit=None, units=None):
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
-    def __init__(self, warmups, raw_samples):
+    def __init__(self, warmups, raw_samples, loops=1, inner_loops=1):
         if (not raw_samples
         or any(not(isinstance(sample, float) and sample > 0)
                for sample in raw_samples)):
@@ -109,12 +109,34 @@ class Run(object):
         # non-empty tuple of float > 0
         self._raw_samples = tuple(raw_samples)
 
+        if not(isinstance(loops, int) and loops >= 1):
+            raise ValueError("loops must be an int >= 1")
+        self._loops = loops
+
+        if not(isinstance(inner_loops, int) and inner_loops >= 1):
+            raise ValueError("inner_loops must be an int >= 1")
+        self._inner_loops = inner_loops
+
+    @property
+    def loops(self):
+        return self._loops
+
+    @property
+    def inner_loops(self):
+        return self._inner_loops
+
+    def _get_total_loops(self):
+        loops = self._loops
+        if self._inner_loops is not None:
+            loops *= self._inner_loops
+        return loops
+
     def _get_nsample(self):
         "Get the number of samples, excluding wamrup samples."
         return (len(self._raw_samples) - self._warmups)
 
-    # FIXME: remove loops arg
-    def _get_samples(self, loops):
+    def _get_samples(self):
+        loops = self._get_total_loops()
         return [sample / loops for sample in self._get_raw_samples()]
 
     def _get_raw_samples(self, warmups=False):
@@ -132,22 +154,23 @@ class Run(object):
         data = {'raw_samples': self._raw_samples}
         if self._warmups:
             data['warmups'] = self._warmups
+        if self._loops != 1:
+            data['loops'] = self._loops
+        if self._inner_loops != 1:
+            data['inner_loops'] = self._inner_loops
         return data
 
     @classmethod
     def _json_load(cls, run_data):
         warmups = run_data.get('warmups', 0)
         raw_samples = run_data['raw_samples']
-        return cls(warmups, raw_samples)
+        loops = run_data.get('loops', 1)
+        inner_loops = run_data.get('inner_loops', 1)
+        return cls(warmups, raw_samples, loops, inner_loops)
 
 
 class Benchmark(object):
-    def __init__(self, name, loops=1, inner_loops=None, metadata=None):
-        # use loops property setter
-        self.loops = loops
-        # use inner_loops property setter
-        self.inner_loops = inner_loops
-
+    def __init__(self, name, metadata=None):
         # list of Run objects
         self._runs = []
 
@@ -179,51 +202,29 @@ class Benchmark(object):
 
         self.metadata['name'] = value
 
-    @property
-    def inner_loops(self):
-        return self._inner_loops
+    def _get_run_property(self, get_property):
+        # FIXME: move this check to Benchmark constructor?
+        if not self._runs:
+            raise ValueError("no run")
 
-    @inner_loops.setter
-    def inner_loops(self, value):
-        if not((isinstance(value, int) and value >= 1) or value is None):
-            raise ValueError("inner_loops must be an int >= 1 or None")
-        self._clear_stats_cache()
-        self._inner_loops = value
+        values = [get_property(run) for run in self._runs]
+        if len(set(values)) == 1:
+            return values[0]
 
-    @property
-    def loops(self):
-        return self._loops
-
-    @loops.setter
-    def loops(self, value):
-        if not(isinstance(value, int) and value >= 1):
-            raise ValueError("loops must be an int >= 1")
-        self._clear_stats_cache()
-        self._loops = value
+        # Compute the mean (float)
+        return float(sum(values)) / len(values)
 
     def get_warmups(self):
-        # FIXME: move this check to Benchmark constructor?
-        if not self._runs:
-            raise ValueError("no run")
-
-        values = [run._warmups for run in self._runs]
-        if len(set(values)) == 1:
-            return values[0]
-
-        # Compute the mean (float)
-        return float(sum(values)) / len(values)
+        return self._get_run_property(lambda run: run._warmups)
 
     def _get_nsample_per_run(self):
-        # FIXME: move this check to Benchmark constructor?
-        if not self._runs:
-            raise ValueError("no run")
+        return self._get_run_property(lambda run: run._get_nsample())
 
-        values = [run._get_nsample() for run in self._runs]
-        if len(set(values)) == 1:
-            return values[0]
+    def get_loops(self):
+        return self._get_run_property(lambda run: run.loops)
 
-        # Compute the mean (float)
-        return float(sum(values)) / len(values)
+    def get_inner_loops(self):
+        return self._get_run_property(lambda run: run.inner_loops)
 
     def _clear_stats_cache(self):
         self._samples = None
@@ -245,11 +246,6 @@ class Benchmark(object):
     def _get_worker_run(self, run_bench):
         if len(run_bench._runs) != 1:
             raise ValueError("A worker result must have exactly one run")
-        # FIXME: remove these checks?
-        for attr in 'loops inner_loops'.split():
-            if getattr(run_bench, attr) != getattr(self, attr):
-                raise ValueError("%s value is different" % attr)
-
         return run_bench._runs[0]
 
     def _format_sample(self, sample):
@@ -268,22 +264,13 @@ class Benchmark(object):
     def get_nsample(self):
         return sum(run._get_nsample() for run in self._runs)
 
-    def get_loops(self):
-        loops = self.loops
-        if not loops:
-            raise ValueError("loops is zero")
-        if self.inner_loops is not None:
-            loops *= self.inner_loops
-        return loops
-
     def get_samples(self):
         if self._samples is not None:
             return self._samples
 
-        loops = self.get_loops()
         samples = []
         for run in self._runs:
-            samples.extend(run._get_samples(loops))
+            samples.extend(run._get_samples())
         samples = tuple(samples)
         self._samples = samples
         return samples
@@ -318,40 +305,32 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data, version):
-        loops = data.get('loops', 1)
-        inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
         name = metadata.get('name')
 
         if version == _JSON_VERSION:
-            bench = cls(name,
-                        loops=loops,
-                        inner_loops=inner_loops,
-                        metadata=metadata)
+            bench = cls(name, metadata=metadata)
 
             for run_data in data['runs']:
                 run = Run._json_load(run_data)
                 bench.add_run(run)
         else:
-            warmups = data.get('warmups', 0)
-
-            bench = cls(name,
-                        loops=loops,
-                        inner_loops=inner_loops,
-                        metadata=metadata)
-
             # version 1 and 2
+            warmups = data.get('warmups', 0)
+            loops = data.get('loops', 1)
+            inner_loops = data.get('inner_loops', 1)
+            if not inner_loops:
+                inner_loops = 1
+
+            bench = cls(name, metadata=metadata)
+
             for raw_samples in data['runs']:
-                run = Run(warmups, raw_samples)
+                run = Run(warmups, raw_samples, loops, inner_loops)
                 bench.add_run(run)
         return bench
 
     def _as_json(self):
         data = {'runs': [run._as_json() for run in self._runs]}
-        if self.loops is not None:
-            data['loops'] = self.loops
-        if self.inner_loops is not None:
-            data['inner_loops'] = self.inner_loops
         if self.metadata:
             data['metadata'] = self.metadata
         return data
@@ -404,11 +383,10 @@ class Benchmark(object):
         max_sample = median * 1.05
 
         new_runs = []
-        loops = self.get_loops()
         for run in self._runs:
             # FIXME: only remove outliers, not whole runs
             if all(min_sample <= sample <= max_sample
-                   for sample in run._get_samples(loops)):
+                   for sample in run._get_samples()):
                 new_runs.append(run)
         if not new_runs:
             raise ValueError("no more runs")

@@ -120,17 +120,42 @@ class TestTools(unittest.TestCase):
 
 class RunTests(unittest.TestCase):
     def test_attr(self):
-        run = perf.Run(1, (1.0, 2.0, 3.0))
+        run = perf.Run(1, (10.0, 20.0, 30.0), 2, 5)
+        self.assertEqual(run.loops, 2)
+        self.assertEqual(run.inner_loops, 5)
         self.assertEqual(run._get_nsample(), 2)
-        self.assertEqual(run._get_samples(1), [2.0, 3.0])
-        self.assertEqual(run._get_raw_samples(), (2.0, 3.0))
-        self.assertEqual(run._get_raw_samples(warmups=True), (1.0, 2.0, 3.0))
+        self.assertEqual(run._get_samples(),
+                         [2.0, 3.0])
+        self.assertEqual(run._get_raw_samples(),
+                         (20.0, 30.0))
+        self.assertEqual(run._get_raw_samples(warmups=True),
+                         (10.0, 20.0, 30.0))
+
+        run = perf.Run(1, (1.0, 2.0, 3.0))
+        self.assertEqual(run.loops, 1)
+        self.assertEqual(run.inner_loops, 1)
 
     def test_constructor(self):
         # need at least 2 samples
         self.assertRaises(ValueError, perf.Run, 0, [])
         self.assertRaises(ValueError, perf.Run, 1, [1.0])
         perf.Run(1, [1.5, 1.0])
+
+        # number of loops
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], loops=-1)
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], loops=0)
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], inner_loops=-1)
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], inner_loops=0)
+
+        # loops type error
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], loops=1.0)
+        with self.assertRaises(ValueError):
+            perf.Run(0, [1.0], inner_loops=1.0)
 
 
 class BenchmarkTests(unittest.TestCase):
@@ -145,46 +170,30 @@ class BenchmarkTests(unittest.TestCase):
         self.assertRaises(TypeError, bench.add_run, [1.0])
         bench.add_run(perf.Run(0, [1.0]))
 
-    def test_benchmark_loops_property(self):
-        bench = perf.Benchmark('bench')
-        self.assertEqual(bench.loops, 1)
-        with self.assertRaises(ValueError):
-            bench.loops = -1
-        with self.assertRaises(ValueError):
-            perf.Benchmark('bench', loops=-1)
-
-    def test_benchmark_inner_loops_property(self):
-        bench = perf.Benchmark('bench')
-        self.assertIsNone(bench.inner_loops)
-        with self.assertRaises(ValueError):
-            bench.inner_loops = -1
-        with self.assertRaises(ValueError):
-            perf.Benchmark('bench', inner_loops=-1)
-
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
-        bench = perf.Benchmark("mybench", loops=20, inner_loops=3)
+        bench = perf.Benchmark("mybench")
         for raw_sample in raw_samples:
-            bench.add_run(perf.Run(1, [3.0, raw_sample]))
+            bench.add_run(perf.Run(1, [3.0, raw_sample], loops=20, inner_loops=3))
         bench.metadata['key'] = 'value'
 
         self.assertEqual(bench.get_samples(), samples)
         self.assertEqual(bench._get_raw_samples(), list(raw_samples))
         self.assertEqual(bench.get_nrun(), 3)
 
-        runs = bench.get_runs()
+        runs = bench._get_runs()
         self.assertIsInstance(runs, list)
         self.assertEqual(len(runs), 3)
-        for run_samples in runs:
-            self.assertIsInstance(run_samples, tuple)
-            self.assertEqual(len(run_samples), 2)
+        for run in runs:
+            self.assertIsInstance(run, perf.Run)
+            self.assertEqual(len(run._get_raw_samples(True)), 2)
+            self.assertEqual(run.loops, 20)
+            self.assertEqual(run.inner_loops, 3)
 
         self.check_runs(bench, raw_samples, 3.0)
 
         self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.loops, 20)
-        self.assertEqual(bench.inner_loops, 3)
         self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
@@ -194,10 +203,9 @@ class BenchmarkTests(unittest.TestCase):
     def test_json(self):
         samples = (1.0, 1.5, 2.0)
         bench = perf.Benchmark("mybench",
-                               loops=100, inner_loops=20,
                                metadata={'key': 'value'})
         for sample in samples:
-            bench.add_run(perf.Run(1, [3.0, sample]))
+            bench.add_run(perf.Run(1, [3.0, sample], loops=100, inner_loops=20))
 
         with tempfile.NamedTemporaryFile() as tmp:
             bench.dump(tmp.name)
@@ -205,8 +213,10 @@ class BenchmarkTests(unittest.TestCase):
 
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
-        self.assertEqual(bench.loops, 100)
-        self.assertEqual(bench.inner_loops, 20)
+
+        for run in bench._get_runs():
+            self.assertEqual(run.loops, 100)
+            self.assertEqual(run.inner_loops, 20)
 
         self.check_runs(bench, samples, 3.0)
 

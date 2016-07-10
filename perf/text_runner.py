@@ -48,8 +48,8 @@ def _bench_suite_from_subprocess(args):
 
 
 def _display_run(bench, run_index, nrun, run, median=None, file=None):
-    loops = bench.get_loops()
-    # FIXME: don't use private attribute
+    loops = run.loops * run.inner_loops
+    # FIXME: don't use private attributes
     samples = [sample / loops for sample in run._raw_samples]
 
     samples_str = list(bench._format_samples(samples))
@@ -86,7 +86,7 @@ def _display_stats(bench, file=None):
     nsample = len(samples)
     median = bench.median()
 
-    # Shortest/Longest raw sample
+    # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()
     print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),
           file=file)
@@ -110,16 +110,28 @@ def _display_stats(bench, file=None):
         text += ' (average)'
     print('Number of warmups per run: %s' % text, file=file)
 
-    # Shortest raw sample (loops)
-    if bench.inner_loops is not None:
-        iterations = []
-        iterations.append(perf._format_number(bench.loops, 'outter-loop'))
-        iterations.append(perf._format_number(bench.inner_loops, 'inner-loop'))
-
-        text = perf._format_number(bench.get_loops())
-        text = '%s (%s)' % (text, ' x '.join(iterations))
+    # Loop iterations per sample
+    loops = bench.get_loops()
+    inner_loops = bench.get_inner_loops()
+    total_loops = loops * inner_loops
+    if isinstance(total_loops, int):
+        text = perf._format_number(total_loops)
     else:
-        text = perf._format_number(bench.get_loops())
+        text = "%s (average)" % total_loops
+
+    if not(isinstance(inner_loops, int) and inner_loops == 1):
+        if isinstance(loops, int):
+            loops = perf._format_number(bench.loops, 'outter-loop')
+        else:
+            loops = '%.1f outter-loops (average)'
+
+        if isinstance(inner_loops, int):
+            inner_loops = perf._format_number(inner_loops, 'inner-loop')
+        else:
+            inner_loops = "%.1f inner-loops (average)" % inner_loops
+
+        text = '%s (%s x %s)' % (text, loops, inner_loops)
+
     print("Loop iterations per sample: %s" % text, file=file)
     print(file=file)
 
@@ -291,7 +303,7 @@ class TextRunner:
     # and so a total duration of 5 seconds by default
     def __init__(self, name, samples=3, warmups=1, processes=20,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 inner_loops=None, _argparser=None):
+                 inner_loops=1, _argparser=None):
         if not name:
             raise ValueError("name must be a non-empty string")
         self.name = name
@@ -513,10 +525,11 @@ class TextRunner:
 
     def _worker(self, bench, sample_func):
         stream = self._stream()
+        loops = self.args.loops
 
         raw_samples = []
         for is_warmup, index in self._range():
-            raw_sample = sample_func(bench.loops)
+            raw_sample = sample_func(loops)
 
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
@@ -539,7 +552,9 @@ class TextRunner:
         if self.args.verbose:
             print(file=stream)
 
-        run = perf.Run(self.args.warmups, raw_samples)
+        run = perf.Run(self.args.warmups, raw_samples,
+                       loops=loops,
+                       inner_loops=self.inner_loops)
         bench.add_run(run)
         self._display_result(bench, check_unstable=False)
 
@@ -556,8 +571,6 @@ class TextRunner:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
         bench = perf.Benchmark(name=self.name,
-                               loops=self.args.loops,
-                               inner_loops=self.inner_loops,
                                metadata=self.metadata)
 
         if not self.args.worker or self.args.metadata:

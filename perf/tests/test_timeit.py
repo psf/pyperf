@@ -112,7 +112,8 @@ class TestTimeit(unittest.TestCase):
 
             bench = perf.Benchmark.load(filename)
 
-        self.assertEqual(bench.loops, 4)
+        for run in bench._get_runs():
+            self.assertEqual(run.loops, 4)
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 2)
