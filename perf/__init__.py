@@ -10,9 +10,10 @@ import statistics   # Python 3.4+, or backport on Python 2.7
 
 __version__ = '0.7'
 # Format format history:
+# 3 - add Run class
 # 2 - support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 2
+_JSON_VERSION = 3
 
 
 # Clocks
@@ -89,7 +90,14 @@ def _format_number(number, unit=None, units=None):
 
 
 class Run(object):
+    # Run is immutable, so it can be shared/exchanged between two benchmarks
+
     def __init__(self, warmups, raw_samples):
+        if (not raw_samples
+        or any(not(isinstance(sample, float) and sample > 0)
+               for sample in raw_samples)):
+            raise ValueError("raw_samples must be a non-empty list of float > 0")
+
         if not(isinstance(warmups, int) and warmups >= 0):
             raise ValueError("warmups must be an int >= 0")
 
@@ -99,7 +107,7 @@ class Run(object):
 
         self._warmups = warmups
         # non-empty tuple of float > 0
-        self._raw_samples = raw_samples
+        self._raw_samples = tuple(raw_samples)
 
     def _get_nsample(self):
         "Get the number of samples, excluding wamrup samples."
@@ -120,15 +128,25 @@ class Run(object):
 
         return Run(0, self._get_raw_samples())
 
+    def _as_json(self):
+        data = {'raw_samples': self._raw_samples}
+        if self._warmups:
+            data['warmups'] = self._warmups
+        return data
+
+    @classmethod
+    def _json_load(cls, run_data):
+        warmups = run_data.get('warmups', 0)
+        raw_samples = run_data['raw_samples']
+        return cls(warmups, raw_samples)
+
 
 class Benchmark(object):
-    def __init__(self, name, loops=1, inner_loops=None,
-                 warmups=1, metadata=None):
+    def __init__(self, name, loops=1, inner_loops=None, metadata=None):
         # use loops property setter
         self.loops = loops
         # use inner_loops property setter
         self.inner_loops = inner_loops
-        self.warmups = warmups
 
         # list of Run objects
         self._runs = []
@@ -183,19 +201,6 @@ class Benchmark(object):
         self._clear_stats_cache()
         self._loops = value
 
-    # FIXME: remove it from Benchmark, moved to Run
-    @property
-    def warmups(self):
-        return self._warmups
-
-    @warmups.setter
-    def warmups(self, value):
-        if not(isinstance(value, int) and value >= 0):
-            raise ValueError("warmups must be an int >= 0")
-        # FIXME: if runs is non-empty, check that warmups < len(self._runs[0]._raw_samples)
-        self._clear_stats_cache()
-        self._warmups = value
-
     def get_warmups(self):
         # FIXME: move this check to Benchmark constructor?
         if not self._runs:
@@ -231,31 +236,21 @@ class Benchmark(object):
             assert self._median != 0
         return self._median
 
-    def add_run(self, raw_samples, warmups=None):
-        if (not raw_samples
-        or any(not(isinstance(value, (int, float)) and value > 0)
-                for value in raw_samples)):
-            raise ValueError("raw_samples must be a non-empty list "
-                             "of float > 0")
-
-        if warmups is None:
-            # FIXME: remove it
-            warmups = self.warmups
-
-        raw_samples = tuple(raw_samples)
-        run = Run(warmups, raw_samples)
-
+    def _add_run(self, run):
+        if not isinstance(run, Run):
+            raise TypeError("Run expected, got %s" % type(run).__name__)
         self._clear_stats_cache()
         self._runs.append(run)
 
-    def _get_worker_samples(self, run_bench):
+    def _get_worker_run(self, run_bench):
         if len(run_bench._runs) != 1:
             raise ValueError("A worker result must have exactly one run")
-        for attr in 'loops inner_loops warmups'.split():
+        # FIXME: remove these checks?
+        for attr in 'loops inner_loops'.split():
             if getattr(run_bench, attr) != getattr(self, attr):
                 raise ValueError("%s value is different" % attr)
 
-        return run_bench._runs[0]._raw_samples
+        return run_bench._runs[0]
 
     def _format_sample(self, sample):
         return self._format_samples((sample,))[0]
@@ -266,6 +261,9 @@ class Benchmark(object):
     # FIXME: remove get_runs? return directly Run objects?
     def get_runs(self):
         return [run._raw_samples for run in self._runs]
+
+    def _get_runs(self):
+        return list(self._runs)
 
     def get_nsample(self):
         return sum(run._get_nsample() for run in self._runs)
@@ -319,25 +317,37 @@ class Benchmark(object):
             return 'Median: %s' % text
 
     @classmethod
-    def _json_load(cls, data):
-        warmups = data.get('warmups', 0)
+    def _json_load(cls, data, version):
         loops = data.get('loops', 1)
         inner_loops = data.get('inner_loops')
         metadata = data.get('metadata')
         name = metadata.get('name')
 
-        bench = cls(name,
-                    warmups=warmups,
-                    loops=loops, inner_loops=inner_loops,
-                    metadata=metadata)
-        for raw_samples in data['runs']:
-            bench.add_run(raw_samples)
+        if version == _JSON_VERSION:
+            bench = cls(name,
+                        loops=loops,
+                        inner_loops=inner_loops,
+                        metadata=metadata)
+
+            for run_data in data['runs']:
+                run = Run._json_load(run_data)
+                bench._add_run(run)
+        else:
+            warmups = data.get('warmups', 0)
+
+            bench = cls(name,
+                        loops=loops,
+                        inner_loops=inner_loops,
+                        metadata=metadata)
+
+            # version 1 and 2
+            for raw_samples in data['runs']:
+                run = Run(warmups, raw_samples)
+                bench._add_run(run)
         return bench
 
     def _as_json(self):
-        data = {'runs': [run._raw_samples for run in self._runs]}
-        if self.warmups:
-            data['warmups'] = self.warmups
+        data = {'runs': [run._as_json() for run in self._runs]}
         if self.loops is not None:
             data['loops'] = self.loops
         if self.inner_loops is not None:
@@ -387,8 +397,6 @@ class Benchmark(object):
 
     def _remove_warmups(self):
         self._runs = [run._remove_warmups() for run in self._runs]
-        # FIXME: remove warmups
-        self.warmups = 0
 
     def _remove_outliers(self):
         median = self.median()
@@ -417,7 +425,7 @@ class Benchmark(object):
             raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
 
         for run in benchmark._runs:
-            self.add_run(run._raw_samples)
+            self._add_run(run)
 
 
 class BenchmarkSuite(dict):
@@ -448,7 +456,7 @@ class BenchmarkSuite(dict):
     @classmethod
     def _load_json(cls, filename, bench_file):
         version = bench_file.get('version')
-        if version == _JSON_VERSION:
+        if version in (_JSON_VERSION, 2):
             benchmarks_json = bench_file['benchmarks']
         elif version == 1:
             # Backward compatibility with perf 0.5
@@ -463,7 +471,7 @@ class BenchmarkSuite(dict):
 
         suite = cls(filename)
         for name, bench_data in benchmarks_json.items():
-            benchmark = Benchmark._json_load(bench_data)
+            benchmark = Benchmark._json_load(bench_data, version)
             suite._add_benchmark(name, benchmark)
 
         if not suite:

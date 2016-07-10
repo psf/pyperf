@@ -25,9 +25,9 @@ class TestRunTextRunner(unittest.TestCase):
     def run_text_runner(self, *args, **kwargs):
         def fake_timer():
             t = fake_timer.value
-            fake_timer.value += 1
+            fake_timer.value += 1.0
             return t
-        fake_timer.value = 0
+        fake_timer.value = 0.0
 
         sample_func = kwargs.pop('sample_func', None)
 

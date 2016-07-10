@@ -113,7 +113,7 @@ Clocks
 Run
 ---
 
-.. class:: perf.Run
+.. class:: perf.Run(warmups: int, raw_samples: List[float])
 
    A benchmark run result is made of multiple samples
 

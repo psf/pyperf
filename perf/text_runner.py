@@ -47,9 +47,10 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run, nrun, raw_samples, median=None, file=None):
+def _display_run(bench, run_index, nrun, run, median=None, file=None):
     loops = bench.get_loops()
-    samples = [sample / loops for sample in raw_samples]
+    # FIXME: don't use private attribute
+    samples = [sample / loops for sample in run._raw_samples]
 
     samples_str = list(bench._format_samples(samples))
 
@@ -60,7 +61,8 @@ def _display_run(bench, run, nrun, raw_samples, median=None, file=None):
         if abs(delta) > max_delta:
             samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
 
-    nwarmup = bench.warmups
+    # FIXME: don't use private attribute
+    nwarmup = run._warmups
     if nwarmup:
         warmups = samples_str[:nwarmup]
         samples = samples_str[nwarmup:]
@@ -72,7 +74,7 @@ def _display_run(bench, run, nrun, raw_samples, median=None, file=None):
         text = ('warmup (%s): %s; %s'
                 % (len(warmups), ', '.join(warmups), text))
 
-    text = "Run %s/%s: %s" % (run, nrun, text)
+    text = "Run %s/%s: %s" % (run_index, nrun, text)
     print(text, file=file)
 
 
@@ -258,10 +260,10 @@ def _display_metadata(metadata, header="Metadata:", file=None):
 def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
                        runs=False, stats=False, hist=False):
     if runs:
-        runs = bench.get_runs()
+        runs = bench._get_runs()
         nrun = len(runs)
-        for index, raw_samples in enumerate(runs, 1):
-            _display_run(bench, index, nrun, raw_samples, file=file)
+        for index, run in enumerate(runs, 1):
+            _display_run(bench, index, nrun, run, file=file)
         print(file=file)
 
     if metadata:
@@ -537,7 +539,8 @@ class TextRunner:
         if self.args.verbose:
             print(file=stream)
 
-        bench.add_run(raw_samples)
+        run = perf.Run(self.args.warmups, raw_samples)
+        bench._add_run(run)
         self._display_result(bench, check_unstable=False)
 
         return bench
@@ -553,7 +556,6 @@ class TextRunner:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
         bench = perf.Benchmark(name=self.name,
-                               warmups=self.args.warmups,
                                loops=self.args.loops,
                                inner_loops=self.inner_loops,
                                metadata=self.metadata)
@@ -694,11 +696,10 @@ class TextRunner:
 
             # FIXME: make sure that the benchmark is compatible
             # FIXME: compare metadata except date?
-            raw_samples = bench._get_worker_samples(run_bench)
-            bench.add_run(raw_samples)
+            run = bench._get_worker_run(run_bench)
+            bench._add_run(run)
             if verbose:
-                _display_run(bench, 1 + process, nprocess,
-                             raw_samples, file=stream)
+                _display_run(bench, 1 + process, nprocess, run, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
                 stream.flush()
