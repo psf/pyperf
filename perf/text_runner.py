@@ -127,7 +127,7 @@ def _display_stats(bench, file=None):
 
     if not(isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
-            loops = perf._format_number(bench.loops, 'outter-loop')
+            loops = perf._format_number(loops, 'outter-loop')
         else:
             loops = '%.1f outter-loops (average)'
 
