@@ -101,9 +101,9 @@ class Run(object):
         # non-empty tuple of float > 0
         self._raw_samples = raw_samples
 
-    def _get_nsample_per_run(self):
-        return len(self._raw_samples) - self._warmups
-
+    def _get_nsample(self):
+        "Get the number of samples, excluding wamrup samples."
+        return (len(self._raw_samples) - self._warmups)
 
 
 class Benchmark(object):
@@ -198,7 +198,7 @@ class Benchmark(object):
         if not self._runs:
             raise ValueError("no run")
 
-        values = [run._get_nsample_per_run() for run in self._runs]
+        values = [run._get_nsample() for run in self._runs]
         if len(set(values)) == 1:
             return values[0]
 
@@ -224,6 +224,7 @@ class Benchmark(object):
                              "of float > 0")
 
         if warmups is None:
+            # FIXME: remove it
             warmups = self.warmups
 
         raw_samples = tuple(raw_samples)
@@ -252,11 +253,7 @@ class Benchmark(object):
         return [run._raw_samples for run in self._runs]
 
     def get_nsample(self):
-        nrun = len(self._runs)
-        if not nrun:
-            return 0
-
-        return nrun * (len(self._runs[0]._raw_samples) - self.warmups)
+        return sum(run._get_nsample() for run in self._runs)
 
     def get_loops(self):
         loops = self.loops

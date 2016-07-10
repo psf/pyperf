@@ -262,6 +262,16 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(warmups, 1)
         self.assertIsInstance(warmups, float)
 
+    def test_get_nsample(self):
+        bench = perf.Benchmark("bench")
+        self.assertEqual(bench.get_nsample(), 0)
+
+        bench.add_run((1.0, 2.0, 3.0), warmups=1)
+        self.assertEqual(bench.get_nsample(), 2)
+
+        bench.add_run((4.0, 5.0), warmups=1)
+        self.assertEqual(bench.get_nsample(), 3)
+
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
