@@ -114,6 +114,12 @@ class Run(object):
             return self._raw_samples
         return self._raw_samples[self._warmups:]
 
+    def _remove_warmups(self):
+        if not self._warmups:
+            return self
+
+        return Run(0, self._get_raw_samples())
+
 
 class Benchmark(object):
     def __init__(self, name, loops=1, inner_loops=None,
@@ -380,25 +386,21 @@ class Benchmark(object):
         self._runs = runs
 
     def _remove_warmups(self):
-        warmups = self.warmups
-        if not warmups:
-            return
-
-        self._runs = [Run(0, run._raw_samples[warmups:]) for run in self._runs]
+        self._runs = [run._remove_warmups() for run in self._runs]
+        # FIXME: remove warmups
         self.warmups = 0
 
     def _remove_outliers(self):
-        warmups = self.warmups
-        raw_samples = self._get_raw_samples()
-
-        median = statistics.median(raw_samples)
+        median = self.median()
         min_sample = median * 0.95
         max_sample = median * 1.05
 
         new_runs = []
+        loops = self.get_loops()
         for run in self._runs:
+            # FIXME: only remove outliers, not whole runs
             if all(min_sample <= sample <= max_sample
-                   for sample in run._raw_samples[warmups:]):
+                   for sample in run._get_samples(loops)):
                 new_runs.append(run)
         if not new_runs:
             raise ValueError("no more runs")
