@@ -89,7 +89,10 @@ def _format_number(number, unit=None, units=None):
 
 
 class Run(object):
-    def __init__(self, raw_samples):
+    def __init__(self, warmups, raw_samples):
+        if not(isinstance(warmups, int) and warmups >= 0):
+            raise ValueError("warmups must be an int >= 0")
+        self._warmups = warmups
         # non-empty tuple of float > 0
         self._raw_samples = raw_samples
 
@@ -156,6 +159,7 @@ class Benchmark(object):
         self._clear_stats_cache()
         self._loops = value
 
+    # FIXME: remove it from Benchmark, moved to Run
     @property
     def warmups(self):
         return self._warmups
@@ -197,7 +201,7 @@ class Benchmark(object):
         if self._runs:
             if len(raw_samples) != len(self._runs[0]._raw_samples):
                 raise ValueError("different number of raw_samples")
-        run = Run(raw_samples)
+        run = Run(self.warmups, raw_samples)
 
         self._clear_stats_cache()
         self._runs.append(run)
@@ -352,7 +356,7 @@ class Benchmark(object):
         if not warmups:
             return
 
-        self._runs = [Run(run._raw_samples[warmups:]) for run in self._runs]
+        self._runs = [Run(0, run._raw_samples[warmups:]) for run in self._runs]
         self.warmups = 0
 
     def _remove_outliers(self):
