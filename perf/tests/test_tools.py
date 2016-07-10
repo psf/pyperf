@@ -118,18 +118,12 @@ class TestTools(unittest.TestCase):
                          '1025 units')
 
 
-class TestBenchmark(unittest.TestCase):
+class BenchmarkTests(unittest.TestCase):
     def check_runs(self, bench, samples, warmup):
         runs = bench.get_runs()
         self.assertEqual(len(runs), len(samples))
         for sample, run in zip(samples, runs):
             self.assertEqual(run, (warmup, sample))
-
-    def test_add_run_nsample(self):
-        bench = perf.Benchmark('bench', warmups=1)
-        bench.add_run([1.5, 1.0])
-        self.assertRaises(ValueError, bench.add_run, [1.5, 1.0, 2.0])
-        bench.add_run([1.5, 1.0])
 
     def test_add_run_warmups(self):
         bench = perf.Benchmark('bench', warmups=1)
@@ -233,6 +227,25 @@ class TestBenchmark(unittest.TestCase):
         bench._add_benchmark_run(bench2)
 
         self.assertEqual(bench.get_samples(), samples + samples2)
+
+    def test__get_nsample_per_run(self):
+        # FIXME: update this test
+
+        # exact
+        bench = perf.Benchmark("bench", warmups=0)
+        bench.add_run((1.0, 2.0, 3.0))
+        bench.add_run((4.0, 5.0, 6.0))
+        nsample = bench._get_nsample_per_run()
+        self.assertEqual(nsample, 3)
+        self.assertIsInstance(nsample, int)
+
+        # average
+        bench = perf.Benchmark("bench", warmups=0)
+        bench.add_run((1.0, 2.0, 3.0, 4.0))
+        bench.add_run((5.0, 6.0))
+        nsample = bench._get_nsample_per_run()
+        self.assertEqual(nsample, 3.0)
+        self.assertIsInstance(nsample, float)
 
 
 class CPUToolsTests(unittest.TestCase):

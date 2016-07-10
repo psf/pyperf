@@ -96,6 +96,10 @@ class Run(object):
         # non-empty tuple of float > 0
         self._raw_samples = raw_samples
 
+    def _get_nsample_per_run(self):
+        return len(self._raw_samples) - self._warmups
+
+
 
 class Benchmark(object):
     def __init__(self, name, loops=1, inner_loops=None,
@@ -173,7 +177,16 @@ class Benchmark(object):
         self._warmups = value
 
     def _get_nsample_per_run(self):
-        return len(self._runs[0]._raw_samples) - self.warmups
+        # FIXME: move this check to Benchmark constructor?
+        if not self._runs:
+            raise ValueError("no run")
+
+        values = [run._get_nsample_per_run() for run in self._runs]
+        if len(set(values)) == 1:
+            return values[0]
+
+        # Compute the mean (float)
+        return float(sum(values)) / len(values)
 
     def _clear_stats_cache(self):
         self._samples = None
@@ -198,9 +211,6 @@ class Benchmark(object):
                              "%s warmups" % (len(raw_samples), self.warmups))
 
         raw_samples = tuple(raw_samples)
-        if self._runs:
-            if len(raw_samples) != len(self._runs[0]._raw_samples):
-                raise ValueError("different number of raw_samples")
         run = Run(self.warmups, raw_samples)
 
         self._clear_stats_cache()
