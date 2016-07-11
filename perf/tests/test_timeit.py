@@ -115,13 +115,15 @@ class TestTimeit(unittest.TestCase):
         for run in bench._get_runs():
             self.assertEqual(run.loops, 4)
 
-        runs = bench.get_runs()
+        runs = bench._get_runs()
         self.assertEqual(len(runs), 2)
-        for samples in runs:
-            self.assertEqual(len(samples), 4)
-            for sample in samples:
-                dt = (sample / loops) * 1e3
-                self.assertTrue(MIN_SAMPLE <= dt <= MAX_SAMPLE, dt)
+        for run in runs:
+            self.assertIsInstance(run, perf.Run)
+            raw_samples = run._get_raw_samples(warmups=True)
+            self.assertEqual(len(raw_samples), 4)
+            for raw_sample in raw_samples:
+                ms = (raw_sample / loops) * 1e3
+                self.assertTrue(MIN_SAMPLE <= ms <= MAX_SAMPLE, ms)
 
     def test_cli_snippet_error(self):
         args = [sys.executable,

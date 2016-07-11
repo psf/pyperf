@@ -47,7 +47,7 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run_index, nrun, run, verbose=0, file=None):
+def _display_run(bench, run_index, run, verbose=0, file=None):
     loops = run.loops * run.inner_loops
     # FIXME: don't use private attributes
     samples = [sample / loops for sample in run._raw_samples]
@@ -74,7 +74,7 @@ def _display_run(bench, run_index, nrun, run, verbose=0, file=None):
         text = ('warmup (%s): %s; %s'
                 % (len(warmups), ', '.join(warmups), text))
 
-    text = "Run %s/%s: %s" % (run_index, nrun, text)
+    text = "Run %s: %s" % (run_index, text)
     print(text, file=file)
 
     if verbose > 0:
@@ -90,15 +90,14 @@ def _display_run(bench, run_index, nrun, run, verbose=0, file=None):
 
 def _display_runs(bench, quiet=False, verbose=False, file=None):
     runs = bench._get_runs()
-    nrun = len(runs)
     if quiet:
         verbose = -1
     elif verbose:
         verbose = 1
     else:
         verbose = 0
-    for index, run in enumerate(runs, 1):
-        _display_run(bench, index, nrun, run, verbose=verbose, file=file)
+    for run_index, run in enumerate(runs, 1):
+        _display_run(bench, run_index, run, verbose=verbose, file=file)
 
 
 def _display_stats(bench, file=None):
@@ -733,7 +732,9 @@ class TextRunner:
             bench._add_benchmark_runs(run_bench)
 
             if verbose:
-                _display_run(bench, 1 + process, nprocess, run, file=stream)
+                run = bench._get_runs()[-1]
+                run_index = '%s/%s' % (1 + process, nprocess)
+                _display_run(bench, run_index, run, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
                 stream.flush()
