@@ -104,6 +104,8 @@ def create_parser():
                      help='enable verbose mode')
     cmd.add_argument('-q', '--quiet', action="store_true",
                      help='enable quiet mode')
+    cmd.add_argument('--raw', action="store_true",
+                     help='display raw samples')
     input_filenames(cmd)
 
     return parser, timeit_runner
@@ -478,7 +480,8 @@ def cmd_dump(args):
 
         perf.text_runner._display_runs(item.benchmark,
                                        quiet=args.quiet,
-                                       verbose=args.verbose)
+                                       verbose=args.verbose,
+                                       raw=args.raw)
         if not item.is_last:
             print()
 

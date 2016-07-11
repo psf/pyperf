@@ -47,16 +47,21 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run_index, run, verbose=0, file=None):
+def _display_run(bench, run_index, run, raw=False, verbose=0, file=None):
     loops = run.loops * run.inner_loops
-    # FIXME: don't use private attributes
-    samples = [sample / loops for sample in run._raw_samples]
+    raw_samples = run._get_raw_samples(warmups=True)
+    if not raw:
+        samples = [sample / loops for sample in raw_samples]
+    else:
+        samples = raw_samples
 
     samples_str = list(bench._format_samples(samples))
 
     median = bench.median()
     max_delta = median * 0.05
     for index, sample in enumerate(samples):
+        if raw:
+            sample /= loops
         delta = sample - median
         if abs(delta) > max_delta:
             samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
@@ -69,10 +74,18 @@ def _display_run(bench, run_index, run, verbose=0, file=None):
     else:
         samples = samples_str
 
-    text = 'samples (%s): %s' % (len(samples), ', '.join(samples))
+    if raw:
+        name = 'raw samples'
+    else:
+        name = 'samples'
+    text = '%s (%s): %s' % (name, len(samples), ', '.join(samples))
     if nwarmup and verbose >= 0:
-        text = ('warmup (%s): %s; %s'
-                % (len(warmups), ', '.join(warmups), text))
+        if raw:
+            name = 'raw warmup'
+        else:
+            name = 'warmup'
+        text = ('%s (%s): %s; %s'
+                % (name, len(warmups), ', '.join(warmups), text))
 
     text = "Run %s: %s" % (run_index, text)
     print(text, file=file)
@@ -88,7 +101,7 @@ def _display_run(bench, run_index, run, verbose=0, file=None):
         print(' '.join(info), file=file)
 
 
-def _display_runs(bench, quiet=False, verbose=False, file=None):
+def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
     runs = bench.get_runs()
     if quiet:
         verbose = -1
@@ -97,7 +110,7 @@ def _display_runs(bench, quiet=False, verbose=False, file=None):
     else:
         verbose = 0
     for run_index, run in enumerate(runs, 1):
-        _display_run(bench, run_index, run, verbose=verbose, file=file)
+        _display_run(bench, run_index, run, verbose=verbose, raw=raw, file=file)
 
 
 def _display_stats(bench, file=None):

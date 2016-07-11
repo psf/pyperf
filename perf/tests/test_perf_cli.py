@@ -267,6 +267,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         """)
         self.check_command(expected, 'stats', TELCO)
 
+    def test_dump_raw(self):
+        expected = """
+            Run 1: raw warmup (1): 99.7 ms; raw samples (3): 98.3 ms, 98.5 ms, 98.5 ms
+            Run 2: raw warmup (1): 100.0 ms; raw samples (3): 99.4 ms, 99.0 ms, 98.6 ms
+            Run 3: raw warmup (1): 98.3 ms; raw samples (3): 98.3 ms, 98.2 ms, 97.4 ms
+        """
+        stdout = self.run_command('dump', '--raw', TELCO)
+        self.assertIn(textwrap.dedent(expected).strip(), stdout)
+
     def test_dump(self):
         expected = """
             Run 1: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
