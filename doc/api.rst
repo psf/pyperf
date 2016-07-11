@@ -113,9 +113,9 @@ Clocks
 Run
 ---
 
-.. class:: perf.Run(warmups: int, raw_samples: List[float])
+.. class:: perf.Run(warmups: int, raw_samples: List[float], loops: int=1, inner_loops: int=1, metadata: dict=None)
 
-   A benchmark run result is made of multiple samples
+   A benchmark run result is made of multiple samples.
 
    *raw_samples* must be a non-empty sequence of numbers (``float``) greater
    than zero. Usually, *raw_samples* is a list of number of seconds.
@@ -131,13 +131,21 @@ Run
    Raw samples are total for all loops. The :meth:`get_samples` method divides
    raw samples by :meth:`get_loops`.
 
+   By default, metadata is collected using
+   :meth:`perf.metadata.collect_run_metadata`, pass a dictionary to not collect
+   metadata.
+
 
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(name=None, loops=None, inner_loops=None, metadata=None)
+.. class:: perf.Benchmark(name=None, metadata=None)
 
    A benchmark is made of multiple :class:`Run` objects.
+
+   By default, metadata is collected using
+   :meth:`perf.metadata.collect_benchmark_metadata`, pass a dictionary to not
+   collect metadata.
 
    Methods:
 
@@ -213,16 +221,6 @@ Benchmark
       standard deviation) a string (``str``).
 
    Attributes:
-
-   .. attribute:: inner_loops
-
-      Number of inner-loop iterations of the benchmark samples
-      (``int >= 1`` or ``None``). Default: ``None``.
-
-   .. attribute:: loops
-
-      Number of outter-loop iterations of the benchmark samples
-      (``int >= 1``). Default: ``1``.
 
    .. attribute:: metadata
 
