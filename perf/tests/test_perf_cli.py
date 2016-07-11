@@ -276,6 +276,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.run_command('dump', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
+    def test_dump_quiet(self):
+        expected = """
+            Run 1/50: samples (3): 24.6 ms, 24.6 ms, 24.6 ms
+            Run 2/50: samples (3): 24.8 ms, 24.8 ms, 24.6 ms
+            Run 3/50: samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+        """
+        stdout = self.run_command('dump', '--quiet', TELCO)
+        self.assertIn(textwrap.dedent(expected).strip(), stdout)
+
     def test_dump_verbose(self):
         expected = """
             Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms

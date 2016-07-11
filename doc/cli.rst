@@ -116,12 +116,14 @@ dump
 Display the benchmark run results::
 
     python3 -m perf dump
+        [-q/--quiet]
         [-v/--verbose]
         file.json [file2.json ...]
 
 Options:
 
-* ``--verbose`` enables verbose mode
+* ``--quiet`` enables the quiet mode: hide warmup samples
+* ``--verbose`` enables the verbose mode: show run metadata
 
 Example::
 

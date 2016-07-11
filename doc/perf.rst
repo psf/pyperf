@@ -110,6 +110,8 @@ See also:
   percentile spectrum"
 
 
+.. _stable_bench:
+
 Stable and reliable benchmarks
 ==============================
 
@@ -185,3 +187,15 @@ Other:
   available
 
 See the :func:`perf.metadata.collect_metadata` function.
+
+
+What is perf so slow?
+=====================
+
+``--fast`` and ``--rigorous`` options indirectly have an impact on the total
+duration of benchmarks. The ``perf`` module is optimized for the total duration
+but to produce :ref:reliable benchmarks <stable_bench>`.
+
+The ``--fast`` is designed to be fast, but remain reliable enough to be useful.
+Using less worker processes and less samples per worker would produce unstable
+results.

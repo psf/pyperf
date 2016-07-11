@@ -102,6 +102,8 @@ def create_parser():
     cmd = subparsers.add_parser('dump', help='Dump the runs')
     cmd.add_argument('-v', '--verbose', action="store_true",
                      help='enable verbose mode')
+    cmd.add_argument('-q', '--quiet', action="store_true",
+                     help='enable quiet mode')
     input_filenames(cmd)
 
     return parser, timeit_runner
@@ -474,7 +476,9 @@ def cmd_dump(args):
         if item.title:
             display_title(item.title)
 
-        perf.text_runner._display_runs(item.benchmark, verbose=args.verbose)
+        perf.text_runner._display_runs(item.benchmark,
+                                       quiet=args.quiet,
+                                       verbose=args.verbose)
         if not item.is_last:
             print()
 

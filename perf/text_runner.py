@@ -47,7 +47,7 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run_index, nrun, run, verbose=False, file=None):
+def _display_run(bench, run_index, nrun, run, verbose=0, file=None):
     loops = run.loops * run.inner_loops
     # FIXME: don't use private attributes
     samples = [sample / loops for sample in run._raw_samples]
@@ -70,14 +70,14 @@ def _display_run(bench, run_index, nrun, run, verbose=False, file=None):
         samples = samples_str
 
     text = 'samples (%s): %s' % (len(samples), ', '.join(samples))
-    if nwarmup:
+    if nwarmup and verbose >= 0:
         text = ('warmup (%s): %s; %s'
                 % (len(warmups), ', '.join(warmups), text))
 
     text = "Run %s/%s: %s" % (run_index, nrun, text)
     print(text, file=file)
 
-    if verbose:
+    if verbose > 0:
         info = [' ', 'loops=%s' % perf._format_number(run.loops)]
         if run.inner_loops:
             info.append('inner_loops=%s' % perf._format_number(run.inner_loops))
@@ -88,9 +88,15 @@ def _display_run(bench, run_index, nrun, run, verbose=False, file=None):
         print(' '.join(info), file=file)
 
 
-def _display_runs(bench, verbose=False, file=None):
+def _display_runs(bench, quiet=False, verbose=False, file=None):
     runs = bench._get_runs()
     nrun = len(runs)
+    if quiet:
+        verbose = -1
+    elif verbose:
+        verbose = 1
+    else:
+        verbose = 0
     for index, run in enumerate(runs, 1):
         _display_run(bench, index, nrun, run, verbose=verbose, file=file)
 
