@@ -1,4 +1,5 @@
 from __future__ import print_function
+import datetime
 import os
 import platform
 import re
@@ -138,7 +139,13 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
-def collect_metadata(metadata):
+def collect_run_metadata(metadata):
+    date = datetime.datetime.now().isoformat()
+    # FIXME: move date to a regular Run attribute with type datetime.datetime?
+    metadata['date'] = date.split('.', 1)[0]
+
+
+def collect_benchmark_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
     # perf.perf_counter() timer

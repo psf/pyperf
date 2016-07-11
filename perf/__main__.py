@@ -26,8 +26,6 @@ def create_parser():
     cmd = subparsers.add_parser('show', help='Display a benchmark')
     cmd.add_argument('-q', '--quiet', action="store_true",
                      help='enable quiet mode')
-    cmd.add_argument('-v', '--verbose', action="store_true",
-                     help='enable verbose mode')
     cmd.add_argument('-m', '--metadata', dest='metadata',
                      action="store_true",
                      help="Show metadata.")
@@ -35,6 +33,8 @@ def create_parser():
                      help='display an histogram of samples')
     cmd.add_argument('-t', '--stats', action="store_true",
                      help='display statistics (min, max, ...)')
+    cmd.add_argument('-d', '--dump', action="store_true",
+                     help='display benchmark run results')
     input_filenames(cmd)
 
     # hist
@@ -97,6 +97,12 @@ def create_parser():
                      help='Remove warmup samples')
     cmd.add_argument('--add', metavar='FILE',
                      help='Add benchmark runs of benchmark FILE')
+
+    # dump
+    cmd = subparsers.add_parser('dump', help='Dump the runs')
+    cmd.add_argument('-v', '--verbose', action="store_true",
+                     help='enable verbose mode')
+    input_filenames(cmd)
 
     return parser, timeit_runner
 
@@ -277,7 +283,8 @@ def cmd_compare(args):
 def cmd_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
-    perf_metadata.collect_metadata(metadata)
+    perf_metadata.collect_run_metadata(metadata)
+    perf_metadata.collect_benchmark_metadata(metadata)
     perf.text_runner._display_metadata(metadata)
 
 
@@ -422,7 +429,7 @@ def cmd_show(args):
         metadatas = [dict(item.benchmark.metadata) for item in data]
         _display_common_metadata(metadatas)
 
-    if args.hist or args.stats or args.verbose:
+    if args.hist or args.stats or args.dump:
         use_title = True
     else:
         use_title = False
@@ -447,17 +454,29 @@ def cmd_show(args):
             perf.text_runner._display_benchmark(item.benchmark,
                                                 hist=args.hist,
                                                 stats=args.stats,
-                                                runs=bool(args.verbose),
+                                                dump=args.dump,
                                                 check_unstable=not args.quiet)
 
             if not item.is_last:
                 print()
     else:
-        for index, item in enumerate(data):
+        for item in data:
             line = str(item.benchmark)
             if item.title:
                 line = '%s: %s' % (item.title, line)
             print(line)
+
+
+def cmd_dump(args):
+    data = load_benchmarks(args)
+
+    for item in data:
+        if item.title:
+            display_title(item.title)
+
+        perf.text_runner._display_runs(item.benchmark, verbose=args.verbose)
+        if not item.is_last:
+            print()
 
 
 def cmd_timeit(args, timeit_runner):
@@ -600,6 +619,8 @@ def main():
             cmd_timeit(args, timeit_runner)
         elif action == 'convert':
             cmd_convert(args)
+        elif action == 'dump':
+            cmd_dump(args)
         else:
             parser.print_usage()
             sys.exit(1)

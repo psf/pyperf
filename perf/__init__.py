@@ -1,5 +1,4 @@
 from __future__ import print_function
-import datetime
 import json
 import math
 import operator
@@ -122,13 +121,9 @@ class Run(object):
         if metadata is not None:
             self.metadata = dict(metadata)
         else:
-            # FIXME: create dict on demand?
+            from perf import metadata as perf_metadata
             self.metadata = {}
-            date = datetime.datetime.now().isoformat()
-
-            # FIXME: move date to a regular attribute?
-            # FIXME: get data from the worker?
-            self.metadata['date'] = date.split('.', 1)[0]
+            perf_metadata.collect_run_metadata(self.metadata)
 
     @property
     def loops(self):
@@ -195,16 +190,19 @@ class Benchmark(object):
 
         self._clear_stats_cache()
 
-        # Metadata dictionary: key=>value, keys and values are non-empty
+        self._format_samples = _format_timedeltas
+
+        # Metadata dictionary: key=>value, keys and values should be non-empty
         # strings
         if metadata is not None:
-            self.metadata = metadata
+            self.metadata = dict(metadata)
         else:
+            from perf import metadata as perf_metadata
             self.metadata = {}
+            perf_metadata.collect_benchmark_metadata(self.metadata)
+
         # use name property setter
         self.name = name
-
-        self._format_samples = _format_timedeltas
 
     @property
     def name(self):
@@ -333,13 +331,18 @@ class Benchmark(object):
             warmups = data.get('warmups', 0)
             loops = data.get('loops', 1)
             inner_loops = data.get('inner_loops', 1)
+            date = metadata.pop('date', None)
             if not inner_loops:
                 inner_loops = 1
+            if date is not None:
+                run_metadata = {'date': date}
+            else:
+                run_metadata = {}
 
             bench = cls(name, metadata=metadata)
 
             for raw_samples in data['runs']:
-                run = Run(warmups, raw_samples, loops, inner_loops)
+                run = Run(warmups, raw_samples, loops, inner_loops, metadata=run_metadata)
                 bench.add_run(run)
         return bench
 

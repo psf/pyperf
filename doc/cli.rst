@@ -10,16 +10,17 @@ Show benchmarks of one or multiple benchmark suites::
 
     python3 -m perf show
         [-q/--quiet]
-        [-v/--verbose]
+        [-d/--dump]
         [-m/--metadata]
         |-g/--hist] [-t/--stats]
         [-b NAME/--name NAME]
         filename.json [filename2.json ...]
 
 * ``--quiet`` enables the quiet mode
-* ``--verbose`` enables the verbose mode
-* ``--metadata`` displays metadata: see :ref:`perf show metadata
-  <show_cmd_metadata>` command
+* ``--dump`` displays the benchmark run results,
+  see :ref:`perf dump <dump_cmd>` command
+* ``--metadata`` displays metadata: see :ref:`perf metadata
+  <metadata_cmd>` command
 * ``--hist`` displays an histogram of samples, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
@@ -27,6 +28,16 @@ Show benchmarks of one or multiple benchmark suites::
 * ``--name NAME`` only displays the benchmark called ``NAME``
 
 .. _show_cmd_metadata:
+
+Example in verbose mode::
+
+    $ python3 -m perf show -v run.json
+    Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
+    Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
+    (...)
+    Run 25/25: warmup (1): 602 ms; raw samples (3): 649 ms, 642 ms, 607 ms
+
+    Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
 
 Example with metadata::
 
@@ -38,16 +49,6 @@ Example with metadata::
     - timeit_stmt: 'len("abc")'
 
     Average: 56.3 ns +- 2.5 ns
-
-Example in verbose mode::
-
-    $ python3 -m perf show -v run.json
-    Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
-    Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
-    (...)
-    Run 25/25: warmup (1): 602 ms; raw samples (3): 649 ms, 642 ms, 607 ms
-
-    Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
 
 
 compare and compare_to
@@ -80,20 +81,25 @@ stats
 
 Compute statistics on a benchmark result::
 
-    python3 -m perf stats filename.json
+    python3 -m perf stats
+        file.json [file2.json ...]
 
 Example::
 
     $ python3 -m perf stats telco.json
-    Number of samples: 250 (50 runs x 5 samples; 1 warmup)
-    Loop iterations per sample: 10
-    Raw sample minimum: 264 ms
-    Raw sample maximum: 273 ms
+    Raw sample minimum: 97.2 ms
+    Raw sample maximum: 101 ms
 
-    Minimum: 26.4 ms (-2%)
-    Median +- std dev: 26.9 ms +- 0.2 ms
-    Mean +- std dev: 26.9 ms +- 0.2 ms
-    Maximum: 27.3 ms (+2%)
+    Number of runs: 50
+    Total number of samples: 150
+    Number of samples per run: 3
+    Number of warmups per run: 1
+    Loop iterations per sample: 4
+
+    Minimum: 24.3 ms (-2%)
+    Median +- std dev: 24.7 ms +- 0.2 ms
+    Mean +- std dev: 24.7 ms +- 0.2 ms
+    Maximum: 25.2 ms (+2%)
 
 Values:
 
@@ -101,6 +107,43 @@ Values:
 * "std dev": `Standard deviation (standard error)
   <https://en.wikipedia.org/wiki/Standard_error>`_
 
+
+.. _dump_cmd:
+
+dump
+----
+
+Display the benchmark run results::
+
+    python3 -m perf dump
+        [-v/--verbose]
+        file.json [file2.json ...]
+
+Options:
+
+* ``--verbose`` enables verbose mode
+
+Example::
+
+    $ python3 -m perf dump telco.json
+    Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
+    Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
+    Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+    (...)
+    Run 50/50: warmup (1): 24.8 ms; samples (3): 24.6 ms, 24.8 ms, 24.8 ms
+
+Example in verbose mode::
+
+    $ python3 -m perf dump telco.json -v
+    Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
+      loops=4 inner_loops=1 date=2016-07-11T15:39:37
+    Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
+      loops=4 inner_loops=1 date=2016-07-11T15:39:37
+    Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+      loops=4 inner_loops=1 date=2016-07-11T15:39:37
+    (...)
+    Run 50/50: warmup (1): 24.8 ms; samples (3): 24.6 ms, 24.8 ms, 24.8 ms
+      loops=4 inner_loops=1 date=2016-07-11T15:40:00
 
 .. _hist_cmd:
 
@@ -189,6 +232,8 @@ Options:
 * ``--indent``: Indent JSON (rather using compact JSON)
 * ``--stdout`` writes the result encoded as JSON into stdout
 
+
+.. _metadata_cmd:
 
 metadata
 --------

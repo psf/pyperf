@@ -391,9 +391,16 @@ TextRunner
 Metadata functions
 ------------------
 
-.. function:: perf.metadata.collect_metadata(metadata)
+See :ref:`Metadata <metadata>`.
 
-   Collect metadata: date, python, system, etc.: see :ref:`Metadata
-   <metadata>`.
+.. function:: perf.metadata.collect_run_metadata(metadata)
+
+   Collect benchmark run result metadata: date.
+
+   *metadata* must be a dictionary.
+
+.. function:: perf.metadata.collect_benchmark_metadata(metadata)
+
+   Collect benchmark result metadata: date, python, system, etc..
 
    *metadata* must be a dictionary.

@@ -6,6 +6,8 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
+MANDATORY_RUN_METADATA = ['date']
+
 MANDATORY_METADATA = [
     'python_implementation', 'python_version',
     'platform']
@@ -13,8 +15,8 @@ if sys.platform.startswith('linux'):
     MANDATORY_METADATA.extend(('aslr', 'cpu_model_name'))
 
 
-def check_all_metadata(testcase, metadata):
-    for key in MANDATORY_METADATA:
+def check_all_metadata(testcase, metadata, mandatory=MANDATORY_METADATA):
+    for key in mandatory:
         testcase.assertIn(key, metadata)
 
     for key, value in metadata.items():
@@ -30,19 +32,24 @@ def check_all_metadata(testcase, metadata):
 
 
 class TestMetadata(unittest.TestCase):
-    def test_metadata(self):
+    def test_run_metadata(self):
         metadata = {}
-        perf.metadata.collect_metadata(metadata)
+        perf.metadata.collect_run_metadata(metadata)
+        check_all_metadata(self, metadata, MANDATORY_RUN_METADATA)
+
+    def test_benchmark_metadata(self):
+        metadata = {}
+        perf.metadata.collect_benchmark_metadata(metadata)
         check_all_metadata(self, metadata)
 
     def check_metadata(self, key, value):
         metadata = {}
-        perf.metadata.collect_metadata(metadata)
+        perf.metadata.collect_benchmark_metadata(metadata)
         self.assertEqual(metadata[key], value)
 
     def check_missing_metadata(self, key):
         metadata = {}
-        perf.metadata.collect_metadata(metadata)
+        perf.metadata.collect_benchmark_metadata(metadata)
         self.assertNotIn(key, metadata)
 
     def test_cpu_count_psutil(self):

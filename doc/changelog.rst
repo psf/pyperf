@@ -5,6 +5,7 @@ Version 0.7
 -----------
 
 * ``convert`` command: add ``--indent`` and ``--remove-warmups`` options
+* add ``dump`` command
 
 Version 0.6 (2016-07-06)
 ------------------------

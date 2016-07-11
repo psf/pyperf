@@ -45,12 +45,15 @@ Output options
 
 Options::
 
+    [-d/--dump]
     [-m/--metadata]
     [-g/--hist]
     [-t/--stats]
     [-v/--verbose]
     [-q/--quiet]
 
+* ``--dump`` displays the benchmark run results,
+  see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays metadata: see :ref:`perf show metadata
   <show_cmd_metadata>` command
 * ``--hist`` displays an histogram of samples, see :ref:`perf hist <hist_cmd>`

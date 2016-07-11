@@ -47,7 +47,7 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run_index, nrun, run, median=None, file=None):
+def _display_run(bench, run_index, nrun, run, verbose=False, file=None):
     loops = run.loops * run.inner_loops
     # FIXME: don't use private attributes
     samples = [sample / loops for sample in run._raw_samples]
@@ -77,15 +77,22 @@ def _display_run(bench, run_index, nrun, run, median=None, file=None):
     text = "Run %s/%s: %s" % (run_index, nrun, text)
     print(text, file=file)
 
-    # FIXME: only in very verbose mode?
-    info = ['', 'loops=%s' % perf._format_number(run.loops)]
-    if run.inner_loops:
-        info.append('inner_loops=%s' % perf._format_number(run.inner_loops))
-    if run.metadata:
-        for key in sorted(run.metadata):
-            value = run.metadata[key]
-            info.append('%s=%s' % (key, value))
-    print(' '.join(info), file=file)
+    if verbose:
+        info = [' ', 'loops=%s' % perf._format_number(run.loops)]
+        if run.inner_loops:
+            info.append('inner_loops=%s' % perf._format_number(run.inner_loops))
+        if run.metadata:
+            for key in sorted(run.metadata):
+                value = run.metadata[key]
+                info.append('%s=%s' % (key, value))
+        print(' '.join(info), file=file)
+
+
+def _display_runs(bench, verbose=False, file=None):
+    runs = bench._get_runs()
+    nrun = len(runs)
+    for index, run in enumerate(runs, 1):
+        _display_run(bench, index, nrun, run, verbose=verbose, file=file)
 
 
 def _display_stats(bench, file=None):
@@ -154,10 +161,14 @@ def _display_stats(bench, file=None):
     # Median +- std dev
     print(str(bench), file=file)
 
+    # Mean +- std dev
     mean = statistics.mean(samples)
-    stdev = statistics.stdev(samples, mean)
-    print("Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
-          file=file)
+    if len(samples) > 2:
+        stdev = statistics.stdev(samples, mean)
+        print("Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
+              file=file)
+    else:
+        print("Mean: %s" % bench._format_sample(mean), file=file)
 
     # Maximum
     print("Maximum: %s" % format_limit(median, max(samples)), file=file)
@@ -280,12 +291,9 @@ def _display_metadata(metadata, header="Metadata:", file=None):
 
 
 def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
-                       runs=False, stats=False, hist=False):
-    if runs:
-        runs = bench._get_runs()
-        nrun = len(runs)
-        for index, run in enumerate(runs, 1):
-            _display_run(bench, index, nrun, run, file=file)
+                       dump=False, stats=False, hist=False):
+    if dump:
+        _display_runs(bench, file=file)
         print(file=file)
 
     if metadata:
@@ -395,6 +403,8 @@ class TextRunner:
                                  % perf._format_timedelta(min_time))
         parser.add_argument('--worker', action="store_true",
                             help='worker process, run the benchmark')
+        parser.add_argument('-d', '--dump', action="store_true",
+                            help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
                             help='show metadata')
         parser.add_argument('--hist', '-g', action="store_true",
@@ -580,10 +590,8 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
-        bench = perf.Benchmark(name=self.name,
-                               metadata=self.metadata)
-
-        perf.metadata.collect_metadata(bench.metadata)
+        bench = perf.Benchmark(name=self.name)
+        bench.metadata.update(self.metadata)
 
         try:
             if self.args.worker or self.args.debug_single_sample:
@@ -682,6 +690,7 @@ class TextRunner:
                            file=stream,
                            check_unstable=check_unstable,
                            metadata=args.metadata,
+                           dump=args.dump,
                            stats=args.stats,
                            hist=args.hist)
 

@@ -1,6 +1,7 @@
 TODO
 ====
 
+* cleanup --verbose in CLIs
 * really avoid removing existing file: open(name, 'x')
 * support 2^15 and/or 2**15 syntax for --loops
 * support --fast + -p1

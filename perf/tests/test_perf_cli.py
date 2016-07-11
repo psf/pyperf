@@ -39,43 +39,6 @@ class BaseTestCase(object):
 
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
-    def show(self, *args):
-        bench = self.create_bench((1.0, 1.5, 2.0), metadata={'key': 'value'})
-
-        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-            bench.dump(tmp.name)
-            stdout = self.run_command('show', tmp.name, *args)
-
-        return stdout
-
-    def test_show(self):
-        stdout = self.show('--metadata')
-        expected = ('Metadata:\n'
-                    '- key: value\n'
-                    '- name: bench\n'
-                    '\n'
-                    'ERROR: the benchmark is very unstable, the standard '
-                        'deviation is very high (stdev/median: 33%)!\n'
-                    'Try to rerun the benchmark with more runs, samples '
-                        'and/or loops\n'
-                    '\n'
-                    'Median +- std dev: 1.50 sec +- 0.50 sec\n')
-        self.assertEqual(stdout, expected)
-
-    def test_show_verbose(self):
-        stdout = self.show('-vv')
-        expected = ('Run 1/3: samples (1): 1.00 sec (-33%)\n'
-                    'Run 2/3: samples (1): 1.50 sec\n'
-                    'Run 3/3: samples (1): 2.00 sec (+33%)\n'
-                    '\n'
-                    'ERROR: the benchmark is very unstable, the standard '
-                        'deviation is very high (stdev/median: 33%)!\n'
-                    'Try to rerun the benchmark with more runs, samples '
-                        'and/or loops\n'
-                    '\n'
-                    'Median +- std dev: 1.50 sec +- 0.50 sec\n')
-        self.assertEqual(stdout, expected)
-
     def test_show_common_metadata(self):
         bench1 = self.create_bench((1.0, 1.5, 2.0),
                                        name='py2',
@@ -195,49 +158,135 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         env['LINES'] = '25'
 
         expected = ("""
-            26.3 ms:  1 ##
-            26.4 ms:  0 |
-            26.4 ms:  3 ######
-            26.5 ms:  1 ##
-            26.5 ms:  1 ##
-            26.6 ms:  8 ################
-            26.6 ms:  6 ############
-            26.6 ms: 10 ####################
-            26.7 ms: 17 ##################################
-            26.7 ms: 17 ##################################
-            26.8 ms: 24 ###############################################
-            26.8 ms: 34 ###################################################################
-            26.9 ms: 28 #######################################################
-            26.9 ms: 14 ############################
-            26.9 ms: 19 #####################################
-            27.0 ms: 18 ###################################
-            27.0 ms: 10 ####################
-            27.1 ms: 12 ########################
-            27.1 ms:  9 ##################
-            27.2 ms: 12 ########################
-            27.2 ms:  4 ########
-            27.2 ms:  1 ##
-            27.3 ms:  1 ##
+            24.2 ms:  1 ###
+            24.3 ms:  1 ###
+            24.3 ms:  3 ##########
+            24.4 ms:  3 ##########
+            24.4 ms:  1 ###
+            24.4 ms:  8 ###########################
+            24.5 ms: 10 ##################################
+            24.5 ms:  9 ##############################
+            24.6 ms: 15 ##################################################
+            24.6 ms: 12 ########################################
+            24.6 ms: 12 ########################################
+            24.7 ms:  6 ####################
+            24.7 ms: 10 ##################################
+            24.8 ms: 20 ###################################################################
+            24.8 ms: 12 ########################################
+            24.8 ms: 10 ##################################
+            24.9 ms:  6 ####################
+            24.9 ms:  4 #############
+            25.0 ms:  2 #######
+            25.0 ms:  1 ###
+            25.0 ms:  1 ###
+            25.1 ms:  0 |
+            25.1 ms:  3 ##########
         """)
         self.check_command(expected, 'hist', TELCO, env=env)
 
-    def test_stats(self):
+    def test_show(self):
         expected = ("""
-            Raw sample minimum: 264 ms
-            Raw sample maximum: 273 ms
+            Median +- std dev: 24.7 ms +- 0.2 ms
+        """)
+        self.check_command(expected, 'show', TELCO)
+
+    def test_show_metadata(self):
+        expected = ("""
+            Metadata:
+            - aslr: enabled
+            - cpu_affinity: 2-3 (isolated)
+            - cpu_count: 4
+            - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+            - description: Test the performance of the Telco decimal benchmark
+            - duration: 23.8 sec
+            - hostname: selma
+            - name: telco
+            - perf_version: 0.7
+            - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
+            - python_executable: /usr/bin/python3
+            - python_implementation: cpython
+            - python_version: 3.5.1 (64bit)
+            - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
+
+            24.3 ms:  2 ######
+            24.3 ms:  0 |
+            24.3 ms:  4 #############
+            24.4 ms:  3 ##########
+            24.4 ms:  4 #############
+            24.5 ms: 12 ######################################
+            24.5 ms:  9 #############################
+            24.6 ms: 16 ###################################################
+            24.6 ms: 13 #########################################
+            24.6 ms: 12 ######################################
+            24.7 ms:  7 ######################
+            24.7 ms: 14 #############################################
+            24.8 ms: 21 ###################################################################
+            24.8 ms: 11 ###################################
+            24.9 ms:  7 ######################
+            24.9 ms:  6 ###################
+            24.9 ms:  3 ##########
+            25.0 ms:  2 ######
+            25.0 ms:  1 ###
+            25.1 ms:  0 |
+            25.1 ms:  3 ##########
+
+            Raw sample minimum: 97.2 ms
+            Raw sample maximum: 101 ms
 
             Number of runs: 50
-            Total number of samples: 250
-            Number of samples per run: 5
+            Total number of samples: 150
+            Number of samples per run: 3
             Number of warmups per run: 1
-            Loop iterations per sample: 10
+            Loop iterations per sample: 4
 
-            Minimum: 26.4 ms (-2%)
-            Median +- std dev: 26.9 ms +- 0.2 ms
-            Mean +- std dev: 26.9 ms +- 0.2 ms
-            Maximum: 27.3 ms (+2%)
+            Minimum: 24.3 ms (-2%)
+            Median +- std dev: 24.7 ms +- 0.2 ms
+            Mean +- std dev: 24.7 ms +- 0.2 ms
+            Maximum: 25.2 ms (+2%)
+
+            Median +- std dev: 24.7 ms +- 0.2 ms
+        """)
+        self.check_command(expected, 'show',
+                           '--hist', '--metadata', '--stats', TELCO)
+
+    def test_stats(self):
+        expected = ("""
+            Raw sample minimum: 97.2 ms
+            Raw sample maximum: 101 ms
+
+            Number of runs: 50
+            Total number of samples: 150
+            Number of samples per run: 3
+            Number of warmups per run: 1
+            Loop iterations per sample: 4
+
+            Minimum: 24.3 ms (-2%)
+            Median +- std dev: 24.7 ms +- 0.2 ms
+            Mean +- std dev: 24.7 ms +- 0.2 ms
+            Maximum: 25.2 ms (+2%)
         """)
         self.check_command(expected, 'stats', TELCO)
+
+    def test_dump(self):
+        expected = """
+            Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
+            Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
+            Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+        """
+        stdout = self.run_command('dump', TELCO)
+        self.assertIn(textwrap.dedent(expected).strip(), stdout)
+
+    def test_dump_verbose(self):
+        expected = """
+            Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
+              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+            Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
+              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+            Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+        """
+        stdout = self.run_command('dump', '--verbose', TELCO)
+        self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_metadata(self):
         stdout = self.run_command('metadata')

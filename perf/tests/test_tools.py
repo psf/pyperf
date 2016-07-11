@@ -173,10 +173,9 @@ class BenchmarkTests(unittest.TestCase):
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
-        bench = perf.Benchmark("mybench")
+        bench = perf.Benchmark("mybench", metadata={'key': 'value'})
         for raw_sample in raw_samples:
             bench.add_run(perf.Run(1, [3.0, raw_sample], loops=20, inner_loops=3))
-        bench.metadata['key'] = 'value'
 
         self.assertEqual(bench.get_samples(), samples)
         self.assertEqual(bench._get_raw_samples(), list(raw_samples))
@@ -230,7 +229,7 @@ class BenchmarkTests(unittest.TestCase):
         samples2 = (4.0, 5.0, 6.0)
         bench2 = perf.Benchmark("bench")
         bench2.add_run(perf.Run(0, samples2))
-        bench._add_benchmark_run(bench2)
+        bench._add_benchmark_runs(bench2)
 
         self.assertEqual(bench.get_samples(), samples + samples2)
 
@@ -383,7 +382,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         samples2 = (4.0, 5.0, 6.0)
         bench2 = perf.Benchmark("bench")
         bench2.add_run(perf.Run(0, samples2))
-        suite._add_benchmark_run(bench2)
+        suite._add_benchmark_runs(bench2)
 
         self.assertEqual(suite['bench'].get_samples(), samples + samples2)
 
