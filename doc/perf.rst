@@ -193,8 +193,8 @@ What is perf so slow?
 =====================
 
 ``--fast`` and ``--rigorous`` options indirectly have an impact on the total
-duration of benchmarks. The ``perf`` module is optimized for the total duration
-but to produce :ref:reliable benchmarks <stable_bench>`.
+duration of benchmarks. The ``perf`` module is not optimized for the total
+duration but to produce :ref:`reliable benchmarks <stable_bench>`.
 
 The ``--fast`` is designed to be fast, but remain reliable enough to be useful.
 Using less worker processes and less samples per worker would produce unstable
