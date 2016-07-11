@@ -266,11 +266,7 @@ class Benchmark(object):
     def get_nrun(self):
         return len(self._runs)
 
-    # FIXME: remove get_runs? return directly Run objects?
     def get_runs(self):
-        return [run._raw_samples for run in self._runs]
-
-    def _get_runs(self):
         return list(self._runs)
 
     def get_nsample(self):

@@ -177,11 +177,7 @@ Benchmark
 
    .. method:: get_runs()
 
-      Get raw samples of all runs as a list of raw samples tuples, including
-      warmup samples.
-
-      Samples are raw values of all loops: use the :meth:`get_samples` method
-      to get normalized samples per loop iteration.
+      Get the list of :class:`perf.Run` objects.
 
    .. method:: get_samples()
 

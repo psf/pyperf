@@ -89,7 +89,7 @@ def _display_run(bench, run_index, run, verbose=0, file=None):
 
 
 def _display_runs(bench, quiet=False, verbose=False, file=None):
-    runs = bench._get_runs()
+    runs = bench.get_runs()
     if quiet:
         verbose = -1
     elif verbose:
@@ -732,7 +732,7 @@ class TextRunner:
             bench._add_benchmark_runs(run_bench)
 
             if verbose:
-                run = bench._get_runs()[-1]
+                run = bench.get_runs()[-1]
                 run_index = '%s/%s' % (1 + process, nprocess)
                 _display_run(bench, run_index, run, file=stream)
             elif not quiet:

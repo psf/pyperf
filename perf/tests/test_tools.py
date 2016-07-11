@@ -163,7 +163,7 @@ class BenchmarkTests(unittest.TestCase):
         runs = bench.get_runs()
         self.assertEqual(len(runs), len(samples))
         for sample, run in zip(samples, runs):
-            self.assertEqual(run, (warmup, sample))
+            self.assertEqual(run._get_raw_samples(warmups=True), (warmup, sample))
 
     def test_add_run(self):
         bench = perf.Benchmark('bench')
@@ -181,7 +181,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench._get_raw_samples(), list(raw_samples))
         self.assertEqual(bench.get_nrun(), 3)
 
-        runs = bench._get_runs()
+        runs = bench.get_runs()
         self.assertIsInstance(runs, list)
         self.assertEqual(len(runs), 3)
         for run in runs:
@@ -213,7 +213,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
 
-        for run in bench._get_runs():
+        for run in bench.get_runs():
             self.assertEqual(run.loops, 100)
             self.assertEqual(run.inner_loops, 20)
 
@@ -284,7 +284,7 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark("bench")
         bench.add_run(run1)
         bench.add_run(run2)
-        self.assertEqual(bench._get_runs(), [run1, run2])
+        self.assertEqual(bench.get_runs(), [run1, run2])
 
 
 class CPUToolsTests(unittest.TestCase):

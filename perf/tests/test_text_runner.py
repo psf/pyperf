@@ -108,7 +108,7 @@ class TestRunTextRunner(unittest.TestCase):
                                       sample_func=sample_func)
 
         self.assertEqual(result.runner.args.loops, 2 ** 17)
-        for run in result.bench._get_runs():
+        for run in result.bench.get_runs():
             self.assertEqual(run.loops, 2 ** 17)
 
         expected = textwrap.dedent('''
@@ -142,7 +142,7 @@ class TestRunTextRunner(unittest.TestCase):
         result = self.run_text_runner('--worker', '--min-time', '0.001',
                                       sample_func=sample_func)
         self.assertEqual(result.runner.args.loops, 2 ** 10)
-        for run in result.bench._get_runs():
+        for run in result.bench.get_runs():
             self.assertEqual(run.loops, 2 ** 10)
 
     def test_json_file(self):
