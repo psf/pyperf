@@ -133,19 +133,13 @@ class Run(object):
     def inner_loops(self):
         return self._inner_loops
 
-    def _get_total_loops(self):
-        loops = self._loops
-        if self._inner_loops is not None:
-            loops *= self._inner_loops
-        return loops
-
     def _get_nsample(self):
         "Get the number of samples, excluding wamrup samples."
         return (len(self._raw_samples) - self._warmups)
 
     def _get_samples(self):
-        loops = self._get_total_loops()
-        return [sample / loops for sample in self._get_raw_samples()]
+        total_loops = self._loops * self._inner_loops
+        return [sample / total_loops for sample in self._get_raw_samples()]
 
     def _get_raw_samples(self, warmups=False):
         if warmups or not self._warmups:
