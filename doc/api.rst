@@ -132,8 +132,8 @@ Run
    raw samples by :meth:`get_loops`.
 
    By default, metadata is collected using
-   :meth:`perf.metadata.collect_run_metadata`, pass a dictionary to not collect
-   metadata.
+   :meth:`perf.metadata.collect_run_metadata`, pass a dictionary to *metadata*
+   to not collect metadata.
 
 
 Benchmark
@@ -144,8 +144,8 @@ Benchmark
    A benchmark is made of multiple :class:`Run` objects.
 
    By default, metadata is collected using
-   :meth:`perf.metadata.collect_benchmark_metadata`, pass a dictionary to not
-   collect metadata.
+   :meth:`perf.metadata.collect_benchmark_metadata`, pass a dictionary to
+   *metadata* to not collect metadata.
 
    Methods:
 

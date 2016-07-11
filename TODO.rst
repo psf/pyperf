@@ -1,6 +1,9 @@
 TODO
 ====
 
+* collect more metadata in each worker *but* add_run() and
+  _add_benchmark_runs() should limit data duplication by storing common
+  metadata in the benchmark metadata
 * cleanup --verbose in CLIs
 * really avoid removing existing file: open(name, 'x')
 * support 2^15 and/or 2**15 syntax for --loops
