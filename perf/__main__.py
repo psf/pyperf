@@ -95,6 +95,8 @@ def create_parser():
                      help='Indent JSON (rather using compact JSON)')
     cmd.add_argument('--remove-warmups', action='store_true',
                      help='Remove warmup samples')
+    cmd.add_argument('--add', metavar='FILE',
+                     help='Add benchmark runs of benchmark FILE')
 
     return parser, timeit_runner
 
@@ -515,6 +517,11 @@ def fatal_missing_benchmark(suite, name):
 
 def cmd_convert(args):
     suite = perf.BenchmarkSuite.load(args.input_filename)
+
+    if args.add:
+        suite2 = perf.BenchmarkSuite.load(args.add)
+        for bench in suite2.get_benchmarks():
+            suite._add_benchmark_runs(bench)
 
     if args.include_benchmark:
         remove = set(suite)

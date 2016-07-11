@@ -1,4 +1,5 @@
 from __future__ import print_function
+import datetime
 import json
 import math
 import operator
@@ -92,7 +93,8 @@ def _format_number(number, unit=None, units=None):
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
-    def __init__(self, warmups, raw_samples, loops=1, inner_loops=1):
+    def __init__(self, warmups, raw_samples, loops=1, inner_loops=1,
+                 metadata=None):
         if (not raw_samples
         or any(not(isinstance(sample, float) and sample > 0)
                for sample in raw_samples)):
@@ -116,6 +118,17 @@ class Run(object):
         if not(isinstance(inner_loops, int) and inner_loops >= 1):
             raise ValueError("inner_loops must be an int >= 1")
         self._inner_loops = inner_loops
+
+        if metadata is not None:
+            self.metadata = dict(metadata)
+        else:
+            # FIXME: create dict on demand?
+            self.metadata = {}
+            date = datetime.datetime.now().isoformat()
+
+            # FIXME: move date to a regular attribute?
+            # FIXME: get data from the worker?
+            self.metadata['date'] = date.split('.', 1)[0]
 
     @property
     def loops(self):
@@ -158,6 +171,8 @@ class Run(object):
             data['loops'] = self._loops
         if self._inner_loops != 1:
             data['inner_loops'] = self._inner_loops
+        if self.metadata:
+            data['metadata'] = self.metadata
         return data
 
     @classmethod
@@ -166,7 +181,11 @@ class Run(object):
         raw_samples = run_data['raw_samples']
         loops = run_data.get('loops', 1)
         inner_loops = run_data.get('inner_loops', 1)
-        return cls(warmups, raw_samples, loops, inner_loops)
+        metadata = run_data.get('metadata', None)
+        return cls(warmups, raw_samples,
+                   loops=loops,
+                   inner_loops=inner_loops,
+                   metadata=metadata)
 
 
 class Benchmark(object):
@@ -242,11 +261,6 @@ class Benchmark(object):
             raise TypeError("Run expected, got %s" % type(run).__name__)
         self._clear_stats_cache()
         self._runs.append(run)
-
-    def _get_worker_run(self, run_bench):
-        if len(run_bench._runs) != 1:
-            raise ValueError("A worker result must have exactly one run")
-        return run_bench._runs[0]
 
     def _format_sample(self, sample):
         return self._format_samples((sample,))[0]
@@ -392,15 +406,23 @@ class Benchmark(object):
             raise ValueError("no more runs")
         self._runs[:] = new_runs
 
-    def _add_benchmark_run(self, benchmark):
+    def _add_benchmark_runs(self, benchmark):
         if benchmark is self:
             raise ValueError("cannot add a benchmark to itself")
 
         # FIXME: compare metadata to make sure that benchmarks are compatible
+        # FIXME: make sure that the benchmark is compatible
+        # FIXME: compare metadata except date?
 
+        if benchmark.metadata != self.metadata:
+            print(benchmark.metadata)
+            print(self.metadata)
+            raise ValueError("incompatible benchmark: metadata are different")
+
+        # FIXME: move this check to benchmark constructor
         nrun = benchmark.get_nrun()
-        if nrun != 1:
-            raise ValueError("benchmark has %s runs, only 1 expected" % nrun)
+        if not nrun:
+            raise ValueError("benchmark has no run")
 
         for run in benchmark._runs:
             self.add_run(run)
@@ -411,14 +433,14 @@ class BenchmarkSuite(dict):
         super(BenchmarkSuite, self).__init__()
         self.filename = filename
 
-    def _add_benchmark_run(self, benchmark):
+    def _add_benchmark_runs(self, benchmark):
         try:
             existing = self[benchmark.name]
         except KeyError:
             self.add_benchmark(benchmark)
             return
 
-        existing._add_benchmark_run(benchmark)
+        existing._add_benchmark_runs(benchmark)
 
     def get_benchmarks(self):
         return sorted(self.values(), key=operator.attrgetter('name'))

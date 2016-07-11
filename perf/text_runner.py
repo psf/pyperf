@@ -13,7 +13,7 @@ try:
 except ImportError:
     psutil = None
 
-import perf
+import perf.metadata
 
 
 def _bench_suite_from_subprocess(args):
@@ -81,6 +81,10 @@ def _display_run(bench, run_index, nrun, run, median=None, file=None):
     info = ['', 'loops=%s' % perf._format_number(run.loops)]
     if run.inner_loops:
         info.append('inner_loops=%s' % perf._format_number(run.inner_loops))
+    if run.metadata:
+        for key in sorted(run.metadata):
+            value = run.metadata[key]
+            info.append('%s=%s' % (key, value))
     print(' '.join(info), file=file)
 
 
@@ -579,9 +583,7 @@ class TextRunner:
         bench = perf.Benchmark(name=self.name,
                                metadata=self.metadata)
 
-        if not self.args.worker or self.args.metadata:
-            from perf import metadata as perf_metadata
-            perf_metadata.collect_metadata(bench.metadata)
+        perf.metadata.collect_metadata(bench.metadata)
 
         try:
             if self.args.worker or self.args.debug_single_sample:
@@ -689,7 +691,7 @@ class TextRunner:
                 suite = perf.BenchmarkSuite.load(args.json_append)
             else:
                 suite = perf.BenchmarkSuite()
-            suite.add_benchmark(bench)
+            suite._add_benchmark_runs(bench)
             suite.dump(args.json_append)
 
         if args.stdout:
@@ -713,10 +715,8 @@ class TextRunner:
                                  % len(run_benchmarks))
             run_bench = run_benchmarks[0]
 
-            # FIXME: make sure that the benchmark is compatible
-            # FIXME: compare metadata except date?
-            run = bench._get_worker_run(run_bench)
-            bench.add_run(run)
+            bench._add_benchmark_runs(run_bench)
+
             if verbose:
                 _display_run(bench, 1 + process, nprocess, run, file=stream)
             elif not quiet:
