@@ -163,15 +163,19 @@ def _get_cpu_boost(cpu):
 
     env = dict(os.environ, LC_ALL='C')
     args = ['cpupower', '-c', str(cpu), 'frequency-info']
-    proc = subprocess.Popen(args,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            env=env)
-    stdout = proc.communicate()[0]
-    if proc.returncode != 0:
-        # if the command failed once, never try it again
-        # (consider that the command is not installed or does not work)
+    try:
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True,
+                                env=env)
+        stdout = proc.communicate()[0]
+        if proc.returncode != 0:
+            # if the command failed once, never try it again
+            # (consider that the command is not installed or does not work)
+            _get_cpu_boost.working = False
+            return None
+    except OSError:
         _get_cpu_boost.working = False
         return None
 

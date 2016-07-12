@@ -93,6 +93,13 @@ class CpuFunctionsTests(unittest.TestCase):
         self.assertEqual(cpu_freq, {0: '1600 MHz (boost)',
                                     2: '2901 MHz'})
 
+    def test_cpu_boost(self):
+        with mock.patch('perf.metadata.subprocess.Popen') as mock_popen:
+            mock_popen.return_value.communicate.side_effect = OSError
+            boost = perf.metadata._get_cpu_boost(0)
+
+        self.assertIsNone(boost)
+
 
 if __name__ == "__main__":
     unittest.main()
