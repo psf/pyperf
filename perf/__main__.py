@@ -637,4 +637,5 @@ def main():
         # ignore broken pipe error
 
 
-main()
+if __name__ == "__main__":
+    main()
