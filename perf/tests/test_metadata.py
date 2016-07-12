@@ -87,7 +87,8 @@ class CpuFunctionsTests(unittest.TestCase):
         def boost(cpu):
             return (cpu == 0)
 
-        with mock.patch('perf.metadata.open', return_value=six.StringIO(data)):
+        with mock.patch('perf.metadata.open', create=True,
+                        return_value=six.StringIO(data)):
             with mock.patch('perf.metadata._get_cpu_boost', side_effect=boost):
                 cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
         self.assertEqual(cpu_freq, {0: '1600 MHz (boost)',
