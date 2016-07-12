@@ -163,7 +163,8 @@ class BenchmarkTests(unittest.TestCase):
         runs = bench.get_runs()
         self.assertEqual(len(runs), len(samples))
         for sample, run in zip(samples, runs):
-            self.assertEqual(run._get_raw_samples(warmups=True), (warmup, sample))
+            self.assertEqual(
+                run._get_raw_samples(warmups=True), (warmup, sample))
 
     def test_add_run(self):
         bench = perf.Benchmark('bench')
@@ -175,7 +176,8 @@ class BenchmarkTests(unittest.TestCase):
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
         bench = perf.Benchmark("mybench", metadata={'key': 'value'})
         for raw_sample in raw_samples:
-            bench.add_run(perf.Run(1, [3.0, raw_sample], loops=20, inner_loops=3))
+            bench.add_run(
+                perf.Run(1, [3.0, raw_sample], loops=20, inner_loops=3))
 
         self.assertEqual(bench.get_samples(), samples)
         self.assertEqual(bench._get_raw_samples(), list(raw_samples))
@@ -204,7 +206,8 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark("mybench",
                                metadata={'key': 'value'})
         for sample in samples:
-            bench.add_run(perf.Run(1, [3.0, sample], loops=100, inner_loops=20))
+            bench.add_run(perf.Run(
+                1, [3.0, sample], loops=100, inner_loops=20))
 
         with tempfile.NamedTemporaryFile() as tmp:
             bench.dump(tmp.name)
@@ -407,7 +410,6 @@ class MiscTests(unittest.TestCase):
         # errors
         self.assertRaises(ValueError, perf._parse_run_list, 'x')
         self.assertRaises(ValueError, perf._parse_run_list, '1,')
-
 
     def test_setup_version(self):
         import setup

@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 import subprocess
 import sys
@@ -40,14 +41,12 @@ class BaseTestCase(object):
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_show_common_metadata(self):
-        bench1 = self.create_bench((1.0, 1.5, 2.0),
-                                       name='py2',
-                                       metadata={'hostname': 'toto',
-                                                 'python_version': '2.7'})
-        bench2 = self.create_bench((1.5, 2.0, 2.5),
-                                           name='py3',
-                                           metadata={'hostname': 'toto',
-                                                     'python_version': '3.4'})
+        bench1 = self.create_bench(
+            (1.0, 1.5, 2.0), name='py2', metadata={
+                'hostname': 'toto', 'python_version': '2.7'})
+        bench2 = self.create_bench(
+            (1.5, 2.0, 2.5), name='py3', metadata={
+                'hostname': 'toto', 'python_version': '3.4'})
         suite = perf.BenchmarkSuite()
         suite.add_benchmark(bench1)
         suite.add_benchmark(bench2)
@@ -107,7 +106,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
         expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                        '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
@@ -129,7 +128,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
         expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                        '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
@@ -142,7 +141,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
         expected = ('Median +- std dev: [changed] 1.50 sec +- 0.50 sec '
-                        '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
+                    '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)

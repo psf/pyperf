@@ -87,7 +87,8 @@ class TestMetadata(unittest.TestCase):
         with mock.patch('os.sched_getaffinity',
                         return_value={2, 3}, create=True):
             with mock.patch('os.cpu_count', return_value=4, create=True):
-                with mock.patch('perf._get_isolated_cpus', return_value=[2, 3]):
+                with mock.patch(
+                        'perf._get_isolated_cpus', return_value=[2, 3]):
                     self.check_metadata('cpu_affinity', '2-3 (isolated)')
 
     def test_cpu_affinity_psutil(self):
@@ -96,7 +97,8 @@ class TestMetadata(unittest.TestCase):
             with mock.patch('perf._get_isolated_cpus', return_value=None):
                 with self.mock_cpu_count(4) as mock_psutil:
                     mock_psutil.cpu_count.return_value = 4
-                    mock_affinity = mock_psutil.Process.return_value.cpu_affinity
+                    mock_affinity = (
+                        mock_psutil.Process.return_value.cpu_affinity)
 
                     # affinity=2/4 CPUs
                     mock_affinity.return_value = [2, 3]
