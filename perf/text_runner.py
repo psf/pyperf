@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import errno
 import os
 import subprocess
 import sys
@@ -721,7 +722,20 @@ class TextRunner:
             suite.dump(args.json_append)
 
         if args.stdout:
-            bench.dump(sys.stdout)
+            try:
+                bench.dump(sys.stdout)
+            except IOError as exc:
+                if exc.errno != errno.EPIPE:
+                    raise
+                # ignore broken pipe error
+
+                # Close stdout to avoid the warning "Exception ignored in: ..."
+                # at exit
+                try:
+                    sys.stdout.close()
+                except IOError:
+                    # close() is likely to fail with EPIPE (BrokenPipeError)
+                    pass
 
         if args.json:
             bench.dump(args.json)
