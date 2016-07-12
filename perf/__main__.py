@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import collections
+import functools
 import errno
 import os.path
 import sys
@@ -619,23 +620,21 @@ def main():
     args = parser.parse_args()
     action = args.action
     try:
-        if action == 'show':
-            cmd_show(args)
-        elif action in ('compare', 'compare_to'):
-            cmd_compare(args)
-        elif action == 'hist':
-            cmd_hist(args)
-        elif action == 'stats':
-            cmd_stats(args)
-        elif action == 'metadata':
-            cmd_metadata()
-        elif action == 'timeit':
-            cmd_timeit(args, timeit_runner)
-        elif action == 'convert':
-            cmd_convert(args)
-        elif action == 'dump':
-            cmd_dump(args)
-        else:
+        dispatch = {
+            'show': functools.partial(cmd_show, args),
+            'compare': functools.partial(cmd_compare, args),
+            'compare_to': functools.partial(cmd_compare, args),
+            'hist': functools.partial(cmd_hist, args),
+            'stats': functools.partial(cmd_stats, args),
+            'metadata': cmd_metadata,
+            'timeit': functools.partial(cmd_timeit, args, timeit_runner),
+            'convert': functools.partial(cmd_convert, args),
+            'dump': functools.partial(cmd_dump, args),
+        }
+
+        try:
+            dispatch[action]()
+        except KeyError:
             parser.print_usage()
             sys.exit(1)
     except IOError as exc:
@@ -644,4 +643,5 @@ def main():
         # ignore broken pipe error
 
 
-main()
+if __name__ == "__main__":
+    main()

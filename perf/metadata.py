@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import socket
+import subprocess
 import sys
 import time
 
@@ -59,39 +60,54 @@ def _collect_python_metadata(metadata):
 
 
 def _read_proc(path):
+    path = os.path.join('/proc', path)
     try:
         if six.PY3:
             fp = open(path, encoding="utf-8")
         else:
-            fp = open("/proc/cpuinfo")
-        with fp:
+            fp = open(path)
+        try:
             for line in fp:
                 yield line.rstrip()
+        finally:
+            fp.close()
     except (OSError, IOError):
         return
 
 
 def _collect_linux_metadata(metadata):
     # CPU model
-    for line in _read_proc("/proc/cpuinfo"):
+    for line in _read_proc("cpuinfo"):
         if line.startswith('model name'):
             model_name = line.split(':', 1)[1]
             _add(metadata, 'cpu_model_name', model_name)
             break
 
     # ASLR
-    for line in _read_proc('/proc/sys/kernel/randomize_va_space'):
-        enabled = 'enabled' if line != '0' else 'disabled'
-        metadata['aslr'] = enabled
+    for line in _read_proc('sys/kernel/randomize_va_space'):
+        if line == '0':
+            metadata['aslr'] = 'No randomization'
+        elif line == '1':
+            metadata['aslr'] = 'Conservative randomization'
+        elif line == '2':
+            metadata['aslr'] = 'Full randomization'
         break
 
 
-def _collect_system_metadata(metadata):
-    metadata['platform'] = platform.platform(True, False)
-    if sys.platform.startswith('linux'):
-        _collect_linux_metadata(metadata)
+def _get_cpu_affinity():
+    if hasattr(os, 'sched_getaffinity'):
+        return os.sched_getaffinity(0)
 
-    # CPU count
+    if psutil is not None:
+        proc = psutil.Process()
+        # cpu_affinity() is only available on Linux, Windows and FreeBSD
+        if hasattr(proc, 'cpu_affinity'):
+            return proc.cpu_affinity()
+
+    return None
+
+
+def _get_logical_cpu_count():
     if psutil is not None:
         # Number of logical CPUs
         cpu_count = psutil.cpu_count()
@@ -109,22 +125,24 @@ def _collect_system_metadata(metadata):
                 cpu_count = multiprocessing.cpu_count()
             except NotImplementedError:
                 pass
-    if cpu_count is not None and cpu_count >= 1:
+    if cpu_count is not None and cpu_count < 1:
+        return None
+    return cpu_count
+
+
+def _collect_system_metadata(metadata):
+    metadata['platform'] = platform.platform(True, False)
+    if sys.platform.startswith('linux'):
+        _collect_linux_metadata(metadata)
+
+    # CPU count
+    cpu_count = _get_logical_cpu_count()
+    if cpu_count:
         metadata['cpu_count'] = str(cpu_count)
 
     # CPU affinity
-    if hasattr(os, 'sched_getaffinity'):
-        cpus = os.sched_getaffinity(0)
-    elif psutil is not None:
-        proc = psutil.Process()
-        if hasattr(proc, 'cpu_affinity'):
-            cpus = proc.cpu_affinity()
-        else:
-            # cpu_affinity() is only available on Linux, Windows and FreeBSD
-            cpus = None
-    else:
-        cpus = None
-    if cpus is not None and cpu_count is not None and cpu_count >= 1:
+    cpus = _get_cpu_affinity()
+    if cpus is not None and cpu_count:
         if set(cpus) == set(range(cpu_count)):
             cpus = None
     if cpus:
@@ -139,10 +157,102 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
+def _get_cpu_boost(cpu):
+    if not _get_cpu_boost.working:
+        return
+
+    env = dict(os.environ, LC_ALL='C')
+    args = ['cpupower', '-c', str(cpu), 'frequency-info']
+    try:
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True,
+                                env=env)
+        stdout = proc.communicate()[0]
+        if proc.returncode != 0:
+            # if the command failed once, never try it again
+            # (consider that the command is not installed or does not work)
+            _get_cpu_boost.working = False
+            return None
+    except OSError:
+        _get_cpu_boost.working = False
+        return None
+
+    boost = False
+    for line in stdout.splitlines():
+        if boost:
+            if 'Active:' in line:
+                value = line.split(':', 1)[-1].strip()
+                if value == 'no':
+                    return False
+                if value == 'yes':
+                    return True
+                raise ValueError("unable to parse: %r" % line)
+        elif 'boost state support' in line:
+            boost = True
+
+    raise ValueError("unable to parse cpupower output: %r" % stdout)
+_get_cpu_boost.working = True
+
+
+def _get_cpu_frequencies(cpus):
+    cpus = set(cpus)
+    cpu_freq = {}
+    cpu = None
+    for line in _read_proc('cpuinfo'):
+        if line.startswith('processor'):
+            value = line.split(':', 1)[-1].strip()
+            cpu = int(value)
+            if cpu not in cpus:
+                # skip this CPU
+                cpu = None
+        elif line.startswith('cpu MHz') and cpu is not None:
+            value = line.split(':', 1)[-1].strip()
+            if value.endswith('.000'):
+                value = value[:-4]
+            value = '%s MHz' % value
+
+            boost = _get_cpu_boost(cpu)
+            if boost:
+                value += ' (boost)'
+
+            cpu_freq[cpu] = value
+    return cpu_freq
+
+
 def collect_run_metadata(metadata):
     date = datetime.datetime.now().isoformat()
     # FIXME: move date to a regular Run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
+
+    # On Linux, load average over 1 minute
+    for line in _read_proc("loadavg"):
+        loadavg = line.split()[0]
+        metadata['load_avg_1min'] = loadavg
+
+    cpus = _get_cpu_affinity()
+    if not cpus:
+        cpus = _get_logical_cpu_count()
+    if cpus:
+        cpu_freq = _get_cpu_frequencies(cpus)
+    else:
+        cpu_freq = None
+    if cpu_freq:
+        merge = (len(set(cpu_freq[cpu] for cpu in cpus)) == 1)
+        if not merge:
+            text = []
+            for cpu in cpus:
+                freq = cpu_freq[cpu]
+                text.append('%s:%s' % (cpu, freq))
+            text = ', '.join(text)
+        else:
+            # compact output if all CPUs have the same frequency
+            cpu = list(cpus)[0]
+            freq = cpu_freq[cpu]
+            cpus = perf._format_cpu_list(cpus)
+            text = '%s:%s' % (cpus, freq)
+        metadata['cpu_freq'] = text
 
 
 def collect_benchmark_metadata(metadata):

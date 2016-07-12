@@ -296,11 +296,17 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_dump_verbose(self):
         expected = """
             Run 1: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
-              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+              loops: 4
+              inner_loops: 1
+              date: 2016-07-11T15:39:37
             Run 2: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
-              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+              loops: 4
+              inner_loops: 1
+              date: 2016-07-11T15:39:37
             Run 3: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
-              loops=4 inner_loops=1 date=2016-07-11T15:39:37
+              loops: 4
+              inner_loops: 1
+              date: 2016-07-11T15:39:37
         """
         stdout = self.run_command('dump', '--verbose', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)

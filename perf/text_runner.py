@@ -1,5 +1,6 @@
 from __future__ import print_function
 import argparse
+import errno
 import os
 import subprocess
 import sys
@@ -91,15 +92,14 @@ def _display_run(bench, run_index, run, raw=False, verbose=0, file=None):
     print(text, file=file)
 
     if verbose > 0:
-        info = [' ', 'loops=%s' % perf._format_number(run.loops)]
+        prefix = '  '
+        print(prefix + 'loops: %s' % perf._format_number(run.loops))
         if run.inner_loops:
-            info.append(
-                'inner_loops=%s' % perf._format_number(run.inner_loops))
-        if run.metadata:
-            for key in sorted(run.metadata):
-                value = run.metadata[key]
-                info.append('%s=%s' % (key, value))
-        print(' '.join(info), file=file)
+            print(prefix + 'inner_loops: %s' % perf._format_number(
+                run.inner_loops))
+        for key in sorted(run.metadata):
+            value = run.metadata[key]
+            print('%s%s: %s' % (prefix, key, value))
 
 
 def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
@@ -744,7 +744,20 @@ class TextRunner:
             suite.dump(args.json_append)
 
         if args.stdout:
-            bench.dump(sys.stdout)
+            try:
+                bench.dump(sys.stdout)
+            except IOError as exc:
+                if exc.errno != errno.EPIPE:
+                    raise
+                # ignore broken pipe error
+
+                # Close stdout to avoid the warning "Exception ignored in: ..."
+                # at exit
+                try:
+                    sys.stdout.close()
+                except IOError:
+                    # close() is likely to fail with EPIPE (BrokenPipeError)
+                    pass
 
         if args.json:
             bench.dump(args.json)

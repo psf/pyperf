@@ -1,5 +1,7 @@
-import contextlib
 import sys
+import textwrap
+
+import six
 
 import perf.metadata
 from perf.tests import mock
@@ -22,7 +24,7 @@ def check_all_metadata(testcase, metadata, mandatory=MANDATORY_METADATA):
     for key, value in metadata.items():
         # test key
         testcase.assertIsInstance(key, str)
-        testcase.assertRegex(key, '^[a-z][a-z_]+$')
+        testcase.assertRegex(key, '^[a-z][a-z0-9_]+$')
 
         # test value
         testcase.assertIsInstance(value, str)
@@ -52,61 +54,54 @@ class TestMetadata(unittest.TestCase):
         perf.metadata.collect_benchmark_metadata(metadata)
         self.assertNotIn(key, metadata)
 
-    def test_cpu_count_psutil(self):
-        with mock.patch('perf.metadata.psutil') as mock_psutil:
-            mock_psutil.cpu_count.return_value = 3
-            self.check_metadata('cpu_count', '3')
-
-    def test_cpu_count_os(self):
-        with mock.patch('perf.metadata.psutil', None):
-            with mock.patch('os.cpu_count', return_value=7, create=True):
-                self.check_metadata('cpu_count', '7')
-
-    @contextlib.contextmanager
-    def mock_cpu_count(self, value):
-        with mock.patch('perf.metadata.psutil') as mock_psutil:
-            mock_psutil.cpu_count.return_value = value
-            yield mock_psutil
-
-    def test_cpu_affinity_getaffinity(self):
-        # affinity=2/4 CPUs
-        with mock.patch('os.sched_getaffinity',
-                        return_value={2, 3}, create=True):
-            with self.mock_cpu_count(2):
-                with mock.patch('perf._get_isolated_cpus', return_value=None):
-                    self.check_metadata('cpu_affinity', '2-3')
-
-        # affinity=all CPUs: ignore metadata
-        with mock.patch('os.sched_getaffinity',
-                        return_value={0, 1}, create=True):
-            with self.mock_cpu_count(2):
-                with mock.patch('perf._get_isolated_cpus', return_value=None):
-                    self.check_missing_metadata('cpu_affinity')
-
     def test_cpu_affinity_isolated(self):
-        with mock.patch('os.sched_getaffinity',
-                        return_value={2, 3}, create=True):
-            with mock.patch('os.cpu_count', return_value=4, create=True):
+        with mock.patch(
+                'perf.metadata._get_logical_cpu_count', return_value=4):
+            with mock.patch(
+                    'perf.metadata._get_cpu_affinity', return_value={2, 3}):
                 with mock.patch(
-                        'perf._get_isolated_cpus', return_value=[2, 3]):
+                        'perf._get_isolated_cpus', return_value={1, 2, 3}):
                     self.check_metadata('cpu_affinity', '2-3 (isolated)')
 
-    def test_cpu_affinity_psutil(self):
-        with mock.patch('perf.metadata.os') as mock_os:
-            del mock_os.sched_getaffinity
-            with mock.patch('perf._get_isolated_cpus', return_value=None):
-                with self.mock_cpu_count(4) as mock_psutil:
-                    mock_psutil.cpu_count.return_value = 4
-                    mock_affinity = (
-                        mock_psutil.Process.return_value.cpu_affinity)
+            with mock.patch('perf.metadata._get_cpu_affinity',
+                            return_value={0, 1, 2, 3}):
+                self.check_missing_metadata('cpu_affinity')
 
-                    # affinity=2/4 CPUs
-                    mock_affinity.return_value = [2, 3]
-                    self.check_metadata('cpu_affinity', '2-3')
 
-                    # affinity=all CPUs: ignore metadata
-                    mock_affinity.return_value = [0, 1, 2, 3]
-                    self.check_missing_metadata('cpu_affinity')
+class CpuFunctionsTests(unittest.TestCase):
+    def test_cpu_frequencies(self):
+        data = textwrap.dedent("""
+            processor	: 0
+            vendor_id	: GenuineIntel
+            cpu family	: 6
+            cpu MHz		: 1600.000
+            power management:
+
+            processor	: 1
+            cpu MHz		: 2901.000
+
+            processor	: 2
+            vendor_id	: GenuineIntel
+            cpu MHz		: 2901.000
+            clflush size	: 64
+        """)
+
+        def boost(cpu):
+            return (cpu == 0)
+
+        with mock.patch('perf.metadata.open', create=True,
+                        return_value=six.StringIO(data)):
+            with mock.patch('perf.metadata._get_cpu_boost', side_effect=boost):
+                cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
+        self.assertEqual(cpu_freq, {0: '1600 MHz (boost)',
+                                    2: '2901 MHz'})
+
+    def test_cpu_boost(self):
+        with mock.patch('perf.metadata.subprocess.Popen') as mock_popen:
+            mock_popen.return_value.communicate.side_effect = OSError
+            boost = perf.metadata._get_cpu_boost(0)
+
+        self.assertIsNone(boost)
 
 
 if __name__ == "__main__":

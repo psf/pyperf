@@ -15,14 +15,17 @@ It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
 dependency is installed: backport of Python 3.4 `statistics module
 <https://docs.python.org/dev/library/statistics.html>`_.
 
-If you get the error ``'install_requires' must be a string ...``: you must
-upgrade setuptools to support environment markers in ``install_requires`` of
+If you get the error ``'install_requires' must be a string ...`` or
+``RequirementParseError: Expected version spec in ...``: you must upgrade
+setuptools to support environment markers in ``install_requires`` of
 ``setup.py``. Try::
 
     python3 -m pip install -U setuptools
 
 Optional dependencies:
 
+* ``cpupower``: used to check if the CPU boost is active or not on Intel and
+  AMD CPUs. Install on Fedora: ``sudo dnf install kernel-tools``.
 * ``psutil``: needed for CPU affinity on Python 2.7
 
 
@@ -193,8 +196,8 @@ What is perf so slow?
 =====================
 
 ``--fast`` and ``--rigorous`` options indirectly have an impact on the total
-duration of benchmarks. The ``perf`` module is optimized for the total duration
-but to produce :ref:reliable benchmarks <stable_bench>`.
+duration of benchmarks. The ``perf`` module is not optimized for the total
+duration but to produce :ref:`reliable benchmarks <stable_bench>`.
 
 The ``--fast`` is designed to be fast, but remain reliable enough to be useful.
 Using less worker processes and less samples per worker would produce unstable
