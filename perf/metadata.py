@@ -63,7 +63,7 @@ def _read_proc(path):
         if six.PY3:
             fp = open(path, encoding="utf-8")
         else:
-            fp = open("/proc/cpuinfo")
+            fp = open(path)
         with fp:
             for line in fp:
                 yield line.rstrip()
@@ -81,8 +81,12 @@ def _collect_linux_metadata(metadata):
 
     # ASLR
     for line in _read_proc('/proc/sys/kernel/randomize_va_space'):
-        enabled = 'enabled' if line != '0' else 'disabled'
-        metadata['aslr'] = enabled
+        if line == '0':
+            metadata['aslr'] = 'No randomization'
+        elif line == '1':
+            metadata['aslr'] = 'Conservative randomization'
+        elif line == '2':
+            metadata['aslr'] = 'Full randomization'
         break
 
 
