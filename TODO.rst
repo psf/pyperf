@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Run: store normalize samples and store loops/inner_loops as run metadata?
 * Move more benchmark metadata as run metadata.
   Need to develop something to move equal run metadata to benchmark metadata
   in add_run()

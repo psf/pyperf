@@ -59,6 +59,7 @@ def _collect_python_metadata(metadata):
 
 
 def _read_proc(path):
+    path = os.path.join('/proc', path)
     try:
         if six.PY3:
             fp = open(path, encoding="utf-8")
@@ -73,14 +74,14 @@ def _read_proc(path):
 
 def _collect_linux_metadata(metadata):
     # CPU model
-    for line in _read_proc("/proc/cpuinfo"):
+    for line in _read_proc("cpuinfo"):
         if line.startswith('model name'):
             model_name = line.split(':', 1)[1]
             _add(metadata, 'cpu_model_name', model_name)
             break
 
     # ASLR
-    for line in _read_proc('/proc/sys/kernel/randomize_va_space'):
+    for line in _read_proc('sys/kernel/randomize_va_space'):
         if line == '0':
             metadata['aslr'] = 'No randomization'
         elif line == '1':
@@ -103,12 +104,7 @@ def _get_cpu_affinity():
     return None
 
 
-def _collect_system_metadata(metadata):
-    metadata['platform'] = platform.platform(True, False)
-    if sys.platform.startswith('linux'):
-        _collect_linux_metadata(metadata)
-
-    # CPU count
+def _get_logical_cpu_count():
     if psutil is not None:
         # Number of logical CPUs
         cpu_count = psutil.cpu_count()
@@ -126,15 +122,27 @@ def _collect_system_metadata(metadata):
                 cpu_count = multiprocessing.cpu_count()
             except NotImplementedError:
                 pass
-    if cpu_count is not None and cpu_count >= 1:
+    if cpu_count is not None and cpu_count < 1:
+        return None
+    return cpu_count
+
+
+def _collect_system_metadata(metadata):
+    metadata['platform'] = platform.platform(True, False)
+    if sys.platform.startswith('linux'):
+        _collect_linux_metadata(metadata)
+
+    # CPU count
+    cpu_count = _get_logical_cpu_count()
+    if cpu_count:
         metadata['cpu_count'] = str(cpu_count)
 
     # CPU affinity
     cpus = _get_cpu_affinity()
-    if cpus is not None and cpu_count is not None and cpu_count >= 1:
+    if cpus is not None and cpu_count:
         if set(cpus) == set(range(cpu_count)):
             cpus = None
-    if cpus is not None:
+    if cpus:
         isolated = perf._get_isolated_cpus()
         text = perf._format_cpu_list(cpus)
         if isolated and set(cpus) <= set(isolated):
@@ -146,15 +154,53 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
+def _get_cpu_frequencies():
+    cpu_freq = {}
+    processor = None
+    for line in _read_proc('cpuinfo'):
+        if line.startswith('processor'):
+            value = line.split(':', 1)[-1].strip()
+            processor = int(value)
+        elif line.startswith('cpu MHz') and processor is not None:
+            value = line.split(':', 1)[-1].strip()
+            if value.endswith('.000'):
+                value = value[:-4]
+            cpu_freq[processor] = value
+    return cpu_freq
+
+
 def collect_run_metadata(metadata):
     date = datetime.datetime.now().isoformat()
     # FIXME: move date to a regular Run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
 
     # On Linux, load average over 1 minute
-    for line in _read_proc("/proc/loadavg"):
+    for line in _read_proc("loadavg"):
         loadavg = line.split()[0]
         metadata['load_avg_1min'] = loadavg
+
+    cpus = _get_cpu_affinity()
+    if not cpus:
+        cpus = _get_logical_cpu_count()
+    if cpus:
+        cpu_freq = _get_cpu_frequencies()
+    else:
+        cpu_freq = None
+    if cpu_freq:
+        merge = (len(set(cpu_freq[cpu] for cpu in cpus)) == 1)
+        if not merge:
+            text = []
+            for cpu in cpus:
+                freq = cpu_freq[cpu]
+                text.append('%s:%s MHz' % (cpu, freq))
+            text = ' '.join(text)
+        else:
+            # compact output if all CPUs have the same frequency
+            cpu = list(cpus)[0]
+            freq = cpu_freq[cpu]
+            cpus = perf._format_cpu_list(cpus)
+            text = '%s:%s MHz' % (cpus, freq)
+        metadata['cpu_freq'] = text
 
 
 def collect_benchmark_metadata(metadata):
