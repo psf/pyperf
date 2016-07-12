@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import socket
+import subprocess
 import sys
 import time
 
@@ -65,9 +66,11 @@ def _read_proc(path):
             fp = open(path, encoding="utf-8")
         else:
             fp = open(path)
-        with fp:
+        try:
             for line in fp:
                 yield line.rstrip()
+        finally:
+            fp.close()
     except (OSError, IOError):
         return
 
@@ -154,18 +157,63 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
-def _get_cpu_frequencies():
+def _get_cpu_boost(cpu):
+    if not _get_cpu_boost.working:
+        return
+
+    env = dict(os.environ, LC_ALL='C')
+    args = ['cpupower', '-c', str(cpu), 'frequency-info']
+    proc = subprocess.Popen(args,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            universal_newlines=True,
+                            env=env)
+    stdout = proc.communicate()[0]
+    if proc.returncode != 0:
+        # if the command failed once, never try it again
+        # (consider that the command is not installed or does not work)
+        _get_cpu_boost.working = False
+        return None
+
+    boost = False
+    for line in stdout.splitlines():
+        if boost:
+            if 'Active:' in line:
+                value = line.split(':', 1)[-1].strip()
+                if value == 'no':
+                    return False
+                if value == 'yes':
+                    return True
+                raise ValueError("unable to parse: %r" % line)
+        elif 'boost state support' in line:
+            boost = True
+
+    raise ValueError("unable to parse cpupower output: %r" % stdout)
+_get_cpu_boost.working = True
+
+
+def _get_cpu_frequencies(cpus):
+    cpus = set(cpus)
     cpu_freq = {}
-    processor = None
+    cpu = None
     for line in _read_proc('cpuinfo'):
         if line.startswith('processor'):
             value = line.split(':', 1)[-1].strip()
-            processor = int(value)
-        elif line.startswith('cpu MHz') and processor is not None:
+            cpu = int(value)
+            if cpu not in cpus:
+                # skip this CPU
+                cpu = None
+        elif line.startswith('cpu MHz') and cpu is not None:
             value = line.split(':', 1)[-1].strip()
             if value.endswith('.000'):
                 value = value[:-4]
-            cpu_freq[processor] = value
+            value = '%s MHz' % value
+
+            boost = _get_cpu_boost(cpu)
+            if boost:
+                value += ' (boost)'
+
+            cpu_freq[cpu] = value
     return cpu_freq
 
 
@@ -183,7 +231,7 @@ def collect_run_metadata(metadata):
     if not cpus:
         cpus = _get_logical_cpu_count()
     if cpus:
-        cpu_freq = _get_cpu_frequencies()
+        cpu_freq = _get_cpu_frequencies(cpus)
     else:
         cpu_freq = None
     if cpu_freq:
@@ -192,14 +240,14 @@ def collect_run_metadata(metadata):
             text = []
             for cpu in cpus:
                 freq = cpu_freq[cpu]
-                text.append('%s:%s MHz' % (cpu, freq))
-            text = ' '.join(text)
+                text.append('%s:%s' % (cpu, freq))
+            text = ', '.join(text)
         else:
             # compact output if all CPUs have the same frequency
             cpu = list(cpus)[0]
             freq = cpu_freq[cpu]
             cpus = perf._format_cpu_list(cpus)
-            text = '%s:%s MHz' % (cpus, freq)
+            text = '%s:%s' % (cpus, freq)
         metadata['cpu_freq'] = text
 
 

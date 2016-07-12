@@ -3,6 +3,8 @@ import os.path
 import sys
 import textwrap
 
+import six
+
 import perf.metadata
 from perf.tests import mock
 from perf.tests import unittest
@@ -74,13 +76,22 @@ class CpuFunctionsTests(unittest.TestCase):
             power management:
 
             processor	: 1
+            cpu MHz		: 2901.000
+
+            processor	: 2
             vendor_id	: GenuineIntel
             cpu MHz		: 2901.000
             clflush size	: 64
         """)
-        with mock.patch('perf.metadata.open', mock.mock_open(read_data=data)):
-            cpu_freq = perf.metadata._get_cpu_frequencies()
-        self.assertEqual(cpu_freq, {})
+
+        def boost(cpu):
+            return (cpu == 0)
+
+        with mock.patch('perf.metadata.open', return_value=six.StringIO(data)):
+            with mock.patch('perf.metadata._get_cpu_boost', side_effect=boost):
+                cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
+        self.assertEqual(cpu_freq, {0: '1600 MHz (boost)',
+                                    2: '2901 MHz'})
 
 
 if __name__ == "__main__":
