@@ -67,6 +67,10 @@ Low priority
 * support multiple units, or remove _format_samples.
   Track memory usage in CPython benchmark suite?
 * use the calibration at the first warmup sample in raw mode
+* metadata: implement time.get_time_info() on Python 2
+
+  * Call QueryPerformanceFrequency() on Windows using ctypes?
+
 
 
 Ideas

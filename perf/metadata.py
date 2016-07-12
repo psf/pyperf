@@ -86,6 +86,19 @@ def _collect_linux_metadata(metadata):
         break
 
 
+def _get_cpu_affinity():
+    if hasattr(os, 'sched_getaffinity'):
+        return os.sched_getaffinity(0)
+
+    if psutil is not None:
+        proc = psutil.Process()
+        # cpu_affinity() is only available on Linux, Windows and FreeBSD
+        if hasattr(proc, 'cpu_affinity'):
+            return proc.cpu_affinity()
+
+    return None
+
+
 def _collect_system_metadata(metadata):
     metadata['platform'] = platform.platform(True, False)
     if sys.platform.startswith('linux'):
@@ -113,21 +126,11 @@ def _collect_system_metadata(metadata):
         metadata['cpu_count'] = str(cpu_count)
 
     # CPU affinity
-    if hasattr(os, 'sched_getaffinity'):
-        cpus = os.sched_getaffinity(0)
-    elif psutil is not None:
-        proc = psutil.Process()
-        if hasattr(proc, 'cpu_affinity'):
-            cpus = proc.cpu_affinity()
-        else:
-            # cpu_affinity() is only available on Linux, Windows and FreeBSD
-            cpus = None
-    else:
-        cpus = None
+    cpus = _get_cpu_affinity()
     if cpus is not None and cpu_count is not None and cpu_count >= 1:
         if set(cpus) == set(range(cpu_count)):
             cpus = None
-    if cpus:
+    if cpus is not None:
         isolated = perf._get_isolated_cpus()
         text = perf._format_cpu_list(cpus)
         if isolated and set(cpus) <= set(isolated):
