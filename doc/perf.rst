@@ -15,8 +15,9 @@ It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
 dependency is installed: backport of Python 3.4 `statistics module
 <https://docs.python.org/dev/library/statistics.html>`_.
 
-If you get the error ``'install_requires' must be a string ...``: you must
-upgrade setuptools to support environment markers in ``install_requires`` of
+If you get the error ``'install_requires' must be a string ...`` or
+``RequirementParseError: Expected version spec in ...``: you must upgrade
+setuptools to support environment markers in ``install_requires`` of
 ``setup.py``. Try::
 
     python3 -m pip install -U setuptools
