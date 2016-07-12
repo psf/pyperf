@@ -1,6 +1,32 @@
 TODO
 ====
 
+* Detect Intel Turbo Mode: kernel-tools, kernel: tools/power/cpupower::
+
+        static const char *cpu_vendor_table[X86_VENDOR_MAX] = {
+                "Unknown", "GenuineIntel", "AuthenticAMD",
+        };
+
+        /* parse /proc/cpuinfo */
+        if (!strncmp(value, "vendor_id", 9)) {
+                for (x = 1; x < X86_VENDOR_MAX; x++) {
+                        if (strstr(value, cpu_vendor_table[x]))
+                                cpu_info->vendor = x;
+                }
+        }
+
+        cpuid_level = cpuid_eax(0);
+        if (cpu_info->vendor == X86_VENDOR_INTEL) {
+            if (cpuid_level >= 6 &&
+                    (cpuid_eax(6) & (1 << 1)))
+                cpu_info->caps |= CPUPOWER_CAP_INTEL_IDA;
+        }
+
+        if (cpupower_cpu_info.caps & CPUPOWER_CAP_INTEL_IDA)
+            *support = *active = 1;
+
+
+
 * collect more metadata in each worker *but* add_run() and
   _add_benchmark_runs() should limit data duplication by storing common
   metadata in the benchmark metadata
