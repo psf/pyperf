@@ -151,6 +151,11 @@ def collect_run_metadata(metadata):
     # FIXME: move date to a regular Run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
 
+    # On Linux, load average over 1 minute
+    for line in _read_proc("/proc/loadavg"):
+        loadavg = line.split()[0]
+        metadata['load_avg_1min'] = loadavg
+
 
 def collect_benchmark_metadata(metadata):
     metadata['perf_version'] = perf.__version__

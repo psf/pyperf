@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Move more benchmark metadata as run metadata.
+  Need to develop something to move equal run metadata to benchmark metadata
+  in add_run()
 * Detect Intel Turbo Mode: kernel-tools, kernel: tools/power/cpupower::
 
         static const char *cpu_vendor_table[X86_VENDOR_MAX] = {

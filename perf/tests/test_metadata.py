@@ -22,7 +22,7 @@ def check_all_metadata(testcase, metadata, mandatory=MANDATORY_METADATA):
     for key, value in metadata.items():
         # test key
         testcase.assertIsInstance(key, str)
-        testcase.assertRegex(key, '^[a-z][a-z_]+$')
+        testcase.assertRegex(key, '^[a-z][a-z0-9_]+$')
 
         # test value
         testcase.assertIsInstance(value, str)
