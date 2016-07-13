@@ -423,7 +423,8 @@ class Benchmark(object):
                 run = Run(warmups, raw_samples,
                           loops=loops,
                           inner_loops=inner_loops,
-                          metadata=run_metadata)
+                          metadata=run_metadata,
+                          collect_metadata=False)
                 bench.add_run(run)
         return bench
 
