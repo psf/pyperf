@@ -36,20 +36,19 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(
-            r'^'
-            r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
-            r'Warmup 1: ([0-9.]+) ms\n'
-            r'Raw sample 1: ([0-9.]+) ms\n'
-            r'Raw sample 2: ([0-9.]+) ms\n'
-            r'\n'
-            r'Metadata:\n'
-            r'(- .*\n)+'
-            r'\n'
-            r'Median \+- std dev: (?P<median>[0-9.]+) ms \+-'
-            ' (?P<stdev>[0-9.]+) ms\n'
-            r'$',
-            stdout)
+        match = re.match(r'^'
+                         r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
+                         r'Warmup 1: ([0-9.]+) ms\n'
+                         r'Raw sample 1: ([0-9.]+) ms\n'
+                         r'Raw sample 2: ([0-9.]+) ms\n'
+                         r'\n'
+                         r'Metadata:\n'
+                         r'(- .*\n)+'
+                         r'\n'
+                         r'Median \+- std dev: (?P<median>[0-9.]+) ms \+-'
+                         ' (?P<stdev>[0-9.]+) ms\n'
+                         r'$',
+                         stdout)
         self.assertIsNotNone(match, repr(stdout))
 
         values = [float(match.group(i)) for i in range(1, 4)]

@@ -35,6 +35,7 @@ CLASSIFIERS = [
     'Topic :: Software Development :: Libraries :: Python Modules',
 ]
 
+
 # put most of the code inside main() to be able to import setup.py in
 # test_tools.py, to ensure that VERSION is the same than
 # perf.__version__.

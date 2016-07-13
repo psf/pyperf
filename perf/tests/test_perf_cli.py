@@ -41,12 +41,12 @@ class BaseTestCase(object):
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_show_common_metadata(self):
-        bench1 = self.create_bench(
-            (1.0, 1.5, 2.0), name='py2', metadata={
-                'hostname': 'toto', 'python_version': '2.7'})
-        bench2 = self.create_bench(
-            (1.5, 2.0, 2.5), name='py3', metadata={
-                'hostname': 'toto', 'python_version': '3.4'})
+        bench1 = self.create_bench((1.0, 1.5, 2.0), name='py2',
+                                   metadata={'hostname': 'toto',
+                                             'python_version': '2.7'})
+        bench2 = self.create_bench((1.5, 2.0, 2.5), name='py3',
+                                   metadata={'hostname': 'toto',
+                                             'python_version': '3.4'})
         suite = perf.BenchmarkSuite()
         suite.add_benchmark(bench1)
         suite.add_benchmark(bench2)

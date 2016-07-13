@@ -10,53 +10,47 @@ import perf.text_runner
 
 
 def create_parser():
-    parser = argparse.ArgumentParser(
-        description='Display benchmark results.', prog='-m perf')
+    parser = argparse.ArgumentParser(description='Display benchmark results.',
+                                     prog='-m perf')
     subparsers = parser.add_subparsers(dest='action')
 
     def input_filenames(cmd):
-        cmd.add_argument(
-            '-b', '--name', help='only display the benchmark called NAME')
-        cmd.add_argument(
-            'filenames', metavar='file.json', type=str, nargs='+',
-            help='Benchmark file')
+        cmd.add_argument('-b', '--name',
+                         help='only display the benchmark called NAME')
+        cmd.add_argument('filenames', metavar='file.json',
+                         type=str, nargs='+',
+                         help='Benchmark file')
 
     # show
     cmd = subparsers.add_parser('show', help='Display a benchmark')
-    cmd.add_argument(
-        '-q', '--quiet', action="store_true", help='enable quiet mode')
-    cmd.add_argument(
-        '-m', '--metadata', dest='metadata', action="store_true",
-        help="Show metadata.")
-    cmd.add_argument(
-        '-g', '--hist', action="store_true",
-        help='display an histogram of samples')
-    cmd.add_argument(
-        '-t', '--stats', action="store_true",
-        help='display statistics (min, max, ...)')
-    cmd.add_argument(
-        '-d', '--dump', action="store_true",
-        help='display benchmark run results')
+    cmd.add_argument('-q', '--quiet',
+                     action="store_true", help='enable quiet mode')
+    cmd.add_argument('-m', '--metadata', dest='metadata', action="store_true",
+                     help="Show metadata.")
+    cmd.add_argument('-g', '--hist', action="store_true",
+                     help='display an histogram of samples')
+    cmd.add_argument('-t', '--stats', action="store_true",
+                     help='display statistics (min, max, ...)')
+    cmd.add_argument('-d', '--dump', action="store_true",
+                     help='display benchmark run results')
     input_filenames(cmd)
 
     # hist
     cmd = subparsers.add_parser('hist', help='Render an histogram')
-    cmd.add_argument(
-        '--extend', action="store_true",
-        help="Extend the histogram to fit the terminal")
-    cmd.add_argument(
-        '-n', '--bins', type=int, default=None,
-        help='Number of histogram bars (default: 25, or less '
-             'depeding on the terminal size)')
+    cmd.add_argument('--extend', action="store_true",
+                     help="Extend the histogram to fit the terminal")
+    cmd.add_argument('-n', '--bins', type=int, default=None,
+                     help='Number of histogram bars (default: 25, or less '
+                          'depeding on the terminal size)')
     input_filenames(cmd)
 
     # compare, compare_to
     for command in ('compare', 'compare_to'):
         cmd = subparsers.add_parser(command, help='Compare benchmarks')
-        cmd.add_argument(
-            '-q', '--quiet', action="store_true", help='enable quiet mode')
-        cmd.add_argument(
-            '-v', '--verbose', action="store_true", help='enable verbose mode')
+        cmd.add_argument('-q', '--quiet', action="store_true",
+                         help='enable quiet mode')
+        cmd.add_argument('-v', '--verbose', action="store_true",
+                         help='enable verbose mode')
         input_filenames(cmd)
 
     # stats
@@ -69,8 +63,8 @@ def create_parser():
     # timeit
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
     timeit_runner = perf.text_runner.TextRunner(name='timeit', _argparser=cmd)
-    cmd.add_argument(
-        '-s', '--setup', action='append', default=[], help='setup statements')
+    cmd.add_argument('-s', '--setup', action='append', default=(),
+                     help='setup statements')
     cmd.add_argument('stmt', nargs='+', help='executed statements')
 
     # convert
@@ -78,37 +72,35 @@ def create_parser():
     cmd.add_argument(
         'input_filename', help='Filename of the input benchmark suite')
     output = cmd.add_mutually_exclusive_group(required=True)
-    output.add_argument(
-        '-o', '--output', metavar='OUTPUT_FILENAME', dest='output_filename',
-        help='Filename where the output benchmark suite is written')
-    output.add_argument(
-        '--stdout', action='store_true',
-        help='Write benchmark encoded to JSON into stdout')
-    cmd.add_argument(
-        '--include-benchmark', metavar='NAME',
-        help='Only keep benchmark called NAME')
-    cmd.add_argument(
-        '--exclude-benchmark', metavar='NAME',
-        help='Remove the benchmark called NAMED')
+    output.add_argument('-o', '--output', metavar='OUTPUT_FILENAME',
+                        dest='output_filename',
+                        help='Filename where the output benchmark suite '
+                             'is written')
+    output.add_argument('--stdout', action='store_true',
+                        help='Write benchmark encoded to JSON into stdout')
+    cmd.add_argument('--include-benchmark', metavar='NAME',
+                     help='Only keep benchmark called NAME')
+    cmd.add_argument('--exclude-benchmark', metavar='NAME',
+                     help='Remove the benchmark called NAMED')
     cmd.add_argument('--include-runs', help='Only keep benchmark runs RUNS')
     cmd.add_argument('--exclude-runs', help='Remove specified benchmark runs')
-    cmd.add_argument(
-        '--remove-outliers', action='store_true', help='Remove outlier runs')
-    cmd.add_argument(
-        '--indent', action='store_true',
-        help='Indent JSON (rather using compact JSON)')
-    cmd.add_argument(
-        '--remove-warmups', action='store_true', help='Remove warmup samples')
-    cmd.add_argument(
-        '--add', metavar='FILE', help='Add benchmark runs of benchmark FILE')
+    cmd.add_argument('--remove-outliers', action='store_true',
+                     help='Remove outlier runs')
+    cmd.add_argument('--indent', action='store_true',
+                     help='Indent JSON (rather using compact JSON)')
+    cmd.add_argument('--remove-warmups', action='store_true',
+                     help='Remove warmup samples')
+    cmd.add_argument('--add', metavar='FILE',
+                     help='Add benchmark runs of benchmark FILE')
 
     # dump
     cmd = subparsers.add_parser('dump', help='Dump the runs')
-    cmd.add_argument(
-        '-v', '--verbose', action='store_true', help='enable verbose mode')
-    cmd.add_argument(
-        '-q', '--quiet', action='store_true', help='enable quiet mode')
-    cmd.add_argument('--raw', action='store_true', help='display raw samples')
+    cmd.add_argument('-v', '--verbose', action='store_true',
+                     help='enable verbose mode')
+    cmd.add_argument('-q', '--quiet', action='store_true',
+                     help='enable quiet mode')
+    cmd.add_argument('--raw', action='store_true',
+                     help='display raw samples')
     input_filenames(cmd)
 
     return parser, timeit_runner
@@ -157,8 +149,8 @@ def _display_common_metadata(metadatas):
 
     common_metadata = _common_metadata(metadatas)
     if common_metadata:
-        perf.text_runner._display_metadata(
-            common_metadata, header='Common metadata:')
+        perf.text_runner._display_metadata(common_metadata,
+                                           header='Common metadata:')
         print()
 
     for key in common_metadata:
@@ -206,8 +198,7 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
         # significant?
         if len(ref_samples) != 1 and len(changed_samples) != 1:
             try:
-                significant, t_score = perf.is_significant(
-                    ref_samples, changed_samples)
+                significant, t_score = perf.is_significant(ref_samples, changed_samples)
             except Exception:
                 print("ERROR when testing if samples are significant")
                 all_significant = True
@@ -244,8 +235,7 @@ def compare_suites(benchmarks, sort_benchmarks, args):
     for index, item in enumerate(grouped_by_name):
         # FIXME: use namedtuple()
         name, cmp_benchmarks, is_last = item
-        significant, lines = compare_benchmarks(
-            cmp_benchmarks, sort_benchmarks, args)
+        significant, lines = compare_benchmarks(cmp_benchmarks, sort_benchmarks, args)
 
         if len(grouped_by_name) > 1:
             title = name
@@ -445,8 +435,7 @@ def cmd_show(args):
         use_title = False
         if not args.quiet:
             for index, item in enumerate(data):
-                warnings = perf.text_runner._warn_if_bench_unstable(
-                    item.benchmark)
+                warnings = perf.text_runner._warn_if_bench_unstable(item.benchmark)
 
                 if warnings:
                     use_title = True

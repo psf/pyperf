@@ -55,12 +55,12 @@ class TestMetadata(unittest.TestCase):
         self.assertNotIn(key, metadata)
 
     def test_cpu_affinity_isolated(self):
-        with mock.patch(
-                'perf.metadata._get_logical_cpu_count', return_value=4):
-            with mock.patch(
-                    'perf.metadata._get_cpu_affinity', return_value={2, 3}):
-                with mock.patch(
-                        'perf._get_isolated_cpus', return_value={1, 2, 3}):
+        with mock.patch('perf.metadata._get_logical_cpu_count',
+                        return_value=4):
+            with mock.patch('perf.metadata._get_cpu_affinity',
+                            return_value={2, 3}):
+                with mock.patch('perf._get_isolated_cpus',
+                                return_value={1, 2, 3}):
                     self.check_metadata('cpu_affinity', '2-3 (isolated)')
 
             with mock.patch('perf.metadata._get_cpu_affinity',

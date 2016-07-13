@@ -95,10 +95,10 @@ class Run(object):
     def __init__(self, warmups, raw_samples, loops=1, inner_loops=1,
                  metadata=None):
         if (not raw_samples
-            or any(not(isinstance(sample, float) and sample > 0)
-                   for sample in raw_samples)):
-            raise ValueError(
-                "raw_samples must be a non-empty list of float > 0")
+           or any(not(isinstance(sample, float) and sample > 0)
+                  for sample in raw_samples)):
+            raise ValueError("raw_samples must be "
+                             "a non-empty list of float > 0")
 
         if not(isinstance(warmups, int) and warmups >= 0):
             raise ValueError("warmups must be an int >= 0")
@@ -333,9 +333,10 @@ class Benchmark(object):
             bench = cls(name, metadata=metadata)
 
             for raw_samples in data['runs']:
-                run = Run(
-                    warmups, raw_samples, loops, inner_loops,
-                    metadata=run_metadata)
+                run = Run(warmups, raw_samples,
+                          loops=loops,
+                          inner_loops=inner_loops,
+                          metadata=run_metadata)
                 bench.add_run(run)
         return bench
 
@@ -606,8 +607,8 @@ def _tscore(sample1, sample2):
         raise ValueError("different number of samples")
     error = _pooled_sample_variance(sample1, sample2) / len(sample1)
     # FIXME: use median?
-    return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(
-        error * 2)
+    diff = statistics.mean(sample1) - statistics.mean(sample2)
+    return diff / math.sqrt(error * 2)
 
 
 def is_significant(sample1, sample2):
@@ -638,7 +639,7 @@ def _format_cpu_list(cpus):
     for cpu in cpus:
         if first is None:
             first = cpu
-        elif cpu != last+1:
+        elif cpu != last + 1:
             if first != last:
                 parts.append('%s-%s' % (first, last))
             else:
@@ -663,7 +664,7 @@ def _parse_run_list(run_list):
                 parts = part.split('-', 1)
                 first = int(parts[0])
                 last = int(parts[1])
-                for run in range(first, last+1):
+                for run in range(first, last + 1):
                     runs.append(run)
             else:
                 runs.append(int(part))
@@ -676,7 +677,7 @@ def _parse_run_list(run_list):
     if min(runs) < 1:
         raise ValueError("number of runs starts at 1")
 
-    return [run-1 for run in runs]
+    return [run - 1 for run in runs]
 
 
 def _parse_cpu_list(cpu_list):
@@ -691,7 +692,7 @@ def _parse_cpu_list(cpu_list):
             parts = part.split('-', 1)
             first = int(parts[0])
             last = int(parts[1])
-            for cpu in range(first, last+1):
+            for cpu in range(first, last + 1):
                 cpus.append(cpu)
         else:
             cpus.append(int(part))
