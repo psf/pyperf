@@ -1,6 +1,8 @@
 TODO
 ====
 
+* test cpu_temp on computer with multiple physical cores
+* perf CLI: handle FileNotFoundError (need unit test)
 * Run: store normalize samples and store loops/inner_loops as run metadata?
 * Move more benchmark metadata as run metadata.
   Need to develop something to move equal run metadata to benchmark metadata

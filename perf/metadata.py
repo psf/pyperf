@@ -59,13 +59,17 @@ def _collect_python_metadata(metadata):
         metadata['python_unicode'] = unicode_impl
 
 
+def _open_text(path):
+    if six.PY3:
+        return open(path, encoding="utf-8")
+    else:
+        return open(path)
+
+
 def _read_proc(path):
     path = os.path.join('/proc', path)
     try:
-        if six.PY3:
-            fp = open(path, encoding="utf-8")
-        else:
-            fp = open(path)
+        fp = _open_text(path)
         try:
             for line in fp:
                 yield line.rstrip()
@@ -73,6 +77,10 @@ def _read_proc(path):
             fp.close()
     except (OSError, IOError):
         return
+
+
+def _sys_path(path):
+    return os.path.join("/sys", path)
 
 
 def _collect_linux_metadata(metadata):
@@ -221,12 +229,58 @@ def _get_cpu_frequencies(cpus):
     return cpu_freq
 
 
+def _get_cpu_temperature(path, cpu_temp):
+    try:
+        fp = _open_text(os.path.join(path, 'name'))
+    except OSError:
+        return
+    with fp:
+        hwmon_name = fp.readline().rstrip()
+    if not hwmon_name.startswith('coretemp'):
+        return
+
+    index = 1
+    while True:
+        template = os.path.join(path, "temp%s_%%s" % index)
+
+        try:
+            fp = _open_text(template % 'label')
+        except OSError:
+            break
+        with fp:
+            temp_label = fp.readline().rstrip()
+
+        fp = _open_text(template % 'input')
+        with fp:
+            temp_input = fp.readline().rstrip()
+
+        temp_input = float(temp_input) / 1000
+        temp_input = "%.0f\xb0C" % temp_input
+
+        item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input)
+        cpu_temp.append(item)
+
+        index += 1
+
+
+def _get_cpu_temperatures():
+    path = _sys_path("class/hwmon")
+    names = os.listdir(path)
+    cpu_temp = []
+    for name in names:
+        hwmon = os.path.join(path, name)
+        _get_cpu_temperature(hwmon, cpu_temp)
+    if not cpu_temp:
+        return None
+    return ', '.join(cpu_temp)
+
+
 def collect_run_metadata(metadata):
     date = datetime.datetime.now().isoformat()
-    # FIXME: move date to a regular Run attribute with type datetime.datetime?
+    # fixme: move date to a regular run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
 
-    # On Linux, load average over 1 minute
+    # on linux, load average over 1 minute
     for line in _read_proc("loadavg"):
         loadavg = line.split()[0]
         metadata['load_avg_1min'] = loadavg
@@ -237,7 +291,7 @@ def collect_run_metadata(metadata):
     if cpus:
         cpu_freq = _get_cpu_frequencies(cpus)
     else:
-        cpu_freq = None
+        cpu_freq = none
     if cpu_freq:
         merge = (len(set(cpu_freq[cpu] for cpu in cpus)) == 1)
         if not merge:
@@ -253,6 +307,10 @@ def collect_run_metadata(metadata):
             cpus = perf._format_cpu_list(cpus)
             text = '%s:%s' % (cpus, freq)
         metadata['cpu_freq'] = text
+
+    cpu_temp = _get_cpu_temperatures()
+    if cpu_temp:
+        metadata['cpu_temp'] = cpu_temp
 
 
 def collect_benchmark_metadata(metadata):
