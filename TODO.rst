@@ -1,6 +1,7 @@
 TODO
 ====
 
+* run: convert loops/inner_loops to metadata
 * decide if metadata is collected by default or not
 * test cpu_temp on computer with multiple physical cores
 * perf CLI: handle FileNotFoundError (need unit test)

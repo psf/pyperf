@@ -4,7 +4,6 @@ import os
 import platform
 import re
 import socket
-import subprocess
 import sys
 import time
 
@@ -195,8 +194,8 @@ def _get_cpu_frequencies(cpus):
                 cpu = None
         elif line.startswith('cpu MHz') and cpu is not None:
             value = line.split(':', 1)[-1].strip()
-            if value.endswith('.000'):
-                value = value[:-4]
+            value = float(value)
+            value = int(round(value))
             value = '%s MHz' % value
 
             info = []
