@@ -125,20 +125,6 @@ def _result_sort_key(result):
     return (result.median(), result.name or '')
 
 
-def _common_metadata(metadatas):
-    if not metadatas:
-        return dict()
-
-    metadata = dict(metadatas[0])
-    for run_metadata in metadatas[1:]:
-        for key in set(metadata) - set(run_metadata):
-            del metadata[key]
-        for key in set(run_metadata) & set(metadata):
-            if run_metadata[key] != metadata[key]:
-                del metadata[key]
-    return metadata
-
-
 def _display_common_metadata(metadatas):
     if len(metadatas) < 2:
         return
@@ -147,7 +133,7 @@ def _display_common_metadata(metadatas):
         # don't display name as metadata, it's already displayed
         metadata.pop('name', None)
 
-    common_metadata = _common_metadata(metadatas)
+    common_metadata = perf._common_metadata(metadatas)
     if common_metadata:
         perf.text_runner._display_metadata(common_metadata,
                                            header='Common metadata:')
@@ -283,8 +269,7 @@ def cmd_compare(args):
 def cmd_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
-    perf_metadata.collect_run_metadata(metadata)
-    perf_metadata.collect_benchmark_metadata(metadata)
+    perf_metadata._collect_metadata(metadata)
     perf.text_runner._display_metadata(metadata)
 
 
@@ -426,10 +411,10 @@ def cmd_show(args):
     data = load_benchmarks(args)
 
     if args.metadata:
-        metadatas = [dict(item.benchmark.metadata) for item in data]
+        metadatas = [item.benchmark.get_metadata() for item in data]
         _display_common_metadata(metadatas)
 
-    if args.hist or args.stats or args.dump:
+    if args.hist or args.stats or args.dump or args.metadata:
         use_title = True
     else:
         use_title = False

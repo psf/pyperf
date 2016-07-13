@@ -48,7 +48,8 @@ def _bench_suite_from_subprocess(args):
     return perf.BenchmarkSuite.loads(stdout)
 
 
-def _display_run(bench, run_index, run, raw=False, verbose=0, file=None):
+def _display_run(bench, run_index, run,
+                 common_metadata=None, raw=False, verbose=0, file=None):
     loops = run.loops * run.inner_loops
     raw_samples = run._get_raw_samples(warmups=True)
     if not raw:
@@ -97,8 +98,12 @@ def _display_run(bench, run_index, run, raw=False, verbose=0, file=None):
         if run.inner_loops:
             print(prefix + 'inner_loops: %s'
                   % perf._format_number(run.inner_loops))
-        for key in sorted(run.metadata):
-            value = run.metadata[key]
+
+        metadata = run.get_metadata()
+        for key in sorted(metadata):
+            if common_metadata and key in common_metadata:
+                continue
+            value = metadata[key]
             print('%s%s: %s' % (prefix, key, value))
 
 
@@ -110,8 +115,20 @@ def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
         verbose = 1
     else:
         verbose = 0
+
+    if verbose > 0:
+        common_metadata = bench._get_common_metadata()
+        print("Common metadata:", file=file)
+        for key in sorted(common_metadata):
+            value = common_metadata[key]
+            print('  %s: %s' % (key, value), file=file)
+        print(file=file)
+    else:
+        common_metadata = None
+
     for run_index, run in enumerate(runs, 1):
         _display_run(bench, run_index, run,
+                     common_metadata=common_metadata,
                      verbose=verbose, raw=raw, file=file)
 
 
@@ -320,7 +337,7 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
         print(file=file)
 
     if metadata:
-        _display_metadata(bench.metadata, file=file)
+        _display_metadata(bench.get_metadata(), file=file)
         print(file=file)
 
     if hist:
@@ -616,8 +633,7 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
-        bench = perf.Benchmark(name=self.name)
-        bench.metadata.update(self.metadata)
+        bench = perf.Benchmark(name=self.name, metadata=self.metadata)
 
         try:
             if self.args.worker or self.args.debug_single_sample:
@@ -779,9 +795,10 @@ class TextRunner:
         duration = perf.monotonic_clock() - start_time
         mins, secs = divmod(duration, 60)
         if mins:
-            bench.metadata['duration'] = '%.0f min %.0f sec' % (mins, secs)
+            duration = '%.0f min %.0f sec' % (mins, secs)
         else:
-            bench.metadata['duration'] = '%.1f sec' % secs
+            duration = '%.1f sec' % secs
+        bench.add_metadata('duration', duration)
 
         self._display_result(bench)
         return bench

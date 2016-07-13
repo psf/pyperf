@@ -8,64 +8,62 @@ from perf.tests import mock
 from perf.tests import unittest
 
 
-MANDATORY_RUN_METADATA = ['date']
-
 MANDATORY_METADATA = [
+    'date',
     'python_implementation', 'python_version',
     'platform']
 if sys.platform.startswith('linux'):
     MANDATORY_METADATA.extend(('aslr', 'cpu_model_name'))
 
 
-def check_all_metadata(testcase, metadata, mandatory=MANDATORY_METADATA):
-    for key in mandatory:
-        testcase.assertIn(key, metadata)
-
-    for key, value in metadata.items():
-        # test key
-        testcase.assertIsInstance(key, str)
-        testcase.assertRegex(key, '^[a-z][a-z0-9_]+$')
-
-        # test value
-        testcase.assertIsInstance(value, str)
-        testcase.assertNotEqual(value, '')
-        testcase.assertEqual(value.strip(), value)
-        testcase.assertNotIn('\n', value)
-
-
 class TestMetadata(unittest.TestCase):
-    def test_run_metadata(self):
+    def test_collect_metadata(self):
         metadata = {}
-        perf.metadata.collect_run_metadata(metadata)
-        check_all_metadata(self, metadata, MANDATORY_RUN_METADATA)
+        perf.metadata._collect_metadata(metadata)
 
-    def test_benchmark_metadata(self):
-        metadata = {}
-        perf.metadata.collect_benchmark_metadata(metadata)
-        check_all_metadata(self, metadata)
+        for key in MANDATORY_METADATA:
+            self.assertIn(key, metadata)
 
-    def check_metadata(self, key, value):
-        metadata = {}
-        perf.metadata.collect_benchmark_metadata(metadata)
-        self.assertEqual(metadata[key], value)
+        for key, value in metadata.items():
+            # test key
+            self.assertIsInstance(key, str)
+            self.assertRegex(key, '^[a-z][a-z0-9_]+$')
 
-    def check_missing_metadata(self, key):
-        metadata = {}
-        perf.metadata.collect_benchmark_metadata(metadata)
-        self.assertNotIn(key, metadata)
+            # test value
+            self.assertIsInstance(value, str)
+            self.assertNotEqual(value, '')
+            self.assertEqual(value.strip(), value)
+            self.assertNotIn('\n', value)
 
-    def test_cpu_affinity_isolated(self):
+    def test_collect_cpu_metadata(self):
+        freq = '123 MHz'
+        cpus = range(4)
+        # FIXME: use ExitStack
         with mock.patch('perf.metadata._get_logical_cpu_count',
                         return_value=4):
-            with mock.patch('perf.metadata._get_cpu_affinity',
-                            return_value={2, 3}):
-                with mock.patch('perf._get_isolated_cpus',
-                                return_value={1, 2, 3}):
-                    self.check_metadata('cpu_affinity', '2-3 (isolated)')
+            with mock.patch('perf.metadata._get_cpu_frequencies',
+                            return_value={cpu: freq for cpu in cpus}):
+                with mock.patch('perf.metadata._get_cpu_temperatures',
+                                return_value=None):
+                    with mock.patch('perf.metadata._get_cpu_affinity',
+                                    return_value={2, 3}):
+                        with mock.patch('perf._get_isolated_cpus',
+                                        return_value={1, 2, 3}):
+                            metadata = {}
+                            perf.metadata._collect_cpu_metadata(metadata)
+                            # the main purpose of the whole test is this check
+                            self.assertEqual(metadata['cpu_affinity'],
+                                             '2-3 (isolated)')
 
-            with mock.patch('perf.metadata._get_cpu_affinity',
-                            return_value={0, 1, 2, 3}):
-                self.check_missing_metadata('cpu_affinity')
+                            self.assertEqual(metadata['cpu_freq'],
+                                             '2-3:123 MHz')
+
+
+                    with mock.patch('perf.metadata._get_cpu_affinity',
+                                    return_value={0, 1, 2, 3}):
+                        metadata = {}
+                        perf.metadata._collect_cpu_metadata(metadata)
+                        self.assertNotIn('cpu_affinity', metadata)
 
 
 class CpuFunctionsTests(unittest.TestCase):

@@ -113,7 +113,7 @@ Clocks
 Run
 ---
 
-.. class:: perf.Run(warmups: int, raw_samples: List[float], loops: int=1, inner_loops: int=1, metadata: dict=None)
+.. class:: perf.Run(warmups: int, raw_samples: List[float], loops: int=1, inner_loops: int=1, metadata: dict=None, collect_metadata=True)
 
    A benchmark run result is made of multiple samples.
 
@@ -131,9 +131,7 @@ Run
    Raw samples are total for all loops. The :meth:`get_samples` method divides
    raw samples by :meth:`get_loops`.
 
-   By default, metadata is collected using
-   :meth:`perf.metadata.collect_run_metadata`, pass a dictionary to *metadata*
-   to not collect metadata.
+   Set *collect_metadata* to false to not collect system metadata.
 
 
 Benchmark
@@ -143,11 +141,11 @@ Benchmark
 
    A benchmark is made of multiple :class:`Run` objects.
 
-   By default, metadata is collected using
-   :meth:`perf.metadata.collect_benchmark_metadata`, pass a dictionary to
-   *metadata* to not collect metadata.
-
    Methods:
+
+   .. method:: add_metadata(key: str, value: int|str)
+
+      Add a metadata.
 
    .. method:: add_run(run: Run)
 
@@ -170,6 +168,11 @@ Benchmark
 
       Get the total number of loops per sample (``int``):
       :attr:`loops` x :attr:`inner_loops`.
+
+   .. method:: get_metadata()
+
+      Get benchmark metadata. Return also metadata which are common to all
+      runs.
 
    .. method:: get_nrun()
 
@@ -380,21 +383,3 @@ TextRunner
 
       For example, ``python3 -m perf.timeit`` sets program_args to
       ``(sys.executable, '-m', 'perf.timeit')``.
-
-
-Metadata functions
-------------------
-
-See :ref:`Metadata <metadata>`.
-
-.. function:: perf.metadata.collect_run_metadata(metadata)
-
-   Collect benchmark run result metadata: date.
-
-   *metadata* must be a dictionary.
-
-.. function:: perf.metadata.collect_benchmark_metadata(metadata)
-
-   Collect benchmark result metadata: date, python, system, etc..
-
-   *metadata* must be a dictionary.

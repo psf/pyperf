@@ -7,7 +7,6 @@ import textwrap
 
 import perf
 from perf import tests
-from perf.tests.test_metadata import check_all_metadata
 from perf.tests import unittest
 
 
@@ -21,7 +20,7 @@ class BaseTestCase(object):
         name = kw.pop('name', 'bench')
         bench = perf.Benchmark(name=name, **kw)
         for sample in samples:
-            bench.add_run(perf.Run(0, [sample]))
+            bench.add_run(perf.Run(0, [sample], collect_metadata=False))
         return bench
 
     def run_command(self, *args, **kwargs):
@@ -313,16 +312,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_metadata(self):
         stdout = self.run_command('metadata')
-        lines = stdout.splitlines()
 
-        self.assertEqual(lines[0], 'Metadata:')
-        metadata = {}
-        for line in lines[1:]:
-            self.assertTrue(line.startswith('- '), repr(line))
-            key, value = line[2:].split(': ', 1)
-            metadata[key] = value
-
-        check_all_metadata(self, metadata)
+        #self.assertRegex(stdout,
+        #                 r'^Metadata:\n(- [^:]+: .*\n)+^')
+        self.assertRegex(stdout,
+                         r'^Metadata:\n(- [^:]+: .*\n)+$')
 
 
 class TestConvert(BaseTestCase, unittest.TestCase):

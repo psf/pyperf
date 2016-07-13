@@ -2,6 +2,7 @@ from __future__ import print_function
 import json
 import math
 import operator
+import re
 import sys
 
 import six
@@ -89,11 +90,39 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
+def _cleanup_metadata(value):
+    if value is None:
+        return None
+
+    if isinstance(value, int):
+        value = str(value)
+    elif not isinstance(value, six.string_types):
+        raise TypeError("invalid metadata type: %r" % (value,))
+
+    # replace '   ' with ' '
+    value = re.sub(r'\s+', ' ', value)
+    return value.strip()
+
+
+def _common_metadata(metadatas):
+    if not metadatas:
+        return dict()
+
+    metadata = dict(metadatas[0])
+    for run_metadata in metadatas[1:]:
+        for key in set(metadata) - set(run_metadata):
+            del metadata[key]
+        for key in set(run_metadata) & set(metadata):
+            if run_metadata[key] != metadata[key]:
+                del metadata[key]
+    return metadata
+
+
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
     def __init__(self, warmups, raw_samples, loops=1, inner_loops=1,
-                 metadata=None):
+                 metadata=None, collect_metadata=True):
         if (not raw_samples
            or any(not(isinstance(sample, float) and sample > 0)
                   for sample in raw_samples)):
@@ -119,12 +148,32 @@ class Run(object):
             raise ValueError("inner_loops must be an int >= 1")
         self._inner_loops = inner_loops
 
-        if metadata is not None:
-            self.metadata = dict(metadata)
-        else:
+        if collect_metadata:
             from perf import metadata as perf_metadata
-            self.metadata = {}
-            perf_metadata.collect_run_metadata(self.metadata)
+
+            metadata2 = {}
+            perf_metadata._collect_metadata(metadata2)
+
+            if metadata is not None:
+                metadata2.update(metadata)
+                metadata = metadata2
+            else:
+                metadata = metadata2
+
+        if metadata:
+            self._metadata = {}
+            for key, value in metadata.items():
+                value = _cleanup_metadata(value)
+                if value:
+                    self._metadata[key] = value
+        else:
+            self._metadata = None
+
+    def get_metadata(self):
+        if self._metadata:
+            return dict(self._metadata)
+        else:
+            return {}
 
     @property
     def loops(self):
@@ -153,7 +202,7 @@ class Run(object):
 
         return Run(0, self._get_raw_samples())
 
-    def _as_json(self):
+    def _as_json(self, common_metadata):
         data = {'raw_samples': self._raw_samples}
         if self._warmups:
             data['warmups'] = self._warmups
@@ -161,21 +210,36 @@ class Run(object):
             data['loops'] = self._loops
         if self._inner_loops != 1:
             data['inner_loops'] = self._inner_loops
-        if self.metadata:
-            data['metadata'] = self.metadata
+
+        if self._metadata:
+            if common_metadata:
+                metadata = {key:value
+                            for key, value in self._metadata.items()
+                            if key not in common_metadata}
+            else:
+                metadata = self._metadata
+
+            if metadata:
+                data['metadata'] = metadata
         return data
 
     @classmethod
-    def _json_load(cls, run_data):
+    def _json_load(cls, run_data, common_metadata):
         warmups = run_data.get('warmups', 0)
         raw_samples = run_data['raw_samples']
         loops = run_data.get('loops', 1)
         inner_loops = run_data.get('inner_loops', 1)
         metadata = run_data.get('metadata', None)
+        if common_metadata:
+            metadata2 = dict(common_metadata)
+            if metadata:
+                metadata2.update(metadata)
+            metadata = metadata2
         return cls(warmups, raw_samples,
                    loops=loops,
                    inner_loops=inner_loops,
-                   metadata=metadata)
+                   metadata=metadata,
+                   collect_metadata=False)
 
 
 class Benchmark(object):
@@ -183,25 +247,25 @@ class Benchmark(object):
         # list of Run objects
         self._runs = []
 
-        self._clear_stats_cache()
+        self._clear_runs_cache()
 
         self._format_samples = _format_timedeltas
 
         # Metadata dictionary: key=>value, keys and values should be non-empty
         # strings
-        if metadata is not None:
-            self.metadata = dict(metadata)
-        else:
-            from perf import metadata as perf_metadata
-            self.metadata = {}
-            perf_metadata.collect_benchmark_metadata(self.metadata)
+        if metadata is None:
+            metadata = {}
+
+        self._metadata = {}
+        for key, value in metadata.items():
+            self.add_metadata(key, value)
 
         # use name property setter
         self.name = name
 
     @property
     def name(self):
-        return self.metadata.get('name', None)
+        return self._metadata.get('name', None)
 
     @name.setter
     def name(self, value):
@@ -212,7 +276,28 @@ class Benchmark(object):
         if not value:
             raise TypeError("name must be a non-empty string")
 
-        self.metadata['name'] = value
+        self._metadata['name'] = value
+
+    def _get_common_metadata(self):
+        if self._common_metadata is None:
+            run_metadatas = [run.get_metadata() for run in self._runs]
+            self._common_metadata = _common_metadata(run_metadatas)
+        return dict(self._common_metadata)
+
+    def get_metadata(self):
+        metadata = self._get_common_metadata()
+        metadata.update(self._metadata)
+        return metadata
+
+    def add_metadata(self, key, value):
+        value = _cleanup_metadata(value)
+        if not value:
+            raise ValueError("metadata value is empty")
+
+        if key in self._metadata:
+            raise ValueError("metata %r is already set to %r"
+                             % (key, self._metadata[key]))
+        self._metadata[key] = value
 
     def _get_run_property(self, get_property):
         # FIXME: move this check to Benchmark constructor?
@@ -238,9 +323,10 @@ class Benchmark(object):
     def get_inner_loops(self):
         return self._get_run_property(lambda run: run.inner_loops)
 
-    def _clear_stats_cache(self):
+    def _clear_runs_cache(self):
         self._samples = None
         self._median = None
+        self._common_metadata = None
 
     def median(self):
         if self._median is None:
@@ -252,7 +338,7 @@ class Benchmark(object):
     def add_run(self, run):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
-        self._clear_stats_cache()
+        self._clear_runs_cache()
         self._runs.append(run)
 
     def _format_sample(self, sample):
@@ -312,10 +398,11 @@ class Benchmark(object):
         name = metadata.get('name')
 
         if version == _JSON_VERSION:
+            common_metadata = data.get('common_metadata', None)
             bench = cls(name, metadata=metadata)
 
             for run_data in data['runs']:
-                run = Run._json_load(run_data)
+                run = Run._json_load(run_data, common_metadata)
                 bench.add_run(run)
         else:
             # version 1 and 2
@@ -341,9 +428,13 @@ class Benchmark(object):
         return bench
 
     def _as_json(self):
-        data = {'runs': [run._as_json() for run in self._runs]}
-        if self.metadata:
-            data['metadata'] = self.metadata
+        data = {}
+        common_metadata = self._get_common_metadata()
+        if common_metadata:
+            data['common_metadata'] = common_metadata
+        data['runs'] = [run._as_json(common_metadata) for run in self._runs]
+        if self._metadata:
+            data['metadata'] = self._metadata
         return data
 
     @staticmethod
@@ -411,9 +502,8 @@ class Benchmark(object):
         # FIXME: make sure that the benchmark is compatible
         # FIXME: compare metadata except date?
 
-        if benchmark.metadata != self.metadata:
-            print(benchmark.metadata)
-            print(self.metadata)
+        if benchmark._metadata != self._metadata:
+            # FIXME: at least, display keys for which values are different
             raise ValueError("incompatible benchmark: metadata are different")
 
         # FIXME: move this check to benchmark constructor
@@ -451,7 +541,7 @@ class BenchmarkSuite(dict):
         self._add_benchmark(benchmark.name, benchmark)
 
     @classmethod
-    def _load_json(cls, filename, bench_file):
+    def _json_load(cls, filename, bench_file):
         version = bench_file.get('version')
         if version in (_JSON_VERSION, 2):
             benchmarks_json = bench_file['benchmarks']
@@ -495,12 +585,12 @@ class BenchmarkSuite(dict):
             filename = getattr(file, 'name', None)
             bench_file = json.load(file)
 
-        return cls._load_json(filename, bench_file)
+        return cls._json_load(filename, bench_file)
 
     @classmethod
     def loads(cls, string):
         bench_file = json.loads(string)
-        return cls._load_json(None, bench_file)
+        return cls._json_load(None, bench_file)
 
     def dump(self, file, compact=True):
         benchmarks_json = {}

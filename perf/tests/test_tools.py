@@ -176,7 +176,9 @@ class BenchmarkTests(unittest.TestCase):
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
         bench = perf.Benchmark("mybench", metadata={'key': 'value'})
         for raw_sample in raw_samples:
-            run = perf.Run(1, [3.0, raw_sample], loops=20, inner_loops=3)
+            run = perf.Run(1, [3.0, raw_sample],
+                           loops=20, inner_loops=3,
+                           collect_metadata=False)
             bench.add_run(run)
 
         self.assertEqual(bench.get_samples(), samples)
@@ -195,7 +197,8 @@ class BenchmarkTests(unittest.TestCase):
         self.check_runs(bench, raw_samples, 3.0)
 
         self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
+        self.assertEqual(bench.get_metadata(),
+                         {'key': 'value', 'name': 'mybench'})
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
@@ -206,7 +209,8 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark("mybench",
                                metadata={'key': 'value'})
         for sample in samples:
-            run = perf.Run(1, [3.0, sample], loops=100, inner_loops=20)
+            run = perf.Run(1, [3.0, sample], loops=100, inner_loops=20,
+                           collect_metadata=False)
             bench.add_run(run)
 
         with tempfile.NamedTemporaryFile() as tmp:
@@ -214,7 +218,8 @@ class BenchmarkTests(unittest.TestCase):
             bench = perf.Benchmark.load(tmp.name)
 
         self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.metadata, {'key': 'value', 'name': 'mybench'})
+        self.assertEqual(bench.get_metadata(),
+                         {'key': 'value', 'name': 'mybench'})
 
         for run in bench.get_runs():
             self.assertEqual(run.loops, 100)

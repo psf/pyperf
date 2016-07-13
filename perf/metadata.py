@@ -58,6 +58,20 @@ def _collect_python_metadata(metadata):
             unicode_impl = 'UCS-4'
         metadata['python_unicode'] = unicode_impl
 
+    # timer
+    if (hasattr(time, 'perf_counter')
+       and perf.perf_counter == time.perf_counter):
+
+        info = time.get_clock_info('perf_counter')
+        metadata['timer'] = ('%s, resolution: %s'
+                             % (info.implementation,
+                                perf._format_timedelta(info.resolution)))
+    elif perf.perf_counter == time.clock:
+        metadata['timer'] = 'time.clock()'
+    elif perf.perf_counter == time.time:
+        metadata['timer'] = 'time.time()'
+
+
 
 def _open_text(path):
     if six.PY3:
@@ -156,22 +170,10 @@ def _collect_system_metadata(metadata):
     if sys.platform.startswith('linux'):
         _collect_linux_metadata(metadata)
 
-    # CPU count
-    cpu_count = _get_logical_cpu_count()
-    if cpu_count:
-        metadata['cpu_count'] = str(cpu_count)
-
-    # CPU affinity
-    cpus = _get_cpu_affinity()
-    if cpus is not None and cpu_count:
-        if set(cpus) == set(range(cpu_count)):
-            cpus = None
-    if cpus:
-        isolated = perf._get_isolated_cpus()
-        text = perf._format_cpu_list(cpus)
-        if isolated and set(cpus) <= set(isolated):
-            text = '%s (isolated)' % text
-        metadata['cpu_affinity'] = text
+    # on linux, load average over 1 minute
+    for line in _read_proc("loadavg"):
+        loadavg = line.split()[0]
+        metadata['load_avg_1min'] = loadavg
 
     # Hostname
     hostname = socket.gethostname()
@@ -258,16 +260,25 @@ def _get_cpu_temperatures():
     return ', '.join(cpu_temp)
 
 
-def collect_run_metadata(metadata):
-    date = datetime.datetime.now().isoformat()
-    # fixme: move date to a regular run attribute with type datetime.datetime?
-    metadata['date'] = date.split('.', 1)[0]
+def _collect_cpu_metadata(metadata):
+    # CPU count
+    cpu_count = _get_logical_cpu_count()
+    if cpu_count:
+        metadata['cpu_count'] = str(cpu_count)
 
-    # on linux, load average over 1 minute
-    for line in _read_proc("loadavg"):
-        loadavg = line.split()[0]
-        metadata['load_avg_1min'] = loadavg
+    # CPU affinity
+    cpus = _get_cpu_affinity()
+    if cpus is not None and cpu_count:
+        if set(cpus) == set(range(cpu_count)):
+            cpus = None
+    if cpus:
+        isolated = perf._get_isolated_cpus()
+        text = perf._format_cpu_list(cpus)
+        if isolated and set(cpus) <= set(isolated):
+            text = '%s (isolated)' % text
+        metadata['cpu_affinity'] = text
 
+    # cpu_freq
     cpus = _get_cpu_affinity()
     if not cpus:
         cpus = _get_logical_cpu_count()
@@ -296,20 +307,13 @@ def collect_run_metadata(metadata):
         metadata['cpu_temp'] = cpu_temp
 
 
-def collect_benchmark_metadata(metadata):
+def _collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
-    if (hasattr(time, 'perf_counter')
-       and perf.perf_counter == time.perf_counter):
-
-        info = time.get_clock_info('perf_counter')
-        metadata['timer'] = ('%s, resolution: %s'
-                             % (info.implementation,
-                                perf._format_timedelta(info.resolution)))
-    elif perf.perf_counter == time.clock:
-        metadata['timer'] = 'time.clock()'
-    elif perf.perf_counter == time.time:
-        metadata['timer'] = 'time.time()'
+    date = datetime.datetime.now().isoformat()
+    # fixme: move date to a regular run attribute with type datetime.datetime?
+    metadata['date'] = date.split('.', 1)[0]
 
     _collect_python_metadata(metadata)
     _collect_system_metadata(metadata)
+    _collect_cpu_metadata(metadata)
