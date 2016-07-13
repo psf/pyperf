@@ -95,7 +95,8 @@ def _display_run(bench, run_index, run, raw=False, verbose=0, file=None):
         prefix = '  '
         print(prefix + 'loops: %s' % perf._format_number(run.loops))
         if run.inner_loops:
-            print(prefix + 'inner_loops: %s' % perf._format_number(run.inner_loops))
+            print(prefix + 'inner_loops: %s' % perf._format_number(
+                run.inner_loops))
         for key in sorted(run.metadata):
             value = run.metadata[key]
             print('%s%s: %s' % (prefix, key, value))
@@ -110,7 +111,8 @@ def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
     else:
         verbose = 0
     for run_index, run in enumerate(runs, 1):
-        _display_run(bench, run_index, run, verbose=verbose, raw=raw, file=file)
+        _display_run(
+            bench, run_index, run, verbose=verbose, raw=raw, file=file)
 
 
 def _display_stats(bench, file=None):
@@ -131,7 +133,9 @@ def _display_stats(bench, file=None):
 
     # Number of samples
     print("Number of runs: %s" % perf._format_number(nrun), file=file)
-    print("Total number of samples: %s" % perf._format_number(nsample), file=file)
+    print(
+        "Total number of samples: %s" % perf._format_number(nsample),
+        file=file)
 
     nsample_per_run = bench._get_nsample_per_run()
     text = perf._format_number(nsample_per_run)
@@ -183,8 +187,9 @@ def _display_stats(bench, file=None):
     mean = statistics.mean(samples)
     if len(samples) > 2:
         stdev = statistics.stdev(samples, mean)
-        print("Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
-              file=file)
+        print(
+            "Mean +- std dev: %s +- %s" % bench._format_samples((mean, stdev)),
+            file=file)
     else:
         print("Mean: %s" % bench._format_sample(mean), file=file)
 
@@ -229,7 +234,8 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
 
         samples = bench.get_samples()
 
-        counter = collections.Counter([sample_bucket(value) for value in samples])
+        counter = collections.Counter(
+            [sample_bucket(value) for value in samples])
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
@@ -273,14 +279,14 @@ def _warn_if_bench_unstable(bench):
         if k > 0.10:
             if k > 0.20:
                 warn("ERROR: the benchmark is very unstable, the standard "
-                      "deviation is very high (stdev/median: %.0f%%)!"
-                      % (k * 100))
+                     "deviation is very high (stdev/median: %.0f%%)!"
+                     % (k * 100))
             else:
                 warn("WARNING: the benchmark seems unstable, the standard "
-                      "deviation is high (stdev/median: %.0f%%)"
-                      % (k * 100))
+                     "deviation is high (stdev/median: %.0f%%)"
+                     % (k * 100))
             warn("Try to rerun the benchmark with more runs, samples "
-                  "and/or loops")
+                 "and/or loops")
             warn("")
 
     # Check that the shortest sample took at least 1 ms
@@ -382,60 +388,76 @@ class TextRunner:
         else:
             parser = argparse.ArgumentParser()
         parser.description = 'Benchmark'
-        parser.add_argument('--rigorous', action="store_true",
-                            help='Spend longer running tests to get more '
-                                 'accurate results')
-        parser.add_argument('--fast', action="store_true",
-                            help='Get rough answers quickly')
-        parser.add_argument("--debug-single-sample", action="store_true",
-                            help="Debug mode, only collect a single sample")
-        parser.add_argument('-p', '--processes', type=strictly_positive, default=processes,
-                            help='number of processes used to run benchmarks (default: %s)'
-                                 % processes)
-        parser.add_argument('-n', '--samples', dest="samples",
-                            type=strictly_positive, default=samples,
-                            help='number of samples per process (default: %s)'
-                                 % samples)
-        parser.add_argument('-w', '--warmups', dest="warmups",
-                            type=positive_or_nul, default=warmups,
-                            help='number of skipped samples per run used to warmup the benchmark (default: %s)'
-                                 % warmups)
-        parser.add_argument('-l', '--loops', type=positive_or_nul, default=loops,
-                            help='number of loops per sample, 0 means '
-                                 'automatic calibration (default: %s)'
-                                 % loops)
-        parser.add_argument('-v', '--verbose', action="store_true",
-                            help='enable verbose mode')
-        parser.add_argument('-q', '--quiet', action="store_true",
-                            help='enable quiet mode')
-        parser.add_argument('--stdout', action='store_true',
-                            help='write results encoded to JSON into stdout')
-        parser.add_argument('--json', metavar='FILENAME',
-                            help='write results encoded to JSON into FILENAME')
-        parser.add_argument('--json-append', metavar='FILENAME',
-                            help='append results encoded to JSON into FILENAME')
-        parser.add_argument('--min-time', type=float, default=min_time,
-                            help='Minimum duration in seconds of a single '
-                                 'sample, used to calibrate the number of '
-                                 'loops (default: %s)'
-                                 % perf._format_timedelta(min_time))
-        parser.add_argument('--worker', action="store_true",
-                            help='worker process, run the benchmark')
-        parser.add_argument('-d', '--dump', action="store_true",
-                            help='display benchmark run results')
-        parser.add_argument('--metadata', '-m', action="store_true",
-                            help='show metadata')
-        parser.add_argument('--hist', '-g', action="store_true",
-                            help='display an histogram of samples')
-        parser.add_argument('--stats', '-t', action="store_true",
-                            help='display statistics (min, max, ...)')
-        parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
-                            help="Specify CPU affinity for worker processes. "
-                                 "This way, benchmarks can be forced to run "
-                                 "on a given set of CPUs to minimize run to "
-                                 "run variation. By default, worker processes "
-                                 "are pinned to isolate CPUs if isolated CPUs "
-                                 "are found.")
+        parser.add_argument(
+            '--rigorous', action="store_true",
+            help='Spend longer running tests to get more accurate results')
+        parser.add_argument(
+            '--fast', action="store_true", help='Get rough answers quickly')
+        parser.add_argument(
+            "--debug-single-sample", action="store_true",
+            help="Debug mode, only collect a single sample")
+        parser.add_argument(
+            '-p', '--processes', type=strictly_positive, default=processes,
+            help='number of processes used to run benchmarks (default: %s)'
+            % processes)
+        parser.add_argument(
+            '-n', '--samples', dest="samples",
+            type=strictly_positive, default=samples,
+            help='number of samples per process (default: %s)'
+            % samples)
+        parser.add_argument(
+            '-w', '--warmups', dest="warmups",
+            type=positive_or_nul, default=warmups,
+            help='number of skipped samples per run used to warmup the'
+                 ' benchmark (default: %s)'
+            % warmups)
+        parser.add_argument(
+            '-l', '--loops', type=positive_or_nul, default=loops,
+            help='number of loops per sample, 0 means '
+                 'automatic calibration (default: %s)'
+            % loops)
+        parser.add_argument(
+            '-v', '--verbose', action="store_true", help='enable verbose mode')
+        parser.add_argument(
+            '-q', '--quiet', action="store_true", help='enable quiet mode')
+        parser.add_argument(
+            '--stdout', action='store_true',
+            help='write results encoded to JSON into stdout')
+        parser.add_argument(
+            '--json', metavar='FILENAME',
+            help='write results encoded to JSON into FILENAME')
+        parser.add_argument(
+            '--json-append', metavar='FILENAME',
+            help='append results encoded to JSON into FILENAME')
+        parser.add_argument(
+            '--min-time', type=float, default=min_time,
+            help='Minimum duration in seconds of a single '
+                 'sample, used to calibrate the number of '
+                 'loops (default: %s)'
+            % perf._format_timedelta(min_time))
+        parser.add_argument(
+            '--worker', action="store_true",
+            help='worker process, run the benchmark')
+        parser.add_argument(
+            '-d', '--dump', action="store_true",
+            help='display benchmark run results')
+        parser.add_argument(
+            '--metadata', '-m', action="store_true",
+            help='show metadata')
+        parser.add_argument(
+            '--hist', '-g', action="store_true",
+            help='display an histogram of samples')
+        parser.add_argument(
+            '--stats', '-t', action="store_true",
+            help='display statistics (min, max, ...)')
+        parser.add_argument(
+            "--affinity", metavar="CPU_LIST", default=None,
+            help='Specify CPU affinity for worker processes. '
+                 'This way, benchmarks can be forced to run '
+                 'on a given set of CPUs to minimize run to '
+                 'run variation. By default, worker processes '
+                 'are pinned to isolate CPUs if isolated CPUs '
+                 'are found.')
         self.argparser = parser
 
     def _calibrate_sample_func(self, sample_func):
@@ -477,7 +499,7 @@ class TextRunner:
         nsamples = self.argparser.get_default('samples')
         if self.args.rigorous:
             self.args.processes = nprocess * 2
-            #self.args.samples = nsamples * 5 // 3
+            # self.args.samples = nsamples * 5 // 3
         elif self.args.fast:
             # use at least 3 processes to benchmark 3 different (randomized)
             # hash functions

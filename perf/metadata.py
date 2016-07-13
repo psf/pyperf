@@ -260,8 +260,8 @@ def collect_benchmark_metadata(metadata):
 
     # perf.perf_counter() timer
     if (hasattr(time, 'get_clock_info')
-       # check if it wasn't replaced
-       and perf.perf_counter == time.perf_counter):
+            # check if it wasn't replaced
+            and perf.perf_counter == time.perf_counter):
         info = time.get_clock_info('perf_counter')
         metadata['timer'] = ('%s, resolution: %s'
                              % (info.implementation,

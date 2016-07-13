@@ -13,8 +13,6 @@ try:
 except ImportError:
     import unittest   # noqa
 
-import perf
-
 
 @contextlib.contextmanager
 def _capture_stream(name):

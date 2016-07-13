@@ -95,9 +95,10 @@ class Run(object):
     def __init__(self, warmups, raw_samples, loops=1, inner_loops=1,
                  metadata=None):
         if (not raw_samples
-        or any(not(isinstance(sample, float) and sample > 0)
-               for sample in raw_samples)):
-            raise ValueError("raw_samples must be a non-empty list of float > 0")
+            or any(not(isinstance(sample, float) and sample > 0)
+                   for sample in raw_samples)):
+            raise ValueError(
+                "raw_samples must be a non-empty list of float > 0")
 
         if not(isinstance(warmups, int) and warmups >= 0):
             raise ValueError("warmups must be an int >= 0")
@@ -332,7 +333,9 @@ class Benchmark(object):
             bench = cls(name, metadata=metadata)
 
             for raw_samples in data['runs']:
-                run = Run(warmups, raw_samples, loops, inner_loops, metadata=run_metadata)
+                run = Run(
+                    warmups, raw_samples, loops, inner_loops,
+                    metadata=run_metadata)
                 bench.add_run(run)
         return bench
 
@@ -603,7 +606,8 @@ def _tscore(sample1, sample2):
         raise ValueError("different number of samples")
     error = _pooled_sample_variance(sample1, sample2) / len(sample1)
     # FIXME: use median?
-    return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(error * 2)
+    return (statistics.mean(sample1) - statistics.mean(sample2)) / math.sqrt(
+        error * 2)
 
 
 def is_significant(sample1, sample2):

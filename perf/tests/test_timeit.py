@@ -2,10 +2,7 @@ import os.path
 import re
 import subprocess
 import sys
-import tempfile
 import unittest
-
-import six
 
 import perf
 from perf import tests
@@ -14,11 +11,11 @@ from perf import tests
 SLEEP = 'time.sleep(1e-3)'
 # The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
 # systems. The unit test doesn't test the system but more the output format.
-MIN_SAMPLE = 0.9 # ms
-MAX_SAMPLE = 50.0 # ms
+MIN_SAMPLE = 0.9  # ms
+MAX_SAMPLE = 50.0  # ms
 MIN_MEAN = MIN_SAMPLE
 MAX_MEAN = MAX_SAMPLE / 2
-MAX_STDEV = 10.0 # ms
+MAX_STDEV = 10.0  # ms
 
 
 class TestTimeit(unittest.TestCase):
@@ -39,18 +36,20 @@ class TestTimeit(unittest.TestCase):
         stdout = proc.communicate()[0]
         self.assertEqual(proc.returncode, 0)
 
-        match = re.match(r'^'
-                         r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
-                         r'Warmup 1: ([0-9.]+) ms\n'
-                         r'Raw sample 1: ([0-9.]+) ms\n'
-                         r'Raw sample 2: ([0-9.]+) ms\n'
-                         r'\n'
-                         r'Metadata:\n'
-                         r'(- .*\n)+'
-                         r'\n'
-                         r'Median \+- std dev: (?P<median>[0-9.]+) ms \+- (?P<stdev>[0-9.]+) ms\n'
-                         r'$',
-                         stdout)
+        match = re.match(
+            r'^'
+            r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
+            r'Warmup 1: ([0-9.]+) ms\n'
+            r'Raw sample 1: ([0-9.]+) ms\n'
+            r'Raw sample 2: ([0-9.]+) ms\n'
+            r'\n'
+            r'Metadata:\n'
+            r'(- .*\n)+'
+            r'\n'
+            r'Median \+- std dev: (?P<median>[0-9.]+) ms \+-'
+            ' (?P<stdev>[0-9.]+) ms\n'
+            r'$',
+            stdout)
         self.assertIsNotNone(match, repr(stdout))
 
         values = [float(match.group(i)) for i in range(1, 4)]
