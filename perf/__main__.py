@@ -63,7 +63,7 @@ def create_parser():
     # timeit
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
     timeit_runner = perf.text_runner.TextRunner(name='timeit', _argparser=cmd)
-    cmd.add_argument('-s', '--setup', action='append', default=(),
+    cmd.add_argument('-s', '--setup', action='append', default=[],
                      help='setup statements')
     cmd.add_argument('stmt', nargs='+', help='executed statements')
 
