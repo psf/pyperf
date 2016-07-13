@@ -205,6 +205,14 @@ def _get_cpu_frequencies(cpus):
             if scaling_driver:
                 info.append('driver:%s' % scaling_driver)
 
+            if scaling_driver == 'intel_pstate':
+                path = os.path.join(sys_path, "intel_pstate/no_turbo")
+                no_turbo = _first_line(path, default='')
+                if no_turbo == '1':
+                    info.append('intel_pstate:no turbo')
+                elif no_turbo == '0':
+                    info.append('intel_pstate:turbo')
+
             path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_governor" % cpu)
             scaling_governor = _first_line(path, default='')
             if scaling_governor:
@@ -265,8 +273,10 @@ def _collect_cpu_metadata(metadata):
     if cpu_count:
         metadata['cpu_count'] = str(cpu_count)
 
+    cpu_affinity = _get_cpu_affinity()
+
     # CPU affinity
-    cpus = _get_cpu_affinity()
+    cpus = cpu_affinity
     if cpus is not None and cpu_count:
         if set(cpus) == set(range(cpu_count)):
             cpus = None
@@ -278,7 +288,7 @@ def _collect_cpu_metadata(metadata):
         metadata['cpu_affinity'] = text
 
     # cpu_freq
-    cpus = _get_cpu_affinity()
+    cpus = cpu_affinity
     if not cpus:
         cpus = _get_logical_cpu_count()
     if cpus:
