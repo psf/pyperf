@@ -70,7 +70,7 @@ class TestMetadata(unittest.TestCase):
 
 class CpuFunctionsTests(unittest.TestCase):
     def test_cpu_frequencies(self):
-        data = textwrap.dedent("""
+        cpuinfo = textwrap.dedent("""
             processor	: 0
             vendor_id	: GenuineIntel
             cpu family	: 6
@@ -86,22 +86,23 @@ class CpuFunctionsTests(unittest.TestCase):
             clflush size	: 64
         """)
 
-        def boost(cpu):
-            return (cpu == 0)
+        def mock_open(filename, *args, **kw):
+            if filename == '/proc/cpuinfo':
+                data = cpuinfo
+            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
+                data = 'DRIVER\n'
+            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
+                data = 'GOVERNOR\n'
+            elif filename.startswith('/sys/devices/system/cpu/cpu2'):
+                raise IOError
+            else:
+                raise ValueError("unexpect open: %r" % filename)
+            return six.StringIO(data)
 
-        with mock.patch('perf.metadata.open', create=True,
-                        return_value=six.StringIO(data)):
-            with mock.patch('perf.metadata._get_cpu_boost', side_effect=boost):
-                cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
-        self.assertEqual(cpu_freq, {0: '1600 MHz (boost)',
+        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
+            cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
+        self.assertEqual(cpu_freq, {0: '1600 MHz (driver:DRIVER, governor:GOVERNOR)',
                                     2: '2901 MHz'})
-
-    def test_cpu_boost(self):
-        with mock.patch('perf.metadata.subprocess.Popen') as mock_popen:
-            mock_popen.return_value.communicate.side_effect = OSError
-            boost = perf.metadata._get_cpu_boost(0)
-
-        self.assertIsNone(boost)
 
 
 if __name__ == "__main__":

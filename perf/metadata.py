@@ -66,6 +66,19 @@ def _open_text(path):
         return open(path)
 
 
+def _first_line(path, default=None):
+    try:
+        fp = _open_text(path)
+        try:
+            line = fp.readline()
+        finally:
+            fp.close()
+        return line.rstrip()
+    except IOError:
+        if default is not None:
+            return default
+        raise
+
 def _read_proc(path):
     path = os.path.join('/proc', path)
     try:
@@ -165,46 +178,9 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
-def _get_cpu_boost(cpu):
-    if not _get_cpu_boost.working:
-        return
-
-    env = dict(os.environ, LC_ALL='C')
-    args = ['cpupower', '-c', str(cpu), 'frequency-info']
-    try:
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True,
-                                env=env)
-        stdout = proc.communicate()[0]
-        if proc.returncode != 0:
-            # if the command failed once, never try it again
-            # (consider that the command is not installed or does not work)
-            _get_cpu_boost.working = False
-            return None
-    except OSError:
-        _get_cpu_boost.working = False
-        return None
-
-    boost = False
-    for line in stdout.splitlines():
-        if boost:
-            if 'Active:' in line:
-                value = line.split(':', 1)[-1].strip()
-                if value == 'no':
-                    return False
-                if value == 'yes':
-                    return True
-                raise ValueError("unable to parse: %r" % line)
-        elif 'boost state support' in line:
-            boost = True
-
-    raise ValueError("unable to parse cpupower output: %r" % stdout)
-_get_cpu_boost.working = True
-
-
 def _get_cpu_frequencies(cpus):
+    sys_path = _sys_path("devices/system/cpu")
+
     cpus = set(cpus)
     cpu_freq = {}
     cpu = None
@@ -221,21 +197,27 @@ def _get_cpu_frequencies(cpus):
                 value = value[:-4]
             value = '%s MHz' % value
 
-            boost = _get_cpu_boost(cpu)
-            if boost:
-                value += ' (boost)'
+            info = []
+
+            path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_driver" % cpu)
+            scaling_driver = _first_line(path, default='')
+            if scaling_driver:
+                info.append('driver:%s' % scaling_driver)
+
+            path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_governor" % cpu)
+            scaling_governor = _first_line(path, default='')
+            if scaling_governor:
+                info.append('governor:%s' % scaling_governor)
+
+            if info:
+                value += ' (%s)' % ', '.join(info)
 
             cpu_freq[cpu] = value
     return cpu_freq
 
 
 def _get_cpu_temperature(path, cpu_temp):
-    try:
-        fp = _open_text(os.path.join(path, 'name'))
-    except OSError:
-        return
-    with fp:
-        hwmon_name = fp.readline().rstrip()
+    hwmon_name = _first_line(os.path.join(path, 'name'), default='')
     if not hwmon_name.startswith('coretemp'):
         return
 
@@ -244,18 +226,15 @@ def _get_cpu_temperature(path, cpu_temp):
         template = os.path.join(path, "temp%s_%%s" % index)
 
         try:
-            fp = _open_text(template % 'label')
-        except OSError:
+            temp_label = _first_line(template % 'label')
+        except IOError:
             break
-        with fp:
-            temp_label = fp.readline().rstrip()
 
-        fp = _open_text(template % 'input')
-        with fp:
-            temp_input = fp.readline().rstrip()
-
+        temp_input = _first_line(template % 'input')
         temp_input = float(temp_input) / 1000
-        temp_input = "%.0f\xb0C" % temp_input
+        # FIXME: On Python 2, u"%.0f\xb0C" introduces unicode errors if the
+        # locale encoding is ASCII
+        temp_input = "%.0f C" % temp_input
 
         item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input)
         cpu_temp.append(item)
@@ -265,7 +244,11 @@ def _get_cpu_temperature(path, cpu_temp):
 
 def _get_cpu_temperatures():
     path = _sys_path("class/hwmon")
-    names = os.listdir(path)
+    try:
+        names = os.listdir(path)
+    except OSError:
+        return None
+
     cpu_temp = []
     for name in names:
         hwmon = os.path.join(path, name)
