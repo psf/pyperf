@@ -40,10 +40,7 @@ CLASSIFIERS = [
 # test_tools.py, to ensure that VERSION is the same than
 # perf.__version__.
 def main():
-    try:
-        from setuptools import setup
-    except ImportError:
-        from distutils.core import setup
+    from setuptools import setup
 
     with open('README.rst') as fp:
         long_description = fp.read().strip()
@@ -60,6 +57,9 @@ def main():
         'classifiers': CLASSIFIERS,
         'packages': ['perf', 'perf.tests'],
         'install_requires': ["statistics; python_version < '3.4'", "six"],
+        'entry_points': {
+            'console_scripts': ['pybench=perf.__main__:main']
+        }
         # Optional dependencies:
         # 'psutil'
         # ['matplotlib', 'scipy']
