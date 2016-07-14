@@ -4,6 +4,7 @@ import os
 import platform
 import re
 import socket
+import subprocess
 import sys
 import time
 
@@ -179,7 +180,66 @@ def _collect_system_metadata(metadata):
     _add(metadata, 'hostname', hostname)
 
 
-def _get_cpu_frequencies(cpus):
+def _get_cpu_boost(cpu):
+    if not _get_cpu_boost.working:
+        return
+
+    env = dict(os.environ, LC_ALL='C')
+    args = ['cpupower', '-c', str(cpu), 'frequency-info']
+    try:
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                universal_newlines=True,
+                                env=env)
+        stdout = proc.communicate()[0]
+        if proc.returncode != 0:
+            # if the command failed once, never try it again
+            # (consider that the command is not installed or does not work)
+            _get_cpu_boost.working = False
+            return None
+    except OSError:
+        _get_cpu_boost.working = False
+        return None
+
+    boost = False
+    for line in stdout.splitlines():
+        if boost:
+            if 'Supported:' in line:
+                value = line.split(':', 1)[-1].strip()
+                if value == 'no':
+                    return False
+                if value == 'yes':
+                    return True
+                raise ValueError("unable to parse: %r" % line)
+        elif 'boost state support' in line:
+            boost = True
+
+    raise ValueError("unable to parse cpupower output: %r" % stdout)
+_get_cpu_boost.working = True
+
+
+def _format_cpu_infos(infos, cpus):
+    if len(infos) == len(cpus):
+        merge = (len(set(infos[cpu] for cpu in cpus)) == 1)
+    else:
+        merge = False
+    if not merge:
+        text = []
+        for cpu in cpus:
+            info = infos[cpu]
+            text.append('%s=%s' % (cpu, info))
+        text = ', '.join(text)
+    else:
+        # compact output if all CPUs have the same info
+        cpu = list(cpus)[0]
+        info = infos[cpu]
+        cpus = perf._format_cpu_list(cpus)
+        text = '%s=%s' % (cpus, info)
+    return text
+
+
+def _collect_cpu_freq(metadata, cpus):
     sys_path = _sys_path("devices/system/cpu")
 
     cpus = set(cpus)
@@ -193,36 +253,61 @@ def _get_cpu_frequencies(cpus):
                 # skip this CPU
                 cpu = None
         elif line.startswith('cpu MHz') and cpu is not None:
-            value = line.split(':', 1)[-1].strip()
-            value = float(value)
-            value = int(round(value))
-            value = '%s MHz' % value
+            mhz = line.split(':', 1)[-1].strip()
+            mhz = float(mhz)
+            mhz = int(round(mhz))
+            cpu_freq[cpu] = '%s MHz' % mhz
 
-            info = []
+    if not cpu_freq:
+        return
 
-            path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_driver" % cpu)
-            scaling_driver = _first_line(path, default='')
-            if scaling_driver:
-                info.append('driver:%s' % scaling_driver)
+    metadata['cpu_freq'] = _format_cpu_infos(cpu_freq, cpus)
 
-            if scaling_driver == 'intel_pstate':
-                path = os.path.join(sys_path, "intel_pstate/no_turbo")
-                no_turbo = _first_line(path, default='')
-                if no_turbo == '1':
-                    info.append('intel_pstate:no turbo')
-                elif no_turbo == '0':
-                    info.append('intel_pstate:turbo')
 
-            path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_governor" % cpu)
-            scaling_governor = _first_line(path, default='')
-            if scaling_governor:
-                info.append('governor:%s' % scaling_governor)
+def _get_cpu_config(cpu):
+    sys_path = _sys_path("devices/system/cpu")
+    info = []
 
-            if info:
-                value += ' (%s)' % ', '.join(info)
+    path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_driver" % cpu)
+    scaling_driver = _first_line(path, default='')
+    if scaling_driver:
+        info.append('driver:%s' % scaling_driver)
 
-            cpu_freq[cpu] = value
-    return cpu_freq
+    if scaling_driver == 'intel_pstate':
+        path = os.path.join(sys_path, "intel_pstate/no_turbo")
+        no_turbo = _first_line(path, default='')
+        if no_turbo == '1':
+            info.append('intel_pstate:no turbo')
+        elif no_turbo == '0':
+            info.append('intel_pstate:turbo')
+    else:
+        boost = _get_cpu_boost(cpu)
+        if boost is not None:
+            if boost:
+                info.append('boost:supported')
+            else:
+                info.append('boost:not suppported')
+
+    path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_governor" % cpu)
+    scaling_governor = _first_line(path, default='')
+    if scaling_governor:
+        info.append('governor:%s' % scaling_governor)
+
+    if not info:
+        return None
+
+    return ', '.join(info)
+
+
+def _collect_cpu_config(metadata, cpus):
+    configs = {}
+    for cpu in cpus:
+        config = _get_cpu_config(cpu)
+        if config:
+            configs[cpu] = config
+    if not configs:
+        return
+    metadata['cpu_config'] = _format_cpu_infos(configs, cpus)
 
 
 def _get_cpu_temperature(path, cpu_temp):
@@ -251,7 +336,7 @@ def _get_cpu_temperature(path, cpu_temp):
         index += 1
 
 
-def _get_cpu_temperatures():
+def _get_cpu_temperatures(metadata):
     path = _sys_path("class/hwmon")
     try:
         names = os.listdir(path)
@@ -264,7 +349,26 @@ def _get_cpu_temperatures():
         _get_cpu_temperature(hwmon, cpu_temp)
     if not cpu_temp:
         return None
-    return ', '.join(cpu_temp)
+
+    metadata['cpu_temp'] = ', '.join(cpu_temp)
+
+
+def _collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
+    if not cpu_affinity:
+        return
+    if not cpu_count:
+        return
+
+    # CPU affinity
+    cpus = cpu_affinity
+    if set(cpu_affinity) == set(range(cpu_count)):
+        return
+
+    isolated = perf._get_isolated_cpus()
+    text = perf._format_cpu_list(cpu_affinity)
+    if isolated and set(cpu_affinity) <= set(isolated):
+        text = '%s (isolated)' % text
+    metadata['cpu_affinity'] = text
 
 
 def _collect_cpu_metadata(metadata):
@@ -274,46 +378,17 @@ def _collect_cpu_metadata(metadata):
         metadata['cpu_count'] = str(cpu_count)
 
     cpu_affinity = _get_cpu_affinity()
+    _collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
 
-    # CPU affinity
-    cpus = cpu_affinity
-    if cpus is not None and cpu_count:
-        if set(cpus) == set(range(cpu_count)):
-            cpus = None
-    if cpus:
-        isolated = perf._get_isolated_cpus()
-        text = perf._format_cpu_list(cpus)
-        if isolated and set(cpus) <= set(isolated):
-            text = '%s (isolated)' % text
-        metadata['cpu_affinity'] = text
+    all_cpus = cpu_affinity
+    if not all_cpus:
+        all_cpus = _get_logical_cpu_count()
 
-    # cpu_freq
-    cpus = cpu_affinity
-    if not cpus:
-        cpus = _get_logical_cpu_count()
-    if cpus:
-        cpu_freq = _get_cpu_frequencies(cpus)
-    else:
-        cpu_freq = none
-    if cpu_freq:
-        merge = (len(set(cpu_freq[cpu] for cpu in cpus)) == 1)
-        if not merge:
-            text = []
-            for cpu in cpus:
-                freq = cpu_freq[cpu]
-                text.append('%s:%s' % (cpu, freq))
-            text = ', '.join(text)
-        else:
-            # compact output if all CPUs have the same frequency
-            cpu = list(cpus)[0]
-            freq = cpu_freq[cpu]
-            cpus = perf._format_cpu_list(cpus)
-            text = '%s:%s' % (cpus, freq)
-        metadata['cpu_freq'] = text
+    if all_cpus:
+        _collect_cpu_freq(metadata, all_cpus)
+        _collect_cpu_config(metadata, all_cpus)
 
-    cpu_temp = _get_cpu_temperatures()
-    if cpu_temp:
-        metadata['cpu_temp'] = cpu_temp
+    _get_cpu_temperatures(metadata)
 
 
 def _collect_metadata(metadata):

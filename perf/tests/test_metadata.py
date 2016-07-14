@@ -35,35 +35,16 @@ class TestMetadata(unittest.TestCase):
             self.assertEqual(value.strip(), value)
             self.assertNotIn('\n', value)
 
-    def test_collect_cpu_metadata(self):
-        freq = '123 MHz'
-        cpus = range(4)
-        # FIXME: use ExitStack
-        with mock.patch('perf.metadata._get_logical_cpu_count',
-                        return_value=4):
-            with mock.patch('perf.metadata._get_cpu_frequencies',
-                            return_value={cpu: freq for cpu in cpus}):
-                with mock.patch('perf.metadata._get_cpu_temperatures',
-                                return_value=None):
-                    with mock.patch('perf.metadata._get_cpu_affinity',
-                                    return_value={2, 3}):
-                        with mock.patch('perf._get_isolated_cpus',
-                                        return_value={1, 2, 3}):
-                            metadata = {}
-                            perf.metadata._collect_cpu_metadata(metadata)
-                            # the main purpose of the whole test is this check
-                            self.assertEqual(metadata['cpu_affinity'],
-                                             '2-3 (isolated)')
+    def test_collect_cpu_affinity(self):
+        with mock.patch('perf._get_isolated_cpus', return_value={1, 2, 3}):
+            metadata = {}
+            perf.metadata._collect_cpu_affinity(metadata, {2, 3}, 4)
+            self.assertEqual(metadata['cpu_affinity'],
+                             '2-3 (isolated)')
 
-                            self.assertEqual(metadata['cpu_freq'],
-                                             '2-3:123 MHz')
-
-
-                    with mock.patch('perf.metadata._get_cpu_affinity',
-                                    return_value={0, 1, 2, 3}):
-                        metadata = {}
-                        perf.metadata._collect_cpu_metadata(metadata)
-                        self.assertNotIn('cpu_affinity', metadata)
+            metadata = {}
+            perf.metadata._collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
+            self.assertNotIn('cpu_affinity', metadata)
 
 
 class CpuFunctionsTests(unittest.TestCase):
@@ -98,9 +79,9 @@ class CpuFunctionsTests(unittest.TestCase):
             return six.StringIO(data)
 
         with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
-            cpu_freq = perf.metadata._get_cpu_frequencies([0, 2])
-        self.assertEqual(cpu_freq, {0: '1600 MHz (driver:DRIVER, governor:GOVERNOR)',
-                                    2: '2901 MHz'})
+            metadata = {}
+            cpu_freq = perf.metadata._collect_cpu_freq(metadata, [0, 2])
+            self.assertEqual(metadata['cpu_freq'], '0=1600 MHz, 2=2901 MHz')
 
 
 if __name__ == "__main__":
