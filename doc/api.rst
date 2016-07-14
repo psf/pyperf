@@ -58,7 +58,7 @@ This command requires the ``scipy`` dependency: see :ref:`Install perf
 
 Example::
 
-    $ python3 -m perf hist_scipy telco.json
+    $ pybench hist_scipy telco.json
 
 Output:
 

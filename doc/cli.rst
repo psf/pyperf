@@ -8,7 +8,7 @@ show
 
 Show benchmarks of one or multiple benchmark suites::
 
-    python3 -m perf show
+    pybench show
         [-q/--quiet]
         [-d/--dump]
         [-m/--metadata]
@@ -31,7 +31,7 @@ Show benchmarks of one or multiple benchmark suites::
 
 Example in verbose mode::
 
-    $ python3 -m perf show -v run.json
+    $ pybench show -v run.json
     Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
     Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
     (...)
@@ -41,7 +41,7 @@ Example in verbose mode::
 
 Example with metadata::
 
-    $ python3 -m perf show --metadata run.json
+    $ pybench show --metadata run.json
     Metadata:
     - duration: 59.1 sec
     - loops: 10^7
@@ -56,19 +56,19 @@ compare and compare_to
 
 Compare benchmark results::
 
-    python3 -m perf
+    pybench
         [-v/--verbose] [-m/--metadata]
         compare reference.json filename.json filename2.json [filename3.json ...]
 
 Compare benchmark results to a reference::
 
-    python3 -m perf
+    pybench
         [-v/--verbose] [-m/--metadata]
         compare_to reference.json changed.json [changed2.json ...]
 
 Example::
 
-    $ python3 -m perf compare py2.json py3.json
+    $ pybench compare py2.json py3.json
     Reference (best): py2
 
     Average: [py2] 46.3 ns +- 2.2 ns -> [py3] 56.3 ns +- 2.5 ns: 1.2x slower
@@ -81,12 +81,12 @@ stats
 
 Compute statistics on a benchmark result::
 
-    python3 -m perf stats
+    pybench stats
         file.json [file2.json ...]
 
 Example::
 
-    $ python3 -m perf stats telco.json
+    $ pybench stats telco.json
     Raw sample minimum: 97.2 ms
     Raw sample maximum: 101 ms
 
@@ -115,7 +115,7 @@ dump
 
 Display the benchmark run results::
 
-    python3 -m perf dump
+    pybench dump
         [-q/--quiet]
         [-v/--verbose]
         [--raw]
@@ -129,7 +129,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf dump telco.json
+    $ pybench dump telco.json
     Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
     Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
     Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
@@ -138,7 +138,7 @@ Example::
 
 Example in verbose mode::
 
-    $ python3 -m perf dump telco.json -v
+    $ pybench dump telco.json -v
     Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
       loops=4 inner_loops=1 date=2016-07-11T15:39:37
     Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
@@ -156,7 +156,7 @@ hist
 
 Render an histogram in text mode::
 
-    python3 -m perf hist
+    pybench hist
         [-n BINS/--bins=BINS] [--extend]
         filename.json [filename2.json ...]
 
@@ -170,7 +170,7 @@ maximum of all files to be able to easily compare them.
 
 Example::
 
-    $ python3 -m perf hist telco.json
+    $ pybench hist telco.json
     26.4 ms:  1 ##
     26.4 ms:  1 ##
     26.4 ms:  2 #####
@@ -208,7 +208,7 @@ convert
 
 Convert or modify a benchmark suite::
 
-    python3 -m perf convert
+    pybench convert
         [--include-benchmark=NAME]
         [--exclude-benchmark=NAME]
         [--include-runs=RUNS]
@@ -244,11 +244,11 @@ metadata
 
 Collect metadata::
 
-    python3 -m perf metadata
+    pybench metadata
 
 Example::
 
-    $ python3 -m perf metadata
+    $ pybench metadata
     Metadata:
     - aslr: enabled
     - cpu_count: 4
@@ -270,7 +270,7 @@ Usage
 
 ``perf timeit`` usage::
 
-    python3 -m perf timeit [options] [-s SETUP] stmt [stmt ...]
+    pybench timeit [options] [-s SETUP] stmt [stmt ...]
 
 See :ref:`TextRunner CLI <textrunner_cli>` for options.
 
@@ -283,13 +283,13 @@ Example
 
 Example::
 
-    $ python3 -m perf timeit 1+1
+    $ pybench timeit 1+1
     .........................
     Median +- std dev: 11.7 ns +- 0.1 ns
 
 Use ``-v`` to enable the verbose mode::
 
-    $ python3 -m perf timeit -v 1+1
+    $ pybench timeit -v 1+1
     calibration: 1 loop: 983 ns
     calibration: 10 loops: 1.47 us
     ...
