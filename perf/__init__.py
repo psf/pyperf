@@ -213,7 +213,7 @@ class Run(object):
 
         if self._metadata:
             if common_metadata:
-                metadata = {key:value
+                metadata = {key: value
                             for key, value in self._metadata.items()
                             if key not in common_metadata}
             else:

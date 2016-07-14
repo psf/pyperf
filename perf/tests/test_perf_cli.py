@@ -1,4 +1,3 @@
-# flake8: noqa
 import os
 import subprocess
 import sys
@@ -313,7 +312,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_metadata(self):
         stdout = self.run_command('metadata')
 
-        #self.assertRegex(stdout,
+        # self.assertRegex(stdout,
         #                 r'^Metadata:\n(- [^:]+: .*\n)+^')
         self.assertRegex(stdout,
                          r'^Metadata:\n(- [^:]+: .*\n)+$')
@@ -341,7 +340,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout,
                          tests.benchmark_as_json(bench, compact=False))
 
-    def test_indent(self):
+    def test_convert(self):
         bench = perf.Benchmark.load(TELCO)
 
         with tests.temporary_directory() as tmpdir:
