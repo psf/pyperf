@@ -466,7 +466,7 @@ class TextRunner:
     def _calibrate_sample_func(self, sample_func):
         stream = self._stream()
 
-        min_dt = self.args.min_time * 0.90
+        min_dt = self.args.min_time
         max_loops = 2 ** 32
 
         loops = 1
