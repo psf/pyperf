@@ -1,70 +1,25 @@
 Before 0.7 release
 ==================
 
-* Finish --json-append feature
 * run metadata: add duration in seconds
+* decide if metadata is collected by default or not
+* rename --json to --output/-o
+* rename --json-append to --append
+* Run: store normalize samples and store loops/inner_loops as run metadata?
+* run: convert loops/inner_loops to metadata
 
 
 TODO
 ====
 
-* run: convert loops/inner_loops to metadata
-* decide if metadata is collected by default or not
-* test cpu_temp on computer with multiple physical cores
-* perf CLI: handle FileNotFoundError (need unit test)
-* Run: store normalize samples and store loops/inner_loops as run metadata?
-* Move more benchmark metadata as run metadata.
-  Need to develop something to move equal run metadata to benchmark metadata
-  in add_run()
-* Detect Intel Turbo Mode: kernel-tools, kernel: tools/power/cpupower::
-
-        static const char *cpu_vendor_table[X86_VENDOR_MAX] = {
-                "Unknown", "GenuineIntel", "AuthenticAMD",
-        };
-
-        /* parse /proc/cpuinfo */
-        if (!strncmp(value, "vendor_id", 9)) {
-                for (x = 1; x < X86_VENDOR_MAX; x++) {
-                        if (strstr(value, cpu_vendor_table[x]))
-                                cpu_info->vendor = x;
-                }
-        }
-
-        cpuid_level = cpuid_eax(0);
-        if (cpu_info->vendor == X86_VENDOR_INTEL) {
-            if (cpuid_level >= 6 &&
-                    (cpuid_eax(6) & (1 << 1)))
-                cpu_info->caps |= CPUPOWER_CAP_INTEL_IDA;
-        }
-
-        if (cpupower_cpu_info.caps & CPUPOWER_CAP_INTEL_IDA)
-            *support = *active = 1;
-
-
-
-* collect more metadata in each worker *but* add_run() and
-  _add_benchmark_runs() should limit data duplication by storing common
-  metadata in the benchmark metadata
-* cleanup --verbose in CLIs
-* really avoid removing existing file: open(name, 'x')
-* support 2^15 and/or 2**15 syntax for --loops
-* support --fast + -p1
-* configurable clock? see pybench
-* metadata: sys.getcheckinterval? GC enabled? Python3: GIL milliseconds
-* fix hist if benchmark only contains one sample
-* reimplement metdata for compare?
-* convert: save operations in metadata?
-* Fix hist command for a benchmark suite with multiple benchmarks: don't
-  use the same scale for unrelated benchmarks
 * "smart" JSON append:
 
   - add new runs to an existing JSON file. rerun exactly the same benchmark
     using --json-append
   - use metadata as the key to check if the benchmark is the same?
     ignore date? ignore CPU affinity?
-
-* "merge" two JSON files: cumulate benchmarks, add runs if two files have the
-  same benchmark, etc.
+  - "merge" two JSON files: cumulate benchmarks, add runs if two files have the
+    same benchmark, etc.
 
 
 Blocker for perf 1.0 (stable API)
@@ -78,6 +33,16 @@ Blocker for perf 1.0 (stable API)
 Low priority
 ============
 
+* add metadata: sys.getcheckinterval, py3: GIL milliseconds? GC enabled?
+* really avoid removing existing file: open(name, 'x')
+* test cpu_temp on computer with multiple physical cores
+* convert: save the operations made on data in metadata?
+* configurable clock? see pybench
+* reimplement metdata for compare?
+* fix hist if benchmark only contains one sample
+* support 2^15 and/or 2**15 syntax for --loops
+* support --fast + -p1
+* perf CLI: handle FileNotFoundError (need unit test)
 * convert --remove-outliers: more serious algorithm? or configurable percent?
 * support multiple units, or remove _format_samples.
   Track memory usage in CPython benchmark suite?
@@ -86,6 +51,7 @@ Low priority
 
   * Call QueryPerformanceFrequency() on Windows using ctypes?
 
+* cleanup --verbose in CLIs
 
 
 Ideas
@@ -94,9 +60,3 @@ Ideas
 * limit the number of processes when a single sample takes 5 seconds
 * rework parameters (processes, samples, loops) depending on max time,
   not hardcoded parameters
-* Metrics measured before and/or after each run:
-
-  * CPU frequency, system load
-  * only store min and max?
-  * use them to detect unstable benchmark
-
