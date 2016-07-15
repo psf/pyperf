@@ -4,8 +4,9 @@ Changelog
 Version 0.7
 -----------
 
+* Add a new ``pybench`` program, similar to ``python3 -m perf``
+* Add a new ``dump`` command
 * ``convert`` command: add ``--indent`` and ``--remove-warmups`` options
-* add ``dump`` command
 
 Version 0.6 (2016-07-06)
 ------------------------
