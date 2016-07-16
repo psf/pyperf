@@ -71,7 +71,7 @@ manually duplicated to limit the cost of Python loops. See the
 
 Example of unstable benchmark because the number of loops is too low::
 
-    $ python3 -m perf.timeit --loops=10 pass
+    $ pybench timeit --loops=10 pass
     .........................
     WARNING: the benchmark seems unstable, the standard deviation is high (11%)
     Try to rerun the benchmark with more runs, samples and/or loops
