@@ -1,6 +1,7 @@
 Before 0.7 release
 ==================
 
+* metadata: set CPU affinity
 * run metadata: add duration in seconds
 * decide if metadata is collected by default or not
 * rename --json to --output/-o
