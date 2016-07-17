@@ -205,6 +205,10 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
     return (all_significant, lines)
 
 
+def benchmark_name(benchmark):
+    # FIXME: better fallback value
+    return benchmark.name or '<no name>'
+
 def compare_suites(benchmarks, sort_benchmarks, args):
     grouped_by_name = benchmarks.group_by_name()
     # FIXME: remove if and use the iterator?
@@ -250,8 +254,10 @@ def compare_suites(benchmarks, sort_benchmarks, args):
         for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
+            # FIXME: better fallback value
+            hidden_names = [benchmark_name(bench) for bench in hidden]
             print("Ignored benchmarks (%s) of %s: %s"
-                  % (len(hidden), suite.filename, ', '.join(sorted(hidden))))
+                  % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
 
 def cmd_compare(args):
@@ -347,9 +353,17 @@ class Benchmarks:
                 yield DataItem(benchmark, title, is_last)
 
     def _group_by_name_names(self):
-        names = set(self.suites[0])
+        def suite_to_name_set(suite):
+            result = set()
+            for  bench in suite:
+                name = bench.name
+                if name:
+                    result.add(name)
+            return result
+
+        names = suite_to_name_set(self.suites[0])
         for suite in self.suites[1:]:
-            names &= set(suite)
+            names &= suite_to_name_set(suite)
         return names
 
     def group_by_name(self):
@@ -365,7 +379,7 @@ class Benchmarks:
         for index, name in enumerate(names):
             benchmarks = []
             for suite in self.suites:
-                benchmark = suite[name]
+                benchmark = suite.get_benchmark(name)
                 filename = format_filename(suite.filename)
                 if show_name:
                     if not show_filename:
@@ -386,7 +400,10 @@ class Benchmarks:
     def group_by_name_ignored(self):
         names = self._group_by_name_names()
         for suite in self.suites:
-            ignored = set(suite) - names
+            ignored = []
+            for bench in suite:
+                if bench.name not in names:
+                    ignored.append(bench)
             if ignored:
                 yield (suite, ignored)
 
@@ -507,7 +524,8 @@ def cmd_hist(args):
             print()
 
     for suite, ignored in ignored:
-        for name in ignored:
+        for bench in ignored:
+            name = benchmark_name(bench)
             print("[ %s ]" % name)
             perf.text_runner._display_histogram([name], bins=args.bins,
                                                 extend=args.extend)
@@ -521,6 +539,14 @@ def fatal_missing_benchmark(suite, name):
     sys.exit(1)
 
 
+def fatal_no_more_benchmark(suite):
+    print("ERROR: After modification, the benchmark suite %s has no "
+          "more benchmark!"
+          % suite.filename,
+          file=sys.stderr)
+    sys.exit(1)
+
+
 def cmd_convert(args):
     suite = perf.BenchmarkSuite.load(args.input_filename)
 
@@ -530,21 +556,18 @@ def cmd_convert(args):
             suite._add_benchmark_runs(bench)
 
     if args.include_benchmark:
-        remove = set(suite)
         name = args.include_benchmark
         try:
-            remove.remove(name)
+            suite._convert_include_benchmark(name)
         except KeyError:
             fatal_missing_benchmark(suite, name)
-        for name in remove:
-            del suite[name]
 
     elif args.exclude_benchmark:
         name = args.exclude_benchmark
         try:
-            del suite[name]
-        except KeyError:
-            fatal_missing_benchmark(suite, name)
+            suite._convert_exclude_benchmark(name)
+        except ValueError:
+            fatal_no_more_benchmark(suite)
 
     if args.include_runs or args.exclude_runs:
         if args.include_runs:
@@ -558,7 +581,7 @@ def cmd_convert(args):
         except ValueError as exc:
             print("ERROR: %s (runs: %r)" % (exc, runs), file=sys.stderr)
             sys.exit(1)
-        for benchmark in suite.values():
+        for benchmark in suite:
             try:
                 benchmark._filter_runs(include, only_runs)
             except ValueError:
@@ -567,11 +590,11 @@ def cmd_convert(args):
                 sys.exit(1)
 
     if args.remove_warmups:
-        for benchmark in suite.values():
+        for benchmark in suite:
             benchmark._remove_warmups()
 
     if args.remove_outliers:
-        for benchmark in suite.values():
+        for benchmark in suite:
             try:
                 benchmark._remove_outliers()
             except ValueError:

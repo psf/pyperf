@@ -386,6 +386,7 @@ class Benchmark(object):
         # FIXME: cpu_affinity?
         # FIXME: cpu_config?
 
+        # don't check the first run
         if self._runs:
             metadata = self._get_common_metadata()
             run_metata = run.get_metadata()
@@ -543,30 +544,52 @@ class Benchmark(object):
             self.add_run(run)
 
 
-class BenchmarkSuite(dict):
+class BenchmarkSuite(object):
     def __init__(self, filename=None):
-        super(BenchmarkSuite, self).__init__()
         self.filename = filename
+        self._benchmarks = []
+
+    def __iter__(self):
+        return iter(self._benchmarks)
 
     def _add_benchmark_runs(self, benchmark):
         try:
-            existing = self[benchmark.name]
+            existing = self.get_benchmark(benchmark.name)
         except KeyError:
             self.add_benchmark(benchmark)
             return
 
         existing._add_benchmark_runs(benchmark)
 
-    def get_benchmarks(self):
-        return sorted(self.values(), key=operator.attrgetter('name'))
+    def get_benchmark(self, name):
+        if not name:
+            raise ValueError("name is empty")
+        for bench in self._benchmarks:
+            if bench.name == name:
+                return bench
+        raise KeyError("there is no benchmark called %r" % name)
 
-    def _add_benchmark(self, name, benchmark):
-        if name in self:
-            raise ValueError("duplicate benchmark name: %r" % name)
-        self[name] = benchmark
+    def get_benchmarks(self):
+        return sorted(self._benchmarks, key=lambda bench: bench.name or '')
+
+    def __len__(self):
+        return len(self._benchmarks)
 
     def add_benchmark(self, benchmark):
-        self._add_benchmark(benchmark.name, benchmark)
+        if benchmark in self._benchmarks:
+            raise ValueError("benchmark already part of the suite")
+
+        name = benchmark.name
+        if name is not None:
+            try:
+                self.get_benchmark(name)
+            except KeyError:
+                pass
+            else:
+                raise ValueError("the suite has already a benchmark called %r"
+                                 % name)
+
+        self._benchmarks.append(benchmark)
 
     @classmethod
     def _json_load(cls, filename, bench_file):
@@ -577,9 +600,9 @@ class BenchmarkSuite(dict):
             raise ValueError("file format version %r not supported" % version)
 
         suite = cls(filename)
-        for name, bench_data in benchmarks_json.items():
+        for bench_data in benchmarks_json:
             benchmark = Benchmark._json_load(bench_data)
-            suite._add_benchmark(name, benchmark)
+            suite.add_benchmark(benchmark)
 
         if not suite:
             raise ValueError("the file doesn't contain any benchmark")
@@ -613,10 +636,8 @@ class BenchmarkSuite(dict):
         return cls._json_load(None, bench_file)
 
     def dump(self, file, compact=True):
-        benchmarks_json = {}
-        for name, benchmark in self.items():
-            benchmarks_json[name] = benchmark._as_json()
-        data = {'version': _JSON_VERSION, 'benchmarks': benchmarks_json}
+        benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
+        data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
 
         def dump(data, fp, compact):
             if compact:
@@ -636,6 +657,24 @@ class BenchmarkSuite(dict):
         else:
             # file is a file object
             dump(data, file, compact)
+
+    def _convert_include_benchmark(self, name):
+        benchmarks = []
+        for bench in self:
+            if bench.name == name:
+                benchmarks.append(bench)
+        if not benchmarks:
+            raise KeyError("benchmark %r not found" % name)
+        self._benchmarks = benchmarks
+
+    def _convert_exclude_benchmark(self, name):
+        benchmarks = []
+        for bench in self:
+            if bench.name != name:
+                benchmarks.append(bench)
+        if not benchmarks:
+            raise ValueError("empty suite")
+        self._benchmarks = benchmarks
 
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a

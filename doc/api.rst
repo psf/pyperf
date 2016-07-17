@@ -256,9 +256,6 @@ BenchmarkSuite
 
    A benchmark suite is made of :class:`perf.Benchmark` objects.
 
-   The class inherits from the ``dict`` type and so has the same methods than a
-   regular Python dictionary.
-
    .. method:: add_benchmark(benchmark)
 
       Add a :class:`perf.Benchmark` object.

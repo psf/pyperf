@@ -389,9 +389,9 @@ class TestBenchmarkSuite(unittest.TestCase):
         self.assertIsNone(suite.filename)
         self.assertEqual(len(suite), 2)
         self.assertEqual(suite.get_benchmarks(), [go, telco])
-        self.assertEqual(suite['go'], go)
+        self.assertEqual(suite.get_benchmark('go'), go)
         with self.assertRaises(KeyError):
-            suite['non_existent']
+            suite.get_benchmark('non_existent')
 
     def test_json(self):
         suite = perf.BenchmarkSuite()
@@ -424,7 +424,8 @@ class TestBenchmarkSuite(unittest.TestCase):
         bench2.add_run(perf.Run(0, samples2))
         suite._add_benchmark_runs(bench2)
 
-        self.assertEqual(suite['bench'].get_samples(), samples + samples2)
+        bench = suite.get_benchmark('bench')
+        self.assertEqual(bench.get_samples(), samples + samples2)
 
 
 class MiscTests(unittest.TestCase):
