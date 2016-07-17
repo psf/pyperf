@@ -1,8 +1,6 @@
 Before 0.7 release
 ==================
 
-* metadata: set CPU affinity
-* run metadata: add duration in seconds
 * decide if metadata is collected by default or not
 * rename --json to --output/-o
 * rename --json-append to --append
@@ -13,6 +11,7 @@ Before 0.7 release
 TODO
 ====
 
+* metadata: set CPU affinity
 * "smart" JSON append:
 
   - add new runs to an existing JSON file. rerun exactly the same benchmark

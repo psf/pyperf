@@ -589,6 +589,7 @@ class TextRunner:
     def _worker(self, bench, sample_func):
         stream = self._stream()
         loops = self.args.loops
+        start_time = perf.monotonic_clock()
 
         raw_samples = []
         for is_warmup, index in self._range():
@@ -615,17 +616,24 @@ class TextRunner:
         if self.args.verbose:
             print(file=stream)
 
+        duration = perf.monotonic_clock() - start_time
+        mins, secs = divmod(duration, 60)
+        if mins:
+            duration = '%.0f min %.0f sec' % (mins, secs)
+        else:
+            duration = '%.1f sec' % secs
+        metadata = {'duration': duration}
+
         run = perf.Run(self.args.warmups, raw_samples,
                        loops=loops,
-                       inner_loops=self.inner_loops)
+                       inner_loops=self.inner_loops,
+                       metadata=metadata)
         bench.add_run(run)
         self._display_result(bench, check_unstable=False)
 
         return bench
 
     def _main(self, sample_func):
-        start_time = perf.monotonic_clock()
-
         self.parse_args()
 
         self._cpu_affinity()
@@ -639,7 +647,7 @@ class TextRunner:
             if self.args.worker or self.args.debug_single_sample:
                 return self._worker(bench, sample_func)
             else:
-                return self._spawn_workers(bench, start_time)
+                return self._spawn_workers(bench)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
@@ -764,7 +772,7 @@ class TextRunner:
         if args.json:
             bench.dump(args.json)
 
-    def _spawn_workers(self, bench, start_time):
+    def _spawn_workers(self, bench):
         verbose = self.args.verbose
         quiet = self.args.quiet
         stream = self._stream()
@@ -791,14 +799,6 @@ class TextRunner:
 
         if not quiet:
             print(file=stream)
-
-        duration = perf.monotonic_clock() - start_time
-        mins, secs = divmod(duration, 60)
-        if mins:
-            duration = '%.0f min %.0f sec' % (mins, secs)
-        else:
-            duration = '%.1f sec' % secs
-        bench.add_metadata('duration', duration)
 
         self._display_result(bench)
         return bench
