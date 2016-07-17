@@ -295,15 +295,6 @@ class Run(object):
             if metadata:
                 metadata2.update(metadata)
             metadata = metadata2
-        # FIXME: remove it? only for backward compatibility with
-        # development version 0.7
-        if loops is not None or inner_loops is not None:
-            if metadata is None:
-                metadata = {}
-            if loops is not None:
-                metadata['loops'] = loops
-            if inner_loops is not None:
-                metadata['inner_loops'] = inner_loops
         return cls(warmups, raw_samples,
                    metadata=metadata,
                    collect_metadata=False)
@@ -459,42 +450,16 @@ class Benchmark(object):
             return 'Median: %s' % text
 
     @classmethod
-    def _json_load(cls, data, version):
-        if version in (1, 2):
-            metadata = data['metadata']
-            name = metadata['name']
-        else:
-            name = data['name']
+    def _json_load(cls, data):
+        name = data['name']
+        common_metadata = data.get('common_metadata', None)
+        bench = cls(name)
 
-        if version == _JSON_VERSION:
-            common_metadata = data.get('common_metadata', None)
-            bench = cls(name)
+        for run_data in data['runs']:
+            run = Run._json_load(run_data, common_metadata)
+            bench.add_run(run)
 
-            for run_data in data['runs']:
-                run = Run._json_load(run_data, common_metadata)
-                bench.add_run(run)
-
-            # FIXME: optim: save common_metadata into self._common_metadata
-        else:
-            # version 1 and 2
-            warmups = data.get('warmups', 0)
-            loops = data.get('loops', 1)
-            inner_loops = data.get('inner_loops', 1)
-            date = metadata.pop('date', None)
-            if data:
-                metadata['date'] = date
-            if not inner_loops:
-                inner_loops = 1
-
-            bench = cls(name)
-
-            for raw_samples in data['runs']:
-                run = Run(warmups, raw_samples,
-                          loops=loops,
-                          inner_loops=inner_loops,
-                          metadata=metadata,
-                          collect_metadata=False)
-                bench.add_run(run)
+        # FIXME: optim: save common_metadata into self._common_metadata
         return bench
 
     def _as_json(self):
@@ -604,22 +569,14 @@ class BenchmarkSuite(dict):
     @classmethod
     def _json_load(cls, filename, bench_file):
         version = bench_file.get('version')
-        if version in (_JSON_VERSION, 2):
+        if version == _JSON_VERSION:
             benchmarks_json = bench_file['benchmarks']
-        elif version == 1:
-            # Backward compatibility with perf 0.5
-            bench_data = bench_file['benchmark']
-            # name must be non-empty
-            name = bench_data['name'] or "benchmark"
-            if 'name' not in bench_data['metadata']:
-                bench_data['metadata']['name'] = name
-            benchmarks_json = {name: bench_data}
         else:
             raise ValueError("file format version %r not supported" % version)
 
         suite = cls(filename)
         for name, bench_data in benchmarks_json.items():
-            benchmark = Benchmark._json_load(bench_data, version)
+            benchmark = Benchmark._json_load(bench_data)
             suite._add_benchmark(name, benchmark)
 
         if not suite:
