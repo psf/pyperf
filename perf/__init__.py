@@ -119,6 +119,53 @@ def _common_metadata(metadatas):
     return metadata
 
 
+def _metadata_formatter(value):
+    if not isinstance(value, six.string_types):
+        return str(value)
+
+    return value
+
+
+def _get_metadata_formatter(name):
+    if name in ('loops', 'inner_loops'):
+        return _format_number
+    return _metadata_formatter
+
+
+class Metadata(object):
+    def __init__(self, name, value, formatter=None):
+        self._name = name
+        self._value = value
+        if formatter is None:
+            formatter = _get_metadata_formatter(name)
+        self._formatter = formatter
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def value(self):
+        return self._value
+
+    def __str__(self):
+        return self._formatter(self._value)
+
+    def __eq__(self, other):
+        if not isinstance(other, Metadata):
+            return False
+        return (self._name == other._name and self._value == other._value)
+
+    if six.PY2:
+        def __ne__(self, other):
+            # negate __eq__()
+            return not(self == other)
+
+    def __repr__(self):
+        return ('<perf.Metadata name=%r value=%r>'
+                % (self._name, self._value))
+
+
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
@@ -302,7 +349,8 @@ class Benchmark(object):
     def get_metadata(self):
         metadata = self._get_common_metadata()
         metadata.update(self._metadata)
-        return metadata
+        return {name: Metadata(name, value)
+                for name, value in metadata.items()}
 
     def add_metadata(self, key, value):
         value = _cleanup_metadata(value)

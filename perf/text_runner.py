@@ -94,11 +94,6 @@ def _display_run(bench, run_index, run,
 
     if verbose > 0:
         prefix = '  '
-        print(prefix + 'loops: %s' % perf._format_number(run.loops))
-        if run.inner_loops:
-            print(prefix + 'inner_loops: %s'
-                  % perf._format_number(run.inner_loops))
-
         metadata = run.get_metadata()
         for key in sorted(metadata):
             if common_metadata and key in common_metadata:

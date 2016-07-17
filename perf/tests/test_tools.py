@@ -171,6 +171,14 @@ class BenchmarkTests(unittest.TestCase):
         self.assertRaises(TypeError, bench.add_run, [1.0])
         bench.add_run(perf.Run(0, [1.0]))
 
+    def get_metadata(self, bench):
+        metadata = bench.get_metadata()
+        result = {}
+        for name, obj in metadata.items():
+            self.assertEqual(obj.name, name)
+            result[obj.name] = obj.value
+        return result
+
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
@@ -197,9 +205,11 @@ class BenchmarkTests(unittest.TestCase):
         self.check_runs(bench, raw_samples, 3.0)
 
         self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.get_metadata(),
-                         {'key': 'value', 'name': 'mybench',
-                          'loops': 20, 'inner_loops': 3})
+        self.assertEqual(self.get_metadata(bench),
+                         {'key': 'value',
+                          'name': 'mybench',
+                          'loops': 20,
+                          'inner_loops': 3})
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
@@ -223,7 +233,7 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(run.inner_loops, 20)
 
         self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.get_metadata(),
+        self.assertEqual(self.get_metadata(bench),
                          {'key': 'value', 'name': 'mybench',
                           'loops': 100, 'inner_loops': 20})
 
