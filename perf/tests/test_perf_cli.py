@@ -309,6 +309,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               hostname: selma
               inner_loops: 1
               loops: 4
+              name: telco
               perf_version: 0.7
               platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
               python_executable: /usr/bin/python3

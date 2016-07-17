@@ -112,7 +112,7 @@ def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
         verbose = 0
 
     if verbose > 0:
-        common_metadata = bench._get_common_metadata()
+        common_metadata = bench.get_metadata()
         print("Metadata:", file=file)
         for key in sorted(common_metadata):
             value = common_metadata[key]
