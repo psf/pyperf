@@ -182,10 +182,11 @@ class BenchmarkTests(unittest.TestCase):
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
-        bench = perf.Benchmark("mybench", metadata={'key': 'value'})
+        bench = perf.Benchmark("mybench")
         for raw_sample in raw_samples:
             run = perf.Run(1, [3.0, raw_sample],
                            loops=20, inner_loops=3,
+                           metadata={'key': 'value'},
                            collect_metadata=False)
             bench.add_run(run)
 
@@ -217,10 +218,11 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_json(self):
         samples = (1.0, 1.5, 2.0)
-        bench = perf.Benchmark("mybench",
-                               metadata={'key': 'value'})
+        bench = perf.Benchmark("mybench")
         for sample in samples:
-            run = perf.Run(1, [3.0, sample], loops=100, inner_loops=20,
+            run = perf.Run(1, [3.0, sample],
+                           loops=100, inner_loops=20,
+                           metadata={'key': 'value'},
                            collect_metadata=False)
             bench.add_run(run)
 

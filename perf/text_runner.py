@@ -617,6 +617,7 @@ class TextRunner:
             duration = '%.0f min %.0f sec' % (mins, secs)
         else:
             duration = '%.1f sec' % secs
+        metadata = dict(self.metadata)
         metadata = {'duration': duration}
 
         run = perf.Run(self.args.warmups, raw_samples,
@@ -636,7 +637,7 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
-        bench = perf.Benchmark(name=self.name, metadata=self.metadata)
+        bench = perf.Benchmark(name=self.name)
 
         try:
             if self.args.worker or self.args.debug_single_sample:
