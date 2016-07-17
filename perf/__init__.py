@@ -376,23 +376,29 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
-        keys = ('aslr', 'cpu_model_name', 'cpu_count', 'hostname',
-                'inner_loops' 'inner_loops', 'platform',
-                'python_executable', 'python_implementation', 'python_version')
+        keys = ('aslr',
+                'cpu_count',
+                'cpu_model_name',
+                'hostname',
+                'inner_loops',
+                'name',
+                'platform',
+                'python_executable',
+                'python_implementation',
+                'python_version')
         # FIXME: check loops?
         # FIXME: cpu_affinity?
         # FIXME: cpu_config?
-        # FIXME: name?
 
         if self._runs:
-            metadata = self.get_metadata()
+            metadata = self._get_common_metadata()
             run_metata = run.get_metadata()
             for key in keys:
                 value = metadata.get(key, None)
                 run_value = run_metata.get(key, None)
                 if run_value != value:
                     raise ValueError("incompatible benchmark, metadata %s is "
-                                     "different: current=%r, run=%r"
+                                     "different: current=%s, run=%s"
                                      % (key, value, run_value))
 
         self._clear_runs_cache()

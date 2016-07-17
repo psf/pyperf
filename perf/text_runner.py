@@ -618,7 +618,7 @@ class TextRunner:
         else:
             duration = '%.1f sec' % secs
         metadata = dict(self.metadata)
-        metadata = {'duration': duration}
+        metadata = {'duration': duration, 'name': self.name}
 
         run = perf.Run(self.args.warmups, raw_samples,
                        loops=loops,

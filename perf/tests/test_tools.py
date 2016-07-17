@@ -168,8 +168,26 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_add_run(self):
         bench = perf.Benchmark('bench')
+
+        # expect Run, not list
         self.assertRaises(TypeError, bench.add_run, [1.0])
-        bench.add_run(perf.Run(0, [1.0]))
+
+        metadata = {'name': 'bench', 'hostname': 'toto'}
+        bench.add_run(perf.Run(0, [1.0], metadata=metadata))
+
+        # incompatible: name is different
+        metadata = {'name': 'bench2', 'hostname': 'toto'}
+        with self.assertRaises(ValueError):
+            bench.add_run(perf.Run(0, [1.0], metadata=metadata))
+
+        # incompatible: hostname is different
+        metadata = {'name': 'bench', 'hostname': 'homer'}
+        with self.assertRaises(ValueError):
+            bench.add_run(perf.Run(0, [1.0], metadata=metadata))
+
+        # compatible (same metadata)
+        metadata = {'name': 'bench', 'hostname': 'toto'}
+        bench.add_run(perf.Run(0, [2.0], metadata=metadata))
 
     def get_metadata(self, bench):
         metadata = bench.get_metadata()
