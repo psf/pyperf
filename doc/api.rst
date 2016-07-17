@@ -383,3 +383,14 @@ TextRunner
 
       For example, ``python3 -m perf.timeit`` sets program_args to
       ``(sys.executable, '-m', 'perf.timeit')``.
+
+
+Functions
+---------
+
+.. function:: add_runs(filename, result)
+
+   Append a Benchmark or BenchmarkSuite to an existing benchmark suite file,
+   or create a new file.
+
+   If the file already exists, adds runs to existing benchmarks.

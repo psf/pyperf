@@ -742,13 +742,7 @@ class TextRunner:
 
         stream.flush()
         if args.append:
-            filename = args.append
-            if os.path.exists(filename):
-                suite = perf.BenchmarkSuite.load(filename)
-            else:
-                suite = perf.BenchmarkSuite()
-            suite._add_benchmark_runs(bench)
-            suite.dump(filename)
+            perf.add_runs(args.append, bench)
 
         if args.stdout:
             try:

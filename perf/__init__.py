@@ -384,13 +384,27 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
-        # FIXME: compare metadata to make sure that benchmarks are compatible
-        # FIXME: make sure that the benchmark is compatible
-        # FIXME: compare metadata except date?
+        keys = ('aslr', 'cpu_model_name', 'cpu_count', 'hostname',
+                'inner_loops' 'inner_loops', 'platform',
+                'python_executable', 'python_implementation', 'python_version')
+        # FIXME: check loops?
+        # FIXME: cpu_affinity?
+        # FIXME: cpu_config?
+        # FIXME: name?
 
-        # if benchmark._metadata != self._metadata:
-        #     # FIXME: at least, display keys for which values are different
-        #     raise ValueError("incompatible benchmark: metadata are different")
+        if self._runs:
+            metadata = self.get_metadata()
+            run_metata = run.get_metadata()
+            for key in keys:
+                if key in metadata:
+                    value = metadata[key].value
+                else:
+                    value = None
+                run_value = run_metata.get(key, None)
+                if run_value != value:
+                    raise ValueError("incompatible benchmark, metadata %s is "
+                                     "different: current=%r, run=%r"
+                                     % (key, value, run_value))
 
         self._clear_runs_cache()
         self._runs.append(run)
@@ -851,3 +865,23 @@ def _get_isolated_cpus():
         return
 
     return _parse_cpu_list(isolated)
+
+
+def add_runs(filename, result):
+    if isinstance(result, BenchmarkSuite):
+        benchmarks = result.get_benchmarks()
+    elif isinstance(result, Benchmark):
+        benchmarks = (result,)
+    else:
+        raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
+                        % type(result).__name__)
+
+    if os.path.exists(filename):
+        suite = BenchmarkSuite.load(filename)
+    else:
+        suite = BenchmarkSuite()
+
+    for benchmark in benchmarks:
+        suite._add_benchmark_runs(benchmark)
+
+    suite.dump(filename)
