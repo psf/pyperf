@@ -121,10 +121,6 @@ def load_result(filename, default_name=None):
     return result
 
 
-def _result_sort_key(result):
-    return (result.median(), result.name or '')
-
-
 def _display_common_metadata(metadatas):
     if len(metadatas) < 2:
         return
@@ -144,18 +140,16 @@ def _display_common_metadata(metadatas):
             metadata.pop(key, None)
 
 
+def _bench_sort_key(item):
+    return (item.benchmark.median(), item.filename or '')
+
+
 def compare_benchmarks(benchmarks, sort_benchmarks, args):
-    # FIXME: remove this, use directly benchmarks
-    new_benchmarks = []
-    for benchmark, title, filename in benchmarks:
-        benchmark.name = filename
-        new_benchmarks.append(benchmark)
-    benchmarks = new_benchmarks
-
     if sort_benchmarks:
-        benchmarks.sort(key=_result_sort_key)
+        benchmarks.sort(key=_bench_sort_key)
 
-    ref_result = benchmarks[0]
+    ref_result = benchmarks[0].benchmark
+    ref_name = benchmarks[0].filename
 
     # Compute medians
     ref_samples = ref_result.get_samples()
@@ -164,12 +158,15 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
     lines = []
     print = lines.append
     all_significant = False
-    for index, changed_result in enumerate(benchmarks[1:], 1):
+    for index, item in enumerate(benchmarks[1:], 1):
+        changed_result = item.benchmark
+        changed_name = item.filename
+
         changed_samples = changed_result.get_samples()
         changed_avg = changed_result.median()
         text = ("Median +- std dev: [%s] %s -> [%s] %s"
-                % (ref_result.name, ref_result.format(),
-                   changed_result.name, changed_result.format()))
+                % (ref_name, ref_result.format(),
+                   changed_name, changed_result.format()))
 
         # avoid division by zero
         if changed_avg == ref_avg:
@@ -274,6 +271,7 @@ def cmd_metadata():
 
 
 DataItem = collections.namedtuple('DataItem', 'benchmark title is_last')
+GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
 
 
 def format_filename_func(suites):
@@ -377,7 +375,7 @@ class Benchmarks:
                         title = filename
                 else:
                     title = None
-                benchmarks.append((benchmark, title, filename))
+                benchmarks.append(GroupItem(benchmark, title, filename))
 
             is_last = (index == (len(names) - 1))
             group = (name, benchmarks, is_last)

@@ -306,23 +306,19 @@ class Benchmark(object):
         # list of Run objects
         self._runs = []
         self._format_samples = _format_timedeltas
-        # use name property setter
-        self.name = name
 
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
+        # name
         if not isinstance(name, six.string_types):
             raise TypeError("name must be a non-empty string")
 
         name = name.strip()
         if not name:
             raise TypeError("name must be a non-empty string")
-
         self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     def _get_common_metadata(self):
         if self._common_metadata is None:
