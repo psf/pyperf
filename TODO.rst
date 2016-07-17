@@ -11,6 +11,9 @@ Before 0.7 release
 TODO
 ====
 
+* put name in Run metadata?
+* find a memory efficient storage for common metadata in Run.
+  Use collections.ChainMap?
 * metadata: set CPU affinity
 * "smart" JSON append:
 

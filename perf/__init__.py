@@ -327,18 +327,18 @@ class Benchmark(object):
 
     @property
     def name(self):
-        return self._metadata.get('name', None)
+        return self._name
 
     @name.setter
-    def name(self, value):
-        if not isinstance(value, six.string_types):
+    def name(self, name):
+        if not isinstance(name, six.string_types):
             raise TypeError("name must be a non-empty string")
 
-        value = value.strip()
-        if not value:
+        name = name.strip()
+        if not name:
             raise TypeError("name must be a non-empty string")
 
-        self._metadata['name'] = value
+        self._name = name
 
     def _get_common_metadata(self):
         if self._common_metadata is None:
@@ -348,7 +348,8 @@ class Benchmark(object):
 
     def get_metadata(self):
         metadata = self._get_common_metadata()
-        metadata.update(self._metadata)
+        # FIXME: error in Run constructor if metadata contains name?
+        metadata['name'] = self._name
         return {name: Metadata(name, value)
                 for name, value in metadata.items()}
 
@@ -458,7 +459,11 @@ class Benchmark(object):
     @classmethod
     def _json_load(cls, data, version):
         metadata = data.get('metadata')
-        name = metadata.get('name')
+        if metadata and 'name' in metadata:
+            # FIXME: remove support of old JSON
+            name = metadata['name']
+        else:
+            name = data['name']
 
         if version == _JSON_VERSION:
             common_metadata = data.get('common_metadata', None)
@@ -494,7 +499,7 @@ class Benchmark(object):
         return bench
 
     def _as_json(self):
-        data = {}
+        data = {'name': self.name}
         common_metadata = self._get_common_metadata()
         if common_metadata:
             data['common_metadata'] = common_metadata
