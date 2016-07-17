@@ -134,6 +134,7 @@ def _get_metadata_formatter(name):
 
 class Metadata(object):
     def __init__(self, name, value, formatter=None):
+        assert not isinstance(value, Metadata)
         self._name = name
         self._value = value
         if formatter is None:
@@ -229,7 +230,8 @@ class Run(object):
 
     def get_metadata(self):
         if self._metadata:
-            return dict(self._metadata)
+            return {name: Metadata(name, value)
+                    for name, value in self._metadata.items()}
         else:
             return {}
 
@@ -340,9 +342,8 @@ class Benchmark(object):
     def get_metadata(self):
         metadata = self._get_common_metadata()
         # FIXME: error in Run constructor if metadata contains name?
-        metadata['name'] = self._name
-        return {name: Metadata(name, value)
-                for name, value in metadata.items()}
+        metadata['name'] = Metadata('name', self._name)
+        return metadata
 
     def _get_run_property(self, get_property):
         # FIXME: move this check to Benchmark constructor?
@@ -396,10 +397,7 @@ class Benchmark(object):
             metadata = self.get_metadata()
             run_metata = run.get_metadata()
             for key in keys:
-                if key in metadata:
-                    value = metadata[key].value
-                else:
-                    value = None
+                value = metadata.get(key, None)
                 run_value = run_metata.get(key, None)
                 if run_value != value:
                     raise ValueError("incompatible benchmark, metadata %s is "
@@ -503,7 +501,8 @@ class Benchmark(object):
         data = {'name': self.name}
         common_metadata = self._get_common_metadata()
         if common_metadata:
-            data['common_metadata'] = common_metadata
+            data['common_metadata'] = {name: obj.value
+                                       for name, obj in common_metadata.items()}
         data['runs'] = [run._as_json(common_metadata) for run in self._runs]
         return data
 
