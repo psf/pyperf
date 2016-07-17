@@ -531,7 +531,11 @@ class Benchmark(object):
             raise ValueError("no more runs")
         self._runs[:] = new_runs
 
-    def _add_benchmark_runs(self, benchmark):
+    def add_runs(self, benchmark):
+        if not isinstance(benchmark, Benchmark):
+            raise TypeError("expected Benchmark, got %s"
+                            % type(benchmark).__name__)
+
         if benchmark is self:
             raise ValueError("cannot add a benchmark to itself")
 
@@ -557,9 +561,25 @@ class BenchmarkSuite(object):
             existing = self.get_benchmark(benchmark.name)
         except KeyError:
             self.add_benchmark(benchmark)
-            return
+        else:
+            existing.add_runs(benchmark)
 
-        existing._add_benchmark_runs(benchmark)
+    def add_runs(self, result):
+        if isinstance(result, Benchmark):
+            self._add_benchmark_runs(result)
+
+        elif isinstance(result, BenchmarkSuite):
+            if len(result) == 0:
+                raise ValueError("the new benchmark suite does not contain "
+                                 "any benchmark")
+
+            for benchmark in result:
+                self._add_benchmark_runs(benchmark)
+
+        else:
+            raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
+                            % type(result).__name__)
+
 
     def get_benchmark(self, name):
         if not name:
@@ -865,20 +885,9 @@ def _get_isolated_cpus():
 
 
 def add_runs(filename, result):
-    if isinstance(result, BenchmarkSuite):
-        benchmarks = result.get_benchmarks()
-    elif isinstance(result, Benchmark):
-        benchmarks = (result,)
-    else:
-        raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
-                        % type(result).__name__)
-
     if os.path.exists(filename):
         suite = BenchmarkSuite.load(filename)
     else:
         suite = BenchmarkSuite()
-
-    for benchmark in benchmarks:
-        suite._add_benchmark_runs(benchmark)
-
+    suite.add_runs(result)
     suite.dump(filename)

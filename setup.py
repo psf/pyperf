@@ -62,7 +62,6 @@ def main():
         }
         # Optional dependencies:
         # 'psutil'
-        # ['matplotlib', 'scipy']
     }
     setup(**options)
 

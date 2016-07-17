@@ -269,7 +269,7 @@ class BenchmarkTests(unittest.TestCase):
         samples2 = (4.0, 5.0, 6.0)
         bench2 = perf.Benchmark("bench")
         bench2.add_run(perf.Run(0, samples2))
-        bench._add_benchmark_runs(bench2)
+        bench.add_runs(bench2)
 
         self.assertEqual(bench.get_samples(), samples + samples2)
 
@@ -410,7 +410,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         self.assertEqual(benchmarks[0].name, 'go')
         self.assertEqual(benchmarks[1].name, 'telco')
 
-    def test__add_benchmark_run(self):
+    def test_add_runs(self):
         # bench 1
         samples = (1.0, 2.0, 3.0)
         bench = perf.Benchmark("bench")
@@ -422,7 +422,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         samples2 = (4.0, 5.0, 6.0)
         bench2 = perf.Benchmark("bench")
         bench2.add_run(perf.Run(0, samples2))
-        suite._add_benchmark_runs(bench2)
+        suite.add_runs(bench2)
 
         bench = suite.get_benchmark('bench')
         self.assertEqual(bench.get_samples(), samples + samples2)

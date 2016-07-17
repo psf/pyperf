@@ -1,14 +1,15 @@
 Before 0.7 release
 ==================
 
-* decide if metadata is collected by default or not
+* decide if metadata is collected by default or not in Run
 * Run: store normalize samples and store loops/inner_loops as run metadata?
 
 
 TODO
 ====
 
-* put name in Run metadata?
+* support BenchmarkSuite directly in TextRunner for pybench
+* remove Benchmark.name?
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?
 * metadata: set CPU affinity

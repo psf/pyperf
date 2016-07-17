@@ -778,7 +778,7 @@ class TextRunner:
                                  % len(run_benchmarks))
             run_bench = run_benchmarks[0]
 
-            bench._add_benchmark_runs(run_bench)
+            bench.add_runs(run_bench)
 
             if verbose:
                 run = bench.get_runs()[-1]
