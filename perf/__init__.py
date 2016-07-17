@@ -215,12 +215,15 @@ class Run(object):
             if inner_loops is not None:
                 metadata['inner_loops'] = inner_loops
 
+        # Metadata dictionary: key=>value, keys and values should be non-empty
+        # strings
         if metadata:
             self._metadata = {}
             for key, value in metadata.items():
                 value = _cleanup_metadata(value)
-                if value:
-                    self._metadata[key] = value
+                if not value:
+                    raise ValueError("metadata value is empty")
+                self._metadata[key] = value
         else:
             self._metadata = None
 
@@ -305,23 +308,11 @@ class Run(object):
 
 
 class Benchmark(object):
-    def __init__(self, name, metadata=None):
+    def __init__(self, name):
+        self._clear_runs_cache()
         # list of Run objects
         self._runs = []
-
-        self._clear_runs_cache()
-
         self._format_samples = _format_timedeltas
-
-        # Metadata dictionary: key=>value, keys and values should be non-empty
-        # strings
-        if metadata is None:
-            metadata = {}
-
-        self._metadata = {}
-        for key, value in metadata.items():
-            self.add_metadata(key, value)
-
         # use name property setter
         self.name = name
 
@@ -352,16 +343,6 @@ class Benchmark(object):
         metadata['name'] = self._name
         return {name: Metadata(name, value)
                 for name, value in metadata.items()}
-
-    def add_metadata(self, key, value):
-        value = _cleanup_metadata(value)
-        if not value:
-            raise ValueError("metadata value is empty")
-
-        if key in self._metadata:
-            raise ValueError("metata %r is already set to %r"
-                             % (key, self._metadata[key]))
-        self._metadata[key] = value
 
     def _get_run_property(self, get_property):
         # FIXME: move this check to Benchmark constructor?
@@ -402,6 +383,15 @@ class Benchmark(object):
     def add_run(self, run):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
+
+        # FIXME: compare metadata to make sure that benchmarks are compatible
+        # FIXME: make sure that the benchmark is compatible
+        # FIXME: compare metadata except date?
+
+        # if benchmark._metadata != self._metadata:
+        #     # FIXME: at least, display keys for which values are different
+        #     raise ValueError("incompatible benchmark: metadata are different")
+
         self._clear_runs_cache()
         self._runs.append(run)
 
@@ -458,16 +448,15 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data, version):
-        metadata = data.get('metadata')
-        if metadata and 'name' in metadata:
-            # FIXME: remove support of old JSON
+        if version in (1, 2):
+            metadata = data['metadata']
             name = metadata['name']
         else:
             name = data['name']
 
         if version == _JSON_VERSION:
             common_metadata = data.get('common_metadata', None)
-            bench = cls(name, metadata=metadata)
+            bench = cls(name)
 
             for run_data in data['runs']:
                 run = Run._json_load(run_data, common_metadata)
@@ -480,20 +469,18 @@ class Benchmark(object):
             loops = data.get('loops', 1)
             inner_loops = data.get('inner_loops', 1)
             date = metadata.pop('date', None)
+            if data:
+                metadata['date'] = date
             if not inner_loops:
                 inner_loops = 1
-            if date is not None:
-                run_metadata = {'date': date}
-            else:
-                run_metadata = {}
 
-            bench = cls(name, metadata=metadata)
+            bench = cls(name)
 
             for raw_samples in data['runs']:
                 run = Run(warmups, raw_samples,
                           loops=loops,
                           inner_loops=inner_loops,
-                          metadata=run_metadata,
+                          metadata=metadata,
                           collect_metadata=False)
                 bench.add_run(run)
         return bench
@@ -504,8 +491,6 @@ class Benchmark(object):
         if common_metadata:
             data['common_metadata'] = common_metadata
         data['runs'] = [run._as_json(common_metadata) for run in self._runs]
-        if self._metadata:
-            data['metadata'] = self._metadata
         return data
 
     @staticmethod
@@ -569,16 +554,8 @@ class Benchmark(object):
         if benchmark is self:
             raise ValueError("cannot add a benchmark to itself")
 
-        # FIXME: compare metadata to make sure that benchmarks are compatible
-        # FIXME: make sure that the benchmark is compatible
-        # FIXME: compare metadata except date?
-
-        if benchmark._metadata != self._metadata:
-            # FIXME: at least, display keys for which values are different
-            raise ValueError("incompatible benchmark: metadata are different")
-
-        # FIXME: move this check to benchmark constructor
         nrun = benchmark.get_nrun()
+        # FIXME: move this check to benchmark constructor?
         if not nrun:
             raise ValueError("benchmark has no run")
 
