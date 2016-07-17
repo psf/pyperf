@@ -76,7 +76,7 @@ class TestRunTextRunner(unittest.TestCase):
             runner = perf.text_runner.TextRunner('bench')
             with tests.capture_stdout() as stdout:
                 try:
-                    runner.parse_args(['--worker', '--json', tmp.name])
+                    runner.parse_args(['--worker', '--output', tmp.name])
                 except SystemExit as exc:
                     self.assertEqual(exc.code, 1)
 
@@ -149,7 +149,7 @@ class TestRunTextRunner(unittest.TestCase):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
 
-            result = self.run_text_runner('--worker', '--json', filename)
+            result = self.run_text_runner('--worker', '--output', filename)
 
             loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)

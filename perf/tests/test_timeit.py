@@ -99,7 +99,7 @@ class TestTimeit(unittest.TestCase):
                     '-p', '2',
                     '-n', '3',
                     '-l', str(loops),
-                    '--json', filename,
+                    '--output', filename,
                     '-s', 'import time',
                     SLEEP]
             proc = subprocess.Popen(args,

@@ -430,9 +430,9 @@ class TextRunner:
                             help='enable quiet mode')
         parser.add_argument('--stdout', action='store_true',
                             help='write results encoded to JSON into stdout')
-        parser.add_argument('--json', metavar='FILENAME',
+        parser.add_argument('-o', '--output', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
-        parser.add_argument('--json-append', metavar='FILENAME',
+        parser.add_argument('--append', metavar='FILENAME',
                             help='append results encoded to JSON into FILENAME')
         parser.add_argument('--min-time', type=float, default=min_time,
                             help='Minimum duration in seconds of a single '
@@ -510,7 +510,7 @@ class TextRunner:
             self.args.loops = 1
             self.args.min_time = 1e-9
 
-        filename = self.args.json
+        filename = self.args.output
         if filename and os.path.exists(filename):
             print("ERROR: The JSON file %r already exists" % filename)
             sys.exit(1)
@@ -741,13 +741,14 @@ class TextRunner:
                            hist=args.hist)
 
         stream.flush()
-        if args.json_append:
-            if os.path.exists(args.json_append):
-                suite = perf.BenchmarkSuite.load(args.json_append)
+        if args.append:
+            filename = args.append
+            if os.path.exists(filename):
+                suite = perf.BenchmarkSuite.load(filename)
             else:
                 suite = perf.BenchmarkSuite()
             suite._add_benchmark_runs(bench)
-            suite.dump(args.json_append)
+            suite.dump(filename)
 
         if args.stdout:
             try:
@@ -765,8 +766,8 @@ class TextRunner:
                     # close() is likely to fail with EPIPE (BrokenPipeError)
                     pass
 
-        if args.json:
-            bench.dump(args.json)
+        if args.output:
+            bench.dump(args.output)
 
     def _spawn_workers(self, bench):
         verbose = self.args.verbose
