@@ -607,10 +607,12 @@ def main():
         }
 
         try:
-            dispatch[action]()
+            func = dispatch[action]
         except KeyError:
             parser.print_usage()
             sys.exit(1)
+        else:
+            func()
     except IOError as exc:
         if exc.errno != errno.EPIPE:
             raise
