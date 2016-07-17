@@ -3,7 +3,6 @@ Before 0.7 release
 
 * decide if metadata is collected by default or not
 * Run: store normalize samples and store loops/inner_loops as run metadata?
-* run: convert loops/inner_loops to metadata
 
 
 TODO
@@ -26,6 +25,7 @@ TODO
 Blocker for perf 1.0 (stable API)
 =================================
 
+* Update doc: check public attributes and methods of classes
 * Clarify run vs process in TextRunner CLI
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29

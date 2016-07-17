@@ -110,6 +110,17 @@ Clocks
    information on Python clocks.
 
 
+Metadata
+--------
+
+.. class:: perf.Metadata(name, value, formatter=None)
+
+   A metadata object.
+
+   If not formatter is specified, a formatter is chosen depending on the
+   metadata name.
+
+
 Run
 ---
 
@@ -132,6 +143,11 @@ Run
    raw samples by :meth:`get_loops`.
 
    Set *collect_metadata* to false to not collect system metadata.
+
+   .. method:: get_metadata()
+
+      Get run metadata. Return a dictionary:
+      name (str) => :class:`perf.Metadata` object.
 
 
 Benchmark
@@ -171,8 +187,10 @@ Benchmark
 
    .. method:: get_metadata()
 
-      Get benchmark metadata. Return also metadata which are common to all
-      runs.
+      Get benchmark metadata: metadata common to all runs, and the benchmark
+      name.
+
+      Return a dictionary: name (str) => :class:`perf.Metadata` object.
 
    .. method:: get_nrun()
 
