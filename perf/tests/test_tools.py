@@ -198,7 +198,8 @@ class BenchmarkTests(unittest.TestCase):
 
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(bench.get_metadata(),
-                         {'key': 'value', 'name': 'mybench'})
+                         {'key': 'value', 'name': 'mybench',
+                          'loops': 20, 'inner_loops': 3})
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
@@ -217,13 +218,14 @@ class BenchmarkTests(unittest.TestCase):
             bench.dump(tmp.name)
             bench = perf.Benchmark.load(tmp.name)
 
-        self.assertEqual(bench.name, "mybench")
-        self.assertEqual(bench.get_metadata(),
-                         {'key': 'value', 'name': 'mybench'})
-
         for run in bench.get_runs():
             self.assertEqual(run.loops, 100)
             self.assertEqual(run.inner_loops, 20)
+
+        self.assertEqual(bench.name, "mybench")
+        self.assertEqual(bench.get_metadata(),
+                         {'key': 'value', 'name': 'mybench',
+                          'loops': 100, 'inner_loops': 20})
 
         self.check_runs(bench, samples, 3.0)
 

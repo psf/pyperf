@@ -94,9 +94,10 @@ def _cleanup_metadata(value):
     if value is None:
         return None
 
-    if isinstance(value, int):
-        value = str(value)
-    elif not isinstance(value, six.string_types):
+    if isinstance(value, (int, float)):
+        return value
+
+    if not isinstance(value, six.string_types):
         raise TypeError("invalid metadata type: %r" % (value,))
 
     # replace '   ' with ' '
@@ -121,7 +122,8 @@ def _common_metadata(metadatas):
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
-    def __init__(self, warmups, raw_samples, loops=1, inner_loops=1,
+    # FIXME: remove loops/inner_loops
+    def __init__(self, warmups, raw_samples, loops=None, inner_loops=None,
                  metadata=None, collect_metadata=True):
         if (not raw_samples
            or any(not(isinstance(sample, float) and sample > 0)
@@ -140,13 +142,11 @@ class Run(object):
         # non-empty tuple of float > 0
         self._raw_samples = tuple(raw_samples)
 
-        if not(isinstance(loops, int) and loops >= 1):
+        if loops is not None and not(isinstance(loops, int) and loops >= 1):
             raise ValueError("loops must be an int >= 1")
-        self._loops = loops
 
-        if not(isinstance(inner_loops, int) and inner_loops >= 1):
+        if inner_loops is not None and not(isinstance(inner_loops, int) and inner_loops >= 1):
             raise ValueError("inner_loops must be an int >= 1")
-        self._inner_loops = inner_loops
 
         if collect_metadata:
             from perf import metadata as perf_metadata
@@ -159,6 +159,14 @@ class Run(object):
                 metadata = metadata2
             else:
                 metadata = metadata2
+
+        if loops is not None or inner_loops is not None:
+            if metadata is None:
+                metadata = {}
+            if loops is not None:
+                metadata['loops'] = loops
+            if inner_loops is not None:
+                metadata['inner_loops'] = inner_loops
 
         if metadata:
             self._metadata = {}
@@ -177,18 +185,22 @@ class Run(object):
 
     @property
     def loops(self):
-        return self._loops
+        if self._metadata is None:
+            return 1
+        return self._metadata.get('loops', 1)
 
     @property
     def inner_loops(self):
-        return self._inner_loops
+        if self._metadata is None:
+            return 1
+        return self._metadata.get('inner_loops', 1)
 
     def _get_nsample(self):
         "Get the number of samples, excluding wamrup samples."
         return (len(self._raw_samples) - self._warmups)
 
     def _get_samples(self):
-        total_loops = self._loops * self._inner_loops
+        total_loops = self.loops * self.inner_loops
         return [sample / total_loops for sample in self._get_raw_samples()]
 
     def _get_raw_samples(self, warmups=False):
@@ -206,10 +218,6 @@ class Run(object):
         data = {'raw_samples': self._raw_samples}
         if self._warmups:
             data['warmups'] = self._warmups
-        if self._loops != 1:
-            data['loops'] = self._loops
-        if self._inner_loops != 1:
-            data['inner_loops'] = self._inner_loops
 
         if self._metadata:
             if common_metadata:
@@ -227,17 +235,24 @@ class Run(object):
     def _json_load(cls, run_data, common_metadata):
         warmups = run_data.get('warmups', 0)
         raw_samples = run_data['raw_samples']
-        loops = run_data.get('loops', 1)
-        inner_loops = run_data.get('inner_loops', 1)
         metadata = run_data.get('metadata', None)
+        loops = run_data.get('loops', None)
+        inner_loops = run_data.get('inner_loops', None)
         if common_metadata:
             metadata2 = dict(common_metadata)
             if metadata:
                 metadata2.update(metadata)
             metadata = metadata2
+        # FIXME: remove it? only for backward compatibility with
+        # development version 0.7
+        if loops is not None or inner_loops is not None:
+            if metadata is None:
+                metadata = {}
+            if loops is not None:
+                metadata['loops'] = loops
+            if inner_loops is not None:
+                metadata['inner_loops'] = inner_loops
         return cls(warmups, raw_samples,
-                   loops=loops,
-                   inner_loops=inner_loops,
                    metadata=metadata,
                    collect_metadata=False)
 
@@ -404,6 +419,8 @@ class Benchmark(object):
             for run_data in data['runs']:
                 run = Run._json_load(run_data, common_metadata)
                 bench.add_run(run)
+
+            # FIXME: optim: save common_metadata into self._common_metadata
         else:
             # version 1 and 2
             warmups = data.get('warmups', 0)

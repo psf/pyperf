@@ -197,6 +197,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - description: Test the performance of the Telco decimal benchmark
             - duration: 23.8 sec
             - hostname: selma
+            - loops: 4
             - name: telco
             - perf_version: 0.7
             - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
