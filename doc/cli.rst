@@ -19,9 +19,9 @@ Show benchmarks of one or multiple benchmark suites::
 * ``--quiet`` enables the quiet mode
 * ``--dump`` displays the benchmark run results,
   see :ref:`perf dump <dump_cmd>` command
-* ``--metadata`` displays metadata: see :ref:`perf metadata
+* ``--metadata`` displays benchmark metadata: see :ref:`perf metadata
   <metadata_cmd>` command
-* ``--hist`` displays an histogram of samples, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
@@ -29,26 +29,23 @@ Show benchmarks of one or multiple benchmark suites::
 
 .. _show_cmd_metadata:
 
-Example in verbose mode::
+Example::
 
-    $ python3 -m perf show -v run.json
-    Run 1/25: warmup (1): 555 ms; raw samples (3): 546 ms, 630 ms, 553 ms
-    Run 2/25: warmup (1): 572 ms; raw samples (3): 546 ms, 546 ms, 547 ms
-    (...)
-    Run 25/25: warmup (1): 602 ms; raw samples (3): 649 ms, 642 ms, 607 ms
-
-    Average: 56.3 ns +- 2.5 ns (25 runs x 3 samples; 1 warmup)
+    $ python3 -m perf show telco.json
+    Median +- std dev: 24.6 ms +- 0.2 ms
 
 Example with metadata::
 
-    $ python3 -m perf show --metadata run.json
+    $ python3 -m perf show telco.json --metadata
     Metadata:
-    - duration: 59.1 sec
-    - loops: 10^7
-    - timeit_setup: 'pass'
-    - timeit_stmt: 'len("abc")'
+    - aslr: Full randomization
+    - cpu_affinity: 1 (isolated)
+    - cpu_count: 2
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - perf_version: 0.7
+    ...
 
-    Average: 56.3 ns +- 2.5 ns
+    Median +- std dev: 24.6 ms +- 0.2 ms
 
 
 compare and compare_to
@@ -87,19 +84,19 @@ Compute statistics on a benchmark result::
 Example::
 
     $ python3 -m perf stats telco.json
-    Raw sample minimum: 97.2 ms
-    Raw sample maximum: 101 ms
+    Raw sample minimum: 96.9 ms
+    Raw sample maximum: 100 ms
 
-    Number of runs: 50
-    Total number of samples: 150
+    Number of runs: 40
+    Total number of samples: 120
     Number of samples per run: 3
     Number of warmups per run: 1
     Loop iterations per sample: 4
 
-    Minimum: 24.3 ms (-2%)
-    Median +- std dev: 24.7 ms +- 0.2 ms
-    Mean +- std dev: 24.7 ms +- 0.2 ms
-    Maximum: 25.2 ms (+2%)
+    Minimum: 24.2 ms (-1%)
+    Median +- std dev: 24.6 ms +- 0.2 ms
+    Mean +- std dev: 24.6 ms +- 0.2 ms
+    Maximum: 25.0 ms (+2%)
 
 Values:
 
@@ -139,15 +136,24 @@ Example::
 Example in verbose mode::
 
     $ python3 -m perf dump telco.json -v
-    Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
-      loops=4 inner_loops=1 date=2016-07-11T15:39:37
-    Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
-      loops=4 inner_loops=1 date=2016-07-11T15:39:37
-    Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
-      loops=4 inner_loops=1 date=2016-07-11T15:39:37
-    (...)
-    Run 50/50: warmup (1): 24.8 ms; samples (3): 24.6 ms, 24.8 ms, 24.8 ms
-      loops=4 inner_loops=1 date=2016-07-11T15:40:00
+    Metadata:
+      cpu_count: 2
+      cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+      hostname: selma
+      loops: 4
+      name: telco
+      ...
+
+    Run 1: warmup (1): 24.7 ms; samples (3): 24.5 ms, 24.5 ms, 24.5 ms
+      cpu_freq: 1=3588 MHz
+      date: 2016-07-17T22:50:27
+      load_avg_1min: 0.12
+    Run 2: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.6 ms, 24.8 ms
+      cpu_freq: 1=3586 MHz
+      date: 2016-07-17T22:50:27
+      load_avg_1min: 0.12
+    ...
+
 
 .. _hist_cmd:
 
@@ -250,16 +256,21 @@ Example::
 
     $ python3 -m perf metadata
     Metadata:
-    - aslr: enabled
+    - aslr: Full randomization
+    - cpu_config: 0-3=driver:intel_pstate, intel_pstate:turbo, governor:powersave
     - cpu_count: 4
-    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - date: 2016-06-15T22:08:21
+    - cpu_freq: 0=2181 MHz, 1=2270 MHz, 2=2191 MHz, 3=2198 MHz
+    - cpu_model_name:  Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - cpu_temp: coretemp:Physical id 0=51 C, coretemp:Core 0=50 C, coretemp:Core 1=51 C
+    - date: 2016-07-18T22:57:06
     - hostname: selma
-    - perf_version: 0.4
-    - platform: Linux-4.4.8-300.fc23.x86_64-x86_64-with-fedora-23-Twenty_Three
+    - load_avg_1min: 0.02
+    - perf_version: 0.8
+    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
     - python_executable: /usr/bin/python3
     - python_implementation: cpython
-    - python_version: 3.4.3
+    - python_version: 3.5.1 (64bit)
+    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
 
 
 timeit
@@ -283,25 +294,56 @@ Example
 
 Example::
 
-    $ python3 -m perf timeit 1+1
+    $ python3 -m perf timeit '" abc ".strip()
     .........................
-    Median +- std dev: 11.7 ns +- 0.1 ns
+    Median +- std dev: 113 ns +- 2 ns
 
-Use ``-v`` to enable the verbose mode::
+Verbose example::
 
-    $ python3 -m perf timeit -v 1+1
-    calibration: 1 loop: 983 ns
-    calibration: 10 loops: 1.47 us
+    $ python3 -m perf timeit --rigorous --hist --dump --metadata '" abc ".strip()'
+    ........................................
+    Metadata:
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - loops: 2^20
+    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
+    - python_version: 3.5.1 (64bit)
+    - timeit_setup: 'pass'
+    - timeit_stmt: '" abc ".strip()'
+    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
     ...
-    calibration: 10^7 loops: 138 ms
-    calibration: use 10^7 loops
-    Run 1/25: warmup (1): 117 ms; raw samples (3): 117 ms, 119 ms, 119 ms
-    Run 2/25: warmup (1): 117 ms; raw samples (3): 118 ms, 117 ms, 116 ms
+
+    Run 1: warmup (1): 135 ns (+18%); samples (3): 112 ns, 112 ns, 114 ns
+    Run 2: warmup (1): 122 ns (+7%); samples (3): 121 ns (+6%), 112 ns, 112 ns
+    Run 3: warmup (1): 112 ns; samples (3): 112 ns, 112 ns, 112 ns
     ...
-    Run 25/25: warmup (1): 143 ms; raw samples (3): 115 ms, 115 ms, 117 ms
+    Run 40: warmup (1): 117 ns; samples (3): 114 ns, 137 ns (+20%), 123 ns (+8%)
 
-    Median +- std dev: 11.7 ns +- 0.2 ns
+    107 ns:  8 ###########
+    111 ns: 59 ###############################################################################
+    116 ns: 21 ############################
+    120 ns: 10 #############
+    125 ns:  9 ############
+    129 ns:  3 ####
+    133 ns:  4 #####
+    138 ns:  1 #
+    142 ns:  1 #
+    147 ns:  1 #
+    151 ns:  0 |
+    156 ns:  0 |
+    160 ns:  0 |
+    165 ns:  2 ###
+    169 ns:  0 |
+    174 ns:  0 |
+    178 ns:  0 |
+    182 ns:  0 |
+    187 ns:  0 |
+    191 ns:  0 |
+    196 ns:  1 #
 
+    WARNING: the benchmark seems unstable, the standard deviation is high (stdev/median: 11%)
+    Try to rerun the benchmark with more runs, samples and/or loops
+
+    Median +- std dev: 114 ns +- 12 ns
 
 
 timeit versus perf timeit
@@ -317,8 +359,8 @@ perf timeit is more reliable and gives a result more representative of a real
 use case:
 
 * It displays the average and the standard deviation
-* It runs the benchmark in multiple processes (default: 25 runs, 3 samples)
-* By default, it uses a first sample in each process to "warmup" the benchmark
+* It runs the benchmark in multiple processes
+* By default, it skips the first sample in each process to warmup the benchmark
 * It does not disable the garbage collector
 
 If a benchmark is run using a single process, we get the performance for one
@@ -330,3 +372,4 @@ specific case, whereas many parameters are random:
   the performance of memory accesses is different in each process
 
 See the :ref:`Minimum versus average and standard deviation <min>` section.
+

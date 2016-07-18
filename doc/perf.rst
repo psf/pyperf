@@ -12,7 +12,7 @@ perf supports Python 2.7 and Python 3. To install perf on Python 3::
     python3 -m pip install perf
 
 It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
-dependency is installed: backport of Python 3.4 `statistics module
+dependency is also installed: backport of Python 3.4 `statistics module
 <https://docs.python.org/dev/library/statistics.html>`_.
 
 If you get the error ``'install_requires' must be a string ...`` or
@@ -24,10 +24,11 @@ setuptools to support environment markers in ``install_requires`` of
 
 Optional dependencies:
 
-* ``cpupower``: used to check if the CPU boost is active or not on Intel and
+* ``cpupower`` command: used to check if the CPU boost is active or not on Intel and
   AMD CPUs when the CPU driver is not ``intel_pstate``.
   Install on Fedora: ``sudo dnf install kernel-tools``.
-* ``psutil``: needed for CPU affinity on Python 2.7
+* Python module ``psutil``: needed for :ref:`CPU affinity <pin-cpu>` on Python
+  2.7. Install: ``python2 -m pip install -U psutil``.
 
 
 .. _loops:
@@ -38,27 +39,28 @@ Runs, samples, warmups, outter and inner loops
 The ``perf`` module uses 5 options to configure benchmarks:
 
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
-  (default: 25)
+  (default: 20)
 * "samples": Number of samples per run,  ``-n/--samples`` command line option:
   calls "samples" (default: 3)
-* "warmups": Number of skipped samples per run,  ``-w/--warmups`` command
-  line option (default: 1)
+* "warmups": Number of samples per run used to warmup the benchmark,
+  ``-w/--warmups`` command line option (default: 1)
 * "loops": Number of outter-loop iterations per sample,  ``-l/--loops`` command
   line option (default: calibrate)
 * "inner_loops": Number of inner-loop iterations per sample, hardcoded in
   benchmark (default: 1).
 
+See also :ref:`TextRunner CLI <textrunner_cli>`.
+
 The number of runs should be large enough to reduce the effect of random
 factors like randomized address space layer (ASLR) and the Python randomized
 hash function.
 
-The total number of samples (runs x samples/run) should be large enough to get
+The total number of samples (runs x samples) should be large enough to get
 an uniform distribution.
 
-The warmup parameter should be configured by analyzing manually samples.
+The "warmups" parameter should be configured by analyzing manually samples.
 Usually, skipping the first sample is enough to warmup the benchmark.
-Sometimes, the benchmark requires the skip the first 5 samples to become
-stable.
+Sometimes, more samples should be skipped to warmup the benchmark.
 
 By default, the number of outter-loops is automatically computed by calibrating
 the benchmark: a sample should take betwen 100 ms and 1 sec (values
@@ -71,7 +73,7 @@ manually duplicated to limit the cost of Python loops. See the
 
 Example of unstable benchmark because the number of loops is too low::
 
-    $ python3 -m perf.timeit --loops=10 pass
+    $ python3 -m perf timeit --loops=10 pass
     .........................
     WARNING: the benchmark seems unstable, the standard deviation is high (11%)
     Try to rerun the benchmark with more runs, samples and/or loops
@@ -127,20 +129,20 @@ analyze manually results to adjust :ref:`benchmark parameters <loops>`.
 CPU pinning and CPU isolation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On Linux with a multicore CPU, isolate at least 1 core has a significant impact
+On Linux with a multicore CPU, isolating at least 1 core has a significant impact
 on the stability of benchmarks. The `My journey to stable benchmark, part 1
 (system) <https://haypo.github.io/journey-to-stable-benchmark-system.html>`_
 article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
 The :class:`~perf.text_runner.TextRunner` class automatically pin worker
-processes to isolated CPUs (when isolated are detected). CPU pinning can be
-checked in benchmark metadata: it is enabled if the ``cpu_affinity``
+processes to isolated CPUs (when isolated CPUs are detected). CPU pinning can
+be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
 
 On Python 3.3 and newer, :func:`os.sched_setaffinity` is used to pin processes.
-On Python 2.7, the ``psutil`` is required for
-``psutil.Process().cpu_affinity``.
+On Python 2.7, the Python module ``psutil`` is required for
+``psutil.Process().cpu_affinity()``.
 
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.
@@ -158,6 +160,15 @@ Metadata
 The :class:`~perf.text_runner.TextRunner` class collects metadata in each
 worker process.
 
+Benchmark:
+
+* ``date``: date when the benchmark run started, formatted as ISO 8601
+* ``duration``: total duration of the benchmark run in seconds (``float``)
+* ``loops``: number of outter-loops of the benchmark run (``int``)
+* ``inner_loops``: number of inner-loops of the benchmark run (``int``)
+* ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
+  available
+
 Python metadata:
 
 * ``python_implementation``: Python implementation. Examples: ``cpython``,
@@ -170,36 +181,32 @@ Python metadata:
 
 System metadata:
 
-* ``hostname``: Host name
-* ``platform``: short string describing the platform
-* ``cpu_count``: number of CPUs
-
-Linux metadata:
-
-* ``cpu_model_name``: CPU model name
 * ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
   ``disabled``
+* ``hostname``: Host name
+* ``platform``: short string describing the platform
 * ``cpu_affinity``: if set, the process is pinned to the specified list of
   CPUs
+* ``cpu_config``: Configuration of CPUs (ex: scaling governor)
+* ``cpu_count``: number of logical CPUs (``int``)
+* ``cpu_freq``: Frequency of CPUs
+* ``cpu_model_name``: CPU model name
+* ``cpu_temp``: Temperature of CPUs
 
 Other:
 
-* ``date``: date when the benchmark started, formatted as ISO 8601
-* ``duration``: total duration of the benchmark
 * ``perf_version``: Version of the ``perf`` module
-* ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
-  available
 
 See the :func:`perf.metadata.collect_metadata` function.
 
 
-What is perf so slow?
-=====================
+Why is perf so slow?
+====================
 
 ``--fast`` and ``--rigorous`` options indirectly have an impact on the total
 duration of benchmarks. The ``perf`` module is not optimized for the total
 duration but to produce :ref:`reliable benchmarks <stable_bench>`.
 
-The ``--fast`` is designed to be fast, but remain reliable enough to be useful.
-Using less worker processes and less samples per worker would produce unstable
-results.
+The ``--fast`` is designed to be fast, but remain reliable enough to be
+sensitive. Using less worker processes and less samples per worker would
+produce unstable results.

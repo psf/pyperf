@@ -53,8 +53,7 @@ Usage::
 
 * ``--bins`` is the number of histogram bars (default: 25)
 
-This command requires the ``scipy`` dependency: see :ref:`Install perf
-<install>`.
+This command requires the ``scipy`` dependency.
 
 Example::
 
@@ -109,16 +108,25 @@ Clocks
    it's :func:`time.time` and so is not monotonic. See the PEP 418 for more
    information on Python clocks.
 
+.. seealso::
+   `PEP 418 -- Add monotonic time, performance counter, and process time
+   functions <https://www.python.org/dev/peps/pep-0418/>`_.
+
 
 Metadata
 --------
 
-.. class:: perf.Metadata(name, value, formatter=None)
+.. class:: perf.Metadata(name, value)
 
    A metadata object.
 
-   If not formatter is specified, a formatter is chosen depending on the
-   metadata name.
+   .. attribute:: name
+
+      Metadata name.
+
+   .. attribute:: value
+
+      Metadata value.
 
 
 Run
@@ -141,10 +149,29 @@ Run
 
    Set *collect_metadata* to false to not collect system metadata.
 
-   .. method:: get_metadata()
+   Methods:
 
-      Get run metadata. Return a dictionary:
-      name (str) => :class:`perf.Metadata` object.
+   .. method:: get_metadata() -> dict
+
+      Get run metadata.
+
+      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+
+   .. method:: get_total_loops() -> int
+
+      Get the total number of loops of the benchmark run:
+      outter-loops x inner-loops.
+
+   Attributes:
+
+   .. attribute:: samples
+
+      Benchmark run samples (``tuple`` of ``float``).
+
+   .. attribute:: warmups
+
+      Benchmark warmup samples (``tuple`` of ``float``).
+
 
 
 Benchmark
@@ -156,94 +183,100 @@ Benchmark
 
    Methods:
 
-   .. method:: add_metadata(key: str, value: int|str)
-
-      Add a metadata.
-
    .. method:: add_run(run: Run)
 
       Add a benchmark run: *run* must a :class:`Run` object.
+
+      The new run must be compatible with existing runs: metadata are compared.
+
+   .. method:: add_runs(bench: Benchmark)
+
+      Add runs of the benchmark *bench*.
+
+      The benchmark must have at least one run.
+
+      See :meth:`perf.BenchmarkSuite.add_runs` method and :func:`add_runs`
+      function.
 
    .. method:: dump(file, compact=True)
 
       Dump the benchmark as JSON into *file*.
 
-      *file* can be a filename, or an open file object.
+      *file* can be a filename, or a file object open for write.
 
-      If *compact* is true, generate small file. Otherwise, indent JSON.
+      If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-   .. method:: format()
+   .. method:: format() -> str
 
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
 
-   .. method:: get_total_loops()
+   .. method:: get_metadata() -> dict
 
-      Get the total number of loops per sample (loops x inner-loops).
+      Get benchmark metadata: metadata common to all runs.
 
-      Return an integer if an ``int`` if all runs have the same number of
-      loops, return the average as a ``float`` otherwise.
+      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
 
-   .. method:: get_metadata()
+   .. method:: get_name() -> str or None
 
-      Get benchmark metadata: metadata common to all runs, and the benchmark
-      name.
+      Get the benchmark name (``str``).
 
-      Return a dictionary: name (str) => :class:`perf.Metadata` object.
+      Return ``None`` if the benchmark has no run or runs have no name in
+      metadata.
 
-   .. method:: get_name()
+   .. method:: get_nrun() -> int
 
-      Get the benchmark name (``str``). Return ``None`` if the benchmark has
-      no run or runs have no name in metadata.
+      Get the number of runs.
 
-   .. method:: get_nrun()
+   .. method:: get_nsample() -> int
 
-      Get the number of runs (``int``).
+      Get the total number of samples.
 
-   .. method:: get_nwarmup()
+   .. method:: get_nwarmup() -> int or float
 
       Get the number of warmup samples per run.
 
       Return an ``int`` if all runs use the same number of warmups, or return
       the average as a ``float``.
 
-   .. method:: get_runs()
+   .. method:: get_runs() -> List[Run]
 
       Get the list of :class:`perf.Run` objects.
 
-   .. method:: get_samples()
+   .. method:: get_samples() -> List[float]
 
       Get samples of all runs (values are average per loop iteration).
+
+   .. method:: get_total_loops() -> int or float
+
+      Get the total number of loops per sample (loops x inner-loops).
+
+      Return an ``int`` if all runs have the same number of
+      loops, return the average as a ``float`` otherwise.
 
    .. classmethod:: load(file) -> Benchmark
 
       Load a benchmark from a JSON file which was created by :meth:`dump`.
 
-      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
-      or an open file object.
+      *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      or a file object open to read.
 
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark from a JSON string.
 
-   .. method:: median()
+   .. method:: median() -> float
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
       :meth:`get_samples`.
 
-      The median cannot be zero: :meth:`add_run` rejects null samples.
+      The median cannot be zero: :meth:`add_run` raises an error if a sample is
+      equal to zero.
 
-   .. method:: __str__()
+   .. method:: __str__() -> str
 
       Format the result as ``Median +- std dev: ... +- ...`` (median +-
-      standard deviation) a string (``str``).
-
-   Attributes:
-
-   .. attribute:: metadata
-
-      Dictionary of metadata (``dict``): key=>value, where keys and values must
-      be non-empty strings.
+      standard deviation) string (``str``).
 
 
 BenchmarkSuite
@@ -251,35 +284,72 @@ BenchmarkSuite
 
 .. class:: perf.BenchmarkSuite
 
-   A benchmark suite is made of :class:`perf.Benchmark` objects.
+   A benchmark suite is made of :class:`~perf.Benchmark` objects.
 
-   .. method:: add_benchmark(benchmark)
+   Methods:
+
+   .. method:: add_benchmark(benchmark: Benchmark)
 
       Add a :class:`perf.Benchmark` object.
+
+   .. method:: add_runs(bench: Benchmark or BenchmarkSuite)
+
+      Add runs of benchmarks.
+
+      *bench* can be a :class:`Benchmark` or a :class:`BenchmarkSuite`.
+
+      Each benchmark must have at least one run. If *bench* is a benchmark
+      suite, it must have at least one benchmark.
+
+      See :meth:`perf.Benchmark.add_runs` method and :func:`add_runs` function.
 
    .. function:: dump(file, compact=True)
 
       Dump the benchmark suite as JSON into *file*.
 
-      *file* can be a filename, or an open file object.
+      *file* can be: a filename, or a file object open for write.
 
-      If *compact* is true, generate small file. Otherwise, indent JSON.
+      If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-   .. method:: get_benchmarks()
+   .. method:: get_benchmark(name: str) -> Benchmark
+
+      Get the benchmark called *name*.
+
+      *name* must be non-empty.
+
+      Raise :exc:`KeyError` if there is no benchmark called *name*.
+
+   .. method:: get_benchmark_names() -> List[str]
+
+      Get the list of benchmark names.
+
+      Raise an error if a benchmark has no name.
+
+   .. method:: get_benchmarks() -> List[Benchmark]
 
       Get the list of benchmarks sorted by their name.
+
+   .. method:: __iter__()
+
+      Iterate on benchmarks.
+
+   .. method:: __len__() -> int
+
+      Get the number of benchmarks.
 
    .. classmethod:: load(file)
 
       Load a benchmark suite from a JSON file which was created by
       :meth:`dump`.
 
-      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
-      or an open file object.
+      *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      or a file object open to read.
 
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark suite from a JSON string.
+
+   Attributes:
 
    .. attribute:: filename
 
@@ -290,30 +360,29 @@ BenchmarkSuite
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(name=None, samples=3, warmups=1, processes=25, nloop=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
+.. class:: perf.text_runner.TextRunner(name, samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
 
    Tool to run a benchmark in text mode.
 
-   *name* is the name of the benchmark.
+   Spawn *processes* worker processes to run the benchmark.
 
-   *metadata* is passed to the :class:`~perf.Benchmark` constructor: see
-   :ref:`Metadata <metadata>`.
+   *name* is the name of the benchmark: it is stored in run metadata as
+   ``name`` metadata. *metadata* is passed to the :class:`~perf.Run`
+   constructor.
 
    *samples*, *warmups* and *processes* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
+   options. See :ref:`TextRunner CLI <textrunner_cli>` for command line
    options.
-
-   See :ref:`TextRunner CLI <textrunner_cli>` for command line options.
 
    If isolated CPUs are detected, the CPU affinity is automatically
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
    <pin-cpu>`.
 
-   Samples are rounded to 9 digits using ``round(sample, 9)``. The most
+   Samples are rounded to 9 decimal digits using ``round(sample, 9)``. The most
    accurate clock has a precision of 1 nanosecond. But a time difference can
    produce more than 9 decimal digits after the dot, because of rounding issues
-   (time delta is stored in base 2, binary, but formatted in base 10,
-   decimal).
+   (time delta is stored in base 2, binary, but formatted in base 10, decimal).
 
    Methods:
 
@@ -321,15 +390,14 @@ TextRunner
 
       Benchmark the function ``func(*args)``.
 
-      The :meth:`get_samples` method will divide samples by ``loops x
-      inner_loops`` (see :attr:`~perf.Benchmark.loops` and
-      :attr:`~perf.Benchmark.inner_loops` attributes of
-      :class:`perf.Benchmark`).
+      The :attr:`inner_loops` attribute is used to normalize timing per loop
+      iteration.
 
       The design of :meth:`bench_func` has a non negligible overhead on
       microbenchmarks: each loop iteration calls ``func(*args)`` but Python
       function calls are expensive. The :meth:`bench_sample_func` method is
-      recommended if ``func(*args)`` takes less than 1 millisecond (0.001 sec).
+      recommended if ``func(*args)`` takes less than ``1`` millisecond
+      (``0.001`` second).
 
       Return a :class:`~perf.Benchmark` instance.
 
@@ -337,11 +405,9 @@ TextRunner
 
       Benchmark ``sample_func(loops, *args)``.
 
-      The function must return the total elapsed time of all loops. The
-      :meth:`get_samples` method will divide samples by ``loops x inner_loops``
-      (see :attr:`~perf.Benchmark.loops` and
-      :attr:`~perf.Benchmark.inner_loops` attributes of
-      :class:`perf.Benchmark`).
+      The function must return the total elapsed time of all loops: raw samples
+      are divided by ``loops x inner_loops``, see :attr:`loops` and
+      :attr:`inner_loops` attributes.
 
       :func:`perf.perf_counter` should be used to measure the elapsed time.
 
@@ -350,38 +416,37 @@ TextRunner
    .. method:: parse_args(args=None)
 
       Parse command line arguments using :attr:`argparser` and put the result
-      into :attr:`args`.
+      into the :attr:`args` attribute.
 
-      Return arguments.
+      Return the :attr:`args` attribute.
 
    Attributes:
 
    .. attribute:: args
 
-      Namespace of arguments, see the :meth:`parse_args` method, ``None``
+      Namespace of arguments: result of the :meth:`parse_args` method, ``None``
       before :meth:`parse_args` is called.
 
    .. attribute:: argparser
 
-      :class:`argparse.ArgumentParser` instance.
+      An :class:`argparse.ArgumentParser` object used to parse command line
+      options.
+
+   .. attribute:: metadata
+
+      Benchmark metadata (``dict``).
 
    .. attribute:: name
 
       Name of the benchmark.
 
-      The value is passed to the :class:`~perf.Benchmark` object created by
-      the :meth:`bench_sample_func` method.
-
    .. attribute:: inner_loops
 
-      Number of inner-loops of the *sample_func* of :meth:`bench_sample_func`.
-      This number is compute the final sample from the result of *sample_func*.
-
-      The value is is passed to the :class:`~perf.Benchmark` constructor.
+      Number of benchmark inner-loops (``int`` or ``None``).
 
    .. attribute:: prepare_subprocess_args
 
-      Callback used to prepare command line arguments to spawn a worker child
+      Callback used to prepare command line arguments to spawn a worker
       process. The callback is called with ``prepare(runner, args)``, args must
       be modified in-place.
 
@@ -393,16 +458,15 @@ TextRunner
       Command list arguments to call the program:
       ``(sys.executable, sys.argv[0])`` by default.
 
-      For example, ``python3 -m perf.timeit`` sets program_args to
-      ``(sys.executable, '-m', 'perf.timeit')``.
-
 
 Functions
 ---------
 
-.. function:: add_runs(filename, result)
+.. function:: add_runs(filename: str, result)
 
-   Append a Benchmark or BenchmarkSuite to an existing benchmark suite file,
-   or create a new file.
+   Append a :class:`Benchmark` or :class:`BenchmarkSuite` to an existing
+   benchmark suite file, or create a new file.
 
    If the file already exists, adds runs to existing benchmarks.
+
+   See :meth:`perf.BenchmarkSuite.add_runs` method.

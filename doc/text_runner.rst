@@ -3,7 +3,7 @@
 TextRunner CLI
 ==============
 
-:class:`perf.text_runner.TextRunner` command line options.
+Command line options of the :class:`~perf.text_runner.TextRunner` class.
 
 Loop iterations
 ---------------
@@ -18,15 +18,16 @@ Options::
     [-w WARMUPS/--warmups=WARMUPS]
     [--min-time=MIN_TIME]
 
+Default: 20 processes and 3 samples per process (total: 60 samples).
+
 * ``--rigorous``: Spend longer running tests to get more accurate results.
-  Multiply the number of ``PROCESSES`` by 2 and multiply the number of
-  ``SAMPLES`` by 5/3 (1.6). Default: 20 processes and 5 samples per process
-  (100 samples).
+  Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
+  samples per process (120 samples).
 * ``--fast``: Get rough answers quickly. Divide the number of ``PROCESSES`` by
-  2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 5 processes
-  and 2 samples per process (total: 10 samples).
+  2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 10 processes
+  and 2 samples per process (total: 20 samples).
 * ``PROCESSES``: number of processes used to run the benchmark
-  (default: ``10``)
+  (default: ``20``)
 * ``SAMPLES``: number of samples per process
   (default: ``3``)
 * ``WARMUPS``: the number of ignored samples used to warmup to benchmark
@@ -56,7 +57,7 @@ Options::
   see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays metadata: see :ref:`perf show metadata
   <show_cmd_metadata>` command
-* ``--hist`` displays an histogram of samples, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
@@ -69,14 +70,14 @@ JSON output
 
 Options::
 
-    [--stdout]
     [-o FILENAME/--output=FILENAME]
     [--append=FILENAME]
+    [--stdout]
 
+* ``--output=FILENAME`` writes the benchmark result as JSON into *FILENAME*
+* ``--append=FILENAME`` appends the benchmark runs to benchmarks of the JSON
+  file *FILENAME*. The file is created if it doesn't exist.
 * ``--stdout`` writes the benchmark as JSON into stdout
-* ``--output=FILENAME`` writes the benchmark result as JSON into *FILENAME*,
-* ``--append=FILENAME`` appends the benchmark result as JSON into
-  *FILENAME*. The file is created if it doesn't exist.
 
 If ``--stdout`` is used, other messages are written into stderr rather than
 stdout.
@@ -105,6 +106,6 @@ explicitly::
     [--worker]
     [--debug-single-sample]
 
-* ``--worker``: a worker process, run the benchmark
-* ``--debug-single-sample``: Debug mode, only collect a single sample
+* ``--worker``: a worker process, run the benchmark in the running processs
+* ``--debug-single-sample``: Debug mode, only produce a single sample
 

@@ -1,6 +1,9 @@
 TODO
 ====
 
+* BenchmarkSuite.get_benchmarks(): don't sort by name? Error if a benchmark
+  has no name?
+* Remove BenchmarkSuite.__iter__()?
 * support BenchmarkSuite directly in TextRunner for pybench
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?

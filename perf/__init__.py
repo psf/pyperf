@@ -567,9 +567,8 @@ class Benchmark(object):
             raise ValueError("cannot add a benchmark to itself")
 
         nrun = benchmark.get_nrun()
-        # FIXME: move this check to benchmark constructor?
         if not nrun:
-            raise ValueError("benchmark has no run")
+            raise ValueError("the benchmark has no run")
 
         for run in benchmark._runs:
             self.add_run(run)
