@@ -333,7 +333,6 @@ class Benchmark(object):
         return dict(self._common_metadata)
 
     def _get_run_property(self, get_property):
-        # FIXME: move this check to Benchmark constructor?
         if not self._runs:
             raise ValueError("the benchmark has no run")
 
@@ -462,7 +461,11 @@ class Benchmark(object):
             run = Run._json_load(run_data, common_metadata)
             bench.add_run(run)
 
-        # FIXME: optim: save common_metadata into self._common_metadata
+        if common_metadata:
+            bench._common_metadata = {name: Metadata(name, value)
+                                     for name, value in common_metadata.items()}
+        else:
+            bench._common_metadata = {}
         return bench
 
     def _as_json(self):
