@@ -327,12 +327,12 @@ def _display_metadata(metadata, header="Metadata:", file=None):
 
 def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
                        dump=False, stats=False, hist=False):
-    if dump:
-        _display_runs(bench, file=file)
-        print(file=file)
-
     if metadata:
         _display_metadata(bench.get_metadata(), file=file)
+        print(file=file)
+
+    if dump:
+        _display_runs(bench, file=file)
         print(file=file)
 
     if hist:
