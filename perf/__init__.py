@@ -240,23 +240,26 @@ class Run(object):
 
     @property
     def warmups(self):
-        if not self._warmups:
+        if self._warmups:
+            return self._warmups
+        else:
             return ()
-        return self._warmups
 
     @property
     def samples(self):
         return self._samples
 
     def _get_loops(self):
-        if self._metadata is None:
+        if self._metadata is not None:
+            return self._metadata.get('loops', 1)
+        else:
             return 1
-        return self._metadata.get('loops', 1)
 
     def _get_inner_loops(self):
-        if self._metadata is None:
+        if self._metadata is not None:
+            return self._metadata.get('inner_loops', 1)
+        else:
             return 1
-        return self._metadata.get('inner_loops', 1)
 
     def get_total_loops(self):
         return self._get_loops() * self._get_inner_loops()
