@@ -256,13 +256,6 @@ class Run(object):
     def get_total_loops(self):
         return self._get_loops() * self._get_inner_loops()
 
-    def _get_nsample(self):
-        "Get the number of samples, excluding wamrup samples."
-        return len(self._samples)
-
-    def _get_samples(self):
-        return self._samples
-
     def _get_raw_samples(self, warmups=False):
         total_loops = self._get_loops() * self._get_inner_loops()
         if warmups and self._warmups:
@@ -363,7 +356,7 @@ class Benchmark(object):
         return self._get_run_property(lambda run: len(run.warmups))
 
     def _get_nsample_per_run(self):
-        return self._get_run_property(lambda run: run._get_nsample())
+        return self._get_run_property(lambda run: len(run.samples))
 
     def _get_loops(self):
         return self._get_run_property(lambda run: run._get_loops())
@@ -427,7 +420,7 @@ class Benchmark(object):
         return list(self._runs)
 
     def get_nsample(self):
-        return sum(run._get_nsample() for run in self._runs)
+        return sum(len(run.samples) for run in self._runs)
 
     def get_samples(self):
         if self._samples is not None:
@@ -435,7 +428,7 @@ class Benchmark(object):
 
         samples = []
         for run in self._runs:
-            samples.extend(run._get_samples())
+            samples.extend(run.samples)
         samples = tuple(samples)
         self._samples = samples
         return samples
@@ -541,7 +534,7 @@ class Benchmark(object):
         for run in self._runs:
             # FIXME: only remove outliers, not whole runs
             if all(min_sample <= sample <= max_sample
-                   for sample in run._get_samples()):
+                   for sample in run.samples):
                 new_runs.append(run)
         if not new_runs:
             raise ValueError("no more runs")

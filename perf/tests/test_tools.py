@@ -127,8 +127,7 @@ class RunTests(unittest.TestCase):
         self.assertEqual(run._get_loops(), 2)
         self.assertEqual(run._get_inner_loops(), 5)
         self.assertEqual(run.get_total_loops(), 2 * 5)
-        self.assertEqual(run._get_nsample(), 2)
-        self.assertEqual(run._get_samples(),
+        self.assertEqual(run.samples,
                          (2.0, 3.0))
         self.assertEqual(run._get_raw_samples(),
                          (20.0, 30.0))
