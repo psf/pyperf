@@ -569,6 +569,15 @@ class BenchmarkSuite(object):
         self.filename = filename
         self._benchmarks = []
 
+    def get_benchmark_names(self):
+        names = []
+        for bench in self:
+            name = bench.name
+            if not name:
+                raise ValuError("a benchmark has no name")
+            names.append(name)
+        return names
+
     def __iter__(self):
         return iter(self._benchmarks)
 
