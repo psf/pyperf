@@ -414,7 +414,10 @@ class Benchmark(object):
         return list(self._runs)
 
     def get_nsample(self):
-        return sum(len(run.samples) for run in self._runs)
+        if self._samples is not None:
+            return len(self._samples)
+        else:
+            return sum(len(run.samples) for run in self._runs)
 
     def get_samples(self):
         if self._samples is not None:
