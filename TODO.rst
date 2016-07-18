@@ -1,14 +1,7 @@
-Before 0.7 release
-==================
-
-* decide if metadata is collected by default or not in Run
-
-
 TODO
 ====
 
 * support BenchmarkSuite directly in TextRunner for pybench
-* remove Benchmark.name?
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?
 * metadata: set CPU affinity

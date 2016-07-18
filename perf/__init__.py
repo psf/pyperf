@@ -343,7 +343,7 @@ class Benchmark(object):
         # Compute the mean (float)
         return float(sum(values)) / len(values)
 
-    def get_nwarmup(self):
+    def _get_nwarmup(self):
         return self._get_run_property(lambda run: len(run.warmups))
 
     def _get_nsample_per_run(self):

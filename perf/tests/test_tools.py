@@ -300,7 +300,7 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark()
         bench.add_run(perf.Run((1.0, 2.0, 3.0), warmups=[1.0]))
         bench.add_run(perf.Run((5.0, 6.0), warmups=[4.0]))
-        nwarmup = bench.get_nwarmup()
+        nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, int)
 
@@ -308,7 +308,7 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark()
         bench.add_run(perf.Run([3.0], warmups=[1.0, 2.0]))
         bench.add_run(perf.Run([4.0, 5.0, 6.0]))
-        nwarmup = bench.get_nwarmup()
+        nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, float)
 

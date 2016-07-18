@@ -417,7 +417,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         bench.add_run(perf.Run(samples, warmups=[5.0],
                                metadata={'name': 'bench'}))
 
-        self.assertEqual(bench.get_nwarmup(), 1)
+        self.assertEqual(bench._get_nwarmup(), 1)
         self.assertEqual(bench._get_raw_samples(warmups=True),
                          raw_samples)
 
@@ -429,7 +429,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                                       '--remove-warmups', '--stdout')
             bench2 = perf.Benchmark.loads(stdout)
 
-        self.assertEqual(bench2.get_nwarmup(), 0)
+        self.assertEqual(bench2._get_nwarmup(), 0)
         self.assertEqual(bench2._get_raw_samples(warmups=True),
                          raw_samples[1:])
 

@@ -53,7 +53,6 @@ def _display_run(bench, run_index, run,
     show_warmup = (verbose >= 0)
 
     total_loops = run.get_total_loops()
-    raw_samples = run._get_raw_samples(warmups=True)
 
     def format_samples(samples):
         samples_str = list(bench._format_samples(samples))
@@ -153,7 +152,7 @@ def _display_stats(bench, file=None):
         text += ' (average)'
     print('Number of samples per run: %s' % text, file=file)
 
-    nwarmup = bench.get_nwarmup()
+    nwarmup = bench._get_nwarmup()
     text = perf._format_number(nwarmup)
     if isinstance(nwarmup, float):
         text += ' (average)'
