@@ -356,7 +356,7 @@ class TextRunner:
     # and so a total duration of 5 seconds by default
     def __init__(self, name, samples=3, warmups=1, processes=20,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 inner_loops=1, _argparser=None):
+                 inner_loops=None, _argparser=None):
         if not name:
             raise ValueError("name must be a non-empty string")
         self.name = name
@@ -612,11 +612,6 @@ class TextRunner:
             print(file=stream)
 
         duration = perf.monotonic_clock() - start_time
-        mins, secs = divmod(duration, 60)
-        if mins:
-            duration = '%.0f min %.0f sec' % (mins, secs)
-        else:
-            duration = '%.1f sec' % secs
         metadata = dict(self.metadata)
         metadata = {'duration': duration, 'name': self.name}
 

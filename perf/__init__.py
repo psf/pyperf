@@ -126,9 +126,22 @@ def _metadata_formatter(value):
     return value
 
 
+def _format_duration(seconds):
+    if seconds < 1.0:
+        return _format_timedelta(seconds)
+
+    mins, secs = divmod(seconds, 60)
+    if mins:
+        return '%.0f min %.0f sec' % (mins, secs)
+    else:
+        return '%.1f sec' % secs
+
+
 def _get_metadata_formatter(name):
     if name in ('loops', 'inner_loops'):
         return _format_number
+    if name == 'duration':
+        return _format_duration
     return _metadata_formatter
 
 
@@ -382,9 +395,7 @@ class Benchmark(object):
                 'python_executable',
                 'python_implementation',
                 'python_version')
-        # FIXME: check loops?
-        # FIXME: cpu_affinity?
-        # FIXME: cpu_config?
+        # FIXME: check loops? or maybe emit a warning in show?
 
         # don't check the first run
         if self._runs:

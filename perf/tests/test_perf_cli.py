@@ -199,7 +199,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - cpu_config: 1=driver:intel_pstate, intel_pstate:turbo, governor:performance
             - cpu_count: 2
             - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-            - duration: 0.4 sec
+            - duration: 400 ms
             - hostname: selma
             - inner_loops: 1
             - loops: 4
@@ -305,7 +305,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               cpu_config: 1=driver:intel_pstate, intel_pstate:turbo, governor:performance
               cpu_count: 2
               cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-              duration: 0.4 sec
+              duration: 400 ms
               hostname: selma
               inner_loops: 1
               loops: 4
