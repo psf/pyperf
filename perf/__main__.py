@@ -259,6 +259,8 @@ def cmd_metadata():
     from perf import metadata as perf_metadata
     metadata = {}
     perf_metadata._collect_metadata(metadata)
+    metadata = {name: perf.Metadata(name, value)
+                for name, value in metadata.items()}
     perf.text_runner._display_metadata(metadata)
 
 
