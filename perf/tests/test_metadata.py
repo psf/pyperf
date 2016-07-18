@@ -30,10 +30,11 @@ class TestMetadata(unittest.TestCase):
             self.assertRegex(key, '^[a-z][a-z0-9_]+$')
 
             # test value
-            self.assertIsInstance(value, str)
+            self.assertIsInstance(value, perf._METADATA_VALUE_TYPES)
             self.assertNotEqual(value, '')
-            self.assertEqual(value.strip(), value)
-            self.assertNotIn('\n', value)
+            if isinstance(value, six.string_types):
+                self.assertEqual(value.strip(), value)
+                self.assertNotIn('\n', value)
 
     def test_collect_cpu_affinity(self):
         with mock.patch('perf._get_isolated_cpus', return_value={1, 2, 3}):

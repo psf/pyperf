@@ -130,6 +130,9 @@ def _get_metadata_formatter(name):
     return _metadata_formatter
 
 
+_METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
+
+
 class Metadata(object):
     def __init__(self, name, value, formatter=None):
         assert not isinstance(value, Metadata)
@@ -219,7 +222,16 @@ class Run(object):
         if metadata:
             self._metadata = {}
             for key, value in metadata.items():
+                if not isinstance(key, six.string_types):
+                    raise TypeError("metadata key must be a string, got %s"
+                                    % type(key).__name__)
+                if not isinstance(value, _METADATA_VALUE_TYPES):
+                    raise TypeError("metadata key must be str, got %s"
+                                    % type(key).__name__)
                 if isinstance(value, six.string_types):
+                    if '\n' in value or '\r' in value:
+                        raise ValueError("newline characters are not allowed "
+                                         "in metadata values: %r" % value)
                     value = value.strip()
                 if not value:
                     raise ValueError("metadata value is empty")

@@ -375,7 +375,7 @@ def _collect_cpu_metadata(metadata):
     # CPU count
     cpu_count = _get_logical_cpu_count()
     if cpu_count:
-        metadata['cpu_count'] = str(cpu_count)
+        metadata['cpu_count'] = cpu_count
 
     cpu_affinity = _get_cpu_affinity()
     _collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
