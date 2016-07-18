@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.7
------------
+Version 0.7 (2016-07-18)
+------------------------
 
 * Add a new ``pybench`` program, similar to ``python3 -m perf``
 * Add a new ``dump`` command
