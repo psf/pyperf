@@ -1,6 +1,7 @@
 import os.path
 import re
 import subprocess
+import six
 import sys
 import unittest
 
@@ -90,7 +91,18 @@ class TestTimeit(unittest.TestCase):
         stdev = float(match.group('stdev'))
         self.assertLessEqual(stdev, MAX_STDEV)
 
-    def test_json_file(self):
+    def run_timeit(self, args):
+        proc = subprocess.Popen(args,
+                                stdout=subprocess.PIPE,
+                                universal_newlines=True)
+        if six.PY3:
+            with proc:
+                proc.communicate()
+        else:
+            proc.communicate()
+        self.assertEqual(proc.returncode, 0)
+
+    def test_output(self):
         loops = 4
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -102,12 +114,7 @@ class TestTimeit(unittest.TestCase):
                     '--output', filename,
                     '-s', 'import time',
                     SLEEP]
-            proc = subprocess.Popen(args,
-                                    stdout=subprocess.PIPE,
-                                    universal_newlines=True)
-            proc.communicate()
-            self.assertEqual(proc.returncode, 0)
-
+            self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
 
         for run in bench.get_runs():
@@ -122,6 +129,28 @@ class TestTimeit(unittest.TestCase):
             for raw_sample in raw_samples:
                 ms = (raw_sample / loops) * 1e3
                 self.assertTrue(MIN_SAMPLE <= ms <= MAX_SAMPLE, ms)
+
+    def test_append(self):
+        loops = 4
+        with tests.temporary_directory() as tmpdir:
+            filename = os.path.join(tmpdir, 'test.json')
+            args = [sys.executable,
+                    '-m', 'perf', 'timeit',
+                    '-p', '1',
+                    '-n', '1',
+                    '-l', '1',
+                    '-w', '0',
+                    '--append', filename,
+                    '-s', 'import time',
+                    SLEEP]
+
+            self.run_timeit(args)
+            bench = perf.Benchmark.load(filename)
+            self.assertEqual(bench.get_nsample(), 1)
+
+            self.run_timeit(args)
+            bench = perf.Benchmark.load(filename)
+            self.assertEqual(bench.get_nsample(), 2)
 
     def test_cli_snippet_error(self):
         args = [sys.executable,
