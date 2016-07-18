@@ -10,7 +10,8 @@ import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 
-__version__ = '0.8'
+__version__ = '0.7.1'
+
 # Format format history:
 # 3 - add Run class
 # 2 - support multiple benchmarks per file

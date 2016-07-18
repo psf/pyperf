@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7.1 (2016-07-18)
+--------------------------
+
+* Fix the ``--append`` command line option
+
 Version 0.7 (2016-07-18)
 ------------------------
 
