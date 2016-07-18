@@ -145,13 +145,9 @@ _METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
 
 
 class Metadata(object):
-    def __init__(self, name, value, formatter=None):
-        assert not isinstance(value, Metadata)
+    def __init__(self, name, value):
         self._name = name
         self._value = value
-        if formatter is None:
-            formatter = _get_metadata_formatter(name)
-        self._formatter = formatter
 
     @property
     def name(self):
@@ -162,7 +158,8 @@ class Metadata(object):
         return self._value
 
     def __str__(self):
-        return self._formatter(self._value)
+        formatter = _get_metadata_formatter(self._name)
+        return formatter(self._value)
 
     def __eq__(self, other):
         if not isinstance(other, Metadata):
@@ -403,7 +400,9 @@ class Benchmark(object):
         # - cpu_affinity
         # - cpu_config
         # - cpu_freq
+        # - cpu_temp
         # - date
+        # - duration
         # - timer
 
         # FIXME: check loops? or maybe emit a warning in show?
