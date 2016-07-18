@@ -15,10 +15,8 @@ TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
 class BaseTestCase(object):
     maxDiff = 100 * 80
 
-    def create_bench(self, samples, **kw):
-        name = kw.pop('name', 'bench')
-        metadata = kw.pop('metadata', None)
-        bench = perf.Benchmark(name=name, **kw)
+    def create_bench(self, samples, metadata=None):
+        bench = perf.Benchmark()
         for sample in samples:
             run = perf.Run([sample],
                            metadata=metadata,
@@ -43,12 +41,14 @@ class BaseTestCase(object):
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_show_common_metadata(self):
-        bench1 = self.create_bench((1.0, 1.5, 2.0), name='py2',
+        bench1 = self.create_bench((1.0, 1.5, 2.0),
                                    metadata={'hostname': 'toto',
-                                             'python_version': '2.7'})
-        bench2 = self.create_bench((1.5, 2.0, 2.5), name='py3',
+                                             'python_version': '2.7',
+                                             'name': 'py2'})
+        bench2 = self.create_bench((1.5, 2.0, 2.5),
                                    metadata={'hostname': 'toto',
-                                             'python_version': '3.4'})
+                                             'python_version': '3.4',
+                                             'name': 'py3'})
         suite = perf.BenchmarkSuite()
         suite.add_benchmark(bench1)
         suite.add_benchmark(bench2)
@@ -100,10 +100,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_compare_to(self):
         ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       name='telco')
+                                       metadata={'name': 'telco'})
 
         changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           name='telco')
+                                           metadata={'name': 'telco'})
 
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
@@ -114,8 +114,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                          expected)
 
     def test_compare_not_significant(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0), name='name')
-        changed_result = self.create_bench((1.5, 2.0, 2.5), name='name')
+        ref_result = self.create_bench((1.0, 1.5, 2.0),
+                                       metadata={'name': 'name'})
+        changed_result = self.create_bench((1.5, 2.0, 2.5),
+                                           metadata={'name': 'name'})
 
         stdout = self.compare('compare', ref_result, changed_result)
 
@@ -124,8 +126,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                          expected)
 
     def test_compare(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0), name='name')
-        changed_result = self.create_bench((1.5, 2.0, 2.5), name='name')
+        ref_result = self.create_bench((1.0, 1.5, 2.0),
+                                       metadata={'name': 'name'})
+        changed_result = self.create_bench((1.5, 2.0, 2.5),
+                                           metadata={'name': 'name'})
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
@@ -137,8 +141,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_compare_same(self):
         samples = (1.0, 1.5, 2.0)
-        ref_result = self.create_bench(samples, name='name')
-        changed_result = self.create_bench(samples, name='name')
+        ref_result = self.create_bench(samples, metadata={'name': 'name'})
+        changed_result = self.create_bench(samples, metadata={'name': 'name'})
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
@@ -369,7 +373,8 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         samples = (1.0, 1.5, 2.0)
         suite = perf.BenchmarkSuite()
         for name in ("call_simple", "go", "telco"):
-            suite.add_benchmark(self.create_bench(samples, name=name))
+            bench = self.create_bench(samples, metadata={'name': name})
+            suite.add_benchmark(bench)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -408,8 +413,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_remove_warmups(self):
         samples = [1.0, 2.0, 3.0]
         raw_samples = [5.0] + samples
-        bench = perf.Benchmark('bench')
-        bench.add_run(perf.Run(samples, warmups=[5.0]))
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run(samples, warmups=[5.0],
+                               metadata={'name': 'bench'}))
 
         self.assertEqual(bench.get_nwarmup(), 1)
         self.assertEqual(bench._get_raw_samples(warmups=True),

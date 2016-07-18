@@ -226,6 +226,11 @@ class Run(object):
         else:
             self._metadata = None
 
+    def _get_name(self):
+        if not self._metadata:
+            return None
+        return self._metadata.get('name', None)
+
     def get_metadata(self):
         if self._metadata:
             return {name: Metadata(name, value)
@@ -309,48 +314,28 @@ class Run(object):
 
 
 class Benchmark(object):
-    # FIXME: remove name parameter
-    def __init__(self, name):
+    def __init__(self):
         self._clear_runs_cache()
         # list of Run objects
         self._runs = []
         self._format_samples = _format_timedeltas
 
-        # name
-        if not isinstance(name, six.string_types):
-            raise TypeError("name must be a non-empty string")
-
-        name = name.strip()
-        if not name:
-            raise TypeError("name must be a non-empty string")
-        self._name = name
-
-    # FIXME: remove name property, use get_name()
-    @property
-    def name(self):
-        return self._name
-
     def get_name(self):
-        # FIXME: get name from the name metadata of the first run,
-        # or return None
-        return self._name
+        if not self._runs:
+            return None
+        run = self._runs[0]
+        return run._get_name()
 
-    def _get_common_metadata(self):
+    def get_metadata(self):
         if self._common_metadata is None:
             run_metadatas = [run.get_metadata() for run in self._runs]
             self._common_metadata = _common_metadata(run_metadatas)
         return dict(self._common_metadata)
 
-    def get_metadata(self):
-        metadata = self._get_common_metadata()
-        # FIXME: error in Run constructor if metadata contains name?
-        metadata['name'] = Metadata('name', self._name)
-        return metadata
-
     def _get_run_property(self, get_property):
         # FIXME: move this check to Benchmark constructor?
         if not self._runs:
-            raise ValueError("no run")
+            raise ValueError("the benchmark has no run")
 
         values = [get_property(run) for run in self._runs]
         if len(set(values)) == 1:
@@ -404,7 +389,7 @@ class Benchmark(object):
 
         # don't check the first run
         if self._runs:
-            metadata = self._get_common_metadata()
+            metadata = self.get_metadata()
             run_metata = run.get_metadata()
             for key in keys:
                 value = metadata.get(key, None)
@@ -470,9 +455,8 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data):
-        name = data['name']
+        bench = cls()
         common_metadata = data.get('common_metadata', None)
-        bench = cls(name)
 
         for run_data in data['runs']:
             run = Run._json_load(run_data, common_metadata)
@@ -483,11 +467,7 @@ class Benchmark(object):
 
     def _as_json(self):
         data = {}
-        # FIXME: drop name? it should also be in runs metadata
-        name = self.get_name()
-        if name:
-            data['name'] = name
-        common_metadata = self._get_common_metadata()
+        common_metadata = self.get_metadata()
         if common_metadata:
             data['common_metadata'] = {name: obj.value
                                        for name, obj in common_metadata.items()}

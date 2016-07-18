@@ -150,7 +150,7 @@ Run
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(name=None, metadata=None)
+.. class:: perf.Benchmark()
 
    A benchmark is made of multiple :class:`Run` objects.
 
@@ -190,6 +190,11 @@ Benchmark
       name.
 
       Return a dictionary: name (str) => :class:`perf.Metadata` object.
+
+   .. method:: get_name()
+
+      Get the benchmark name (``str``). Return ``None`` if the benchmark has
+      no run or runs have no name in metadata.
 
    .. method:: get_nrun()
 
@@ -239,10 +244,6 @@ Benchmark
 
       Dictionary of metadata (``dict``): key=>value, where keys and values must
       be non-empty strings.
-
-   .. attribute:: name
-
-      Benchmark name (``str`` or ``None``).
 
 
 BenchmarkSuite

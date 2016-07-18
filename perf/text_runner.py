@@ -642,8 +642,7 @@ class TextRunner:
         if self.args.loops == 0:
             self.args.loops = self._calibrate_sample_func(sample_func)
 
-        bench = perf.Benchmark(name=self.name)
-
+        bench = perf.Benchmark()
         try:
             if self.args.worker or self.args.debug_single_sample:
                 return self._worker(bench, sample_func)

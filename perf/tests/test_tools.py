@@ -166,7 +166,7 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(run.samples, (sample,))
 
     def test_add_run(self):
-        bench = perf.Benchmark('bench')
+        bench = perf.Benchmark()
 
         # expect Run, not list
         self.assertRaises(TypeError, bench.add_run, [1.0])
@@ -199,13 +199,14 @@ class BenchmarkTests(unittest.TestCase):
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
-        bench = perf.Benchmark("mybench")
+        bench = perf.Benchmark()
         for sample in samples:
             run = perf.Run([sample],
                            warmups=[3.0],
                            metadata={'key': 'value',
                                      'loops': 20,
-                                     'inner_loops': 3},
+                                     'inner_loops': 3,
+                                     'name': 'mybench'},
                            collect_metadata=False)
             bench.add_run(run)
 
@@ -237,13 +238,14 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_json(self):
         samples = (1.0, 1.5, 2.0)
-        bench = perf.Benchmark("mybench")
+        bench = perf.Benchmark()
         for sample in samples:
             run = perf.Run([sample],
                            warmups=[3.0],
                            metadata={'key': 'value',
                                      'loops': 100,
-                                     'inner_loops': 20},
+                                     'inner_loops': 20,
+                                     'name': 'mybench'},
                            collect_metadata=False)
             bench.add_run(run)
 
@@ -265,20 +267,20 @@ class BenchmarkTests(unittest.TestCase):
     def test__add_benchmark_run(self):
         # bench 1
         samples = (1.0, 2.0, 3.0)
-        bench = perf.Benchmark("bench")
-        bench.add_run(perf.Run(samples))
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run(samples, metadata={'name': 'bench'}))
 
         # bench 2
         samples2 = (4.0, 5.0, 6.0)
-        bench2 = perf.Benchmark("bench")
-        bench2.add_run(perf.Run(samples2))
+        bench2 = perf.Benchmark()
+        bench2.add_run(perf.Run(samples2, metadata={'name': 'bench'}))
         bench.add_runs(bench2)
 
         self.assertEqual(bench.get_samples(), samples + samples2)
 
     def test__get_nsample_per_run(self):
         # exact
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         bench.add_run(perf.Run((1.0, 2.0, 3.0)))
         bench.add_run(perf.Run((4.0, 5.0, 6.0)))
         nsample = bench._get_nsample_per_run()
@@ -286,7 +288,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIsInstance(nsample, int)
 
         # average
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         bench.add_run(perf.Run((1.0, 2.0, 3.0, 4.0)))
         bench.add_run(perf.Run((5.0, 6.0)))
         nsample = bench._get_nsample_per_run()
@@ -295,7 +297,7 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_get_warmups(self):
         # exact
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         bench.add_run(perf.Run((1.0, 2.0, 3.0), warmups=[1.0]))
         bench.add_run(perf.Run((5.0, 6.0), warmups=[4.0]))
         nwarmup = bench.get_nwarmup()
@@ -303,7 +305,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIsInstance(nwarmup, int)
 
         # average
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         bench.add_run(perf.Run([3.0], warmups=[1.0, 2.0]))
         bench.add_run(perf.Run([4.0, 5.0, 6.0]))
         nwarmup = bench.get_nwarmup()
@@ -311,7 +313,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertIsInstance(nwarmup, float)
 
     def test_get_nsample(self):
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         self.assertEqual(bench.get_nsample(), 0)
 
         bench.add_run(perf.Run([2.0, 3.0], warmups=[1.0]))
@@ -324,7 +326,7 @@ class BenchmarkTests(unittest.TestCase):
         run1 = perf.Run((1.0,))
         run2 = perf.Run((2.0,))
 
-        bench = perf.Benchmark("bench")
+        bench = perf.Benchmark()
         bench.add_run(run1)
         bench.add_run(run2)
         self.assertEqual(bench.get_runs(), [run1, run2])
@@ -378,8 +380,8 @@ class CPUToolsTests(unittest.TestCase):
 
 class TestBenchmarkSuite(unittest.TestCase):
     def benchmark(self, name):
-        bench = perf.Benchmark(name)
-        bench.add_run(perf.Run([1.0, 1.5, 2.0]))
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run([1.0, 1.5, 2.0], metadata={'name': name}))
         return bench
 
     def test_suite(self):
@@ -416,15 +418,15 @@ class TestBenchmarkSuite(unittest.TestCase):
     def test_add_runs(self):
         # bench 1
         samples = (1.0, 2.0, 3.0)
-        bench = perf.Benchmark("bench")
-        bench.add_run(perf.Run(samples))
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run(samples, metadata={'name': "bench"}))
         suite = perf.BenchmarkSuite()
         suite.add_benchmark(bench)
 
         # bench 2
         samples2 = (4.0, 5.0, 6.0)
-        bench2 = perf.Benchmark("bench")
-        bench2.add_run(perf.Run(samples2))
+        bench2 = perf.Benchmark()
+        bench2.add_run(perf.Run(samples2, metadata={'name': "bench"}))
         suite.add_runs(bench2)
 
         bench = suite.get_benchmark('bench')
