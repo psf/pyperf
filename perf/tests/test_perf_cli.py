@@ -20,7 +20,7 @@ class BaseTestCase(object):
         metadata = kw.pop('metadata', None)
         bench = perf.Benchmark(name=name, **kw)
         for sample in samples:
-            run = perf.Run(0, [sample],
+            run = perf.Run([sample],
                            metadata=metadata,
                            collect_metadata=False)
             bench.add_run(run)
@@ -273,7 +273,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_dump_raw(self):
         expected = """
             Run 1: raw warmup (1): 98.9 ms; raw samples (3): 97.9 ms, 97.8 ms, 98.0 ms
-            Run 2: raw warmup (1): 100 ms; raw samples (3): 99 ms, 98 ms, 99 ms
+            Run 2: raw warmup (1): 100 ms; raw samples (3): 99.0 ms, 98.5 ms, 99.1 ms
             Run 3: raw warmup (1): 100.0 ms; raw samples (3): 99.1 ms, 98.3 ms, 98.5 ms
         """
         stdout = self.run_command('dump', '--raw', TELCO)
@@ -410,10 +410,12 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                          samples)
 
     def test_remove_warmups(self):
-        raw_samples = [5.0, 1.0, 2.0, 3.0]
+        samples = [1.0, 2.0, 3.0]
+        raw_samples = [5.0] + samples
         bench = perf.Benchmark('bench')
-        bench.add_run(perf.Run(1, raw_samples))
+        bench.add_run(perf.Run(samples, warmups=[5.0]))
 
+        self.assertEqual(bench.get_nwarmup(), 1)
         self.assertEqual(bench._get_raw_samples(warmups=True),
                          raw_samples)
 
@@ -425,6 +427,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                                       '--remove-warmups', '--stdout')
             bench2 = perf.Benchmark.loads(stdout)
 
+        self.assertEqual(bench2.get_nwarmup(), 0)
         self.assertEqual(bench2._get_raw_samples(warmups=True),
                          raw_samples[1:])
 

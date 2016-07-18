@@ -2,7 +2,6 @@ Before 0.7 release
 ==================
 
 * decide if metadata is collected by default or not in Run
-* Run: store normalize samples and store loops/inner_loops as run metadata?
 
 
 TODO

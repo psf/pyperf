@@ -124,23 +124,20 @@ Metadata
 Run
 ---
 
-.. class:: perf.Run(warmups: int, raw_samples: List[float], loops: int=1, inner_loops: int=1, metadata: dict=None, collect_metadata=True)
+.. class:: perf.Run(samples: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
 
    A benchmark run result is made of multiple samples.
 
-   *raw_samples* must be a non-empty sequence of numbers (``float``) greater
-   than zero. Usually, *raw_samples* is a list of number of seconds.
+   *samples* must be a non-empty sequence of numbers (``float``) greater
+   than zero. Usually, *samples* is a list of number of seconds.
 
-   Raw samples must not be equal to zero. If a raw sample is zero, use more
+   Samples must not be equal to zero. If a sample is zero, use more
    loop iterations: see :ref:`Runs, samples, warmups, outter and inner loops
    <loops>`.
 
-   *raw_samples* must contains at least ``warmups + 1`` samples. The first
-   :attr:`warmups` samples are excluded from the :meth:`Benchmark.get_samples`
-   result.
+   *samples* must contains at least ``1`` sample.
 
-   Raw samples are total for all loops. The :meth:`get_samples` method divides
-   raw samples by :meth:`get_loops`.
+   Samples are normalized value per loop iteration.
 
    Set *collect_metadata* to false to not collect system metadata.
 
@@ -165,7 +162,7 @@ Benchmark
 
    .. method:: add_run(run: Run)
 
-      Add a run: *run* must a :class:`Run` object.
+      Add a benchmark run: *run* must a :class:`Run` object.
 
    .. method:: dump(file, compact=True)
 
@@ -196,6 +193,13 @@ Benchmark
 
       Get the number of runs (``int``).
 
+   .. method:: get_nwarmup()
+
+      Get the number of warmup samples per run.
+
+      Return an ``int`` if all runs use the same number of warmups, or return
+      the average as a ``float``.
+
    .. method:: get_runs()
 
       Get the list of :class:`perf.Run` objects.
@@ -206,13 +210,6 @@ Benchmark
 
       Raw run samples are divided by ``loops x inner_loops``: see :attr:`loops`
       and :attr:`inner_loops` attributes.
-
-   .. method:: get_warmups()
-
-      Get the number of warmup samples per run.
-
-      Return an ``int`` if all runs use the same number of warmups, or return
-      the average as a ``float``.
 
    .. classmethod:: load(file) -> Benchmark
 

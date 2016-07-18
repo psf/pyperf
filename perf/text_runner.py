@@ -50,38 +50,37 @@ def _bench_suite_from_subprocess(args):
 
 def _display_run(bench, run_index, run,
                  common_metadata=None, raw=False, verbose=0, file=None):
-    loops = run.loops * run.inner_loops
+    show_warmup = (verbose >= 0)
+
+    total_loops = run.loops * run.inner_loops
     raw_samples = run._get_raw_samples(warmups=True)
-    if not raw:
-        samples = [sample / loops for sample in raw_samples]
-    else:
-        samples = raw_samples
 
-    samples_str = list(bench._format_samples(samples))
+    def format_samples(samples):
+        samples_str = list(bench._format_samples(samples))
+        median = bench.median()
+        max_delta = median * 0.05
+        for index, sample in enumerate(samples):
+            if raw:
+                sample /= total_loops
+            delta = sample - median
+            if abs(delta) > max_delta:
+                samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
+        return samples_str
 
-    median = bench.median()
-    max_delta = median * 0.05
-    for index, sample in enumerate(samples):
-        if raw:
-            sample /= loops
-        delta = sample - median
-        if abs(delta) > max_delta:
-            samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
-
-    # FIXME: don't use private attribute
-    nwarmup = run._warmups
-    if nwarmup:
-        warmups = samples_str[:nwarmup]
-        samples = samples_str[nwarmup:]
-    else:
-        samples = samples_str
+    warmups = run.warmups
+    samples = run.samples
+    if raw:
+        warmups = [sample * total_loops for sample in warmups]
+        samples = [sample * total_loops for sample in samples]
+    samples = format_samples(samples)
+    warmups = format_samples(warmups)
 
     if raw:
         name = 'raw samples'
     else:
         name = 'samples'
     text = '%s (%s): %s' % (name, len(samples), ', '.join(samples))
-    if nwarmup and verbose >= 0:
+    if warmups and show_warmup:
         if raw:
             name = 'raw warmup'
         else:
@@ -154,9 +153,9 @@ def _display_stats(bench, file=None):
         text += ' (average)'
     print('Number of samples per run: %s' % text, file=file)
 
-    warmups = bench.get_warmups()
-    text = perf._format_number(warmups)
-    if isinstance(warmups, float):
+    nwarmup = bench.get_nwarmup()
+    text = perf._format_number(nwarmup)
+    if isinstance(nwarmup, float):
         text += ' (average)'
     print('Number of warmups per run: %s' % text, file=file)
 
@@ -586,9 +585,15 @@ class TextRunner:
         loops = self.args.loops
         start_time = perf.monotonic_clock()
 
-        raw_samples = []
+        warmups = []
+        samples = []
+        total_loops = loops
+        if self.inner_loops is not None:
+            total_loops *= self.inner_loops
         for is_warmup, index in self._range():
             raw_sample = sample_func(loops)
+
+            sample = float(raw_sample) / loops
 
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
@@ -596,16 +601,19 @@ class TextRunner:
             # the dot. Round manually to 10^-9 to produce more compact JSON
             # files and don't pretend to have a better resolution than 1
             # nanosecond.
-            raw_sample = round(raw_sample, 9)
+            sample = round(sample, 9)
 
-            raw_samples.append(raw_sample)
+            if is_warmup:
+                warmups.append(sample)
+            else:
+                samples.append(sample)
 
             if self.args.verbose:
-                text = bench._format_sample(raw_sample)
+                text = bench._format_sample(sample)
                 if is_warmup:
                     text = "Warmup %s: %s" % (index, text)
                 else:
-                    text = "Raw sample %s: %s" % (index, text)
+                    text = "Sample %s: %s" % (index, text)
                 print(text, file=stream)
 
         if self.args.verbose:
@@ -613,12 +621,14 @@ class TextRunner:
 
         duration = perf.monotonic_clock() - start_time
         metadata = dict(self.metadata)
-        metadata = {'duration': duration, 'name': self.name}
+        metadata['duration'] = duration
+        metadata['name'] = self.name
+        metadata['loops'] = loops
+        if self.inner_loops is not None and self.inner_loops != 1:
+            metadata['inner_loops'] = self.inner_loops
 
-        run = perf.Run(self.args.warmups, raw_samples,
-                       loops=loops,
-                       inner_loops=self.inner_loops,
-                       metadata=metadata)
+        # Run collects metadata
+        run = perf.Run(samples, warmups=warmups, metadata=metadata)
         bench.add_run(run)
         self._display_result(bench, check_unstable=False)
 
