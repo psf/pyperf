@@ -224,7 +224,7 @@ class BenchmarkTests(unittest.TestCase):
 
         self.check_runs(bench, (3.0,), samples)
 
-        self.assertEqual(bench.name, "mybench")
+        self.assertEqual(bench.get_name(), "mybench")
         self.assertEqual(self.get_metadata(bench),
                          {'key': 'value',
                           'name': 'mybench',
@@ -255,7 +255,7 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(run._get_loops(), 100)
             self.assertEqual(run._get_inner_loops(), 20)
 
-        self.assertEqual(bench.name, "mybench")
+        self.assertEqual(bench.get_name(), "mybench")
         self.assertEqual(self.get_metadata(bench),
                          {'key': 'value', 'name': 'mybench',
                           'loops': 100, 'inner_loops': 20})
@@ -410,8 +410,8 @@ class TestBenchmarkSuite(unittest.TestCase):
 
         benchmarks = suite.get_benchmarks()
         self.assertEqual(len(benchmarks), 2)
-        self.assertEqual(benchmarks[0].name, 'go')
-        self.assertEqual(benchmarks[1].name, 'telco')
+        self.assertEqual(benchmarks[0].get_name(), 'go')
+        self.assertEqual(benchmarks[1].get_name(), 'telco')
 
     def test_add_runs(self):
         # bench 1

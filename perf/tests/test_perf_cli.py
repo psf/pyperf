@@ -383,14 +383,10 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                                       '--exclude-benchmark', 'go', '--stdout')
             suite3 = perf.BenchmarkSuite.loads(stdout)
 
-        def get_benchmark_names(suite):
-            return [bench.name
-                    for bench in suite.get_benchmarks()]
-
-        self.assertEqual(get_benchmark_names(suite2),
+        self.assertEqual(suite2.get_benchmark_names(),
                          ['go'])
 
-        self.assertEqual(get_benchmark_names(suite3),
+        self.assertEqual(suite3.get_benchmark_names(),
                          ['call_simple', 'telco'])
 
     def test_remove_outliers(self):

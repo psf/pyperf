@@ -51,7 +51,7 @@ class TestRunTextRunner(unittest.TestCase):
 
         # check bench_sample_func() bench
         self.assertIsInstance(bench, perf.Benchmark)
-        self.assertEqual(bench.name, 'bench')
+        self.assertEqual(bench.get_name(), 'bench')
         self.assertEqual(bench.get_nrun(), 1)
 
         return Result(runner, bench, stdout)

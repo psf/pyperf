@@ -309,6 +309,7 @@ class Run(object):
 
 
 class Benchmark(object):
+    # FIXME: remove name parameter
     def __init__(self, name):
         self._clear_runs_cache()
         # list of Run objects
@@ -324,8 +325,14 @@ class Benchmark(object):
             raise TypeError("name must be a non-empty string")
         self._name = name
 
+    # FIXME: remove name property, use get_name()
     @property
     def name(self):
+        return self._name
+
+    def get_name(self):
+        # FIXME: get name from the name metadata of the first run,
+        # or return None
         return self._name
 
     def _get_common_metadata(self):
@@ -475,7 +482,11 @@ class Benchmark(object):
         return bench
 
     def _as_json(self):
-        data = {'name': self.name}
+        data = {}
+        # FIXME: drop name? it should also be in runs metadata
+        name = self.get_name()
+        if name:
+            data['name'] = name
         common_metadata = self._get_common_metadata()
         if common_metadata:
             data['common_metadata'] = {name: obj.value
@@ -565,7 +576,7 @@ class BenchmarkSuite(object):
     def get_benchmark_names(self):
         names = []
         for bench in self:
-            name = bench.name
+            name = bench.get_name()
             if not name:
                 raise ValuError("a benchmark has no name")
             names.append(name)
@@ -575,8 +586,12 @@ class BenchmarkSuite(object):
         return iter(self._benchmarks)
 
     def _add_benchmark_runs(self, benchmark):
+        name = benchmark.get_name()
+        if not name:
+            raise ValueError("the benchmark has no name")
+
         try:
-            existing = self.get_benchmark(benchmark.name)
+            existing = self.get_benchmark(name)
         except KeyError:
             self.add_benchmark(benchmark)
         else:
@@ -603,12 +618,13 @@ class BenchmarkSuite(object):
         if not name:
             raise ValueError("name is empty")
         for bench in self._benchmarks:
-            if bench.name == name:
+            if bench.get_name() == name:
                 return bench
         raise KeyError("there is no benchmark called %r" % name)
 
     def get_benchmarks(self):
-        return sorted(self._benchmarks, key=lambda bench: bench.name or '')
+        return sorted(self._benchmarks,
+                      key=lambda bench: bench.get_name() or '')
 
     def __len__(self):
         return len(self._benchmarks)
@@ -617,8 +633,8 @@ class BenchmarkSuite(object):
         if benchmark in self._benchmarks:
             raise ValueError("benchmark already part of the suite")
 
-        name = benchmark.name
-        if name is not None:
+        name = benchmark.get_name()
+        if name:
             try:
                 self.get_benchmark(name)
             except KeyError:
@@ -699,7 +715,7 @@ class BenchmarkSuite(object):
     def _convert_include_benchmark(self, name):
         benchmarks = []
         for bench in self:
-            if bench.name == name:
+            if bench.get_name() == name:
                 benchmarks.append(bench)
         if not benchmarks:
             raise KeyError("benchmark %r not found" % name)
@@ -708,7 +724,7 @@ class BenchmarkSuite(object):
     def _convert_exclude_benchmark(self, name):
         benchmarks = []
         for bench in self:
-            if bench.name != name:
+            if bench.get_name() != name:
                 benchmarks.append(bench)
         if not benchmarks:
             raise ValueError("empty suite")

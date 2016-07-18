@@ -106,21 +106,6 @@ def create_parser():
     return parser, timeit_runner
 
 
-def load_result(filename, default_name=None):
-    result = perf.Benchmark.load(filename)
-
-    if not result.name and filename != "-":
-        name = filename
-        if name.lower().endswith('.json'):
-            name = name[:-5]
-        if name:
-            result.name = name
-    if not result.name and default_name:
-        result.name = default_name
-
-    return result
-
-
 def _display_common_metadata(metadatas):
     if len(metadatas) < 2:
         return
@@ -205,9 +190,10 @@ def compare_benchmarks(benchmarks, sort_benchmarks, args):
     return (all_significant, lines)
 
 
-def benchmark_name(benchmark):
+def get_benchmark_name(benchmark):
     # FIXME: better fallback value
-    return benchmark.name or '<no name>'
+    return benchmark.get_name() or '<no name>'
+
 
 def compare_suites(benchmarks, sort_benchmarks, args):
     grouped_by_name = benchmarks.group_by_name()
@@ -255,7 +241,7 @@ def compare_suites(benchmarks, sort_benchmarks, args):
             if not hidden:
                 continue
             # FIXME: better fallback value
-            hidden_names = [benchmark_name(bench) for bench in hidden]
+            hidden_names = [get_benchmark_name(bench) for bench in hidden]
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
@@ -342,7 +328,7 @@ class Benchmarks:
             benchmarks = suite.get_benchmarks()
             for bench_index, benchmark in enumerate(benchmarks):
                 if show_name:
-                    title = benchmark.name
+                    title = get_benchmark_name(benchmark)
                     if show_filename:
                         title = "%s:%s" % (filename, title)
                 else:
@@ -356,7 +342,7 @@ class Benchmarks:
         def suite_to_name_set(suite):
             result = set()
             for  bench in suite:
-                name = bench.name
+                name = bench.get_name()
                 if name:
                     result.add(name)
             return result
@@ -402,7 +388,7 @@ class Benchmarks:
         for suite in self.suites:
             ignored = []
             for bench in suite:
-                if bench.name not in names:
+                if bench.get_name() not in names:
                     ignored.append(bench)
             if ignored:
                 yield (suite, ignored)
@@ -525,7 +511,7 @@ def cmd_hist(args):
 
     for suite, ignored in ignored:
         for bench in ignored:
-            name = benchmark_name(bench)
+            name = get_benchmark_name(bench)
             print("[ %s ]" % name)
             perf.text_runner._display_histogram([name], bins=args.bins,
                                                 extend=args.extend)
@@ -585,7 +571,8 @@ def cmd_convert(args):
             try:
                 benchmark._filter_runs(include, only_runs)
             except ValueError:
-                print("ERROR: Benchmark %r has no more run" % benchmark.name,
+                print("ERROR: Benchmark %r has no more run"
+                      % get_benchmark_name(benchmark),
                       file=sys.stderr)
                 sys.exit(1)
 
@@ -599,7 +586,7 @@ def cmd_convert(args):
                 benchmark._remove_outliers()
             except ValueError:
                 print("ERROR: Benchmark %r has no more run after removing "
-                      "outliers" % benchmark.name,
+                      "outliers" % get_benchmark_name(benchmark),
                       file=sys.stderr)
                 sys.exit(1)
 
