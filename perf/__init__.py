@@ -123,11 +123,21 @@ def _format_duration(seconds):
         return '%.1f sec' % secs
 
 
+def _format_load(load):
+    if isinstance(load, (int, float)):
+        return '%.2f' % load
+    else:
+        # backward compatibility with perf 0.7.0 (load stored as string)
+        return load
+
+
 def _get_metadata_formatter(name):
     if name in ('loops', 'inner_loops'):
         return _format_number
     if name == 'duration':
         return _format_duration
+    if name == 'load_avg_1min':
+        return _format_load
     return _metadata_formatter
 
 
@@ -387,7 +397,15 @@ class Benchmark(object):
                 'platform',
                 'python_executable',
                 'python_implementation',
+                'python_unicode',
                 'python_version')
+        # ignored:
+        # - cpu_affinity
+        # - cpu_config
+        # - cpu_freq
+        # - date
+        # - timer
+
         # FIXME: check loops? or maybe emit a warning in show?
 
         # don't check the first run

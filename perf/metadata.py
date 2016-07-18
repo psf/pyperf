@@ -18,21 +18,6 @@ except ImportError:
 import perf
 
 
-def _add(metadata, key, value):
-    if value is None:
-        return
-
-    if isinstance(value, int):
-        value = str(value)
-    elif not isinstance(value, str):
-        raise TypeError("invalid metadata type: %r" % (value,))
-
-    value = re.sub(r'\s+', ' ', value)
-    value = value.strip()
-    if value:
-        metadata[key] = value
-
-
 def _collect_python_metadata(metadata):
     # Implementation
     if hasattr(sys, 'implementation'):
@@ -40,15 +25,16 @@ def _collect_python_metadata(metadata):
         metadata['python_implementation'] = sys.implementation.name
     else:
         # Convert to lower case to use the same format than Python 3
-        _add(metadata, 'python_implementation',
-             platform.python_implementation().lower())
+        python_impl = platform.python_implementation().lower()
+        metadata['python_implementation'] = python_impl
 
     version = platform.python_version()
     bits = platform.architecture()[0]
     if bits:
         version = '%s (%s)' % (version, bits)
     metadata['python_version'] = version
-    _add(metadata, 'python_executable', sys.executable)
+    if sys.executable:
+        metadata['python_executable'] = sys.executable
 
     # Before PEP 393 (Python 3.3)
     if sys.version_info < (3, 3):
@@ -70,7 +56,6 @@ def _collect_python_metadata(metadata):
         metadata['timer'] = 'time.clock()'
     elif perf.perf_counter == time.time:
         metadata['timer'] = 'time.time()'
-
 
 
 def _open_text(path):
@@ -114,8 +99,9 @@ def _collect_linux_metadata(metadata):
     # CPU model
     for line in _read_proc("cpuinfo"):
         if line.startswith('model name'):
-            model_name = line.split(':', 1)[1]
-            _add(metadata, 'cpu_model_name', model_name)
+            model_name = line.split(':', 1)[1].strip()
+            if model_name:
+                metadata['cpu_model_name'] = model_name
             break
 
     # ASLR
@@ -173,11 +159,12 @@ def _collect_system_metadata(metadata):
     # on linux, load average over 1 minute
     for line in _read_proc("loadavg"):
         loadavg = line.split()[0]
-        metadata['load_avg_1min'] = loadavg
+        metadata['load_avg_1min'] = float(loadavg)
 
     # Hostname
     hostname = socket.gethostname()
-    _add(metadata, 'hostname', hostname)
+    if hostname:
+        metadata['hostname'] = hostname
 
 
 def _get_cpu_boost(cpu):
