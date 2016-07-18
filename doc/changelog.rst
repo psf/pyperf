@@ -10,10 +10,29 @@ Version 0.7 (2016-07-18)
 ------------------------
 
 * Add a new ``pybench`` program, similar to ``python3 -m perf``
-* Add a new ``dump`` command
+* Most perf CLI commands now support multiple files and support benchmark
+  suites.
+* Add a new ``dump`` command to the perf CLI and a ``--dump`` option to
+  the TextRunner CLI
 * ``convert`` command: add ``--indent`` and ``--remove-warmups`` options
+* replace ``--json`` option with ``-o/--output``
+* New metadata:
+
+  - cpu_config
+  - cpu_freq
+  - cpu_temp
+  - load_avg_1min
+
+Changes:
+
 * New :func:`add_runs` function.
 * Once again, rewrite Run and Benchmark API. Benchmark name is now optional.
+* New :class:`Run` class: it now stores normalized samples rather than raw
+  samples
+* Metadata are now stored in Run, no more in Benchmark.
+  Benchmark.get_metadata() return metadata common to all runs.
+* Metadata become typed (can have a different type than string), the
+  new :class:`Metadata` class formats them.
 
 Version 0.6 (2016-07-06)
 ------------------------

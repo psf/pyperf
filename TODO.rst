@@ -8,14 +8,6 @@ TODO
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?
 * metadata: set CPU affinity
-* "smart" JSON append:
-
-  - add new runs to an existing JSON file. rerun exactly the same benchmark
-    using --json-append
-  - use metadata as the key to check if the benchmark is the same?
-    ignore date? ignore CPU affinity?
-  - "merge" two JSON files: cumulate benchmarks, add runs if two files have the
-    same benchmark, etc.
 
 
 Blocker for perf 1.0 (stable API)
