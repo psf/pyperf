@@ -382,7 +382,7 @@ def _collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
     date = datetime.datetime.now().isoformat()
-    # fixme: move date to a regular run attribute with type datetime.datetime?
+    # FIXME: Move date to a regular run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
 
     _collect_python_metadata(metadata)
