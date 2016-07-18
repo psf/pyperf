@@ -124,8 +124,9 @@ class RunTests(unittest.TestCase):
                        warmups=(1.0,),
                        metadata={'loops': 2, 'inner_loops': 5},
                        collect_metadata=False)
-        self.assertEqual(run.loops, 2)
-        self.assertEqual(run.inner_loops, 5)
+        self.assertEqual(run._get_loops(), 2)
+        self.assertEqual(run._get_inner_loops(), 5)
+        self.assertEqual(run.get_total_loops(), 2 * 5)
         self.assertEqual(run._get_nsample(), 2)
         self.assertEqual(run._get_samples(),
                          (2.0, 3.0))
@@ -135,8 +136,9 @@ class RunTests(unittest.TestCase):
                          (10.0, 20.0, 30.0))
 
         run = perf.Run((2.0, 3.0), warmups=(1.0,))
-        self.assertEqual(run.loops, 1)
-        self.assertEqual(run.inner_loops, 1)
+        self.assertEqual(run._get_loops(), 1)
+        self.assertEqual(run._get_inner_loops(), 1)
+        self.assertEqual(run.get_total_loops(), 1)
 
     def test_constructor(self):
         # need at least 2 samples
@@ -218,8 +220,8 @@ class BenchmarkTests(unittest.TestCase):
         for run in runs:
             self.assertIsInstance(run, perf.Run)
             self.assertEqual(len(run._get_raw_samples(True)), 2)
-            self.assertEqual(run.loops, 20)
-            self.assertEqual(run.inner_loops, 3)
+            self.assertEqual(run._get_loops(), 20)
+            self.assertEqual(run._get_inner_loops(), 3)
 
         self.check_runs(bench, (3.0,), samples)
 
@@ -251,8 +253,8 @@ class BenchmarkTests(unittest.TestCase):
             bench = perf.Benchmark.load(tmp.name)
 
         for run in bench.get_runs():
-            self.assertEqual(run.loops, 100)
-            self.assertEqual(run.inner_loops, 20)
+            self.assertEqual(run._get_loops(), 100)
+            self.assertEqual(run._get_inner_loops(), 20)
 
         self.assertEqual(bench.name, "mybench")
         self.assertEqual(self.get_metadata(bench),

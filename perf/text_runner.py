@@ -52,7 +52,7 @@ def _display_run(bench, run_index, run,
                  common_metadata=None, raw=False, verbose=0, file=None):
     show_warmup = (verbose >= 0)
 
-    total_loops = run.loops * run.inner_loops
+    total_loops = run.get_total_loops()
     raw_samples = run._get_raw_samples(warmups=True)
 
     def format_samples(samples):
@@ -160,8 +160,8 @@ def _display_stats(bench, file=None):
     print('Number of warmups per run: %s' % text, file=file)
 
     # Loop iterations per sample
-    loops = bench.get_loops()
-    inner_loops = bench.get_inner_loops()
+    loops = bench._get_loops()
+    inner_loops = bench._get_inner_loops()
     total_loops = loops * inner_loops
     if isinstance(total_loops, int):
         text = perf._format_number(total_loops)

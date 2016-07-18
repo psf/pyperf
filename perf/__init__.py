@@ -243,18 +243,18 @@ class Run(object):
     def samples(self):
         return self._samples
 
-    # FIXME: remove these properties? or rename to get_xxx()?
-    @property
-    def loops(self):
+    def _get_loops(self):
         if self._metadata is None:
             return 1
         return self._metadata.get('loops', 1)
 
-    @property
-    def inner_loops(self):
+    def _get_inner_loops(self):
         if self._metadata is None:
             return 1
         return self._metadata.get('inner_loops', 1)
+
+    def get_total_loops(self):
+        return self._get_loops() * self._get_inner_loops()
 
     def _get_nsample(self):
         "Get the number of samples, excluding wamrup samples."
@@ -264,7 +264,7 @@ class Run(object):
         return self._samples
 
     def _get_raw_samples(self, warmups=False):
-        total_loops = self.loops * self.inner_loops
+        total_loops = self._get_loops() * self._get_inner_loops()
         if warmups and self._warmups:
             samples = self._warmups + self._samples
         else:
@@ -305,8 +305,6 @@ class Run(object):
         warmups = run_data.get('warmups', None)
         samples = run_data['samples']
         metadata = run_data.get('metadata', None)
-        loops = run_data.get('loops', None)
-        inner_loops = run_data.get('inner_loops', None)
         if common_metadata:
             metadata2 = dict(common_metadata)
             if metadata:
@@ -367,11 +365,14 @@ class Benchmark(object):
     def _get_nsample_per_run(self):
         return self._get_run_property(lambda run: run._get_nsample())
 
-    def get_loops(self):
-        return self._get_run_property(lambda run: run.loops)
+    def _get_loops(self):
+        return self._get_run_property(lambda run: run._get_loops())
 
-    def get_inner_loops(self):
-        return self._get_run_property(lambda run: run.inner_loops)
+    def get_total_loops(self):
+        return self._get_run_property(lambda run: run.get_total_loops())
+
+    def _get_inner_loops(self):
+        return self._get_run_property(lambda run: run._get_inner_loops())
 
     def _clear_runs_cache(self):
         self._samples = None

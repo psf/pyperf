@@ -177,10 +177,12 @@ Benchmark
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
 
-   .. method:: get_loops()
+   .. method:: get_total_loops()
 
-      Get the total number of loops per sample (``int``):
-      :attr:`loops` x :attr:`inner_loops`.
+      Get the total number of loops per sample (loops x inner-loops).
+
+      Return an integer if an ``int`` if all runs have the same number of
+      loops, return the average as a ``float`` otherwise.
 
    .. method:: get_metadata()
 
@@ -206,10 +208,7 @@ Benchmark
 
    .. method:: get_samples()
 
-      Get samples of all runs: values are normalized per loop iteration.
-
-      Raw run samples are divided by ``loops x inner_loops``: see :attr:`loops`
-      and :attr:`inner_loops` attributes.
+      Get samples of all runs (values are average per loop iteration).
 
    .. classmethod:: load(file) -> Benchmark
 
