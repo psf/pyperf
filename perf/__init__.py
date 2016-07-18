@@ -90,21 +90,6 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, unit)
 
 
-def _cleanup_metadata(value):
-    if value is None:
-        return None
-
-    if isinstance(value, (int, float)):
-        return value
-
-    if not isinstance(value, six.string_types):
-        raise TypeError("invalid metadata type: %r" % (value,))
-
-    # replace '   ' with ' '
-    value = re.sub(r'\s+', ' ', value)
-    return value.strip()
-
-
 def _common_metadata(metadatas):
     if not metadatas:
         return dict()
@@ -234,7 +219,8 @@ class Run(object):
         if metadata:
             self._metadata = {}
             for key, value in metadata.items():
-                value = _cleanup_metadata(value)
+                if isinstance(value, six.string_types):
+                    value = value.strip()
                 if not value:
                     raise ValueError("metadata value is empty")
                 self._metadata[key] = value
