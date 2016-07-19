@@ -62,7 +62,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - hostname: toto
 
             py2
-            ===
+            ---
 
             Metadata:
             - python_version: 2.7
@@ -73,7 +73,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Median +- std dev: 1.50 sec +- 0.50 sec
 
             py3
-            ===
+            ---
 
             Metadata:
             - python_version: 3.4

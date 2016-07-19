@@ -106,6 +106,16 @@ def create_parser():
     return parser, timeit_runner
 
 
+def display_title(title, level=1):
+    print(title)
+    if level == 1:
+        char = '='
+    else:
+        char = '-'
+    print(char * len(title))
+    print()
+
+
 def _display_common_metadata(metadatas):
     if len(metadatas) < 2:
         return
@@ -264,7 +274,7 @@ def cmd_metadata():
     perf.text_runner._display_metadata(metadata)
 
 
-DataItem = collections.namedtuple('DataItem', 'benchmark title is_last')
+DataItem = collections.namedtuple('DataItem', 'suite filename benchmark name title is_last')
 GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
 
 
@@ -329,8 +339,10 @@ class Benchmarks:
 
             benchmarks = suite.get_benchmarks()
             for bench_index, benchmark in enumerate(benchmarks):
+                name = get_benchmark_name(benchmark)
+                # FIXME: remove title, move logic to the caller?
                 if show_name:
-                    title = get_benchmark_name(benchmark)
+                    title = name
                     if show_filename:
                         title = "%s:%s" % (filename, title)
                 else:
@@ -338,7 +350,7 @@ class Benchmarks:
                 last_benchmark = (bench_index == (len(benchmarks) - 1))
                 is_last = (last_suite and last_benchmark)
 
-                yield DataItem(benchmark, title, is_last)
+                yield DataItem(suite, filename, benchmark, name, title, is_last)
 
     def _group_by_name_names(self):
         def suite_to_name_set(suite):
@@ -396,12 +408,6 @@ class Benchmarks:
                 yield (suite, ignored)
 
 
-def display_title(title):
-    print(title)
-    print("=" * len(title))
-    print()
-
-
 def load_benchmarks(args):
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
@@ -430,9 +436,17 @@ def cmd_show(args):
                     break
 
     if use_title:
+        show_filename = (data.get_nsuite() > 1)
+        show_name = show_filename or (len(data.suites[0]) > 1)
+
+        suite = None
         for index, item in enumerate(data):
-            if item.title:
-                display_title(item.title)
+            if show_filename and item.suite is not suite:
+                suite = item.suite
+                display_title(item.filename, 1)
+
+            if show_name:
+                display_title(item.name, 2)
 
             if args.metadata:
                 metadata = metadatas[index]
@@ -449,19 +463,36 @@ def cmd_show(args):
             if not item.is_last:
                 print()
     else:
+        use_titles = (data.get_nsuite() > 1)
+
+        suite = None
         for item in data:
+            if use_titles and item.suite is not suite:
+                if suite is not None:
+                    print()
+
+                suite = item.suite
+                display_title(item.filename, 1)
+
             line = str(item.benchmark)
             if item.title:
-                line = '%s: %s' % (item.title, line)
+                line = '%s: %s' % (item.name, line)
             print(line)
 
 
 def cmd_dump(args):
     data = load_benchmarks(args)
 
+    use_titles = (data.get_nsuite() > 1) or (len(data.suites[0]) > 1)
+    suite = None
     for item in data:
-        if item.title:
-            display_title(item.title)
+        if item.suite is not suite:
+            suite = item.suite
+            if use_titles:
+                display_title(item.filename, 1)
+
+        if use_titles:
+            display_title(item.name, 2)
 
         perf.text_runner._display_runs(item.benchmark,
                                        quiet=args.quiet,
@@ -481,9 +512,22 @@ def cmd_timeit(args, timeit_runner):
 def cmd_stats(args):
     data = load_benchmarks(args)
 
+    use_titles = (data.get_nsuite() > 1) or (len(data.suites[0]) > 1)
+    suite = None
     for item in data:
-        if item.title:
-            display_title(item.title)
+        if item.suite is not suite:
+            suite = item.suite
+
+            if use_titles:
+                display_title(item.filename, 1)
+
+                duration = suite.get_total_duration()
+                print("Number of benchmarks: %s" % len(suite))
+                print("Total duration: %s" % perf._format_seconds(duration))
+                print()
+
+        if use_titles:
+            display_title(item.name, 2)
         perf.text_runner._display_stats(item.benchmark)
         if not item.is_last:
             print()

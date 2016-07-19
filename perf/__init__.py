@@ -598,6 +598,9 @@ class BenchmarkSuite(object):
             names.append(name)
         return names
 
+    def __len__(self):
+        return len(self._benchmarks)
+
     def __iter__(self):
         return iter(self._benchmarks)
 
@@ -641,9 +644,6 @@ class BenchmarkSuite(object):
     def get_benchmarks(self):
         return sorted(self._benchmarks,
                       key=lambda bench: bench.get_name() or '')
-
-    def __len__(self):
-        return len(self._benchmarks)
 
     def add_benchmark(self, benchmark):
         if benchmark in self._benchmarks:
