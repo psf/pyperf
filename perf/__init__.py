@@ -493,7 +493,10 @@ class Benchmark(object):
 
         for run_data in data['runs']:
             run = Run._json_load(run_data, common_metadata)
-            bench.add_run(run)
+            # Don't call add_run() to avoid O(n) complexity:
+            # expect that runs were already validated before being written
+            # into a JSON file
+            bench._runs.append(run)
 
         if common_metadata:
             bench._common_metadata = {name: Metadata(name, value)
