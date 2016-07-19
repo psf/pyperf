@@ -250,7 +250,6 @@ def compare_suites(benchmarks, sort_benchmarks, args):
         for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
-            # FIXME: better fallback value
             hidden_names = [get_benchmark_name(bench) for bench in hidden]
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))

@@ -156,11 +156,24 @@ class TestRunTextRunner(unittest.TestCase):
 
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
-    def test_cpu_affinity_setaffinity_isolcpus(self):
+    def test_cpu_affinity_args(self):
+        runner = perf.text_runner.TextRunner('bench')
+        runner.parse_args(['-v', '--affinity=3,7'])
+
+        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
+            with tests.capture_stdout() as stdout:
+                runner._cpu_affinity()
+
+        self.assertEqual(runner.args.affinity, '3,7')
+        self.assertEqual(stdout.getvalue(),
+                         'Pin process to CPUs: 3,7\n')
+        mock_setaffinity.assert_called_once_with([3, 7])
+
+    def test_cpu_affinity_isolcpus(self):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
-        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
+        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
             with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
                 with tests.capture_stdout() as stdout:
                     runner._cpu_affinity()
@@ -168,35 +181,18 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         self.assertEqual(runner.args.affinity, '1-2')
         self.assertEqual(stdout.getvalue(),
                          'Pin process to isolated CPUs: 1-2\n')
-        mock_setaffinity.assert_called_once_with(0, [1, 2])
+        mock_setaffinity.assert_called_once_with([1, 2])
 
-    def test_cpu_affinity_setaffinity_without_isolcpus(self):
+    def test_cpu_affinity_no_isolcpus(self):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
         with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
             with mock.patch('perf._get_isolated_cpus', return_value=None):
                 runner._cpu_affinity()
+
+        self.assertFalse(runner.args.affinity)
         self.assertEqual(mock_setaffinity.call_count, 0)
-
-    def test_cpu_affinity_psutil_isolcpus(self):
-        runner = perf.text_runner.TextRunner('bench')
-        runner.parse_args(['-v'])
-
-        with mock.patch('perf.text_runner.os') as mock_os:
-            del mock_os.sched_setaffinity
-
-            with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
-                with mock.patch('perf.text_runner.psutil') as mock_psutil:
-                    with tests.capture_stdout() as stdout:
-                        runner._cpu_affinity()
-
-        self.assertEqual(runner.args.affinity, '1-2')
-        self.assertEqual(stdout.getvalue(),
-                         'Pin process to isolated CPUs: 1-2\n')
-
-        cpu_affinity = mock_psutil.Process.return_value.cpu_affinity
-        cpu_affinity.assert_called_once_with([1, 2])
 
 
 if __name__ == "__main__":
