@@ -8,7 +8,6 @@ TODO
 * support BenchmarkSuite directly in TextRunner for pybench
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?
-* metadata: set CPU affinity
 
 
 Blocker for perf 1.0 (stable API)

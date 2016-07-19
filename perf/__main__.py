@@ -267,6 +267,12 @@ def cmd_compare(args):
 
 def cmd_metadata():
     from perf import metadata as perf_metadata
+
+    cpus = perf._get_isolated_cpus()
+    if cpus:
+        perf._set_cpu_affinity(cpus)
+        # ignore if _set_cpu_affinity() failed
+
     metadata = {}
     perf_metadata._collect_metadata(metadata)
     metadata = {name: perf.Metadata(name, value)

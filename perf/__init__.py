@@ -945,3 +945,22 @@ def add_runs(filename, result):
         suite = BenchmarkSuite()
     suite.add_runs(result)
     suite.dump(filename)
+
+
+def _set_cpu_affinity(cpus):
+    # Python 3.3 or newer?
+    if hasattr(os, 'sched_setaffinity'):
+        os.sched_setaffinity(0, cpus)
+        return True
+
+    try:
+        import psutil
+    except ImportError:
+        return
+
+    proc = psutil.Process()
+    if not hasattr(proc, 'cpu_affinity'):
+        return
+
+    proc.cpu_affinity(cpus)
+    return True

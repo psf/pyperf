@@ -536,55 +536,44 @@ class TextRunner:
             yield (False, 1 + run)
 
     def _cpu_affinity(self):
-        # sched_setaffinity() was added to Python 3.3
-        has_sched_setaffinity = hasattr(os, 'sched_setaffinity')
-        if not has_sched_setaffinity:
-            if psutil is not None:
-                proc = psutil.Process()
-                psutil_has_cpu_affinity = hasattr(proc, 'cpu_affinity')
-            else:
-                psutil_has_cpu_affinity = False
+        stream = self._stream()
 
         cpus = self.args.affinity
         if not cpus:
-            stream = self._stream()
-
             # --affinity option is not set: detect isolated CPUs
+            isolated = True
             cpus = perf._get_isolated_cpus()
             if not cpus:
                 # no isolated CPUs or unable to get the isolated CPUs
                 return
+        else:
+            isolated = False
+            cpus = perf._parse_cpu_list(cpus)
 
-            if not has_sched_setaffinity and not psutil_has_cpu_affinity:
-                # unable to pin CPUs
+        if self.args.verbose:
+            if isolated:
+                text = ("Pin process to isolated CPUs: %s"
+                        % perf._format_cpu_list(cpus))
+            else:
+                text = ("Pin process to CPUs: %s"
+                        % perf._format_cpu_list(cpus))
+            print(text, file=stream)
+
+        if perf._set_cpu_affinity(cpus):
+            if isolated:
+                self.args.affinity = perf._format_cpu_list(cpus)
+        else:
+            if not isolated:
+                print("ERROR: CPU affinity not available.", file=sys.stderr)
+                print("Use Python 3.3 or newer, or install psutil dependency",
+                      file=stream)
+                sys.exit(1)
+            else:
                 print("WARNING: unable to pin worker processes to "
                       "isolated CPUs, CPU affinity not available", file=stream)
                 print("Use Python 3.3 or newer, or install psutil dependency",
                       file=stream)
-                return
 
-            if self.args.verbose:
-                print("Pin process to isolated CPUs: %s"
-                      % perf._format_cpu_list(cpus), file=stream)
-
-            self.args.affinity = perf._format_cpu_list(cpus)
-        else:
-            cpus = perf._parse_cpu_list(cpus)
-            if self.args.verbose:
-                print("Pin process to CPUs: %s"
-                      % perf._format_cpu_list(cpus),
-                      file=self._stream())
-
-        if has_sched_setaffinity:
-            os.sched_setaffinity(0, cpus)
-        elif psutil_has_cpu_affinity:
-            proc = psutil.Process()
-            proc.cpu_affinity(cpus)
-        else:
-            print("ERROR: CPU affinity not available.", file=sys.stderr)
-            print("Use Python 3.3 or newer, or install psutil dependency",
-                  file=stream)
-            sys.exit(1)
 
     def _worker(self, bench, sample_func):
         stream = self._stream()
