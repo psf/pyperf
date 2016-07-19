@@ -331,6 +331,19 @@ class BenchmarkTests(unittest.TestCase):
         bench.add_run(run2)
         self.assertEqual(bench.get_runs(), [run1, run2])
 
+    def test_get_total_duration(self):
+        bench = perf.Benchmark()
+        self.assertEqual(bench.get_total_duration(), 0.0)
+
+        # use duration metadata
+        bench.add_run(perf.Run([0.1], metadata={'duration': 1.0}))
+        bench.add_run(perf.Run([0.1], metadata={'duration': 2.0}))
+        self.assertEqual(bench.get_total_duration(), 3.0)
+
+        # run without duration metadata
+        bench.add_run(perf.Run([5.0]))
+        self.assertEqual(bench.get_total_duration(), 8.0)
+
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):

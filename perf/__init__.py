@@ -57,6 +57,17 @@ def _format_timedelta(value):
     return _format_timedeltas((value,))[0]
 
 
+def _format_seconds(seconds):
+    if seconds < 1.0:
+        return _format_timedelta(seconds)
+
+    mins, secs = divmod(seconds, 60)
+    if mins:
+        return '%.0f min %.0f sec' % (mins, secs)
+    else:
+        return '%.1f sec' % secs
+
+
 def _format_number(number, unit=None, units=None):
     plural = (abs(number) > 1)
     if number >= 10000:
@@ -113,17 +124,6 @@ def _metadata_formatter(value):
     return value
 
 
-def _format_duration(seconds):
-    if seconds < 1.0:
-        return _format_timedelta(seconds)
-
-    mins, secs = divmod(seconds, 60)
-    if mins:
-        return '%.0f min %.0f sec' % (mins, secs)
-    else:
-        return '%.1f sec' % secs
-
-
 def _format_load(load):
     if isinstance(load, (int, float)):
         return '%.2f' % load
@@ -136,7 +136,7 @@ def _get_metadata_formatter(name):
     if name in ('loops', 'inner_loops'):
         return _format_number
     if name == 'duration':
-        return _format_duration
+        return _format_seconds
     if name == 'load_avg_1min':
         return _format_load
     return _metadata_formatter
@@ -235,10 +235,14 @@ class Run(object):
         else:
             self._metadata = None
 
+    def _get_metadata(self, name, default):
+        if self._metadata:
+            return self._metadata.get(name, default)
+        else:
+            return default
+
     def _get_name(self):
-        if not self._metadata:
-            return None
-        return self._metadata.get('name', None)
+        return self._get_metadata('name', None)
 
     def get_metadata(self):
         if self._metadata:
@@ -259,16 +263,10 @@ class Run(object):
         return self._samples
 
     def _get_loops(self):
-        if self._metadata is not None:
-            return self._metadata.get('loops', 1)
-        else:
-            return 1
+        return self._get_metadata('loops', 1)
 
     def _get_inner_loops(self):
-        if self._metadata is not None:
-            return self._metadata.get('inner_loops', 1)
-        else:
-            return 1
+        return self._get_metadata('inner_loops', 1)
 
     def get_total_loops(self):
         return self._get_loops() * self._get_inner_loops()
@@ -292,6 +290,13 @@ class Run(object):
         return Run(self._samples,
                    metadata=self._metadata,
                    collect_metadata=False)
+
+    def _get_duration(self):
+        duration = self._get_metadata('duration', None)
+        if duration is not None:
+            return duration
+        raw_samples = self._get_raw_samples(warmups=True)
+        return math.fsum(raw_samples)
 
     def _as_json(self, common_metadata):
         data = {'samples': self._samples}
@@ -343,6 +348,10 @@ class Benchmark(object):
             run_metadatas = [run.get_metadata() for run in self._runs]
             self._common_metadata = _common_metadata(run_metadatas)
         return dict(self._common_metadata)
+
+    def get_total_duration(self):
+        durations = [run._get_duration() for run in self._runs]
+        return math.fsum(durations)
 
     def _get_run_property(self, get_property):
         if not self._runs:

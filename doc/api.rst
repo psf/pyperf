@@ -247,6 +247,13 @@ Benchmark
 
       Get samples of all runs (values are average per loop iteration).
 
+   .. method:: get_total_duration() -> float or None
+
+      Get the total duration of the benchmark in seconds.
+
+      Use the ``duration`` metadata of runs, or compute the sum of their
+      raw samples including warmup samples.
+
    .. method:: get_total_loops() -> int or float
 
       Get the total number of loops per sample (loops x inner-loops).

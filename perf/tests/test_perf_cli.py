@@ -237,6 +237,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             25.0 ms:  3 #################
             25.0 ms:  2 ###########
 
+            Total duration: 16.0 sec
             Raw sample minimum: 96.9 ms
             Raw sample maximum: 100 ms
 
@@ -258,6 +259,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_stats(self):
         expected = ("""
+            Total duration: 16.0 sec
             Raw sample minimum: 96.9 ms
             Raw sample maximum: 100 ms
 

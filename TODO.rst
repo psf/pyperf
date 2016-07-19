@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Enhance TextRunner to be able to run multiple benchmarks
 * BenchmarkSuite.get_benchmarks(): don't sort by name? Error if a benchmark
   has no name?
 * Remove BenchmarkSuite.__iter__()?

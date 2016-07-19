@@ -72,7 +72,8 @@ def _display_run(bench, run_index, run,
         warmups = [sample * total_loops for sample in warmups]
         samples = [sample * total_loops for sample in samples]
     samples = format_samples(samples)
-    warmups = format_samples(warmups)
+    if warmups:
+        warmups = format_samples(warmups)
 
     if raw:
         name = 'raw samples'
@@ -132,6 +133,12 @@ def _display_stats(bench, file=None):
     nrun = bench.get_nrun()
     nsample = len(samples)
     median = bench.median()
+
+    # Total duration
+    duration = bench.get_total_duration()
+    if duration:
+        print("Total duration: %s" % perf._format_seconds(duration),
+              file=file)
 
     # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()
