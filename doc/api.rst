@@ -247,7 +247,7 @@ Benchmark
 
       Get samples of all runs (values are average per loop iteration).
 
-   .. method:: get_total_duration() -> float or None
+   .. method:: get_total_duration() -> float
 
       Get the total duration of the benchmark in seconds.
 
@@ -335,6 +335,12 @@ BenchmarkSuite
    .. method:: get_benchmarks() -> List[Benchmark]
 
       Get the list of benchmarks sorted by their name.
+
+   .. method:: get_total_duration() -> float
+
+      Get the total duration of all benchmarks in seconds.
+
+      See the :meth:`perf.Benchmark.get_total_duration` method.
 
    .. method:: __iter__()
 

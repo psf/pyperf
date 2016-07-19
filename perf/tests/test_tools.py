@@ -445,6 +445,19 @@ class TestBenchmarkSuite(unittest.TestCase):
         bench = suite.get_benchmark('bench')
         self.assertEqual(bench.get_samples(), samples + samples2)
 
+    def test_get_total_duration(self):
+        suite = perf.BenchmarkSuite()
+
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run([1.0]))
+        suite.add_benchmark(bench)
+
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run([2.0]))
+        suite.add_benchmark(bench)
+
+        self.assertEqual(suite.get_total_duration(), 3.0)
+
 
 class MiscTests(unittest.TestCase):
     def test_parse_run_list(self):

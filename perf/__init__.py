@@ -746,6 +746,10 @@ class BenchmarkSuite(object):
             raise ValueError("empty suite")
         self._benchmarks = benchmarks
 
+    def get_total_duration(self):
+        durations = [benchmark.get_total_duration() for benchmark in self]
+        return math.fsum(durations)
+
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
 # function of the degrees of freedom. For larger degrees of freedom, we
