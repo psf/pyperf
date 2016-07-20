@@ -1,3 +1,4 @@
+import datetime
 import os.path
 import sys
 import tempfile
@@ -63,6 +64,12 @@ class TestStatistics(unittest.TestCase):
 
 
 class TestTools(unittest.TestCase):
+    def test_parse_iso8601(self):
+        self.assertEqual(perf._parse_iso8601('2016-07-20T14:06:07'),
+                         datetime.datetime(2016, 7, 20, 14, 6, 7))
+        self.assertEqual(perf._parse_iso8601('2016-07-20T14:06:07.608319'),
+                         datetime.datetime(2016, 7, 20, 14, 6, 7, 608319))
+
     def test_timedelta(self):
         def fmt_delta(seconds):
             return perf._format_timedelta(seconds)
@@ -163,6 +170,15 @@ class RunTests(unittest.TestCase):
         run = perf.Run([1.0], metadata={'load_avg_1min': 0.0},
                        collect_metadata=False)
         self.assertEqual(run.get_metadata()['load_avg_1min'].value, 0.0)
+
+    def test_get_date(self):
+        date = datetime.datetime.now()
+        run = perf.Run([1.0], metadata={'date': date.isoformat()},
+                        collect_metadata=False)
+        self.assertEqual(run._get_date(), date)
+
+        run = perf.Run([1.0], collect_metadata=False)
+        self.assertIsNone(run._get_date())
 
 
 class BenchmarkTests(unittest.TestCase):
@@ -352,6 +368,24 @@ class BenchmarkTests(unittest.TestCase):
         bench.add_run(perf.Run([5.0]))
         self.assertEqual(bench.get_total_duration(), 8.0)
 
+    def test_get_dates(self):
+        bench = perf.Benchmark()
+        self.assertEqual(bench.get_dates(), ())
+
+        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0},
+                        collect_metadata=False)
+        bench.add_run(run)
+        self.assertEqual(bench.get_dates(),
+                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
+                          datetime.datetime(2016, 7, 20, 14, 7, 0)))
+
+        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:10:00', 'duration': 60.0},
+                        collect_metadata=False)
+        bench.add_run(run)
+        self.assertEqual(bench.get_dates(),
+                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
+                          datetime.datetime(2016, 7, 20, 14, 11, 0)))
+
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
@@ -465,6 +499,28 @@ class TestBenchmarkSuite(unittest.TestCase):
         suite.add_benchmark(bench)
 
         self.assertEqual(suite.get_total_duration(), 3.0)
+
+    def test_get_dates(self):
+        suite = perf.BenchmarkSuite()
+        self.assertEqual(suite.get_dates(), ())
+
+        bench = perf.Benchmark()
+        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0},
+                        collect_metadata=False)
+        bench.add_run(run)
+        suite.add_benchmark(bench)
+        self.assertEqual(suite.get_dates(),
+                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
+                          datetime.datetime(2016, 7, 20, 14, 7, 0)))
+
+        bench = perf.Benchmark()
+        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:10:00', 'duration': 60.0},
+                        collect_metadata=False)
+        bench.add_run(run)
+        suite.add_benchmark(bench)
+        self.assertEqual(suite.get_dates(),
+                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
+                          datetime.datetime(2016, 7, 20, 14, 11, 0)))
 
 
 class MiscTests(unittest.TestCase):

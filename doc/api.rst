@@ -211,6 +211,16 @@ Benchmark
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
 
+   .. method:: get_dates() -> tuple
+
+      Get the start date of the first run and the end date of the last run.
+
+      Return a ``(start, end)`` tuple where start and end are
+      ``datetime.datetime`` objects if a least one run has a date metadata.
+
+      Return ``(None, None)`` if no run has ``date`` metadata or if the
+      benchmark has no run.
+
    .. method:: get_metadata() -> dict
 
       Get benchmark metadata: metadata common to all runs.
@@ -335,6 +345,17 @@ BenchmarkSuite
    .. method:: get_benchmarks() -> List[Benchmark]
 
       Get the list of benchmarks sorted by their name.
+
+   .. method:: get_dates() -> tuple
+
+      Get the start date of the first benchmark and end date of the last
+      benchmark.
+
+      Return a ``(start, end)`` tuple where start and end are
+      ``datetime.datetime`` objects if a least one benchmark has dates.
+
+      Return ``(None, None)`` if no benchmark has dates, or if the suite
+      doesn't contain any benchmark.
 
    .. method:: get_total_duration() -> float
 

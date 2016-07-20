@@ -140,6 +140,13 @@ def _display_stats(bench, file=None):
         print("Total duration: %s" % perf._format_seconds(duration),
               file=file)
 
+    # Start/End dates
+    dates = bench.get_dates()
+    if dates:
+        start, end = dates
+        print("Start date: %s" % start.isoformat())
+        print("End date: %s" % end.isoformat())
+
     # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()
     print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),

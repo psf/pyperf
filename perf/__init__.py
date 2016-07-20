@@ -1,4 +1,5 @@
 from __future__ import print_function
+import datetime
 import json
 import math
 import operator
@@ -140,6 +141,17 @@ def _get_metadata_formatter(name):
     if name == 'load_avg_1min':
         return _format_load
     return _metadata_formatter
+
+
+def _parse_iso8601(date):
+    if '.' in date:
+        date, floatpart = date.split('.', 1)
+        floatpart = float('.' + floatpart)
+    else:
+        floatpart = 0
+    dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+    dt += datetime.timedelta(seconds=floatpart)
+    return dt
 
 
 _METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
@@ -298,6 +310,12 @@ class Run(object):
         raw_samples = self._get_raw_samples(warmups=True)
         return math.fsum(raw_samples)
 
+    def _get_date(self):
+        date = self._get_metadata('date', None)
+        if not date:
+            return None
+        return _parse_iso8601(date)
+
     def _as_json(self, common_metadata):
         data = {'samples': self._samples}
         if self._warmups:
@@ -383,6 +401,7 @@ class Benchmark(object):
         self._samples = None
         self._median = None
         self._common_metadata = None
+        self._dates = None
 
     def median(self):
         if self._median is None:
@@ -586,6 +605,31 @@ class Benchmark(object):
         for run in benchmark._runs:
             self.add_run(run)
 
+    def get_dates(self):
+        if self._dates is not None:
+            return self._dates
+
+        start = None
+        end = None
+        for run in self._runs:
+            run_start = run._get_date()
+            if run_start is None:
+                continue
+
+            duration = run._get_duration()
+            duration = int(math.ceil(duration))
+            run_end = run_start + datetime.timedelta(seconds=duration)
+            if start is None or run_start < start:
+                start = run_start
+            if end is None or run_end > end:
+                end = run_end
+
+        if start is not None and end is not None:
+            self._dates = (start, end)
+        else:
+            self._dates = ()
+        return self._dates
+
 
 class BenchmarkSuite(object):
     def __init__(self, filename=None):
@@ -752,6 +796,22 @@ class BenchmarkSuite(object):
     def get_total_duration(self):
         durations = [benchmark.get_total_duration() for benchmark in self]
         return math.fsum(durations)
+
+    def get_dates(self):
+        start = None
+        end = None
+        for benchmark in self:
+            dates = benchmark.get_dates()
+            if not dates:
+                continue
+            if start is None or dates[0] < start:
+                start = dates[0]
+            if end is None or dates[1] > end:
+                end = dates[1]
+        if start is not None and end is not None:
+            return (start, end)
+        else:
+            return ()
 
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a

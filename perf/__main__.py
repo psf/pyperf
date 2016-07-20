@@ -529,6 +529,11 @@ def cmd_stats(args):
                 duration = suite.get_total_duration()
                 print("Number of benchmarks: %s" % len(suite))
                 print("Total duration: %s" % perf._format_seconds(duration))
+                dates = suite.get_dates()
+                if dates:
+                    start, end = dates
+                    print("Start date: %s" % start.isoformat())
+                    print("End date: %s" % end.isoformat())
                 print()
 
         if use_titles:
