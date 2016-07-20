@@ -317,14 +317,12 @@ class Benchmarks:
         for filename in filenames:
             self.load_benchmark_suite(filename)
 
-    # FIXME: move this method to BenchmarkSuite?
     def include_benchmark(self, name):
         for suite in self.suites:
-            if name not in suite:
+            try:
+                suite._convert_include_benchmark(name)
+            except KeyError:
                 fatal_missing_benchmark(suite, name)
-            for key in list(suite):
-                if key != name:
-                    del suite[key]
 
     def get_nsuite(self):
         return len(self.suites)
