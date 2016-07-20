@@ -226,8 +226,8 @@ class Run(object):
                         raise ValueError("newline characters are not allowed "
                                          "in metadata values: %r" % value)
                     value = value.strip()
-                if not value:
-                    raise ValueError("metadata value is empty")
+                    if not value:
+                        raise ValueError("metadata %r value is empty" % name)
                 if name in ('loops', 'inner_loops'):
                     if not(isinstance(value, six.integer_types) and value >= 1):
                         raise ValueError("%s must be an integer >= 1" % name)

@@ -141,20 +141,28 @@ class RunTests(unittest.TestCase):
 
     def test_constructor(self):
         # need at least 2 samples
-        self.assertRaises(ValueError, perf.Run, [])
-        perf.Run([1.0])
+        with self.assertRaises(ValueError):
+            perf.Run([], collect_metadata=False)
+        perf.Run([1.0], collect_metadata=False)
 
         # number of loops
         with self.assertRaises(ValueError):
-            perf.Run([1.0], metadata={'loops': -1})
+            perf.Run([1.0], metadata={'loops': -1}, collect_metadata=False)
         with self.assertRaises(ValueError):
-            perf.Run([1.0], metadata={'inner_loops': 0})
+            perf.Run([1.0], metadata={'inner_loops': 0}, collect_metadata=False)
 
         # loops type error
         with self.assertRaises(ValueError):
-            perf.Run([1.0], metadata={'loops': 1.0})
+            perf.Run([1.0], metadata={'loops': 1.0}, collect_metadata=False)
         with self.assertRaises(ValueError):
-            perf.Run([1.0], metadata={'inner_loops': 1.0})
+            perf.Run([1.0], metadata={'inner_loops': 1.0}, collect_metadata=False)
+
+        # metadata value must not be an empty string
+        with self.assertRaises(ValueError):
+            perf.Run([1.0], metadata={'name': ''}, collect_metadata=False)
+        run = perf.Run([1.0], metadata={'load_avg_1min': 0.0},
+                       collect_metadata=False)
+        self.assertEqual(run.get_metadata()['load_avg_1min'].value, 0.0)
 
 
 class BenchmarkTests(unittest.TestCase):
