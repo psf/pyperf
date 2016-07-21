@@ -133,6 +133,19 @@ def _format_load(load):
         return load
 
 
+def _format_filesize(size):
+    if size < 10 * 1024:
+        if size != 1:
+            return '%s bytes' % size
+        else:
+            return '%s byte' % size
+
+    if size > 10 * 1024 * 1024:
+        return '%.1f MB' % (size / (1024.0 * 1024.0))
+
+    return '%.1f kB' % (size / 1024.0)
+
+
 def _get_metadata_formatter(name):
     if name in ('loops', 'inner_loops'):
         return _format_number
