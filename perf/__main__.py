@@ -92,6 +92,8 @@ def create_parser():
                      help='Remove warmup samples')
     cmd.add_argument('--add', metavar='FILE',
                      help='Add benchmark runs of benchmark FILE')
+    cmd.add_argument('--extract-metadata', metavar='NAME',
+                     help='Use metadata NAME as the new run values')
 
     # dump
     cmd = subparsers.add_parser('dump', help='Dump the runs')
@@ -633,6 +635,23 @@ def cmd_convert(args):
     if args.remove_warmups:
         for benchmark in suite:
             benchmark._remove_warmups()
+
+    if args.extract_metadata:
+        name = args.extract_metadata
+        for benchmark in suite:
+            try:
+                benchmark._extract_metadata(name)
+            except KeyError:
+                print("ERROR: Benchmark %r has no metadata %r"
+                      % (get_benchmark_name(benchmark), name),
+                      file=sys.stderr)
+                sys.exit(1)
+            except TypeError:
+                raise
+                print("ERROR: Metadata %r of benchmark %r is not an integer"
+                      % (name, get_benchmark_name(benchmark)),
+                      file=sys.stderr)
+                sys.exit(1)
 
     if args.remove_outliers:
         for benchmark in suite:

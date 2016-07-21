@@ -262,6 +262,12 @@ class Run(object):
         else:
             self._metadata = None
 
+    def _replace(self, samples, warmups=None):
+        run = Run(samples, warmups=warmups, collect_metadata=False)
+        # share metadata dict since Run metadata is immutable
+        run._metadata = self._metadata
+        return run
+
     def _get_metadata(self, name, default):
         if self._metadata:
             return self._metadata.get(name, default)
@@ -314,9 +320,7 @@ class Run(object):
             return self
 
         # don't pass self._warmups
-        return Run(self._samples,
-                   metadata=self._metadata,
-                   collect_metadata=False)
+        return self._replace(self._samples)
 
     def _get_duration(self):
         duration = self._get_metadata('duration', None)
@@ -358,9 +362,22 @@ class Run(object):
             if metadata:
                 metadata2.update(metadata)
             metadata = metadata2
-        return cls(samples, warmups,
+        return cls(samples,
+                   warmups=warmups,
                    metadata=metadata,
                    collect_metadata=False)
+
+    def _extract_metadata(self, name):
+        value = self._get_metadata(name, None)
+        if value is None:
+            raise KeyError("run has no metadata %r" % name)
+
+        if isinstance(value, int):
+            value = float(value)
+        elif not isinstance(value, float):
+            raise TypeError("run metadata %r" % name)
+
+        return self._replace((value,))
 
 
 class Benchmark(object):
@@ -644,6 +661,11 @@ class Benchmark(object):
         else:
             self._dates = ()
         return self._dates
+
+    def _extract_metadata(self, name):
+        new_runs = [run._extract_metadata(name)
+                    for run in self._runs]
+        self._runs = new_runs
 
 
 class BenchmarkSuite(object):

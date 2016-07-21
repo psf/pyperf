@@ -228,11 +228,12 @@ Convert or modify a benchmark suite::
         [--indent]
         [--remove-warmups]
         [--add=FILE]
+        [--extract-metadata=NAME]
         input_filename.json
         (-o output_filename.json/--output=output_filename.json
         | --stdout)
 
-Options:
+Operations:
 
 * ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``
 * ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``
@@ -245,6 +246,10 @@ Options:
   See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 * ``--remove-warmups``: remove warmup samples
 * ``--add=FILE``: Add benchmark runs of benchmark *FILE*
+* ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values
+
+Options:
+
 * ``--indent``: Indent JSON (rather using compact JSON)
 * ``--stdout`` writes the result encoded as JSON into stdout
 
