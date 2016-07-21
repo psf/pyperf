@@ -187,7 +187,7 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
-        with mock.patch('os.sched_setaffinity', create=True) as mock_setaffinity:
+        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
             with mock.patch('perf._get_isolated_cpus', return_value=None):
                 runner._cpu_affinity()
 
