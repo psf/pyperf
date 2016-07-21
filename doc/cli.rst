@@ -1,6 +1,12 @@
 perf commands
 =============
 
+The Python perf module comes with a ``pyperf`` program which includes different
+commands. If for some reasons, ``pyperf`` program cannot be used, ``python3 -m
+perf ...`` can be used: it is the same, it's just longer to type :-) For
+example, the ``-m perf ...`` syntax is preferred for ``timeit`` because this
+command uses the running Python program.
+
 General note: if a filename is ``-``, read the JSON content from stdin.
 
 show

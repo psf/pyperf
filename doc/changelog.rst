@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 0.7.2 (2016-07-21)
+--------------------------
+
+* Add start/end dates and duration to the ``stats`` command
+* Fix the program name: ``pyperf``, not ``pybench``!
+* Fix the ``-b`` command line option of show/stats/... commands
+* Fix metadata: ``load_avg_1min=0.0`` is valid!
+
 Version 0.7.1 (2016-07-18)
 --------------------------
 

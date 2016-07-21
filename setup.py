@@ -22,7 +22,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '0.8'
+VERSION = '0.7.2'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [
@@ -58,7 +58,7 @@ def main():
         'packages': ['perf', 'perf.tests'],
         'install_requires': ["statistics; python_version < '3.4'", "six"],
         'entry_points': {
-            'console_scripts': ['pybench=perf.__main__:main']
+            'console_scripts': ['pyperf=perf.__main__:main']
         }
         # Optional dependencies:
         # 'psutil'
