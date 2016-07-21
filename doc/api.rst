@@ -157,6 +157,8 @@ Run
 
       Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
 
+      See :ref:`Metadata <metadata>`.
+
    .. method:: get_total_loops() -> int
 
       Get the total number of loops of the benchmark run:
@@ -223,9 +225,11 @@ Benchmark
 
    .. method:: get_metadata() -> dict
 
-      Get benchmark metadata: metadata common to all runs.
+      Get metadata common to all runs.
 
       Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+
+      See :ref:`Metadata <metadata>`.
 
    .. method:: get_name() -> str or None
 

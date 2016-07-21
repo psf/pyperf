@@ -192,6 +192,8 @@ System metadata:
 * ``cpu_freq``: Frequency of CPUs
 * ``cpu_model_name``: CPU model name
 * ``cpu_temp``: Temperature of CPUs
+* ``mem_private``: Process private memory (clean + dirty)
+* ``mem_rss``: Process Resident Set Size (RSS) memory
 
 Other:
 

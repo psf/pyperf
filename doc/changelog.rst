@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7.3
+-------------
+
+* metadata: add ``mem_rss`` and ``mem_private`` metadat
+
 Version 0.7.2 (2016-07-21)
 --------------------------
 
