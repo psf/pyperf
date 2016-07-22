@@ -720,7 +720,6 @@ class TextRunner:
                      '--samples', str(self.args.samples),
                      '--warmups', str(self.args.warmups),
                      '--loops', str(self.args.loops)))
-        # FIXME: pass --min-time?
         if self.args.verbose:
             args.append('-' + 'v' * self.args.verbose)
         if self.args.affinity:
