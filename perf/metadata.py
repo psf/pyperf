@@ -213,6 +213,12 @@ def _get_cpu_boost(cpu):
         _get_cpu_boost.working = False
         return None
 
+    # cpupower doesn't seem to work on PPC64LE:
+    # see https://github.com/haypo/perf/issues/11
+    if 'no or unknown cpufreq driver is active on this CPU' in stdout:
+        _get_cpu_boost.working = False
+        return None
+
     boost = False
     for line in stdout.splitlines():
         if boost:
