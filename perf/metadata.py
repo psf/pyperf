@@ -237,7 +237,7 @@ def _format_cpu_infos(infos, cpus):
         merge = False
     if not merge:
         text = []
-        for cpu in cpus:
+        for cpu in sorted(cpus):
             info = infos[cpu]
             text.append('%s=%s' % (cpu, info))
         text = ', '.join(text)
@@ -253,14 +253,14 @@ def _format_cpu_infos(infos, cpus):
 def _collect_cpu_freq(metadata, cpus):
     sys_path = _sys_path("devices/system/cpu")
 
-    cpus = set(cpus)
+    cpu_set = set(cpus)
     cpu_freq = {}
     cpu = None
     for line in _read_proc('cpuinfo'):
         if line.startswith('processor'):
             value = line.split(':', 1)[-1].strip()
             cpu = int(value)
-            if cpu not in cpus:
+            if cpu not in cpu_set:
                 # skip this CPU
                 cpu = None
         elif line.startswith('cpu MHz') and cpu is not None:
@@ -392,8 +392,8 @@ def _collect_cpu_metadata(metadata):
     _collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
 
     all_cpus = cpu_affinity
-    if not all_cpus:
-        all_cpus = _get_logical_cpu_count()
+    if not all_cpus and cpu_count:
+        all_cpus = tuple(range(cpu_count))
 
     if all_cpus:
         _collect_cpu_freq(metadata, all_cpus)
