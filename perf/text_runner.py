@@ -774,6 +774,8 @@ class TextRunner:
             cmd.append('--affinity=%s' % args.affinity)
         if args.tracemalloc:
             cmd.append('--tracemalloc')
+        if args.track_memory:
+            cmd.append('--track-memory')
 
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, cmd)

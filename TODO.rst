@@ -1,7 +1,8 @@
 TODO
 ====
 
-* Write unit test for tracemalloc: allocate 30 MB, usage >= 30 MB
+* Write unit test for tracemalloc and track memory: allocate 30 MB,
+  check usage >= 30 MB
 * Add CLI option to sort benchmarks by start date, not by name
 * Enhance TextRunner to be able to run multiple benchmarks
 * BenchmarkSuite.get_benchmarks(): don't sort by name? Error if a benchmark
