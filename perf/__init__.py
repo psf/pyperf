@@ -153,7 +153,7 @@ def _get_metadata_formatter(name):
         return _format_seconds
     if name == 'load_avg_1min':
         return _format_load
-    if name in ('mem_rss', 'mem_private', 'tracemalloc_peak'):
+    if name in ('mem_peak', 'tracemalloc_peak'):
         return _format_filesize
     return _metadata_formatter
 

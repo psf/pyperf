@@ -470,6 +470,8 @@ class TextRunner:
                                  'are found.')
         parser.add_argument('--tracemalloc', action="store_true",
                             help='Trace memory allocations using tracemalloc')
+        parser.add_argument('--track-memory', action="store_true",
+                            help='Track memory usage using a thread')
         self.argparser = parser
 
     def _calibrate_sample_func(self, sample_func):
@@ -536,6 +538,14 @@ class TextRunner:
                 import tracemalloc
             except ImportError as exc:
                 print("ERROR: fail to import tracemalloc: %s" % exc)
+                sys.exit(1)
+
+        if args.track_memory:
+            from perf._memory import check_tracking_memory
+            err_msg = check_tracking_memory()
+            if err_msg:
+                print("ERROR: unable to track the memory usage "
+                      "(--track-memory): %s" % err_msg)
                 sys.exit(1)
 
     def parse_args(self, args=None):
@@ -608,6 +618,13 @@ class TextRunner:
             else:
                 tracemalloc.start()
 
+        if self.args.track_memory:
+            from perf._memory import PeakMemoryUsageThread
+            mem_thread = PeakMemoryUsageThread()
+            mem_thread.start()
+        else:
+            mem_thread = None
+
         warmups = []
         samples = []
         total_loops = loops
@@ -653,6 +670,10 @@ class TextRunner:
             traced_peak = tracemalloc.get_traced_memory()[1]
             if traced_peak:
                 metadata['tracemalloc_peak'] = traced_peak
+        if mem_thread is not None:
+            mem_thread.stop()
+            if mem_thread.peak_usage:
+                metadata['mem_peak'] = mem_thread.peak_usage
 
         # Run collects metadata
         run = perf.Run(samples, warmups=warmups, metadata=metadata)

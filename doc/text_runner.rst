@@ -90,6 +90,7 @@ Option::
 
     [-h/--help]
     [--affinity=CPU_LIST]
+    [--track-memory]
     [--tracemalloc]
 
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
@@ -100,6 +101,9 @@ Option::
   allocation and get the peak of memory usage in metadata. The module is only
   available on Python 3.4 and newer. See the `tracemalloc module
   <https://docs.python.org/dev/library/tracemalloc.html>`_.
+* ``--track-memory``: run a thread reading the memory usage every millisecond
+  and store the peak as ``mem_peak`` metadata. It is less accurate than
+  ``tracemalloc``, but has a lower overhead.
 
 
 Internal usage only

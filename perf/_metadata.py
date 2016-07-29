@@ -2,7 +2,6 @@ from __future__ import print_function
 import datetime
 import os
 import platform
-import re
 import socket
 import subprocess
 import sys
@@ -157,30 +156,6 @@ def collect_system_metadata(metadata):
     hostname = socket.gethostname()
     if hostname:
         metadata['hostname'] = hostname
-
-
-def collect_memory_metadata(metadata):
-    if psutil is None:
-        for line in read_proc('/proc/self/status'):
-            if line.startswith('VmRSS:') and line.endswith(' kB'):
-                line = line[6:-3].strip()
-                rss_kb = int(line)
-                metadata['mem_rss'] = rss_kb * 1024
-                break
-        return
-
-    # get rss memory
-    process = psutil.Process()
-    mem_info = process.memory_info()
-    metadata['mem_rss'] = mem_info.rss
-
-    # FIXME: support FreeBSD and Windows
-    if sys.platform.startswith('linux'):
-        # get private memory
-        private = 0
-        for mem_map in process.memory_maps():
-            private += mem_map.private_clean + mem_map.private_dirty
-        metadata['mem_private'] = private
 
 
 def get_cpu_boost(cpu):
@@ -381,7 +356,6 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
         return
 
     # CPU affinity
-    cpus = cpu_affinity
     if set(cpu_affinity) == set(range(cpu_count)):
         return
 
@@ -438,5 +412,4 @@ def collect_metadata(metadata):
 
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)
-    collect_memory_metadata(metadata)
     collect_cpu_metadata(metadata)
