@@ -267,7 +267,7 @@ def cmd_compare(args):
 
 
 def cmd_metadata():
-    from perf import metadata as perf_metadata
+    from perf import _metadata as perf_metadata
 
     cpus = perf._get_isolated_cpus()
     if cpus:

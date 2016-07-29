@@ -3,7 +3,8 @@ import textwrap
 
 import six
 
-import perf.metadata
+import perf
+from perf import _metadata as perf_metadata
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -19,7 +20,7 @@ if sys.platform.startswith('linux'):
 class TestMetadata(unittest.TestCase):
     def test_collect_metadata(self):
         metadata = {}
-        perf.metadata._collect_metadata(metadata)
+        perf_metadata._collect_metadata(metadata)
 
         for key in MANDATORY_METADATA:
             self.assertIn(key, metadata)
@@ -39,12 +40,12 @@ class TestMetadata(unittest.TestCase):
     def test_collect_cpu_affinity(self):
         with mock.patch('perf._get_isolated_cpus', return_value={1, 2, 3}):
             metadata = {}
-            perf.metadata._collect_cpu_affinity(metadata, {2, 3}, 4)
+            perf_metadata._collect_cpu_affinity(metadata, {2, 3}, 4)
             self.assertEqual(metadata['cpu_affinity'],
                              '2-3 (isolated)')
 
             metadata = {}
-            perf.metadata._collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
+            perf_metadata._collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
             self.assertNotIn('cpu_affinity', metadata)
 
 
@@ -162,10 +163,10 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
-            with mock.patch('perf.metadata._get_cpu_boost', return_value=None):
+        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
+            with mock.patch('perf._metadata._get_cpu_boost', return_value=None):
                 metadata = {}
-                cpu_freq = perf.metadata._collect_cpu_config(metadata, [0, 2])
+                cpu_freq = perf_metadata._collect_cpu_config(metadata, [0, 2])
                 self.assertEqual(metadata['cpu_config'],
                                  '0=driver:DRIVER, governor:GOVERNOR')
 
@@ -183,10 +184,10 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
+        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
             metadata = {}
-            perf.metadata._collect_cpu_freq(metadata, [0, 2])
-            perf.metadata._collect_cpu_model(metadata)
+            perf_metadata._collect_cpu_freq(metadata, [0, 2])
+            perf_metadata._collect_cpu_model(metadata)
             self.assertEqual(metadata['cpu_freq'],
                              '0=1288 MHz, 2=1200 MHz')
             self.assertEqual(metadata['cpu_model_name'],
@@ -200,10 +201,10 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
+        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
             metadata = {}
-            perf.metadata._collect_cpu_freq(metadata, [0, 159])
-            perf.metadata._collect_cpu_model(metadata)
+            perf_metadata._collect_cpu_freq(metadata, [0, 159])
+            perf_metadata._collect_cpu_model(metadata)
             self.assertEqual(metadata['cpu_freq'],
                              '0,159=3425 MHz')
             self.assertEqual(metadata['cpu_machine'],

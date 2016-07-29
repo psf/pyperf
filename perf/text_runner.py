@@ -8,13 +8,13 @@ import sys
 import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
+import perf
+
 try:
     # Optional dependency
     import psutil
 except ImportError:
     psutil = None
-
-import perf.metadata
 
 
 def _bench_suite_from_subprocess(args):

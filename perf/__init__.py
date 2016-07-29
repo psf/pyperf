@@ -226,7 +226,7 @@ class Run(object):
         self._samples = tuple(samples)
 
         if collect_metadata:
-            from perf import metadata as perf_metadata
+            from perf import _metadata as perf_metadata
 
             metadata2 = {}
             perf_metadata._collect_metadata(metadata2)
