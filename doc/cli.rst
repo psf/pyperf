@@ -66,7 +66,8 @@ Compare benchmark results::
 Compare benchmark results to a reference::
 
     python3 -m perf
-        [-v/--verbose] [-m/--metadata]
+        [-v/--verbose] [-q/--quiet]
+        [-G/--group-by-speed]
         compare_to reference.json changed.json [changed2.json ...]
 
 Example::
@@ -76,6 +77,10 @@ Example::
 
     Average: [py2] 46.3 ns +- 2.2 ns -> [py3] 56.3 ns +- 2.5 ns: 1.2x slower
     Significant (t=-25.90)
+
+Options:
+
+* ``--group-by-speed``: group results by "Slower", "Faster" and "Same speed"
 
 .. _stats_cmd:
 

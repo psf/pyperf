@@ -51,6 +51,9 @@ def create_parser():
                          help='enable quiet mode')
         cmd.add_argument('-v', '--verbose', action="store_true",
                          help='enable verbose mode')
+        if command == 'compare_to':
+            cmd.add_argument('-G', '--group-by-speed', action="store_true",
+                             help='group slower/faster/same speed')
         input_filenames(cmd)
 
     # stats
@@ -141,65 +144,97 @@ def _bench_sort_key(item):
     return (item.benchmark.median(), item.filename or '')
 
 
-def compare_benchmarks(benchmarks, sort_benchmarks, args):
-    if sort_benchmarks:
-        benchmarks.sort(key=_bench_sort_key)
+class CompareData:
+    def __init__(self, name, benchmark):
+        self.name = name
+        self.benchmark = benchmark
 
-    ref_result = benchmarks[0].benchmark
-    ref_name = benchmarks[0].filename
 
-    # Compute medians
-    ref_samples = ref_result.get_samples()
-    ref_avg = ref_result.median()
-    last_index = len(benchmarks) - 1
-    lines = []
-    print = lines.append
-    all_significant = False
-    for index, item in enumerate(benchmarks[1:], 1):
-        changed_result = item.benchmark
-        changed_name = item.filename
+class CompareResult(object):
+    def __init__(self, ref, changed):
+        self.ref = ref
+        self.changed = changed
+        self._significant = None
+        self._t_score = None
+        self._speed = None
 
-        changed_samples = changed_result.get_samples()
-        changed_avg = changed_result.median()
-        text = ("Median +- std dev: [%s] %s -> [%s] %s"
-                % (ref_name, ref_result.format(),
-                   changed_name, changed_result.format()))
+    def _get_significant(self):
+        ref_samples = self.ref.benchmark.get_samples()
+        changed_samples = self.changed.benchmark.get_samples()
 
-        # avoid division by zero
-        if changed_avg == ref_avg:
-            text = "%s: no change" % text
-        elif changed_avg < ref_avg:
-            text = "%s: %.1fx faster" % (text, ref_avg / changed_avg)
-        else:
-            text = "%s: %.1fx slower" % (text, changed_avg / ref_avg)
-        print(text)
-        two_lines = False
-
-        # significant?
-        if len(ref_samples) != 1 and len(changed_samples) != 1:
-            try:
-                significant, t_score = perf.is_significant(ref_samples, changed_samples)
-            except Exception:
-                print("ERROR when testing if samples are significant")
-                all_significant = True
-            else:
-                if significant:
-                    if args.verbose:
-                        print("Significant (t=%.2f)" % t_score)
-                        two_lines = True
-                    all_significant = True
-                else:
-                    print("Not significant!")
-                    two_lines = True
-        else:
+        if len(ref_samples) == 1 and len(changed_samples) == 1:
             # FIXME: is it ok to consider that comparison between two samples
             # is significant?
-            all_significant = True
+            self._significant = True
+            self._tscore = None
+            return
 
-        if index != last_index and two_lines:
-            print("")
+        try:
+            significant, t_score = perf.is_significant(ref_samples,
+                                                       changed_samples)
+            self._significant = significant
+            self._t_score = t_score
+        except Exception:
+            # FIXME: fix the root bug, don't work around it
+            self._significant = True
+            self._t_score = None
 
-    return (all_significant, lines)
+    @property
+    def significant(self):
+        if self._significant is None:
+            self._get_significant()
+        return self._significant
+
+    @property
+    def t_score(self):
+        if self._significant is None:
+            self._get_significant()
+        return self._t_score
+
+    @property
+    def speed(self):
+        if self._speed is None:
+            ref_avg = self.ref.benchmark.median()
+            changed_avg = self.changed.benchmark.median()
+            self._speed = ref_avg / changed_avg
+        return self._speed
+
+    def oneliner(self, verbose=True):
+        ref_text = self.ref.benchmark.format()
+        chg_text = self.changed.benchmark.format()
+        if verbose:
+            text = ("Median +- std dev: [%s] %s -> [%s] %s"
+                    % (self.ref.name, ref_text,
+                       self.changed.name, chg_text))
+        else:
+            text = "%s -> %s" % (ref_text, chg_text)
+
+        speed = self.speed
+        if speed == 1.0:
+            text = "%s: no change" % text
+        elif speed > 1.0:
+            text = "%s: %.2fx faster" % (text, speed)
+        else:
+            text = "%s: %.2fx slower" % (text, 1.0 / speed)
+        return text
+
+    def format(self, verbose=True):
+        text = self.oneliner()
+        lines = [text]
+
+        # significant?
+        if self.t_score is None:
+            lines.append("ERROR when testing if samples are significant")
+
+        if self.significant:
+            if verbose:
+                if self.t_score is not None:
+                    lines.append("Significant (t=%.2f)" % self.t_score)
+                else:
+                    lines.append("Significant")
+        else:
+            lines.append("Not significant!")
+        return lines
 
 
 def get_benchmark_name(benchmark):
@@ -207,41 +242,48 @@ def get_benchmark_name(benchmark):
     return benchmark.get_name() or '<no name>'
 
 
-def compare_suites(benchmarks, sort_benchmarks, args):
-    grouped_by_name = benchmarks.group_by_name()
-    # FIXME: remove if and use the iterator?
-    if not grouped_by_name:
-        print("ERROR: Benchmark suites have no benchmark in common",
-              file=sys.stderr)
-        sys.exit(1)
+class CompareResults(list):
+    def __init__(self, name):
+        self.name = name
 
+
+def compare_benchmarks(name, benchmarks):
+    results = CompareResults(name)
+
+    ref_item = benchmarks[0]
+    ref = CompareData(ref_item.filename, ref_item.benchmark)
+
+    for item in benchmarks[1:]:
+        changed = CompareData(item.filename, item.benchmark)
+        result = CompareResult(ref, changed)
+        results.append(result)
+
+    return results
+
+
+def compare_suites_list(all_results, show_name, args):
     not_significant = []
-    # FIXME: add "is_last" to grouped_by_name
-    for index, item in enumerate(grouped_by_name):
-        # FIXME: use namedtuple()
-        name, cmp_benchmarks, is_last = item
-        significant, lines = compare_benchmarks(cmp_benchmarks, sort_benchmarks, args)
-
-        if len(grouped_by_name) > 1:
-            title = name
-        else:
-            title = None
+    for index, results in enumerate(all_results):
+        significant = any(result.significant for result in results)
+        lines = []
+        for result in results:
+            lines.extend(result.format(args.verbose))
 
         if not(significant or args.verbose):
-            not_significant.append(name)
+            not_significant.append(results.name)
             continue
 
         if len(lines) != 1:
-            if title:
-                display_title(title)
+            if show_name:
+                display_title(results.name)
             for line in lines:
                 print(line)
-            if index != len(grouped_by_name) - 1:
+            if index != len(all_results) - 1:
                 print()
         else:
             text = lines[0]
-            if title:
-                text = '%s: %s' % (title, text)
+            if show_name:
+                text = '%s: %s' % (results.name, text)
             print(text)
 
     if not args.quiet:
@@ -249,6 +291,72 @@ def compare_suites(benchmarks, sort_benchmarks, args):
             print("Benchmark hidden because not significant (%s): %s"
                   % (len(not_significant), ', '.join(not_significant)))
 
+
+def compare_suites_by_speed(all_results, show_name, args):
+    not_significant = []
+    slower = []
+    faster = []
+    same = []
+    for results in all_results:
+        result = results[0]
+        if not result.significant:
+            not_significant.append(results.name)
+            continue
+
+        item = (results.name, result)
+        speed = result.speed
+        if speed == 1.0:
+            same.append(item)
+        elif speed > 1.0:
+            faster.append(item)
+        else:
+            slower.append(item)
+
+    for title, results, sort_reverse in (
+        ('Slower', slower, False),
+        ('Faster', faster, True),
+        ('Same speed', same, False),
+    ):
+        if not results:
+            continue
+
+        results.sort(key=lambda item: item[1].speed, reverse=sort_reverse)
+
+        print("%s (%s):" % (title, len(results)))
+        for name, result in results:
+            text = result.oneliner(verbose=False)
+            print("- %s: %s" % (name, text))
+        print()
+
+
+
+    if not args.quiet and not_significant:
+        print("Benchmark hidden because not significant (%s): %s"
+              % (len(not_significant), ', '.join(not_significant)))
+
+
+def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
+    grouped_by_name = benchmarks.group_by_name()
+    if not grouped_by_name:
+        print("ERROR: Benchmark suites have no benchmark in common",
+              file=sys.stderr)
+        sys.exit(1)
+
+    all_results = []
+    for item in grouped_by_name:
+        cmp_benchmarks = item.benchmarks
+        if sort_benchmarks:
+            cmp_benchmarks.sort(key=_bench_sort_key)
+        results = compare_benchmarks(item.name, cmp_benchmarks)
+        all_results.append(results)
+
+    show_name = (len(grouped_by_name) > 1)
+    if by_speed:
+        compare_suites_by_speed(all_results, show_name, args)
+    else:
+        compare_suites_list(all_results, show_name, args)
+
+    if not args.quiet:
         for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
@@ -263,7 +371,16 @@ def cmd_compare(args):
         print("ERROR: need at least two benchmark files")
         sys.exit(1)
 
-    compare_suites(data, args.action == 'compare', args)
+    if args.action == 'compare_to':
+        by_speed = args.group_by_speed
+    else:
+        by_speed = False
+    if by_speed and data.get_nsuite() != 2:
+        print("ERROR: by_speed only works on two benchmark files",
+              file=sys.stderr)
+        sys.exit(1)
+
+    compare_suites(data, args.action == 'compare', by_speed, args)
 
 
 def cmd_metadata():
@@ -283,6 +400,7 @@ def cmd_metadata():
 
 DataItem = collections.namedtuple('DataItem', 'suite filename benchmark name title is_last')
 GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
+GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
 
 
 def format_filename_func(suites):
@@ -397,7 +515,7 @@ class Benchmarks:
                 benchmarks.append(GroupItem(benchmark, title, filename))
 
             is_last = (index == (len(names) - 1))
-            group = (name, benchmarks, is_last)
+            group = GroupItem2(name, benchmarks, is_last)
             groups.append(group)
 
         return groups

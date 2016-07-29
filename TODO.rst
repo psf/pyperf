@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Write unit test for compare_to --group-by-speed
 * Display mem_peak in benchmark metadata: compute maximum of all runs.
   Store maximum in JSON (optimization)? "dump -v" should still show individual
   mem_peak values

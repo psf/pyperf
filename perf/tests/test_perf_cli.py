@@ -108,7 +108,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
         expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
@@ -134,7 +134,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
         expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.3x slower\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
