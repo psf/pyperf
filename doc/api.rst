@@ -485,8 +485,9 @@ TextRunner
    .. attribute:: prepare_subprocess_args
 
       Callback used to prepare command line arguments to spawn a worker
-      process. The callback is called with ``prepare(runner, args)``, args must
-      be modified in-place.
+      process. The callback is called with ``prepare(runner, cmd)`` where *cmd*
+      is a list of strings (command line arguments). *cmd* must be modified
+      in-place.
 
       For example, the callback can be used to add arguments not handled
       directly by :class:`~perf.text_runner.TextRunner`.

@@ -90,11 +90,16 @@ Option::
 
     [-h/--help]
     [--affinity=CPU_LIST]
+    [--tracemalloc]
 
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if
   isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+* ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
+  allocation and get the peak of memory usage in metadata. The module is only
+  available on Python 3.4 and newer. See the `tracemalloc module
+  <https://docs.python.org/dev/library/tracemalloc.html>`_.
 
 
 Internal usage only

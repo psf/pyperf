@@ -468,6 +468,8 @@ class TextRunner:
                                  'run variation. By default, worker processes '
                                  'are pinned to isolate CPUs if isolated CPUs '
                                  'are found.')
+        parser.add_argument('--tracemalloc', action="store_true",
+                            help='Trace memory allocations using tracemalloc')
         self.argparser = parser
 
     def _calibrate_sample_func(self, sample_func):
@@ -500,32 +502,41 @@ class TextRunner:
         return loops
 
     def _process_args(self):
-        if self.args.quiet:
-            self.args.verbose = False
-        if self.args.debug_single_sample:
-            self.args.worker = True
+        args = self.args
+
+        if args.quiet:
+            args.verbose = False
+        if args.debug_single_sample:
+            args.worker = True
 
         nprocess = self.argparser.get_default('processes')
         nsamples = self.argparser.get_default('samples')
-        if self.args.rigorous:
-            self.args.processes = nprocess * 2
-            # self.args.samples = nsamples * 5 // 3
-        elif self.args.fast:
+        if args.rigorous:
+            args.processes = nprocess * 2
+            # args.samples = nsamples * 5 // 3
+        elif args.fast:
             # use at least 3 processes to benchmark 3 different (randomized)
             # hash functions
-            self.args.processes = max(nprocess // 2, 3)
-            self.args.samples = max(nsamples * 2 // 3, 2)
-        elif self.args.debug_single_sample:
-            self.args.processes = 1
-            self.args.warmups = 0
-            self.args.samples = 1
-            self.args.loops = 1
-            self.args.min_time = 1e-9
+            args.processes = max(nprocess // 2, 3)
+            args.samples = max(nsamples * 2 // 3, 2)
+        elif args.debug_single_sample:
+            args.processes = 1
+            args.warmups = 0
+            args.samples = 1
+            args.loops = 1
+            args.min_time = 1e-9
 
-        filename = self.args.output
+        filename = args.output
         if filename and os.path.exists(filename):
             print("ERROR: The JSON file %r already exists" % filename)
             sys.exit(1)
+
+        if args.tracemalloc:
+            try:
+                import tracemalloc
+            except ImportError as exc:
+                print("ERROR: fail to import tracemalloc: %s" % exc)
+                sys.exit(1)
 
     def parse_args(self, args=None):
         if self.args is None:
@@ -587,6 +598,16 @@ class TextRunner:
         loops = self.args.loops
         start_time = perf.monotonic_clock()
 
+        if self.args.tracemalloc:
+            try:
+                import tracemalloc
+            except ImportError as exc:
+                self.args.tracemalloc = False
+                print("WARNING: fail to import tracemalloc: %s"
+                       % exc, file=stream)
+            else:
+                tracemalloc.start()
+
         warmups = []
         samples = []
         total_loops = loops
@@ -628,6 +649,10 @@ class TextRunner:
         metadata['loops'] = loops
         if self.inner_loops is not None and self.inner_loops != 1:
             metadata['inner_loops'] = self.inner_loops
+        if self.args.tracemalloc:
+            traced_peak = tracemalloc.get_traced_memory()[1]
+            if traced_peak:
+                metadata['tracemalloc_peak'] = traced_peak
 
         # Run collects metadata
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
@@ -637,16 +662,16 @@ class TextRunner:
         return bench
 
     def _main(self, sample_func):
-        self.parse_args()
+        args = self.parse_args()
 
         self._cpu_affinity()
 
-        if self.args.loops == 0:
-            self.args.loops = self._calibrate_sample_func(sample_func)
+        if args.loops == 0:
+            args.loops = self._calibrate_sample_func(sample_func)
 
         bench = perf.Benchmark()
         try:
-            if self.args.worker or self.args.debug_single_sample:
+            if args.worker or args.debug_single_sample:
                 return self._worker(bench, sample_func)
             else:
                 return self._spawn_workers(bench)
@@ -714,21 +739,25 @@ class TextRunner:
         return self._main(sample_func)
 
     def _spawn_worker(self):
-        args = []
-        args.extend(self.program_args)
-        args.extend(('--worker', '--stdout',
-                     '--samples', str(self.args.samples),
-                     '--warmups', str(self.args.warmups),
-                     '--loops', str(self.args.loops)))
-        if self.args.verbose:
-            args.append('-' + 'v' * self.args.verbose)
-        if self.args.affinity:
-            args.append('--affinity=%s' % self.args.affinity)
+        args = self.args
+
+        cmd = []
+        cmd.extend(self.program_args)
+        cmd.extend(('--worker', '--stdout',
+                     '--samples', str(args.samples),
+                     '--warmups', str(args.warmups),
+                     '--loops', str(args.loops)))
+        if args.verbose:
+            cmd.append('-' + 'v' * args.verbose)
+        if args.affinity:
+            cmd.append('--affinity=%s' % args.affinity)
+        if args.tracemalloc:
+            cmd.append('--tracemalloc')
 
         if self.prepare_subprocess_args:
-            self.prepare_subprocess_args(self, args)
+            self.prepare_subprocess_args(self, cmd)
 
-        return _bench_suite_from_subprocess(args)
+        return _bench_suite_from_subprocess(cmd)
 
     def _display_result(self, bench, check_unstable=True):
         stream = self._stream()

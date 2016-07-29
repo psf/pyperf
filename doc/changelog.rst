@@ -6,6 +6,8 @@ Version 0.7.3
 
 * convert: add ``--extract-metadata=NAME``
 * metadata: add ``mem_rss`` and ``mem_private`` metadat
+* add ``--tracemalloc`` option: use the ``tracemalloc`` module to track
+  Python memory allocation and get the peak of memory usage in metadata
 
 Version 0.7.2 (2016-07-21)
 --------------------------
