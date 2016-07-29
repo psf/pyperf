@@ -18,7 +18,7 @@ except ImportError:
 import perf
 
 
-def _collect_python_metadata(metadata):
+def collect_python_metadata(metadata):
     # Implementation
     if hasattr(sys, 'implementation'):
         # PEP 421, Python 3.3
@@ -58,16 +58,16 @@ def _collect_python_metadata(metadata):
         metadata['timer'] = 'time.time()'
 
 
-def _open_text(path):
+def open_text(path):
     if six.PY3:
         return open(path, encoding="utf-8")
     else:
         return open(path)
 
 
-def _first_line(path, default=None):
+def first_line(path, default=None):
     try:
-        fp = _open_text(path)
+        fp = open_text(path)
         try:
             line = fp.readline()
         finally:
@@ -78,10 +78,10 @@ def _first_line(path, default=None):
             return default
         raise
 
-def _read_proc(path):
+def read_proc(path):
     path = os.path.join('/proc', path)
     try:
-        fp = _open_text(path)
+        fp = open_text(path)
         try:
             for line in fp:
                 yield line.rstrip()
@@ -91,13 +91,13 @@ def _read_proc(path):
         return
 
 
-def _sys_path(path):
+def sys_path(path):
     return os.path.join("/sys", path)
 
 
-def _collect_linux_metadata(metadata):
+def collect_linux_metadata(metadata):
     # ASLR
-    for line in _read_proc('sys/kernel/randomize_va_space'):
+    for line in read_proc('sys/kernel/randomize_va_space'):
         if line == '0':
             metadata['aslr'] = 'No randomization'
         elif line == '1':
@@ -107,7 +107,7 @@ def _collect_linux_metadata(metadata):
         break
 
 
-def _get_cpu_affinity():
+def get_cpu_affinity():
     if hasattr(os, 'sched_getaffinity'):
         return os.sched_getaffinity(0)
 
@@ -120,7 +120,7 @@ def _get_cpu_affinity():
     return None
 
 
-def _get_logical_cpu_count():
+def get_logical_cpu_count():
     if psutil is not None:
         # Number of logical CPUs
         cpu_count = psutil.cpu_count()
@@ -143,13 +143,13 @@ def _get_logical_cpu_count():
     return cpu_count
 
 
-def _collect_system_metadata(metadata):
+def collect_system_metadata(metadata):
     metadata['platform'] = platform.platform(True, False)
     if sys.platform.startswith('linux'):
-        _collect_linux_metadata(metadata)
+        collect_linux_metadata(metadata)
 
     # on linux, load average over 1 minute
-    for line in _read_proc("loadavg"):
+    for line in read_proc("loadavg"):
         loadavg = line.split()[0]
         metadata['load_avg_1min'] = float(loadavg)
 
@@ -159,9 +159,9 @@ def _collect_system_metadata(metadata):
         metadata['hostname'] = hostname
 
 
-def _collect_memory_metadata(metadata):
+def collect_memory_metadata(metadata):
     if psutil is None:
-        for line in _read_proc('/proc/self/status'):
+        for line in read_proc('/proc/self/status'):
             if line.startswith('VmRSS:') and line.endswith(' kB'):
                 line = line[6:-3].strip()
                 rss_kb = int(line)
@@ -183,8 +183,8 @@ def _collect_memory_metadata(metadata):
         metadata['mem_private'] = private
 
 
-def _get_cpu_boost(cpu):
-    if not _get_cpu_boost.working:
+def get_cpu_boost(cpu):
+    if not get_cpu_boost.working:
         return
 
     env = dict(os.environ, LC_ALL='C')
@@ -199,16 +199,16 @@ def _get_cpu_boost(cpu):
         if proc.returncode != 0:
             # if the command failed once, never try it again
             # (consider that the command is not installed or does not work)
-            _get_cpu_boost.working = False
+            get_cpu_boost.working = False
             return None
     except OSError:
-        _get_cpu_boost.working = False
+        get_cpu_boost.working = False
         return None
 
     # cpupower doesn't seem to work on PPC64LE:
     # see https://github.com/haypo/perf/issues/11
     if 'no or unknown cpufreq driver is active on this CPU' in stdout:
-        _get_cpu_boost.working = False
+        get_cpu_boost.working = False
         return None
 
     boost = False
@@ -225,10 +225,10 @@ def _get_cpu_boost(cpu):
             boost = True
 
     raise ValueError("unable to parse cpupower output: %r" % stdout)
-_get_cpu_boost.working = True
+get_cpu_boost.working = True
 
 
-def _format_cpu_infos(infos, cpus):
+def format_cpu_infos(infos, cpus):
     if len(infos) == len(cpus):
         merge = (len(set(infos[cpu] for cpu in cpus)) == 1)
     else:
@@ -252,12 +252,12 @@ def _format_cpu_infos(infos, cpus):
     return text
 
 
-def _collect_cpu_freq(metadata, cpus):
+def collect_cpu_freq(metadata, cpus):
     # Parse /proc/cpuinfo: search for 'cpu MHz' (Intel) or 'clock' (Power8)
     cpu_set = set(cpus)
     cpu_freq = {}
     cpu = None
-    for line in _read_proc('cpuinfo'):
+    for line in read_proc('cpuinfo'):
         if line.startswith('processor'):
             value = line.split(':', 1)[-1].strip()
             cpu = int(value)
@@ -282,35 +282,35 @@ def _collect_cpu_freq(metadata, cpus):
     if not cpu_freq:
         return
 
-    metadata['cpu_freq'] = _format_cpu_infos(cpu_freq, cpus)
+    metadata['cpu_freq'] = format_cpu_infos(cpu_freq, cpus)
 
 
-def _get_cpu_config(cpu):
-    sys_path = _sys_path("devices/system/cpu")
+def get_cpu_config(cpu):
+    sys_cpu_path = sys_path("devices/system/cpu")
     info = []
 
-    path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_driver" % cpu)
-    scaling_driver = _first_line(path, default='')
+    path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_driver" % cpu)
+    scaling_driver = first_line(path, default='')
     if scaling_driver:
         info.append('driver:%s' % scaling_driver)
 
     if scaling_driver == 'intel_pstate':
-        path = os.path.join(sys_path, "intel_pstate/no_turbo")
-        no_turbo = _first_line(path, default='')
+        path = os.path.join(sys_cpu_path, "intel_pstate/no_turbo")
+        no_turbo = first_line(path, default='')
         if no_turbo == '1':
             info.append('intel_pstate:no turbo')
         elif no_turbo == '0':
             info.append('intel_pstate:turbo')
     else:
-        boost = _get_cpu_boost(cpu)
+        boost = get_cpu_boost(cpu)
         if boost is not None:
             if boost:
                 info.append('boost:supported')
             else:
                 info.append('boost:not suppported')
 
-    path = os.path.join(sys_path, "cpu%s/cpufreq/scaling_governor" % cpu)
-    scaling_governor = _first_line(path, default='')
+    path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_governor" % cpu)
+    scaling_governor = first_line(path, default='')
     if scaling_governor:
         info.append('governor:%s' % scaling_governor)
 
@@ -320,19 +320,19 @@ def _get_cpu_config(cpu):
     return ', '.join(info)
 
 
-def _collect_cpu_config(metadata, cpus):
+def collect_cpu_config(metadata, cpus):
     configs = {}
     for cpu in cpus:
-        config = _get_cpu_config(cpu)
+        config = get_cpu_config(cpu)
         if config:
             configs[cpu] = config
     if not configs:
         return
-    metadata['cpu_config'] = _format_cpu_infos(configs, cpus)
+    metadata['cpu_config'] = format_cpu_infos(configs, cpus)
 
 
-def _get_cpu_temperature(path, cpu_temp):
-    hwmon_name = _first_line(os.path.join(path, 'name'), default='')
+def get_cpu_temperature(path, cpu_temp):
+    hwmon_name = first_line(os.path.join(path, 'name'), default='')
     if not hwmon_name.startswith('coretemp'):
         return
 
@@ -341,11 +341,11 @@ def _get_cpu_temperature(path, cpu_temp):
         template = os.path.join(path, "temp%s_%%s" % index)
 
         try:
-            temp_label = _first_line(template % 'label')
+            temp_label = first_line(template % 'label')
         except IOError:
             break
 
-        temp_input = _first_line(template % 'input')
+        temp_input = first_line(template % 'input')
         temp_input = float(temp_input) / 1000
         # FIXME: On Python 2, u"%.0f\xb0C" introduces unicode errors if the
         # locale encoding is ASCII
@@ -357,8 +357,8 @@ def _get_cpu_temperature(path, cpu_temp):
         index += 1
 
 
-def _get_cpu_temperatures(metadata):
-    path = _sys_path("class/hwmon")
+def collect_cpu_temperatures(metadata):
+    path = sys_path("class/hwmon")
     try:
         names = os.listdir(path)
     except OSError:
@@ -367,14 +367,14 @@ def _get_cpu_temperatures(metadata):
     cpu_temp = []
     for name in names:
         hwmon = os.path.join(path, name)
-        _get_cpu_temperature(hwmon, cpu_temp)
+        get_cpu_temperature(hwmon, cpu_temp)
     if not cpu_temp:
         return None
 
     metadata['cpu_temp'] = ', '.join(cpu_temp)
 
 
-def _collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
+def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     if not cpu_affinity:
         return
     if not cpu_count:
@@ -392,8 +392,8 @@ def _collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     metadata['cpu_affinity'] = text
 
 
-def _collect_cpu_model(metadata):
-    for line in _read_proc("cpuinfo"):
+def collect_cpu_model(metadata):
+    for line in read_proc("cpuinfo"):
         if line.startswith('model name'):
             model_name = line.split(':', 1)[1].strip()
             if model_name:
@@ -407,36 +407,36 @@ def _collect_cpu_model(metadata):
             break
 
 
-def _collect_cpu_metadata(metadata):
-    _collect_cpu_model(metadata)
+def collect_cpu_metadata(metadata):
+    collect_cpu_model(metadata)
 
     # CPU count
-    cpu_count = _get_logical_cpu_count()
+    cpu_count = get_logical_cpu_count()
     if cpu_count:
         metadata['cpu_count'] = cpu_count
 
-    cpu_affinity = _get_cpu_affinity()
-    _collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
+    cpu_affinity = get_cpu_affinity()
+    collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
 
     all_cpus = cpu_affinity
     if not all_cpus and cpu_count:
         all_cpus = tuple(range(cpu_count))
 
     if all_cpus:
-        _collect_cpu_freq(metadata, all_cpus)
-        _collect_cpu_config(metadata, all_cpus)
+        collect_cpu_freq(metadata, all_cpus)
+        collect_cpu_config(metadata, all_cpus)
 
-    _get_cpu_temperatures(metadata)
+    collect_cpu_temperatures(metadata)
 
 
-def _collect_metadata(metadata):
+def collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
     date = datetime.datetime.now().isoformat()
     # FIXME: Move date to a regular run attribute with type datetime.datetime?
     metadata['date'] = date.split('.', 1)[0]
 
-    _collect_python_metadata(metadata)
-    _collect_system_metadata(metadata)
-    _collect_memory_metadata(metadata)
-    _collect_cpu_metadata(metadata)
+    collect_python_metadata(metadata)
+    collect_system_metadata(metadata)
+    collect_memory_metadata(metadata)
+    collect_cpu_metadata(metadata)

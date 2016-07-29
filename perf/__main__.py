@@ -275,7 +275,7 @@ def cmd_metadata():
         # ignore if _set_cpu_affinity() failed
 
     metadata = {}
-    perf_metadata._collect_metadata(metadata)
+    perf_metadata.collect_metadata(metadata)
     metadata = {name: perf.Metadata(name, value)
                 for name, value in metadata.items()}
     perf.text_runner._display_metadata(metadata)

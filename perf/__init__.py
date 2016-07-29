@@ -229,7 +229,7 @@ class Run(object):
             from perf import _metadata as perf_metadata
 
             metadata2 = {}
-            perf_metadata._collect_metadata(metadata2)
+            perf_metadata.collect_metadata(metadata2)
 
             if metadata is not None:
                 metadata2.update(metadata)
