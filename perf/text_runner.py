@@ -535,7 +535,7 @@ class TextRunner:
 
         if args.tracemalloc:
             try:
-                import tracemalloc
+                import tracemalloc   # noqa
             except ImportError as exc:
                 print("ERROR: fail to import tracemalloc: %s" % exc)
                 sys.exit(1)

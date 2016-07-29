@@ -2,9 +2,7 @@ from __future__ import print_function
 import datetime
 import json
 import math
-import operator
 import os.path
-import re
 import sys
 
 import six
@@ -678,7 +676,7 @@ class BenchmarkSuite(object):
         for bench in self:
             name = bench.get_name()
             if not name:
-                raise ValuError("a benchmark has no name")
+                raise ValueError("a benchmark has no name")
             names.append(name)
         return names
 
