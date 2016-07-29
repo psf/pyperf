@@ -96,14 +96,6 @@ def _sys_path(path):
 
 
 def _collect_linux_metadata(metadata):
-    # CPU model
-    for line in _read_proc("cpuinfo"):
-        if line.startswith('model name'):
-            model_name = line.split(':', 1)[1].strip()
-            if model_name:
-                metadata['cpu_model_name'] = model_name
-            break
-
     # ASLR
     for line in _read_proc('sys/kernel/randomize_va_space'):
         if line == '0':
@@ -244,8 +236,12 @@ def _format_cpu_infos(infos, cpus):
     if not merge:
         text = []
         for cpu in sorted(cpus):
-            info = infos[cpu]
-            text.append('%s=%s' % (cpu, info))
+            try:
+                info = infos[cpu]
+            except KeyError:
+                pass
+            else:
+                text.append('%s=%s' % (cpu, info))
         text = ', '.join(text)
     else:
         # compact output if all CPUs have the same info
@@ -257,8 +253,7 @@ def _format_cpu_infos(infos, cpus):
 
 
 def _collect_cpu_freq(metadata, cpus):
-    sys_path = _sys_path("devices/system/cpu")
-
+    # Parse /proc/cpuinfo: search for 'cpu MHz' (Intel) or 'clock' (Power8)
     cpu_set = set(cpus)
     cpu_freq = {}
     cpu = None
@@ -269,8 +264,17 @@ def _collect_cpu_freq(metadata, cpus):
             if cpu not in cpu_set:
                 # skip this CPU
                 cpu = None
+
         elif line.startswith('cpu MHz') and cpu is not None:
+            # Intel: 'cpu MHz : 1261.613'
             mhz = line.split(':', 1)[-1].strip()
+            mhz = float(mhz)
+            mhz = int(round(mhz))
+            cpu_freq[cpu] = '%s MHz' % mhz
+
+        elif line.startswith('clock') and line.endswith('MHz') and cpu is not None:
+            # Power8: 'clock : 3425.000000MHz'
+            mhz = line[:-3].split(':', 1)[-1].strip()
             mhz = float(mhz)
             mhz = int(round(mhz))
             cpu_freq[cpu] = '%s MHz' % mhz
@@ -388,7 +392,24 @@ def _collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     metadata['cpu_affinity'] = text
 
 
+def _collect_cpu_model(metadata):
+    for line in _read_proc("cpuinfo"):
+        if line.startswith('model name'):
+            model_name = line.split(':', 1)[1].strip()
+            if model_name:
+                metadata['cpu_model_name'] = model_name
+            break
+
+        if line.startswith('machine'):
+            machine = line.split(':', 1)[1].strip()
+            if machine:
+                metadata['cpu_machine'] = machine
+            break
+
+
 def _collect_cpu_metadata(metadata):
+    _collect_cpu_model(metadata)
+
     # CPU count
     cpu_count = _get_logical_cpu_count()
     if cpu_count:

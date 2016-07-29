@@ -49,26 +49,130 @@ class TestMetadata(unittest.TestCase):
 
 
 class CpuFunctionsTests(unittest.TestCase):
-    def test_cpu_frequencies(self):
-        cpuinfo = textwrap.dedent("""
-            processor	: 0
-            vendor_id	: GenuineIntel
-            cpu family	: 6
-            cpu MHz		: 1600.000
-            power management:
+    INTEL_CPU_INFO = textwrap.dedent("""
+        processor : 0
+        vendor_id\t: GenuineIntel
+        cpu family\t: 6
+        model\t\t: 58
+        model name\t: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+        stepping\t: 9
+        microcode\t: 0x1c
+        cpu MHz\t\t: 1287.554
+        cache size\t: 4096 KB
+        physical id\t: 0
+        siblings\t: 4
+        core id\t\t: 0
+        cpu cores\t: 2
+        apicid\t\t: 0
+        initial apicid\t: 0
+        fpu\t\t: yes
+        fpu_exception\t: yes
+        cpuid level\t: 13
+        wp\t\t: yes
+        flags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm epb tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms xsaveopt dtherm ida arat pln pts
+        bugs\t\t:
+        bogomips\t: 5786.64
+        clflush size\t: 64
+        cache_alignment\t: 64
+        address sizes\t: 36 bits physical, 48 bits virtual
+        power management:
 
-            processor	: 1
-            cpu MHz		: 2901.000
+        processor\t: 1
+        vendor_id\t: GenuineIntel
+        cpu family\t: 6
+        model\t\t: 58
+        model name\t: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+        stepping\t: 9
+        microcode\t: 0x1c
+        cpu MHz\t\t: 1225.363
+        cache size\t: 4096 KB
+        physical id\t: 0
+        siblings\t: 4
+        core id\t\t: 0
+        cpu cores\t: 2
+        apicid\t\t: 1
+        initial apicid\t: 1
+        fpu\t\t: yes
+        fpu_exception\t: yes
+        cpuid level\t: 13
+        wp\t\t: yes
+        flags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm epb tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms xsaveopt dtherm ida arat pln pts
+        bugs\t\t:
+        bogomips\t: 5791.91
+        clflush size\t: 64
+        cache_alignment\t: 64
+        address sizes\t: 36 bits physical, 48 bits virtual
+        power management:
 
-            processor	: 2
-            vendor_id	: GenuineIntel
-            cpu MHz		: 2901.000
-            clflush size	: 64
-        """)
+        processor\t: 2
+        vendor_id\t: GenuineIntel
+        cpu family\t: 6
+        model\t\t: 58
+        model name\t: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+        stepping\t: 9
+        microcode\t: 0x1c
+        cpu MHz\t\t: 1200.101
+        cache size\t: 4096 KB
+        physical id\t: 0
+        siblings\t: 4
+        core id\t\t: 1
+        cpu cores\t: 2
+        apicid\t\t: 2
+        initial apicid\t: 2
+        fpu\t\t: yes
+        fpu_exception\t: yes
+        cpuid level\t: 13
+        wp\t\t: yes
+        flags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm epb tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms xsaveopt dtherm ida arat pln pts
+        bugs\t\t:
+        bogomips\t: 5790.60
+        clflush size\t: 64
+        cache_alignment\t: 64
+        address sizes\t: 36 bits physical, 48 bits virtual
+        power management:
+    """)
 
+    POWER8_CPUINFO = textwrap.dedent("""
+        processor       : 0
+        cpu             : POWER8E (raw), altivec supported
+        clock           : 3425.000000MHz
+        revision        : 2.1 (pvr 004b 0201)
+
+        processor       : 159
+        cpu             : POWER8E (raw), altivec supported
+        clock           : 3425.000000MHz
+        revision        : 2.1 (pvr 004b 0201)
+
+        timebase        : 512000000
+        platform        : PowerNV
+        model           : 8247-22L
+        machine         : PowerNV 8247-22L
+        firmware        : OPAL v3
+    """)
+
+    def test_cpu_config(self):
+        def mock_open(filename, *args, **kw):
+            if filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
+                data = 'DRIVER\n'
+            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
+                data = 'GOVERNOR\n'
+            elif filename.startswith('/sys/devices/system/cpu/cpu2'):
+                raise IOError
+            else:
+                raise ValueError("unexpect open: %r" % filename)
+            return six.StringIO(data)
+
+        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
+            with mock.patch('perf.metadata._get_cpu_boost', return_value=None):
+                metadata = {}
+                cpu_freq = perf.metadata._collect_cpu_config(metadata, [0, 2])
+                self.assertEqual(metadata['cpu_config'],
+                                 '0=driver:DRIVER, governor:GOVERNOR')
+
+    def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
             if filename == '/proc/cpuinfo':
-                data = cpuinfo
+                data = self.INTEL_CPU_INFO
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
                 data = 'DRIVER\n'
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
@@ -81,9 +185,29 @@ class CpuFunctionsTests(unittest.TestCase):
 
         with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
             metadata = {}
-            cpu_freq = perf.metadata._collect_cpu_freq(metadata, [0, 2])
-            self.assertEqual(metadata['cpu_freq'], '0=1600 MHz, 2=2901 MHz')
+            perf.metadata._collect_cpu_freq(metadata, [0, 2])
+            perf.metadata._collect_cpu_model(metadata)
+            self.assertEqual(metadata['cpu_freq'],
+                             '0=1288 MHz, 2=1200 MHz')
+            self.assertEqual(metadata['cpu_model_name'],
+                             'Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz')
 
+    def test_power8_cpu_frequencies(self):
+        def mock_open(filename, *args, **kw):
+            if filename == '/proc/cpuinfo':
+                data = self.POWER8_CPUINFO
+            else:
+                raise ValueError("unexpect open: %r" % filename)
+            return six.StringIO(data)
+
+        with mock.patch('perf.metadata.open', create=True, side_effect=mock_open):
+            metadata = {}
+            perf.metadata._collect_cpu_freq(metadata, [0, 159])
+            perf.metadata._collect_cpu_model(metadata)
+            self.assertEqual(metadata['cpu_freq'],
+                             '0,159=3425 MHz')
+            self.assertEqual(metadata['cpu_machine'],
+                             'PowerNV 8247-22L')
 
 if __name__ == "__main__":
     unittest.main()
