@@ -5,6 +5,7 @@ TODO
 * Display mem_peak in benchmark metadata: compute maximum of all runs.
   Store maximum in JSON (optimization)? "dump -v" should still show individual
   mem_peak values
+* Display also stability warnings in compare output
 * Write unit test for tracemalloc and track memory: allocate 30 MB,
   check usage >= 30 MB
 * Add CLI option to sort benchmarks by start date, not by name
