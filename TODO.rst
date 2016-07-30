@@ -1,6 +1,8 @@
 TODO
 ====
 
+* metadata: detect PYTHONHASHSEED
+* metadata: get Python Mercurial revision and the "+" modified marker
 * Write unit test for compare_to --group-by-speed
 * Display mem_peak in benchmark metadata: compute maximum of all runs.
   Store maximum in JSON (optimization)? "dump -v" should still show individual

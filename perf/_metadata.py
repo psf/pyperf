@@ -149,8 +149,14 @@ def collect_system_metadata(metadata):
 
     # on linux, load average over 1 minute
     for line in read_proc("loadavg"):
-        loadavg = line.split()[0]
+        fields = line.split()
+        loadavg = fields[0]
         metadata['load_avg_1min'] = float(loadavg)
+
+        if len(fields) >= 4 and '/' in fields[3]:
+            runnable_threads = fields[3].split('/', 1)[0]
+            runnable_threads = int(runnable_threads)
+            metadata['runnable_threads'] = runnable_threads
 
     # Hostname
     hostname = socket.gethostname()
