@@ -192,7 +192,11 @@ System metadata:
 * ``cpu_freq``: Frequency of CPUs
 * ``cpu_model_name``: CPU model name
 * ``cpu_temp``: Temperature of CPUs
-* ``mem_peak``: Peak of the memory usage in bytes (``int``)
+* ``mem_peak``: Peak of the memory usage in bytes (``int``), see
+  the ``--track-memory`` option
+* ``tracemalloc_peak``: Peak of the Python memory traced by tracemalloc,
+  see the ``--tracemalloc`` option
+
 
 Other:
 

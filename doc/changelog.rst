@@ -7,6 +7,7 @@ Version 0.7.3
 * convert: add ``--extract-metadata=NAME``
 * add ``--tracemalloc`` option: use the ``tracemalloc`` module to track
   Python memory allocation and get the peak of memory usage in metadata
+  (``tracemalloc_peak``)
 * add ``--track-memory`` option: run a thread reading the memory usage
   every millisecond and store the peak as ``mem_peak`` metadata
 

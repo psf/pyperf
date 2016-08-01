@@ -98,8 +98,9 @@ Option::
   variation. By default, worker processes are pinned to isolate CPUs if
   isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
 * ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
-  allocation and get the peak of memory usage in metadata. The module is only
-  available on Python 3.4 and newer. See the `tracemalloc module
+  allocation and get the peak of memory usage in metadata
+  (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
+  See the `tracemalloc module
   <https://docs.python.org/dev/library/tracemalloc.html>`_.
 * ``--track-memory``: run a thread reading the memory usage every millisecond
   and store the peak as ``mem_peak`` metadata. It is less accurate than
