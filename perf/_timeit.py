@@ -44,10 +44,10 @@ def create_timer(runner):
     return timer
 
 
-def prepare_args(runner, args):
+def prepare_args(runner, cmd):
     for setup in runner.args.setup:
-        args.extend(("--setup", setup))
-    args.extend(runner.args.stmt)
+        cmd.extend(("--setup", setup))
+    cmd.extend(runner.args.stmt)
 
 
 def sample_func(loops, timer):
