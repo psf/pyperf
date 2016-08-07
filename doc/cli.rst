@@ -1,6 +1,19 @@
 perf commands
 =============
 
+Commands:
+
+* :ref:`show <show_cmd>`
+* :ref:`compare and compare_to <compare_cmd>`
+* :ref:`stats <stats_cmd>`
+* :ref:`dump <dump_cmd>`
+* :ref:`hist <hist_cmd>`
+* :ref:`convert <convert_cmd>`
+* :ref:`metadata <metadata_cmd>`
+* :ref:`timeit <timeit_cmd>`
+* :ref:`slowest <slowest_cmd>`
+
+
 The Python perf module comes with a ``pyperf`` program which includes different
 commands. If for some reasons, ``pyperf`` program cannot be used, ``python3 -m
 perf ...`` can be used: it is the same, it's just longer to type :-) For
@@ -8,6 +21,8 @@ example, the ``-m perf ...`` syntax is preferred for ``timeit`` because this
 command uses the running Python program.
 
 General note: if a filename is ``-``, read the JSON content from stdin.
+
+.. _show_cmd:
 
 show
 ----
@@ -53,6 +68,7 @@ Example with metadata::
 
     Median +- std dev: 24.6 ms +- 0.2 ms
 
+.. _compare_cmd:
 
 compare and compare_to
 ----------------------
@@ -220,6 +236,8 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 <https://en.wikipedia.org/wiki/Probability_density_function>`_.
 
 
+.. _convert_cmd:
+
 convert
 -------
 
@@ -288,6 +306,8 @@ Example::
     - python_version: 3.5.1 (64bit)
     - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
 
+
+.. _timeit_cmd:
 
 timeit
 ------
@@ -388,4 +408,18 @@ specific case, whereas many parameters are random:
   the performance of memory accesses is different in each process
 
 See the :ref:`Minimum versus average and standard deviation <min>` section.
+
+
+.. _slowest_cmd:
+
+slowest
+-------
+
+Display the 5 benchmarks which took the most time to be run. This command
+should not be used to compare performances, but only to find "slow" benchmarks
+which makes running benchmarks taking too long.
+
+Options:
+
+* ``-n``: Number of slow benchmarks to display (default: ``5``)
 

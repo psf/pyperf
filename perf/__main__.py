@@ -112,7 +112,161 @@ def create_parser():
                      help='display raw samples')
     input_filenames(cmd)
 
+    # slowest
+    cmd = subparsers.add_parser('slowest', help='List benchmarks which took most of the time')
+    cmd.add_argument('-n', type=int, default=5,
+                     help='Number of slow benchmarks to display (default: 5)')
+    input_filenames(cmd)
+
     return parser, timeit_runner
+
+
+DataItem = collections.namedtuple('DataItem', 'suite filename benchmark name title is_last')
+GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
+GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
+IterSuite = collections.namedtuple('IterSuite', 'filename suite')
+
+
+def format_filename_func(suites):
+    filenames = [suite.filename for suite in suites]
+
+    base_filenames = {os.path.basename(filename) for filename in filenames}
+    if len(base_filenames) != len(filenames):
+        # FIXME: try harder: try to get differente names by keeping only
+        # the parent directory?
+        return lambda filename: filename
+
+    noext_filenames = {os.path.splitext(filename)[0]
+                       for filename in base_filenames}
+    if len(noext_filenames) != len(base_filenames):
+        return os.path.basename
+
+    def format_filename(filename):
+        filename = os.path.basename(filename)
+        filename = os.path.splitext(filename)[0]
+        return filename
+
+    return format_filename
+
+
+class Benchmarks:
+    def __init__(self):
+        self.suites = []
+
+    def load_benchmark_suite(self, filename):
+        suite = perf.BenchmarkSuite.load(filename)
+        self.suites.append(suite)
+
+    def load_benchmark_suites(self, filenames):
+        for filename in filenames:
+            self.load_benchmark_suite(filename)
+
+    def include_benchmark(self, name):
+        for suite in self.suites:
+            try:
+                suite._convert_include_benchmark(name)
+            except KeyError:
+                fatal_missing_benchmark(suite, name)
+
+    def get_nsuite(self):
+        return len(self.suites)
+
+    def __len__(self):
+        return sum(len(suite) for suite in self.suites)
+
+    def iter_suites(self):
+        format_filename = format_filename_func(self.suites)
+        for suite in self.suites:
+            filename = format_filename(suite.filename)
+            yield IterSuite(filename, suite)
+
+    def __iter__(self):
+        format_filename = format_filename_func(self.suites)
+
+        show_name = (len(self) > 1)
+        show_filename = (self.get_nsuite() > 1)
+
+        for suite_index, suite in enumerate(self.suites):
+            filename = format_filename(suite.filename)
+            last_suite = (suite_index == (len(self.suites) - 1))
+
+            benchmarks = suite.get_benchmarks()
+            for bench_index, benchmark in enumerate(benchmarks):
+                name = get_benchmark_name(benchmark)
+                # FIXME: remove title, move logic to the caller?
+                if show_name:
+                    title = name
+                    if show_filename:
+                        title = "%s:%s" % (filename, title)
+                else:
+                    title = None
+                last_benchmark = (bench_index == (len(benchmarks) - 1))
+                is_last = (last_suite and last_benchmark)
+
+                yield DataItem(suite, filename, benchmark, name, title, is_last)
+
+    def _group_by_name_names(self):
+        def suite_to_name_set(suite):
+            result = set()
+            for  bench in suite:
+                name = bench.get_name()
+                if name:
+                    result.add(name)
+            return result
+
+        names = suite_to_name_set(self.suites[0])
+        for suite in self.suites[1:]:
+            names &= suite_to_name_set(suite)
+        return names
+
+    def group_by_name(self):
+        format_filename = format_filename_func(self.suites)
+
+        show_filename = (self.get_nsuite() > 1)
+
+        names = self._group_by_name_names()
+        names = sorted(names)
+        show_name = (len(names) > 1)
+
+        groups = []
+        for index, name in enumerate(names):
+            benchmarks = []
+            for suite in self.suites:
+                benchmark = suite.get_benchmark(name)
+                filename = format_filename(suite.filename)
+                if show_name:
+                    if not show_filename:
+                        title = name
+                    else:
+                        # name is displayed in the group title
+                        title = filename
+                else:
+                    title = None
+                benchmarks.append(GroupItem(benchmark, title, filename))
+
+            is_last = (index == (len(names) - 1))
+            group = GroupItem2(name, benchmarks, is_last)
+            groups.append(group)
+
+        return groups
+
+    def group_by_name_ignored(self):
+        names = self._group_by_name_names()
+        for suite in self.suites:
+            ignored = []
+            for bench in suite:
+                if bench.get_name() not in names:
+                    ignored.append(bench)
+            if ignored:
+                yield (suite, ignored)
+
+
+def load_benchmarks(args):
+    data = Benchmarks()
+    data.load_benchmark_suites(args.filenames)
+    if args.name:
+        data.include_benchmark(args.name)
+    return data
 
 
 def display_title(title, level=1):
@@ -406,147 +560,6 @@ def cmd_metadata():
     perf.text_runner._display_metadata(metadata)
 
 
-DataItem = collections.namedtuple('DataItem', 'suite filename benchmark name title is_last')
-GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
-GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
-
-
-def format_filename_func(suites):
-    filenames = [suite.filename for suite in suites]
-
-    base_filenames = {os.path.basename(filename) for filename in filenames}
-    if len(base_filenames) != len(filenames):
-        # FIXME: try harder: try to get differente names by keeping only
-        # the parent directory?
-        return lambda filename: filename
-
-    noext_filenames = {os.path.splitext(filename)[0]
-                       for filename in base_filenames}
-    if len(noext_filenames) != len(base_filenames):
-        return os.path.basename
-
-    def format_filename(filename):
-        filename = os.path.basename(filename)
-        filename = os.path.splitext(filename)[0]
-        return filename
-
-    return format_filename
-
-
-class Benchmarks:
-    def __init__(self):
-        self.suites = []
-
-    def load_benchmark_suite(self, filename):
-        suite = perf.BenchmarkSuite.load(filename)
-        self.suites.append(suite)
-
-    def load_benchmark_suites(self, filenames):
-        for filename in filenames:
-            self.load_benchmark_suite(filename)
-
-    def include_benchmark(self, name):
-        for suite in self.suites:
-            try:
-                suite._convert_include_benchmark(name)
-            except KeyError:
-                fatal_missing_benchmark(suite, name)
-
-    def get_nsuite(self):
-        return len(self.suites)
-
-    def __len__(self):
-        return sum(len(suite) for suite in self.suites)
-
-    def __iter__(self):
-        format_filename = format_filename_func(self.suites)
-
-        show_name = (len(self) > 1)
-        show_filename = (self.get_nsuite() > 1)
-
-        for suite_index, suite in enumerate(self.suites):
-            filename = format_filename(suite.filename)
-            last_suite = (suite_index == (len(self.suites) - 1))
-
-            benchmarks = suite.get_benchmarks()
-            for bench_index, benchmark in enumerate(benchmarks):
-                name = get_benchmark_name(benchmark)
-                # FIXME: remove title, move logic to the caller?
-                if show_name:
-                    title = name
-                    if show_filename:
-                        title = "%s:%s" % (filename, title)
-                else:
-                    title = None
-                last_benchmark = (bench_index == (len(benchmarks) - 1))
-                is_last = (last_suite and last_benchmark)
-
-                yield DataItem(suite, filename, benchmark, name, title, is_last)
-
-    def _group_by_name_names(self):
-        def suite_to_name_set(suite):
-            result = set()
-            for  bench in suite:
-                name = bench.get_name()
-                if name:
-                    result.add(name)
-            return result
-
-        names = suite_to_name_set(self.suites[0])
-        for suite in self.suites[1:]:
-            names &= suite_to_name_set(suite)
-        return names
-
-    def group_by_name(self):
-        format_filename = format_filename_func(self.suites)
-
-        show_filename = (self.get_nsuite() > 1)
-
-        names = self._group_by_name_names()
-        names = sorted(names)
-        show_name = (len(names) > 1)
-
-        groups = []
-        for index, name in enumerate(names):
-            benchmarks = []
-            for suite in self.suites:
-                benchmark = suite.get_benchmark(name)
-                filename = format_filename(suite.filename)
-                if show_name:
-                    if not show_filename:
-                        title = name
-                    else:
-                        # name is displayed in the group title
-                        title = filename
-                else:
-                    title = None
-                benchmarks.append(GroupItem(benchmark, title, filename))
-
-            is_last = (index == (len(names) - 1))
-            group = GroupItem2(name, benchmarks, is_last)
-            groups.append(group)
-
-        return groups
-
-    def group_by_name_ignored(self):
-        names = self._group_by_name_names()
-        for suite in self.suites:
-            ignored = []
-            for bench in suite:
-                if bench.get_name() not in names:
-                    ignored.append(bench)
-            if ignored:
-                yield (suite, ignored)
-
-
-def load_benchmarks(args):
-    data = Benchmarks()
-    data.load_benchmark_suites(args.filenames)
-    if args.name:
-        data.include_benchmark(args.name)
-    return data
-
-
 def cmd_show(args):
     data = load_benchmarks(args)
 
@@ -796,6 +809,28 @@ def cmd_convert(args):
         suite.dump(sys.stdout, compact=compact)
 
 
+def cmd_slowest(args):
+    data = load_benchmarks(args)
+    nslowest = args.n
+
+    use_title = (data.get_nsuite() > 1)
+    for item in data.iter_suites():
+        if use_title:
+            display_title(item.filename, 1)
+
+        benchs = []
+        for bench in item.suite:
+            duration = bench.get_total_duration()
+            benchs.append((duration, bench))
+        benchs.sort(key=lambda item: item[0], reverse=True)
+
+        for index, item in enumerate(benchs[:nslowest], 1):
+            duration, bench = item
+            name = get_benchmark_name(bench)
+            print("#%s: %s (%s)"
+                  % (index, name, perf._format_timedelta(duration)))
+
+
 def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
@@ -811,6 +846,7 @@ def main():
             'timeit': functools.partial(cmd_timeit, args, timeit_runner),
             'convert': functools.partial(cmd_convert, args),
             'dump': functools.partial(cmd_dump, args),
+            'slowest': functools.partial(cmd_slowest, args),
         }
 
         try:

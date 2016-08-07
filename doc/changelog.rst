@@ -4,6 +4,7 @@ Changelog
 Version 0.7.3
 -------------
 
+* add a new ``slowest`` command
 * convert: add ``--extract-metadata=NAME``
 * add ``--tracemalloc`` option: use the ``tracemalloc`` module to track
   Python memory allocation and get the peak of memory usage in metadata

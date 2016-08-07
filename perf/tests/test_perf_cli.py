@@ -341,6 +341,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertRegex(stdout,
                          r'^Metadata:\n(- [^:]+: .*\n)+$')
 
+    def test_metadata(self):
+        stdout = self.run_command('slowest', TELCO)
+        self.assertEqual(stdout.rstrip(),
+                         '#1: telco (16.0 sec)')
+
 
 class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):
