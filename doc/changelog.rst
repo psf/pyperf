@@ -10,6 +10,8 @@ Version 0.7.3
   (``tracemalloc_peak``)
 * add ``--track-memory`` option: run a thread reading the memory usage
   every millisecond and store the peak as ``mem_peak`` metadata
+* ``compare``, ``compare_to``: add ``--min-delta`` option
+* ``compare_to``: add ``--group-by-speed`` (``-G``) option
 
 Version 0.7.2 (2016-07-21)
 --------------------------

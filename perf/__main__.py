@@ -54,6 +54,10 @@ def create_parser():
         if command == 'compare_to':
             cmd.add_argument('-G', '--group-by-speed', action="store_true",
                              help='group slower/faster/same speed')
+        cmd.add_argument('--min-delta', type=float,
+                         help='Absolute minimum of speed in percent to '
+                              'consider that a benchmark is significant '
+                              '(default: 0%%)')
         input_filenames(cmd)
 
     # stats
@@ -303,8 +307,12 @@ def compare_suites_by_speed(all_results, show_name, args):
             not_significant.append(results.name)
             continue
 
-        item = (results.name, result)
         speed = result.speed
+        if args.min_delta and abs(speed - 1.0) * 100 < args.min_delta:
+            not_significant.append(results.name)
+            continue
+
+        item = (results.name, result)
         if speed == 1.0:
             same.append(item)
         elif speed > 1.0:
