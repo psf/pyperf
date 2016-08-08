@@ -1,6 +1,8 @@
 TODO
 ====
 
+* resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+* Make benchmark name mandatory?
 * metadata: detect PYTHONHASHSEED
 * metadata: get Python Mercurial revision and the "+" modified marker
 * Write unit test for compare_to --group-by-speed
