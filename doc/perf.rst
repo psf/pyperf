@@ -190,10 +190,16 @@ System metadata:
 * ``cpu_config``: Configuration of CPUs (ex: scaling governor)
 * ``cpu_count``: number of logical CPUs (``int``)
 * ``cpu_freq``: Frequency of CPUs
+* ``cpu_machine``: CPU machine
 * ``cpu_model_name``: CPU model name
 * ``cpu_temp``: Temperature of CPUs
+* ``load_avg_1min``: Load average figures giving the number of jobs in the run
+  queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
+  minute
 * ``mem_peak``: Peak of the memory usage in bytes (``int``), see
   the ``--track-memory`` option
+* ``runnable_threads``: number of currently runnable kernel scheduling entities
+  (processes, threads)
 * ``tracemalloc_peak``: Peak of the Python memory traced by tracemalloc,
   see the ``--tracemalloc`` option
 

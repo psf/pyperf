@@ -73,17 +73,19 @@ Example with metadata::
 compare and compare_to
 ----------------------
 
-Compare benchmark results::
+Compare benchmark suites, compute the minimum of each benchmark to use it as
+the reference::
 
     python3 -m perf
         [-v/--verbose] [-m/--metadata]
         compare reference.json filename.json filename2.json [filename3.json ...]
 
-Compare benchmark results to a reference::
+Compare benchmark suites, use the first file as the reference::
 
     python3 -m perf
         [-v/--verbose] [-q/--quiet]
         [-G/--group-by-speed]
+        [--min-speed=MIN_SPEED]
         compare_to reference.json changed.json [changed2.json ...]
 
 Example::
@@ -97,6 +99,9 @@ Example::
 Options:
 
 * ``--group-by-speed``: group results by "Slower", "Faster" and "Same speed"
+* ``--min-speed``: Absolute minimum of speed in percent to consider that a
+  benchmark is significant (default: 0%)
+
 
 .. _stats_cmd:
 

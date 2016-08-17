@@ -12,6 +12,8 @@ Version 0.7.3
 * add ``--track-memory`` option: run a thread reading the memory usage
   every millisecond and store the peak as ``mem_peak`` metadata
 * ``compare_to``: add ``--group-by-speed`` (``-G``) and ``--min-speed`` options
+* metadata: add ``runnable_threads``
+* Fix issues on ppc64le Power8
 
 Version 0.7.2 (2016-07-21)
 --------------------------
