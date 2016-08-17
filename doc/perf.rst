@@ -183,7 +183,8 @@ Python metadata:
 
 Memory metadata:
 
-* ``mem_max_rss``: Maximum resident set size in bytes (``int``)
+* ``mem_max_rss``: Maximum resident set size in bytes (``int``). On Linux,
+  kernel 2.6.32 or newer is required.
 * ``mem_peak``: Peak of the memory usage in bytes (``int``), see
   the ``--track-memory`` option. On Linux, compute the sum of ``Private_Clean``
   and ``Private_Dirty`` memory mappings of ``/proc/self/smaps``. On Windows,
