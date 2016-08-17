@@ -179,12 +179,20 @@ Python metadata:
 * ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
   only set on Pyhon 2.7, Python 3.2 and older
 
-System metadata:
+Memory metadata:
 
-* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
-  ``disabled``
-* ``hostname``: Host name
-* ``platform``: short string describing the platform
+* ``mem_max_rss``: Maximum resident set size in bytes (``int``)
+* ``mem_peak``: Peak of the memory usage in bytes (``int``), see
+  the ``--track-memory`` option. On Linux, compute the sum of ``Private_Clean``
+  and ``Private_Dirty`` memory mappings of ``/proc/self/smaps``. On Windows,
+  get ``PeakPagefileUsage`` of ``GetProcessMemoryInfo()`` (of the current
+  process): the peak value of the Commit Charge during the lifetime of this
+  process.
+* ``mem_tracemalloc_peak``: Peak of the Python memory traced by tracemalloc,
+  see the ``--tracemalloc`` option
+
+CPU metadata:
+
 * ``cpu_affinity``: if set, the process is pinned to the specified list of
   CPUs
 * ``cpu_config``: Configuration of CPUs (ex: scaling governor)
@@ -193,16 +201,18 @@ System metadata:
 * ``cpu_machine``: CPU machine
 * ``cpu_model_name``: CPU model name
 * ``cpu_temp``: Temperature of CPUs
+
+System metadata:
+
+* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
+  ``disabled``
+* ``hostname``: Host name
+* ``platform``: short string describing the platform
 * ``load_avg_1min``: Load average figures giving the number of jobs in the run
   queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
   minute
-* ``mem_peak``: Peak of the memory usage in bytes (``int``), see
-  the ``--track-memory`` option
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
   (processes, threads)
-* ``tracemalloc_peak``: Peak of the Python memory traced by tracemalloc,
-  see the ``--tracemalloc`` option
-
 
 Other:
 
