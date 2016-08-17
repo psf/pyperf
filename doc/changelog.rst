@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.7.3
--------------
+Version 0.7.3 (2016-08-17)
+--------------------------
 
 * add a new ``slowest`` command
 * convert: add ``--extract-metadata=NAME``

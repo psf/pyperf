@@ -6,7 +6,7 @@
 #  - update version in setup.py, perf/__init__.py and doc/conf.py
 #  - set release date in doc/changelog.rst
 #  - run tests: tox
-#  - git commit -a
+#  - git commit -a -m "prepare release x.y"
 #  - git push
 #
 # Release a new version:
