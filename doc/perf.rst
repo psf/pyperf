@@ -171,11 +171,13 @@ Benchmark:
 
 Python metadata:
 
+* ``python_executable``: path to the Python executable
+* ``python_hash_seed``: value of the ``PYTHONHASHSEED`` environment variable
+  (``random`` string or an ``int``)
 * ``python_implementation``: Python implementation. Examples: ``cpython``,
   ``pypy``, etc.
 * ``python_version``: Python version, with the architecture (32 or 64 bits) if
   available, ex: ``2.7.11 (64bit)``
-* ``python_executable``: path to the Python binary program
 * ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
   only set on Pyhon 2.7, Python 3.2 and older
 

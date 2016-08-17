@@ -4,7 +4,6 @@ TODO
 * --tracemalloc/--track-memory: use mem_peak as the benchmark value and
   add an unit (bytes, seconds) to benchmarks!
 * Make benchmark name mandatory?
-* metadata: detect PYTHONHASHSEED
 * metadata: get Python Mercurial revision and the "+" modified marker
 * Write unit test for compare_to --group-by-speed
 * Display mem_peak in benchmark metadata: compute maximum of all runs.

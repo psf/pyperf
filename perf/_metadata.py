@@ -60,6 +60,17 @@ def collect_python_metadata(metadata):
     elif perf.perf_counter == time.time:
         metadata['timer'] = 'time.time()'
 
+    # PYTHONHASHSEED
+    if os.environ.get('PYTHONHASHSEED'):
+        hash_seed = os.environ['PYTHONHASHSEED']
+        try:
+            if hash_seed != "random":
+                hash_seed = int(hash_seed)
+        except ValueError:
+            pass
+        else:
+            metadata['python_hash_seed'] = hash_seed
+
 
 def open_text(path):
     if six.PY3:
