@@ -419,3 +419,6 @@ def collect_metadata(metadata):
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)
     collect_cpu_metadata(metadata)
+
+    # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
+    # not accurate. See perf._memory for more accurate memory metrics.
