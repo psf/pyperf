@@ -1,6 +1,8 @@
 TODO
 ====
 
+* --tracemalloc/--track-memory: use mem_peak as the benchmark value and
+  add an unit (bytes, seconds) to benchmarks!
 * resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 * Make benchmark name mandatory?
 * metadata: detect PYTHONHASHSEED
