@@ -144,18 +144,6 @@ def _format_filesize(size):
     return '%.1f kB' % (size / 1024.0)
 
 
-def _get_metadata_formatter(name):
-    if name in ('loops', 'inner_loops'):
-        return _format_number
-    if name == 'duration':
-        return _format_seconds
-    if name == 'load_avg_1min':
-        return _format_load
-    if name in ('mem_peak', 'tracemalloc_peak'):
-        return _format_filesize
-    return _metadata_formatter
-
-
 def _parse_iso8601(date):
     if '.' in date:
         date, floatpart = date.split('.', 1)
@@ -168,6 +156,33 @@ def _parse_iso8601(date):
 
 
 _METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
+
+
+def _get_metadata_formatter(name):
+    if name in ('loops', 'inner_loops'):
+        return _format_number
+    if name == 'duration':
+        return _format_seconds
+    if name == 'load_avg_1min':
+        return _format_load
+    if name in ('mem_max_rss', 'mem_peak', 'mem_tracemalloc_peak'):
+        return _format_filesize
+    return _metadata_formatter
+
+
+def _check_metadata(name, value):
+    if not isinstance(name, six.string_types):
+        raise TypeError("metadata name must be a string, got %s"
+                        % type(name).__name__)
+
+    if not isinstance(value, _METADATA_VALUE_TYPES):
+        raise TypeError("metadata name must be str, got %s"
+                        % type(name).__name__)
+
+    # FIXME: use a kind of registry for metadata values?
+    if name in ('loops', 'inner_loops', 'mem_max_rss', 'mem_peak', 'mem_tracemalloc_peak'):
+        if not(isinstance(value, six.integer_types) and value >= 1):
+            raise ValueError("%s must be an integer >= 1" % name)
 
 
 class Metadata(object):
@@ -240,12 +255,7 @@ class Run(object):
         if metadata:
             self._metadata = {}
             for name, value in metadata.items():
-                if not isinstance(name, six.string_types):
-                    raise TypeError("metadata name must be a string, got %s"
-                                    % type(name).__name__)
-                if not isinstance(value, _METADATA_VALUE_TYPES):
-                    raise TypeError("metadata name must be str, got %s"
-                                    % type(name).__name__)
+                _check_metadata(name, value)
                 if isinstance(value, six.string_types):
                     if '\n' in value or '\r' in value:
                         raise ValueError("newline characters are not allowed "
@@ -253,9 +263,6 @@ class Run(object):
                     value = value.strip()
                     if not value:
                         raise ValueError("metadata %r value is empty" % name)
-                if name in ('loops', 'inner_loops'):
-                    if not(isinstance(value, six.integer_types) and value >= 1):
-                        raise ValueError("%s must be an integer >= 1" % name)
                 self._metadata[name] = value
         else:
             self._metadata = None

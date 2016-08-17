@@ -39,6 +39,8 @@ class PeakMemoryUsageThread(threading.Thread):
 
     def get(self):
         if win32api is not None:
+            # FIXME: do we really need a thread since the kernel already
+            # computes the maximum for us?
             pmi = win32process.GetProcessMemoryInfo(self._handle)
             usage = pmi["PeakPagefileUsage"]
         else:

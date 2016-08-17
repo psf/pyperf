@@ -6,6 +6,10 @@ import socket
 import subprocess
 import sys
 import time
+try:
+    import resource
+except ImportError:
+    resource = None
 
 import six
 try:
@@ -162,6 +166,12 @@ def collect_system_metadata(metadata):
     hostname = socket.gethostname()
     if hostname:
         metadata['hostname'] = hostname
+
+    if resource is not None:
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        max_rss = usage.ru_maxrss
+        if max_rss:
+            metadata['mem_max_rss'] = max_rss * 1024
 
 
 def get_cpu_boost(cpu):

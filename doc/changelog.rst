@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7.4
+-------------
+
+* metadata: add ``mem_max_rss``
+
 Version 0.7.3 (2016-08-17)
 --------------------------
 
