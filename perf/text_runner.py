@@ -669,10 +669,12 @@ class TextRunner:
         if self.args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
             if traced_peak:
-                metadata['tracemalloc_peak'] = traced_peak
+                metadata['mem_tracemalloc_peak'] = traced_peak
         if mem_thread is not None:
             mem_thread.stop()
             if mem_thread.peak_usage:
+                # FIXME: rename it to "mem_uss_peak" on Linux
+                # FIXME: rename it to "mem_peak_pagefile" on Windows
                 metadata['mem_peak'] = mem_thread.peak_usage
 
         # Run collects metadata
