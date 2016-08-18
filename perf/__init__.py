@@ -10,7 +10,7 @@ import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 
-__version__ = '0.7.4'
+__version__ = '0.7.5'
 
 # Format format history:
 # 4 - warmups are now a lists of (loops, raw_sample) rather than lists of
