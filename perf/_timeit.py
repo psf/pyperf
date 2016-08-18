@@ -51,8 +51,12 @@ def prepare_args(runner, cmd):
 
 
 def sample_func(loops, timer):
-    it = itertools.repeat(None, loops)
-    return timer.inner(it, timer.timer)
+    if perf.python_implementation() == 'pypy':
+        inner = timer.make_inner()
+        return inner(loops, timer.timer)
+    else:
+        it = itertools.repeat(None, loops)
+        return timer.inner(it, timer.timer)
 
 
 def main(runner):
