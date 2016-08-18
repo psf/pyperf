@@ -595,10 +595,10 @@ class TextRunner:
         if loops <= 0:
             raise ValueError("loops must be >= 1")
 
-        if is_warmup:
-            sample_name = 'Warmup'
-        elif is_calibrate:
+        if is_calibrate:
             sample_name = 'Calibration'
+        elif is_warmup:
+            sample_name = 'Warmup'
         else:
             sample_name = 'Sample'
 
@@ -615,6 +615,9 @@ class TextRunner:
                 value = raw_sample
             else:
                 value = sample
+
+            # FIXME: if the value is zero, drop it in calibration mode,
+            # or raise an error in non-calibration mode
 
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
@@ -656,16 +659,23 @@ class TextRunner:
         return (loops, samples)
 
     def _calibrate(self, bench, sample_func):
-        loops, samples = self._run_bench(bench, sample_func,
-                                         loops=1, nsample=1,
-                                         calibrate=True, is_calibrate=True)
-        return loops
+        return self._run_bench(bench, sample_func,
+                               loops=1, nsample=1,
+                               calibrate=True,
+                               is_calibrate=True, is_warmup=True)
 
-    def _worker(self, bench, sample_func, calibrate):
+    def _worker(self, bench, sample_func):
         args = self.args
+        loops = args.loops
         metadata = dict(self.metadata)
         start_time = perf.monotonic_clock()
         stream = self._stream()
+
+        calibrate = (not loops)
+        if calibrate:
+            loops, calibrate_warmups = self._calibrate(bench, sample_func)
+        else:
+            calibrate_warmups = None
 
         if args.track_memory:
             from perf._memory import PeakMemoryUsageThread
@@ -684,13 +694,14 @@ class TextRunner:
             else:
                 tracemalloc.start()
 
-        loops = max(args.loops, 1)
         if args.warmups:
             loops, warmups = self._run_bench(bench, sample_func, loops,
                                              args.warmups,
                                              is_warmup=True, calibrate=calibrate)
         else:
-            warmups = None
+            warmups = ()
+        if calibrate_warmups:
+            warmups = calibrate_warmups + warmups
         loops, samples = self._run_bench(bench, sample_func, loops,
                                          args.samples)
 
@@ -717,6 +728,9 @@ class TextRunner:
         bench.add_run(run)
         self._display_result(bench, check_unstable=False)
 
+        # Save loops into args
+        args.loops = loops
+
     def _main(self, sample_func):
         args = self.parse_args()
 
@@ -724,15 +738,11 @@ class TextRunner:
 
         bench = perf.Benchmark()
 
-        calibrate = (not args.loops)
-        if calibrate:
-            args.loops = self._calibrate(bench, sample_func)
-
         try:
             if args.worker:
-                self._worker(bench, sample_func, calibrate)
+                self._worker(bench, sample_func)
             else:
-                self._spawn_workers(bench)
+                self._spawn_workers(bench, sample_func)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
@@ -859,11 +869,16 @@ class TextRunner:
         if args.output:
             bench.dump(args.output)
 
-    def _spawn_workers(self, bench):
-        verbose = self.args.verbose
-        quiet = self.args.quiet
+    def _spawn_workers(self, bench, sample_func):
+        args = self.args
+        verbose = args.verbose
+        quiet = args.quiet
         stream = self._stream()
-        nprocess = self.args.processes
+        nprocess = args.processes
+
+        if not args.loops:
+            args.loops, warmups = self._calibrate(bench, sample_func)
+            # drop warmup samples
 
         for process in range(nprocess):
             run_suite = self._spawn_worker()
