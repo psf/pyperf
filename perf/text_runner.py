@@ -685,9 +685,12 @@ class TextRunner:
                 tracemalloc.start()
 
         loops = max(args.loops, 1)
-        loops, warmups = self._run_bench(bench, sample_func, loops,
-                                         args.warmups,
-                                         is_warmup=True, calibrate=calibrate)
+        if args.warmups:
+            loops, warmups = self._run_bench(bench, sample_func, loops,
+                                             args.warmups,
+                                             is_warmup=True, calibrate=calibrate)
+        else:
+            warmups = None
         loops, samples = self._run_bench(bench, sample_func, loops,
                                          args.samples)
 
