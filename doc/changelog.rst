@@ -1,17 +1,19 @@
 Changelog
 =========
 
-Version 0.7.4
--------------
+Version 0.7.4 (2018-08-18)
+--------------------------
 
 * Support PyPy
 * metadata: add ``mem_max_rss`` and ``python_hash_seed``
 * Add :func:`perf.python_implementation` and :func:`perf.python_has_jit`
   functions
-* TextRunner now calibrates the benchmark while runnning warmup samples.
-  Add new warmup samples if needed until enough warmup raw samples are longer
-  than the minimum time.
-* Run warmups are now lists of (loops, raw_sample) rather than lists of samples
+* In workers, calibration samples are now stored as warmup samples.
+* With a JIT (PyPy), the calibration is now done in each worker. The warmup
+  step can compute more warmup samples if a raw sample is shorter than the
+  minimum time.
+* Warmups of Run objects are now lists of (loops, raw_sample) rather than lists
+  of samples. This change requires a change in the JSON format.
 
 Version 0.7.3 (2016-08-17)
 --------------------------
