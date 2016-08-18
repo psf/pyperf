@@ -57,7 +57,7 @@ def _display_run(bench, run_index, run,
     inner_loops = run._get_inner_loops()
 
     def format_samples(samples, percent=True):
-        samples_str = list(bench._format_samples(samples))
+        samples_str = [bench._format_sample(sample) for sample in samples]
         if not percent:
             return samples_str
 
@@ -73,10 +73,10 @@ def _display_run(bench, run_index, run,
 
     samples = run.samples
     if raw:
-        warmups = [raw_sample for loops, raw_sample in run.warmups]
-        warmups = list(bench._format_samples(warmups))
-        warmups = ['%s (%s)' % (raw_sample, perf._format_number(item[0], 'loop'))
-                   for raw_sample, item in zip(warmups, run.warmups)]
+        warmups = [('%s (%s)'
+                    % (bench._format_sample(raw_sample),
+                       perf._format_number(loops, 'loop')))
+                   for loops, raw_sample in run.warmups]
         samples = [sample * total_loops for sample in samples]
     else:
         warmups = run.warmups
