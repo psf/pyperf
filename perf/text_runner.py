@@ -692,6 +692,9 @@ class TextRunner:
         if calibrate:
             loops, calibrate_warmups = self._calibrate(bench, sample_func)
         else:
+            if perf.python_has_jit():
+                # With a JIT, continue to calibrate during warmup
+                calibrate = True
             calibrate_warmups = None
 
         if args.track_memory:
