@@ -496,8 +496,6 @@ class TextRunner:
 
         if args.quiet:
             args.verbose = False
-        if args.debug_single_sample:
-            args.worker = True
 
         nprocess = self.argparser.get_default('processes')
         nsamples = self.argparser.get_default('samples')
@@ -731,7 +729,7 @@ class TextRunner:
             args.loops = self._calibrate(bench, sample_func)
 
         try:
-            if args.worker or args.debug_single_sample:
+            if args.worker:
                 self._worker(bench, sample_func, calibrate)
             else:
                 self._spawn_workers(bench)

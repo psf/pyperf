@@ -62,7 +62,7 @@ class TestRunTextRunner(unittest.TestCase):
                          r'^Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_debug_single_sample(self):
-        result = self.run_text_runner('--debug-single-sample')
+        result = self.run_text_runner('--debug-single-sample', '--worker')
         self.assertEqual(result.bench.get_nsample(), 1)
 
     def test_stdout(self):
