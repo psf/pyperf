@@ -34,14 +34,7 @@ def create_timer(runner):
     stmt = "\n".join(runner.args.stmt)
     setup = "\n".join(runner.args.setup)
 
-    timer = timeit.Timer(stmt, setup, perf.perf_counter)
-    if runner.args.loops == 0:
-        try:
-            runner.args.loops = runner._calibrate_sample_func(timer.timeit)
-        except:
-            timer.print_exc()
-            sys.exit(1)
-    return timer
+    return timeit.Timer(stmt, setup, timer=perf.perf_counter)
 
 
 def prepare_args(runner, cmd):

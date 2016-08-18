@@ -20,7 +20,7 @@ MAX_STDEV = 10.0  # ms
 
 
 class TestTimeit(unittest.TestCase):
-    def test_raw_verbose(self):
+    def test_worker_verbose(self):
         args = [sys.executable,
                 '-m', 'perf', 'timeit',
                 '--worker',
@@ -39,7 +39,8 @@ class TestTimeit(unittest.TestCase):
 
         match = re.match(r'^'
                          r'(?:Pin process to.* CPUs: [0-9,-]+\n)?'
-                         r'Warmup 1: ([0-9.]+) ms\n'
+                         r'Warmup 1: ([0-9.]+) ms \(1 loop: [0-9.]+ ms\)\n'
+                         r'\n'
                          r'Sample 1: ([0-9.]+) ms\n'
                          r'Sample 2: ([0-9.]+) ms\n'
                          r'\n'

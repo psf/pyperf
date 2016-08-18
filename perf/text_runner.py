@@ -53,9 +53,13 @@ def _display_run(bench, run_index, run,
     show_warmup = (verbose >= 0)
 
     total_loops = run.get_total_loops()
+    inner_loops = run._get_inner_loops()
 
-    def format_samples(samples):
+    def format_samples(samples, percent=True):
         samples_str = list(bench._format_samples(samples))
+        if not percent:
+            return samples_str
+
         median = bench.median()
         max_delta = median * 0.05
         for index, sample in enumerate(samples):
@@ -66,14 +70,18 @@ def _display_run(bench, run_index, run,
                 samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
         return samples_str
 
-    warmups = run.warmups
     samples = run.samples
     if raw:
-        warmups = [sample * total_loops for sample in warmups]
+        warmups = [raw_sample for loops, raw_sample in run.warmups]
+        warmups = list(bench._format_samples(warmups))
+        warmups = ['%s (%s)' % (raw_sample, perf._format_number(item[0], 'loop'))
+                   for raw_sample, item in zip(warmups, run.warmups)]
         samples = [sample * total_loops for sample in samples]
-    samples = format_samples(samples)
-    if warmups:
+    else:
+        warmups = [raw_sample / (loops * inner_loops)
+                   for loops, raw_sample in run.warmups]
         warmups = format_samples(warmups)
+    samples = format_samples(samples)
 
     if raw:
         name = 'raw samples'
@@ -474,35 +482,6 @@ class TextRunner:
                             help='Track memory usage using a thread')
         self.argparser = parser
 
-    def _calibrate_sample_func(self, sample_func):
-        stream = self._stream()
-
-        min_dt = self.args.min_time
-        max_loops = 2 ** 32
-
-        loops = 1
-        while 1:
-            if loops > max_loops:
-                raise ValueError("unable to calibrate: loops=%s" % loops)
-
-            dt = sample_func(loops)
-            if self.args.verbose:
-                print("calibration: %s: %s"
-                      % (perf._format_number(loops, 'loop'),
-                         perf._format_timedelta(dt)),
-                      file=stream)
-
-            if dt >= min_dt:
-                break
-
-            loops *= 2
-
-        if self.args.verbose:
-            print("calibration: use %s" % perf._format_number(loops, 'loop'),
-                  file=stream)
-
-        return loops
-
     def _process_args(self):
         args = self.args
 
@@ -578,16 +557,16 @@ class TextRunner:
             isolated = False
             cpus = perf._parse_cpu_list(cpus)
 
-        if self.args.verbose:
-            if isolated:
-                text = ("Pin process to isolated CPUs: %s"
-                        % perf._format_cpu_list(cpus))
-            else:
-                text = ("Pin process to CPUs: %s"
-                        % perf._format_cpu_list(cpus))
-            print(text, file=stream)
-
         if perf._set_cpu_affinity(cpus):
+            if self.args.verbose:
+                if isolated:
+                    text = ("Pin process to isolated CPUs: %s"
+                            % perf._format_cpu_list(cpus))
+                else:
+                    text = ("Pin process to CPUs: %s"
+                            % perf._format_cpu_list(cpus))
+                print(text, file=stream)
+
             if isolated:
                 self.args.affinity = perf._format_cpu_list(cpus)
         else:
@@ -602,42 +581,32 @@ class TextRunner:
                 print("Use Python 3.3 or newer, or install psutil dependency",
                       file=stream)
 
-
-    def _worker(self, bench, sample_func, recalibrate):
+    def _run_bench(self, bench, sample_func, loops, nsample,
+                   is_warmup=False, is_calibrate=False, calibrate=False):
         args = self.args
         stream = self._stream()
-        loops = self.args.loops
-        warmup_loops = None
-        start_time = perf.monotonic_clock()
+        if loops <= 0:
+            raise ValueError("loops must be >= 1")
 
-        if self.args.tracemalloc:
-            try:
-                import tracemalloc
-            except ImportError as exc:
-                self.args.tracemalloc = False
-                print("WARNING: fail to import tracemalloc: %s"
-                       % exc, file=stream)
-            else:
-                tracemalloc.start()
-
-        if self.args.track_memory:
-            from perf._memory import PeakMemoryUsageThread
-            mem_thread = PeakMemoryUsageThread()
-            mem_thread.start()
+        if is_warmup:
+            sample_name = 'Warmup'
+        elif is_calibrate:
+            sample_name = 'Calibration'
         else:
-            mem_thread = None
+            sample_name = 'Sample'
 
-        warmups = []
         samples = []
-        for is_warmup, index in self._range():
-            if index == 1 and not is_warmup and recalibrate:
-                # Recalibrate the benchmark after warmup samples
-                warmup_loops = loops
-                loops = self._calibrate_sample_func(sample_func)
+        index = 1
+        while True:
+            if index > nsample:
+                break
 
             raw_sample = sample_func(loops)
-
             sample = float(raw_sample) / loops
+            if is_warmup:
+                value = raw_sample
+            else:
+                value = sample
 
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
@@ -645,37 +614,79 @@ class TextRunner:
             # the dot. Round manually to 10^-9 to produce more compact JSON
             # files and don't pretend to have a better resolution than 1
             # nanosecond.
-            sample = round(sample, 9)
-
+            value = round(value, 9)
             if is_warmup:
-                warmups.append(sample)
+                samples.append((loops, value))
             else:
-                samples.append(sample)
+                samples.append(value)
 
-            if self.args.verbose:
+            if args.verbose:
                 text = bench._format_sample(sample)
-                if is_warmup:
-                    text = "Warmup %s: %s" % (index, text)
-                else:
-                    text = "Sample %s: %s" % (index, text)
+                if is_warmup or is_calibrate:
+                    text = ('%s (%s: %s)'
+                            % (text,
+                               perf._format_number(loops, 'loop'),
+                               bench._format_sample(raw_sample)))
+                text = ("%s %s: %s"
+                        % (sample_name, index, text))
                 print(text, file=stream)
 
-        if self.args.verbose:
+            if calibrate and raw_sample < args.min_time:
+                loops *= 2
+                if loops > 2 ** 32:
+                    raise ValueError("error in calibration, loops is "
+                                     "too big: %s" % loops)
+                # need more samples for the calibration
+                nsample += 1
+
+            index += 1
+
+        if args.verbose:
             print(file=stream)
 
-        duration = perf.monotonic_clock() - start_time
+        # Run collects metadata
+        return (loops, samples)
+
+    def _calibrate(self, bench, sample_func):
+        loops, samples = self._run_bench(bench, sample_func,
+                                         loops=1, nsample=1,
+                                         calibrate=True, is_calibrate=True)
+        return loops
+
+    def _worker(self, bench, sample_func, calibrate):
+        args = self.args
         metadata = dict(self.metadata)
-        metadata['duration'] = duration
-        metadata['name'] = self.name
-        metadata['loops'] = loops
-        if warmup_loops:
-            metadata['warmup_loops'] = warmup_loops
-        if self.inner_loops is not None and self.inner_loops != 1:
-            metadata['inner_loops'] = self.inner_loops
-        if self.args.tracemalloc:
+        start_time = perf.monotonic_clock()
+
+        if args.track_memory:
+            from perf._memory import PeakMemoryUsageThread
+            mem_thread = PeakMemoryUsageThread()
+            mem_thread.start()
+        else:
+            mem_thread = None
+
+        if args.tracemalloc:
+            try:
+                import tracemalloc
+            except ImportError as exc:
+                args.tracemalloc = False
+                print("WARNING: fail to import tracemalloc: %s"
+                       % exc, file=stream)
+            else:
+                tracemalloc.start()
+
+        loops = max(args.loops, 1)
+        loops, warmups = self._run_bench(bench, sample_func, loops,
+                                         args.warmups,
+                                         is_warmup=True, calibrate=calibrate)
+        loops, samples = self._run_bench(bench, sample_func, loops,
+                                         args.samples)
+
+        if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
             if traced_peak:
                 metadata['mem_tracemalloc_peak'] = traced_peak
+
         if mem_thread is not None:
             mem_thread.stop()
             if mem_thread.peak_usage:
@@ -683,35 +694,38 @@ class TextRunner:
                 # FIXME: rename it to "mem_peak_pagefile" on Windows
                 metadata['mem_peak'] = mem_thread.peak_usage
 
-        # Run collects metadata
+        duration = perf.monotonic_clock() - start_time
+        metadata['duration'] = duration
+        metadata['name'] = self.name
+        metadata['loops'] = loops
+        if self.inner_loops is not None and self.inner_loops != 1:
+            metadata['inner_loops'] = self.inner_loops
+
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
         bench.add_run(run)
         self._display_result(bench, check_unstable=False)
-
-        return bench
 
     def _main(self, sample_func):
         args = self.parse_args()
 
         self._cpu_affinity()
 
-        calibrate = (args.loops == 0)
-        # If the Python has a JIT compiler, we need to recalibrate the
-        # benchmark after warmup samples
-        recalibrate = (calibrate and args.warmups and perf.python_has_jit())
-
-        if calibrate:
-            args.loops = self._calibrate_sample_func(sample_func)
-
         bench = perf.Benchmark()
+
+        calibrate = (not args.loops)
+        if calibrate:
+            args.loops = self._calibrate(bench, sample_func)
+
         try:
             if args.worker or args.debug_single_sample:
-                return self._worker(bench, sample_func, recalibrate)
+                self._worker(bench, sample_func, calibrate)
             else:
-                return self._spawn_workers(bench)
+                self._spawn_workers(bench)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
+
+        return bench
 
     def bench_sample_func(self, sample_func, *args):
         """"Benchmark sample_func(loops, *args)
@@ -862,4 +876,3 @@ class TextRunner:
             print(file=stream)
 
         self._display_result(bench)
-        return bench

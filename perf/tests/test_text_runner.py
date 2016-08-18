@@ -87,9 +87,11 @@ class TestRunTextRunner(unittest.TestCase):
     def test_verbose_metadata(self):
         result = self.run_text_runner('--worker', '--verbose', '--metadata')
         self.assertRegex(result.stdout,
-                         r'^(calibration: .*\n)*'
-                         r'(?:Set affinity to isolated CPUs: \[[0-9 ,]+\]\n)?'
-                         r'Warmup 1: 1\.00 sec\n'
+                         r'^'
+                         r'Calibration 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
+                         r'\n'
+                         r'Warmup 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
+                         r'\n'
                          r'Sample 1: 1\.00 sec\n'
                          r'Sample 2: 1\.00 sec\n'
                          r'Sample 3: 1\.00 sec\n'
@@ -112,25 +114,25 @@ class TestRunTextRunner(unittest.TestCase):
             self.assertEqual(run.get_total_loops(), 2 ** 17)
 
         expected = textwrap.dedent('''
-            calibration: 1 loop: 1.00 us
-            calibration: 2 loops: 2.00 us
-            calibration: 4 loops: 4.00 us
-            calibration: 8 loops: 8.00 us
-            calibration: 16 loops: 16.0 us
-            calibration: 32 loops: 32.0 us
-            calibration: 64 loops: 64.0 us
-            calibration: 128 loops: 128 us
-            calibration: 256 loops: 256 us
-            calibration: 512 loops: 512 us
-            calibration: 1024 loops: 1.02 ms
-            calibration: 2048 loops: 2.05 ms
-            calibration: 4096 loops: 4.10 ms
-            calibration: 8192 loops: 8.19 ms
-            calibration: 2^14 loops: 16.4 ms
-            calibration: 2^15 loops: 32.8 ms
-            calibration: 2^16 loops: 65.5 ms
-            calibration: 2^17 loops: 131 ms
-            calibration: use 2^17 loops
+            Calibration 1: 1.00 us (1 loop: 1.00 us)
+            Calibration 2: 1.00 us (2 loops: 2.00 us)
+            Calibration 3: 1.00 us (4 loops: 4.00 us)
+            Calibration 4: 1.00 us (8 loops: 8.00 us)
+            Calibration 5: 1.00 us (16 loops: 16.0 us)
+            Calibration 6: 1.00 us (32 loops: 32.0 us)
+            Calibration 7: 1.00 us (64 loops: 64.0 us)
+            Calibration 8: 1.00 us (128 loops: 128 us)
+            Calibration 9: 1.00 us (256 loops: 256 us)
+            Calibration 10: 1.00 us (512 loops: 512 us)
+            Calibration 11: 1.00 us (1024 loops: 1.02 ms)
+            Calibration 12: 1.00 us (2048 loops: 2.05 ms)
+            Calibration 13: 1.00 us (4096 loops: 4.10 ms)
+            Calibration 14: 1.00 us (8192 loops: 8.19 ms)
+            Calibration 15: 1.00 us (2^14 loops: 16.4 ms)
+            Calibration 16: 1.00 us (2^15 loops: 32.8 ms)
+            Calibration 17: 1.00 us (2^16 loops: 65.5 ms)
+            Calibration 18: 1.00 us (2^17 loops: 131 ms)
+
         ''').strip()
         self.assertIn(expected, result.stdout)
 

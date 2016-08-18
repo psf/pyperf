@@ -2,6 +2,7 @@ TODO
 ====
 
 * calibration: don't loose the sample, use it as the first sample?
+* store the calibration samples in the JSON file?
 * bm_telco.py requires 1 iteration *before* loop calibration: write something
   more generic?
 * --tracemalloc/--track-memory: use mem_peak as the benchmark value and

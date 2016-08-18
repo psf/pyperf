@@ -138,7 +138,7 @@ class TestTools(unittest.TestCase):
 class RunTests(unittest.TestCase):
     def test_attr(self):
         run = perf.Run((2.0, 3.0),
-                       warmups=(1.0,),
+                       warmups=((4, 10.0),),
                        metadata={'loops': 2, 'inner_loops': 5},
                        collect_metadata=False)
         self.assertEqual(run._get_loops(), 2)
@@ -151,7 +151,7 @@ class RunTests(unittest.TestCase):
         self.assertEqual(run._get_raw_samples(warmups=True),
                          (10.0, 20.0, 30.0))
 
-        run = perf.Run((2.0, 3.0), warmups=(1.0,))
+        run = perf.Run((2.0, 3.0), warmups=((1, 1.0),))
         self.assertEqual(run._get_loops(), 1)
         self.assertEqual(run._get_inner_loops(), 1)
         self.assertEqual(run.get_total_loops(), 1)
@@ -196,7 +196,7 @@ class BenchmarkTests(unittest.TestCase):
         runs = bench.get_runs()
         self.assertEqual(len(runs), len(samples))
         for sample, run in zip(samples, runs):
-            self.assertEqual(run.warmups, warmups)
+            self.assertEqual(run.warmups, tuple(warmups))
             self.assertEqual(run.samples, (sample,))
 
     def test_add_run(self):
@@ -236,7 +236,7 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark()
         for sample in samples:
             run = perf.Run([sample],
-                           warmups=[3.0],
+                           warmups=[(1, 3.0)],
                            metadata={'key': 'value',
                                      'loops': 20,
                                      'inner_loops': 3,
@@ -257,7 +257,7 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(run._get_loops(), 20)
             self.assertEqual(run._get_inner_loops(), 3)
 
-        self.check_runs(bench, (3.0,), samples)
+        self.check_runs(bench, [(1, 3.0)], samples)
 
         self.assertEqual(bench.get_name(), "mybench")
         self.assertEqual(self.get_metadata(bench),
@@ -275,7 +275,7 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark()
         for sample in samples:
             run = perf.Run([sample],
-                           warmups=[3.0],
+                           warmups=[(1, 3.0)],
                            metadata={'key': 'value',
                                      'loops': 100,
                                      'inner_loops': 20,
@@ -296,7 +296,7 @@ class BenchmarkTests(unittest.TestCase):
                          {'key': 'value', 'name': 'mybench',
                           'loops': 100, 'inner_loops': 20})
 
-        self.check_runs(bench, (3.0,), samples)
+        self.check_runs(bench, [(1, 3.0)], samples)
 
     def test__add_benchmark_run(self):
         # bench 1
@@ -332,15 +332,15 @@ class BenchmarkTests(unittest.TestCase):
     def test_get_warmups(self):
         # exact
         bench = perf.Benchmark()
-        bench.add_run(perf.Run((1.0, 2.0, 3.0), warmups=[1.0]))
-        bench.add_run(perf.Run((5.0, 6.0), warmups=[4.0]))
+        bench.add_run(perf.Run((1.0, 2.0, 3.0), warmups=[(1, 1.0)]))
+        bench.add_run(perf.Run((5.0, 6.0), warmups=[(1, 4.0)]))
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, int)
 
         # average
         bench = perf.Benchmark()
-        bench.add_run(perf.Run([3.0], warmups=[1.0, 2.0]))
+        bench.add_run(perf.Run([3.0], warmups=[(1, 1.0), (1, 2.0)]))
         bench.add_run(perf.Run([4.0, 5.0, 6.0]))
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
@@ -350,10 +350,10 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark()
         self.assertEqual(bench.get_nsample(), 0)
 
-        bench.add_run(perf.Run([2.0, 3.0], warmups=[1.0]))
+        bench.add_run(perf.Run([2.0, 3.0], warmups=[(1, 1.0)]))
         self.assertEqual(bench.get_nsample(), 2)
 
-        bench.add_run(perf.Run([5.0], warmups=[4.0]))
+        bench.add_run(perf.Run([5.0], warmups=[(1, 4.0)]))
         self.assertEqual(bench.get_nsample(), 3)
 
     def test_get_runs(self):

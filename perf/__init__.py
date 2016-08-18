@@ -13,10 +13,12 @@ import statistics   # Python 3.4+, or backport on Python 2.7
 __version__ = '0.7.4'
 
 # Format format history:
+# 4 - warmups are now a lists of (loops, raw_sample) rather than lists of
+#     samples
 # 3 - add Run class
 # 2 - support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 3
+_JSON_VERSION = 4
 
 
 # Clocks
@@ -218,14 +220,36 @@ class Metadata(object):
                 % (self._name, self._value))
 
 
+def _check_warmups(warmups):
+    for item in warmups:
+        if not isinstance(item, tuple):
+            return False
+        if len(item) != 2:
+            return False
+
+        loops, sample = item
+        if not isinstance(loops, int):
+            return False
+        if loops < 1:
+            return False
+
+        if not isinstance(sample, float):
+            return False
+        if sample <= 0:
+            return False
+
+    return True
+
+
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
     def __init__(self, samples, warmups=None,
                  metadata=None, collect_metadata=True):
-        if warmups and any(not(isinstance(sample, float) and sample > 0)
-                           for sample in samples):
-            raise ValueError("warmups must be a sequence of float > 0")
+        if warmups is not None and not _check_warmups(warmups):
+            raise ValueError("warmups must be a sequence of (loops, sample) "
+                             "where loops is a int >= 1 and sample "
+                             "is a float > 0")
 
         if (not samples
            or any(not(isinstance(sample, float) and sample > 0)
@@ -268,8 +292,8 @@ class Run(object):
         else:
             self._metadata = None
 
-    def _replace(self, samples, warmups=None):
-        run = Run(samples, warmups=warmups, collect_metadata=False)
+    def _replace(self, new_samples):
+        run = Run(new_samples, collect_metadata=False)
         # share metadata dict since Run metadata is immutable
         run._metadata = self._metadata
         return run
@@ -301,12 +325,6 @@ class Run(object):
     def samples(self):
         return self._samples
 
-    def _get_warmup_loops(self):
-        loops = self._get_metadata('warmup_loops', None)
-        if loops is not None:
-            return loops
-        return self._get_loops()
-
     def _get_loops(self):
         return self._get_metadata('loops', 1)
 
@@ -317,13 +335,15 @@ class Run(object):
         return self._get_loops() * self._get_inner_loops()
 
     def _get_raw_samples(self, warmups=False):
-        warmup_loops = self._get_warmup_loops() * self._get_inner_loops()
+        inner_loops = self._get_inner_loops()
+
         if warmups and self._warmups:
-            raw_samples = [sample * warmup_loops for sample in self._warmups]
+            # FIXME: store the number of loops in each warmup sample
+            raw_samples = [raw_sample for loops, raw_sample in self._warmups]
         else:
             raw_samples = []
 
-        sample_loops = self._get_loops() * self._get_inner_loops()
+        sample_loops = self._get_loops() * inner_loops
         raw_samples.extend(sample * sample_loops for sample in self._samples)
         return tuple(raw_samples)
 
@@ -365,15 +385,30 @@ class Run(object):
         return data
 
     @classmethod
-    def _json_load(cls, run_data, common_metadata):
-        warmups = run_data.get('warmups', None)
-        samples = run_data['samples']
+    def _json_load(cls, run_data, common_metadata, version):
         metadata = run_data.get('metadata', None)
         if common_metadata:
             metadata2 = dict(common_metadata)
             if metadata:
                 metadata2.update(metadata)
             metadata = metadata2
+
+        warmups = run_data.get('warmups', None)
+        if warmups:
+            if version == _JSON_VERSION:
+                warmups = [tuple(item) for item in warmups]
+            else:
+                if metadata:
+                    loops = metadata.get('loops', 1)
+                    inner_loops = metadata.get('inner_loops', 1)
+                else:
+                    loops = 1
+                    inner_loops = 1
+                total_loops = loops * inner_loops
+                warmups = [(loops, sample * total_loops)
+                           for sample in warmups]
+        samples = run_data['samples']
+
         return cls(samples,
                    warmups=warmups,
                    metadata=metadata,
@@ -550,12 +585,12 @@ class Benchmark(object):
             return 'Median: %s' % text
 
     @classmethod
-    def _json_load(cls, data):
+    def _json_load(cls, data, version):
         bench = cls()
         common_metadata = data.get('common_metadata', None)
 
         for run_data in data['runs']:
-            run = Run._json_load(run_data, common_metadata)
+            run = Run._json_load(run_data, common_metadata, version)
             # Don't call add_run() to avoid O(n) complexity:
             # expect that runs were already validated before being written
             # into a JSON file
@@ -760,14 +795,14 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, bench_file):
         version = bench_file.get('version')
-        if version == _JSON_VERSION:
+        if version in (3, _JSON_VERSION):
             benchmarks_json = bench_file['benchmarks']
         else:
             raise ValueError("file format version %r not supported" % version)
 
         suite = cls(filename)
         for bench_data in benchmarks_json:
-            benchmark = Benchmark._json_load(bench_data)
+            benchmark = Benchmark._json_load(bench_data, version)
             suite.add_benchmark(benchmark)
 
         if not suite:

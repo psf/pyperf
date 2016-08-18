@@ -282,9 +282,9 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump_raw(self):
         expected = """
-            Run 1: raw warmup (1): 98.9 ms; raw samples (3): 97.9 ms, 97.8 ms, 98.0 ms
-            Run 2: raw warmup (1): 100 ms; raw samples (3): 99.0 ms, 98.5 ms, 99.1 ms
-            Run 3: raw warmup (1): 100.0 ms; raw samples (3): 99.1 ms, 98.3 ms, 98.5 ms
+            Run 1: raw warmup (1): 98.9 ms (4 loops); raw samples (3): 97.9 ms, 97.8 ms, 98.0 ms
+            Run 2: raw warmup (1): 100 ms (4 loops); raw samples (3): 99.0 ms, 98.5 ms, 99.1 ms
+            Run 3: raw warmup (1): 100.0 ms (4 loops); raw samples (3): 99.1 ms, 98.3 ms, 98.5 ms
         """
         stdout = self.run_command('dump', '--raw', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
@@ -425,7 +425,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         samples = [1.0, 2.0, 3.0]
         raw_samples = [5.0] + samples
         bench = perf.Benchmark()
-        bench.add_run(perf.Run(samples, warmups=[5.0],
+        bench.add_run(perf.Run(samples, warmups=[(1, 5.0)],
                                metadata={'name': 'bench'}))
 
         self.assertEqual(bench._get_nwarmup(), 1)
