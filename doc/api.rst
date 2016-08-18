@@ -443,9 +443,9 @@ TextRunner
 
       Benchmark ``sample_func(loops, *args)``.
 
-      The function must return the total elapsed time of all loops: raw samples
-      are divided by ``loops x inner_loops``, see :attr:`loops` and
-      :attr:`inner_loops` attributes.
+      The function must return raw samples: the total elapsed time of all
+      loops. TextRunner will divide raw samples by ``loops x inner_loops``
+      (*loops* parameter and the :attr:`inner_loops` attribute).
 
       :func:`perf.perf_counter` should be used to measure the elapsed time.
 

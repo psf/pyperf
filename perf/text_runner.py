@@ -604,12 +604,13 @@ class TextRunner:
 
         samples = []
         index = 1
+        inner_loops = self.inner_loops or 1
         while True:
             if index > nsample:
                 break
 
             raw_sample = sample_func(loops)
-            sample = float(raw_sample) / loops
+            sample = float(raw_sample) / (loops * inner_loops)
             if is_warmup:
                 value = raw_sample
             else:
