@@ -39,17 +39,16 @@ Runs, samples, warmups, outter and inner loops
 The ``perf`` module uses 5 options to configure benchmarks:
 
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
-  (default: 20)
 * "samples": Number of samples per run,  ``-n/--samples`` command line option:
-  calls "samples" (default: 3)
+  calls "samples"
 * "warmups": Number of samples per run used to warmup the benchmark,
-  ``-w/--warmups`` command line option (default: 1)
+  ``-w/--warmups`` command line option
 * "loops": Number of outter-loop iterations per sample,  ``-l/--loops`` command
-  line option (default: calibrate)
+  line option
 * "inner_loops": Number of inner-loop iterations per sample, hardcoded in
-  benchmark (default: 1).
+  benchmark.
 
-See also :ref:`TextRunner CLI <textrunner_cli>`.
+See also :ref:`TextRunner CLI <textrunner_cli>` for default values.
 
 The number of runs should be large enough to reduce the effect of random
 factors like randomized address space layer (ASLR) and the Python randomized

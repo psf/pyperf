@@ -18,8 +18,8 @@ Options::
     [-w WARMUPS/--warmups=WARMUPS]
     [--min-time=MIN_TIME]
 
-Default: 20 processes, 3 samples per process (total: 60 samples), and 1 warmup
-(10 on PyPy).
+Default: 20 processes (5 on PyPy), 3 samples per process (total: 60 samples),
+and 1 warmup (10 on PyPy).
 
 * ``--rigorous``: Spend longer running tests to get more accurate results.
   Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
@@ -28,7 +28,7 @@ Default: 20 processes, 3 samples per process (total: 60 samples), and 1 warmup
   2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 10 processes
   and 2 samples per process (total: 20 samples).
 * ``PROCESSES``: number of processes used to run the benchmark
-  (default: ``20``)
+  (default: ``20``, or ``5`` on PyPy)
 * ``SAMPLES``: number of samples per process
   (default: ``3``)
 * ``WARMUPS``: the number of ignored samples used to warmup to benchmark
