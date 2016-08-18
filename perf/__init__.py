@@ -301,6 +301,12 @@ class Run(object):
     def samples(self):
         return self._samples
 
+    def _get_warmup_loops(self):
+        loops = self._get_metadata('warmup_loops', None)
+        if loops is not None:
+            return loops
+        return self._get_loops()
+
     def _get_loops(self):
         return self._get_metadata('loops', 1)
 
@@ -311,15 +317,15 @@ class Run(object):
         return self._get_loops() * self._get_inner_loops()
 
     def _get_raw_samples(self, warmups=False):
-        total_loops = self._get_loops() * self._get_inner_loops()
+        warmup_loops = self._get_warmup_loops() * self._get_inner_loops()
         if warmups and self._warmups:
-            samples = self._warmups + self._samples
+            raw_samples = [sample * warmup_loops for sample in self._warmups]
         else:
-            samples = self._samples
-        if total_loops != 1:
-            return tuple(sample * total_loops for sample in samples)
-        else:
-            return samples
+            raw_samples = []
+
+        sample_loops = self._get_loops() * self._get_inner_loops()
+        raw_samples.extend(sample * sample_loops for sample in self._samples)
+        return tuple(raw_samples)
 
     def _remove_warmups(self):
         if not self._warmups:

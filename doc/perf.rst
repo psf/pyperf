@@ -164,8 +164,11 @@ Benchmark:
 
 * ``date``: date when the benchmark run started, formatted as ISO 8601
 * ``duration``: total duration of the benchmark run in seconds (``float``)
-* ``loops``: number of outter-loops of the benchmark run (``int``)
-* ``inner_loops``: number of inner-loops of the benchmark run (``int``)
+* ``loops``: number of outter-loops per sample (``int``)
+* ``warmup_loops``: number of outter-loops per warmup sample (``int``), used
+  when the benchmark is recalibrated after warmup samples (if Python has a JIT
+  compiler)
+* ``inner_loops``: number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
   available
 

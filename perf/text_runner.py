@@ -603,9 +603,11 @@ class TextRunner:
                       file=stream)
 
 
-    def _worker(self, bench, sample_func):
+    def _worker(self, bench, sample_func, recalibrate):
+        args = self.args
         stream = self._stream()
         loops = self.args.loops
+        warmup_loops = None
         start_time = perf.monotonic_clock()
 
         if self.args.tracemalloc:
@@ -627,10 +629,12 @@ class TextRunner:
 
         warmups = []
         samples = []
-        total_loops = loops
-        if self.inner_loops is not None:
-            total_loops *= self.inner_loops
         for is_warmup, index in self._range():
+            if index == 1 and not is_warmup and recalibrate:
+                # Recalibrate the benchmark after warmup samples
+                warmup_loops = loops
+                loops = self._calibrate_sample_func(sample_func)
+
             raw_sample = sample_func(loops)
 
             sample = float(raw_sample) / loops
@@ -664,6 +668,8 @@ class TextRunner:
         metadata['duration'] = duration
         metadata['name'] = self.name
         metadata['loops'] = loops
+        if warmup_loops:
+            metadata['warmup_loops'] = warmup_loops
         if self.inner_loops is not None and self.inner_loops != 1:
             metadata['inner_loops'] = self.inner_loops
         if self.args.tracemalloc:
@@ -689,13 +695,18 @@ class TextRunner:
 
         self._cpu_affinity()
 
-        if args.loops == 0:
+        calibrate = (args.loops == 0)
+        # If the Python has a JIT compiler, we need to recalibrate the
+        # benchmark after warmup samples
+        recalibrate = (calibrate and args.warmups and perf.python_has_jit())
+
+        if calibrate:
             args.loops = self._calibrate_sample_func(sample_func)
 
         bench = perf.Benchmark()
         try:
             if args.worker or args.debug_single_sample:
-                return self._worker(bench, sample_func)
+                return self._worker(bench, sample_func, recalibrate)
             else:
                 return self._spawn_workers(bench)
         except KeyboardInterrupt:
