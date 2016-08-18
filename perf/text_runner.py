@@ -79,9 +79,11 @@ def _display_run(bench, run_index, run,
                    for raw_sample, item in zip(warmups, run.warmups)]
         samples = [sample * total_loops for sample in samples]
     else:
-        warmups = [raw_sample / (loops * inner_loops)
-                   for loops, raw_sample in run.warmups]
-        warmups = format_samples(warmups)
+        warmups = run.warmups
+        if warmups:
+            warmups = [raw_sample / (loops * inner_loops)
+                       for loops, raw_sample in warmups]
+            warmups = format_samples(warmups)
     samples = format_samples(samples)
 
     if raw:
