@@ -1,6 +1,7 @@
 from __future__ import print_function
 import argparse
 import errno
+import math
 import os
 import subprocess
 import sys
@@ -374,11 +375,17 @@ def _display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 class TextRunner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, name, samples=3, warmups=1, processes=20,
+    def __init__(self, name, samples=3, warmups=None, processes=20,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None, _argparser=None):
         if not name:
             raise ValueError("name must be a non-empty string")
+        if not warmups:
+            if perf.python_has_jit():
+                # PyPy JIT needs a longer warmup (at least 1 second)
+                warmups = int(math.ceil(1.0 / min_time))
+            else:
+                warmups = 1
         self.name = name
         if metadata is not None:
             self.metadata = metadata
@@ -657,6 +664,7 @@ class TextRunner:
         args = self.args
         metadata = dict(self.metadata)
         start_time = perf.monotonic_clock()
+        stream = self._stream()
 
         if args.track_memory:
             from perf._memory import PeakMemoryUsageThread

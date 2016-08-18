@@ -109,6 +109,7 @@ class TestTimeit(unittest.TestCase):
                     '-m', 'perf', 'timeit',
                     '-p', '2',
                     '-n', '3',
+                    '-w', '1',
                     '-l', str(loops),
                     '--output', filename,
                     '-s', 'import time',

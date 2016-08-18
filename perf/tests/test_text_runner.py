@@ -91,6 +91,8 @@ class TestRunTextRunner(unittest.TestCase):
                          r'Calibration 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
                          r'\n'
                          r'Warmup 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
+                         # PyPy uses more warmups
+                         r'(?:Warmup .*\n)*'
                          r'\n'
                          r'Sample 1: 1\.00 sec\n'
                          r'Sample 2: 1\.00 sec\n'
