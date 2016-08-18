@@ -836,7 +836,8 @@ class TextRunner:
         cmd.extend(('--worker', '--stdout',
                      '--samples', str(args.samples),
                      '--warmups', str(args.warmups),
-                     '--loops', str(args.loops)))
+                     '--loops', str(args.loops),
+                     '--min-time', str(args.min_time)))
         if args.verbose:
             cmd.append('-' + 'v' * args.verbose)
         if args.affinity:
