@@ -27,6 +27,7 @@ class TestTimeit(unittest.TestCase):
                 '-w', '1',
                 '-n', '2',
                 '-l', '1',
+                '--min-time', '0.001',
                 '--metadata',
                 '-v',
                 '-s', 'import time',
@@ -65,8 +66,10 @@ class TestTimeit(unittest.TestCase):
         args = [sys.executable,
                 '-m', 'perf', 'timeit',
                 '-p', '2',
+                '-w', '1',
                 '-n', '3',
                 '-l', '4',
+                '--min-time', '0.001',
                 '-s', 'import time',
                 SLEEP]
         proc = subprocess.Popen(args,
@@ -108,17 +111,20 @@ class TestTimeit(unittest.TestCase):
             args = [sys.executable,
                     '-m', 'perf', 'timeit',
                     '-p', '2',
-                    '-n', '3',
                     '-w', '1',
+                    '-n', '3',
                     '-l', str(loops),
+                    '--min-time', '0.001',
                     '--output', filename,
                     '-s', 'import time',
                     SLEEP]
             self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
 
-        for run in bench.get_runs():
-            self.assertEqual(run.get_total_loops(), 4)
+        # FIXME: skipped test, since calibration continues during warmup
+        if not perf.python_has_jit():
+            for run in bench.get_runs():
+                self.assertEqual(run.get_total_loops(), 4)
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 2)
