@@ -539,6 +539,10 @@ class MiscTests(unittest.TestCase):
         self.assertIsInstance(name, str)
         self.assertRegex(name, '^[a-z]+$')
 
+    def test_python_has_jit(self):
+        jit = perf.python_has_jit()
+        self.assertIsInstance(jit, bool)
+
     def test_parse_run_list(self):
         with self.assertRaises(ValueError):
             perf._parse_run_list('')

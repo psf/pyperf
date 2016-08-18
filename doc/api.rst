@@ -527,3 +527,11 @@ Functions
    See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
 
    .. versionadded:: 0.7.4
+
+.. function:: perf.python_has_jit()
+
+   Return ``True`` if Python has a Just In Time compiler (JIT).
+
+   For example, return ``True`` for PyPy but ``False`` for CPython.
+
+   .. versionadded:: 0.7.4

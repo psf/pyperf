@@ -1079,3 +1079,7 @@ def python_implementation():
     else:
         name = platform.python_implementation()
     return name.lower()
+
+
+def python_has_jit():
+    return (python_implementation() == 'pypy')

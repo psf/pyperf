@@ -5,7 +5,7 @@ Version 0.7.4
 -------------
 
 * metadata: add ``mem_max_rss`` and ``python_hash_seed``
-* add :func:`perf.python_implementation`
+* add :func:`perf.python_implementation` and :func:`perf.python_has_jit`
 
 Version 0.7.3 (2016-08-17)
 --------------------------
