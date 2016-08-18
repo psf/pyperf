@@ -1,6 +1,8 @@
 TODO
 ====
 
+* bm_telco.py requires 1 iteration *before* loop calibration: write something
+  more generic?
 * --tracemalloc/--track-memory: use mem_peak as the benchmark value and
   add an unit (bytes, seconds) to benchmarks!
 * Make benchmark name mandatory?
@@ -43,7 +45,7 @@ Low priority
 * fix hist if benchmark only contains one sample
 * support 2^15 and/or 2**15 syntax for --loops
 * support --fast + -p1
-* perf CLI: handle FileNotFoundError (need unit test)
+* perf CLI: handle FileNotFoundError for input file (need unit test)
 * convert --remove-outliers: more serious algorithm? or configurable percent?
 * support multiple units, or remove _format_samples.
   Track memory usage in CPython benchmark suite?

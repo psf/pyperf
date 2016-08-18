@@ -501,7 +501,7 @@ TextRunner
 Functions
 ---------
 
-.. function:: add_runs(filename: str, result)
+.. function:: perf.add_runs(filename: str, result)
 
    Append a :class:`Benchmark` or :class:`BenchmarkSuite` to an existing
    benchmark suite file, or create a new file.
@@ -509,3 +509,21 @@ Functions
    If the file already exists, adds runs to existing benchmarks.
 
    See :meth:`perf.BenchmarkSuite.add_runs` method.
+
+
+.. function:: perf.python_implementation()
+
+   Name of the Python implementation in lower case.
+
+   Examples:
+
+   * ``cpython``
+   * ``ironpython``
+   * ``jython``
+   * ``pypy``
+
+   Use ``sys.implementation.name`` and ``platform.python_implementation()``.
+
+   See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
+
+   .. versionadded:: 0.7.4

@@ -2,12 +2,12 @@ import datetime
 import os.path
 import sys
 import tempfile
-import unittest
 
 import six
 
 import perf
 from perf.tests import mock
+from perf.tests import unittest
 
 
 class TestClocks(unittest.TestCase):
@@ -534,6 +534,11 @@ class TestBenchmarkSuite(unittest.TestCase):
 
 
 class MiscTests(unittest.TestCase):
+    def test_python_implementation(self):
+        name = perf.python_implementation()
+        self.assertIsInstance(name, str)
+        self.assertRegex(name, '^[a-z]+$')
+
     def test_parse_run_list(self):
         with self.assertRaises(ValueError):
             perf._parse_run_list('')

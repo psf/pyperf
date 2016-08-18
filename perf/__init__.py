@@ -3,6 +3,7 @@ import datetime
 import json
 import math
 import os.path
+import platform
 import sys
 
 import six
@@ -1069,3 +1070,12 @@ def _set_cpu_affinity(cpus):
 
     proc.cpu_affinity(cpus)
     return True
+
+
+def python_implementation():
+    if hasattr(sys, 'implementation'):
+        # PEP 421, Python 3.3
+        name = sys.implementation.name
+    else:
+        name = platform.python_implementation()
+    return name.lower()

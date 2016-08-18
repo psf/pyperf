@@ -23,13 +23,7 @@ import perf
 
 def collect_python_metadata(metadata):
     # Implementation
-    if hasattr(sys, 'implementation'):
-        # PEP 421, Python 3.3
-        metadata['python_implementation'] = sys.implementation.name
-    else:
-        # Convert to lower case to use the same format than Python 3
-        python_impl = platform.python_implementation().lower()
-        metadata['python_implementation'] = python_impl
+    metadata['python_implementation'] = perf.python_implementation()
 
     version = platform.python_version()
     bits = platform.architecture()[0]
