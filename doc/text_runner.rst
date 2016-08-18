@@ -18,8 +18,11 @@ Options::
     [-w WARMUPS/--warmups=WARMUPS]
     [--min-time=MIN_TIME]
 
-Default: 20 processes (5 on PyPy), 3 samples per process (total: 60 samples),
-and 1 warmup (10 on PyPy).
+Default (no JIT, ex: CPython): 20 processes, 3 samples per process (total: 60
+samples), and 1 warmup.
+
+Default (with a JIT, ex: PyPy): 6 processes, 10 samples per process (total: 60
+samples), and 10 warmups.
 
 * ``--rigorous``: Spend longer running tests to get more accurate results.
   Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
@@ -28,11 +31,11 @@ and 1 warmup (10 on PyPy).
   2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 10 processes
   and 2 samples per process (total: 20 samples).
 * ``PROCESSES``: number of processes used to run the benchmark
-  (default: ``20``, or ``5`` on PyPy)
+  (default: ``20``, or ``6`` with a JIT)
 * ``SAMPLES``: number of samples per process
-  (default: ``3``)
+  (default: ``3``, or ``10`` with a JIT)
 * ``WARMUPS``: the number of ignored samples used to warmup to benchmark
-  (default: ``1`` on CPython or ``10`` on PyPy)
+  (default: ``1``, or ``10`` with a JIT)
 * ``LOOPS``: number of loops per sample. By default, the timer is calibrated
   to get raw samples taking at least ``MIN_TIME`` seconds.
 * ``MIN_TIME``: Minimum duration of a single raw sample in seconds

@@ -88,18 +88,14 @@ class TestRunTextRunner(unittest.TestCase):
         result = self.run_text_runner('--worker', '--verbose', '--metadata')
         self.assertRegex(result.stdout,
                          r'^'
-                         r'Calibration 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
+                         r'(?:Calibration [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
                          r'\n'
-                         r'Warmup 1: 1\.00 sec \(1 loop: 1\.00 sec\)\n'
-                         # PyPy uses more warmups
-                         r'(?:Warmup .*\n)*'
+                         r'(?:Warmup [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
                          r'\n'
-                         r'Sample 1: 1\.00 sec\n'
-                         r'Sample 2: 1\.00 sec\n'
-                         r'Sample 3: 1\.00 sec\n'
+                         r'(?:Sample [0-9]+: 1\.00 sec\n)+'
                          r'\n'
                          r'Metadata:\n'
-                         r'(- .*\n)+'
+                         r'(?:- .*\n)+'
                          r'\n'
                          r'Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
