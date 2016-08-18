@@ -6,7 +6,8 @@ Version 0.7.4
 
 * Support PyPy
 * metadata: add ``mem_max_rss`` and ``python_hash_seed``
-* add :func:`perf.python_implementation` and :func:`perf.python_has_jit`
+* Add :func:`perf.python_implementation` and :func:`perf.python_has_jit`
+  functions
 * TextRunner now calibrates the benchmark while runnning warmup samples.
   Add new warmup samples if needed until enough warmup raw samples are longer
   than the minimum time.
