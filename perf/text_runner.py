@@ -719,7 +719,7 @@ class TextRunner:
                                              args.warmups,
                                              is_warmup=True, calibrate=calibrate)
         else:
-            warmups = ()
+            warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
         loops, samples = self._run_bench(bench, sample_func, loops,
