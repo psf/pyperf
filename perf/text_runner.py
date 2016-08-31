@@ -627,7 +627,8 @@ class TextRunner:
                 break
 
             raw_sample = sample_func(loops)
-            sample = float(raw_sample) / (loops * inner_loops)
+            raw_sample = float(raw_sample)
+            sample = raw_sample / (loops * inner_loops)
             if is_warmup:
                 value = raw_sample
             else:

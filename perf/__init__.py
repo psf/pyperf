@@ -438,7 +438,13 @@ class Run(object):
 
         return self._replace(samples=(value,))
 
-    def _add_metadata(self, metadata):
+    def _update_metadata(self, metadata):
+        if 'inner_loops' in metadata:
+            inner_loops = self._get_metadata('inner_loops', None)
+            if (inner_loops is not None
+               and metadata['inner_loops'] != inner_loops):
+                raise ValueError("inner_loops metadata cannot be modified")
+
         # metadata must be parsed by _parse_metadata()
         metadata2 = dict(self._metadata)
         metadata2.update(metadata)
@@ -732,14 +738,16 @@ class Benchmark(object):
                     for run in self._runs]
         self._runs = new_runs
 
-    def add_metadata(self, metadata):
-        """Add metadata to all runs."""
+    def update_metadata(self, metadata):
         metadata = _parse_metadata(metadata)
         if not metadata:
             return self
 
+        if not self._runs:
+            raise ValueError("benchmark has no run")
+
         self._clear_runs_cache()
-        self._runs = [run._add_metadata(metadata) for run in self._runs]
+        self._runs = [run._update_metadata(metadata) for run in self._runs]
 
 
 class BenchmarkSuite(object):

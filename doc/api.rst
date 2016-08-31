@@ -137,15 +137,16 @@ Run
    A benchmark run result is made of multiple samples.
 
    *samples* must be a non-empty sequence of numbers (``float``) greater
-   than zero. Usually, *samples* is a list of number of seconds.
+   than zero. Usually, *samples* is a list of number of seconds. Samples must
+   be normalized per loop iteration (total of outter and inner loops).
+
+   *warmups* is an optional sequence of ``(loops: int, sample: float)`` tuples
+   where *sample* must be greater than zero. Warmup samples must not be
+   normalized per loop iteration, they must be "raw" samples.
 
    Samples must not be equal to zero. If a sample is zero, use more
    loop iterations: see :ref:`Runs, samples, warmups, outter and inner loops
    <loops>`.
-
-   *samples* must contains at least ``1`` sample.
-
-   Samples are normalized value per loop iteration.
 
    Set *collect_metadata* to false to not collect system metadata.
 
@@ -185,9 +186,14 @@ Benchmark
 
    Methods:
 
-   .. method:: add_metadata(metadata: dict)
+   .. method:: update_metadata(metadata: dict)
 
-      Add metadata to all runs of the benchmark.
+      Update metadata of all runs of the benchmark.
+
+      The benchmark must contain at least one run.
+
+      If the ``inner_loops`` metadata is already set and its value is modified,
+      an exception is raised.
 
       See :ref:`Metadata <metadata>`.
 

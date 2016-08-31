@@ -281,7 +281,7 @@ class BenchmarkTests(unittest.TestCase):
         for run in bench.get_runs():
             self.assertEqual(run.warmups, warmups)
 
-    def test_add_metadata(self):
+    def test_update_metadata(self):
         bench = perf.Benchmark()
         for sample in (1.0, 2.0, 3.0):
             bench.add_run(perf.Run((sample,),
@@ -290,9 +290,23 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(self.get_metadata(bench),
                          {'name': 'bench'})
 
-        bench.add_metadata({'os': 'linux'})
+        bench.update_metadata({'os': 'linux'})
         self.assertEqual(self.get_metadata(bench),
                          {'os': 'linux', 'name': 'bench'})
+
+    def test_update_metadata_no_run(self):
+        bench = perf.Benchmark()
+        # error: need at least 1 run
+        with self.assertRaises(ValueError):
+            bench.update_metadata({'os': 'linux'})
+
+    def test_update_metadata_inner_loops(self):
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run((1.0,),
+                               metadata={'inner_loops': 5},
+                               collect_metadata=False))
+        with self.assertRaises(ValueError):
+            bench.update_metadata({'inner_loops': 8})
 
 
 class TestBenchmarkSuite(unittest.TestCase):
