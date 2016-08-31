@@ -14,10 +14,8 @@ class ExampleTests(unittest.TestCase):
         stdout = proc.communicate()[0]
 
         self.assertRegex(stdout,
-                         r'^\.{%s}\n'
                          r'Median \+- std dev: [0-9]+\.[0-9]+ [mn]s '
-                         r'\+- [0-9]+\.[0-9]+ [mn]s\n$'
-                         % nproc)
+                         r'\+- [0-9]+\.[0-9]+ [mn]s\n')
         self.assertEqual(proc.returncode, 0)
 
     def test_bench_func(self):
