@@ -188,6 +188,21 @@ def _check_metadata(name, value):
             raise ValueError("%s must be an integer >= 1" % name)
 
 
+def _parse_metadata(metadata):
+    result = {}
+    for name, value in metadata.items():
+        _check_metadata(name, value)
+        if isinstance(value, six.string_types):
+            if '\n' in value or '\r' in value:
+                raise ValueError("newline characters are not allowed "
+                                 "in metadata values: %r" % value)
+            value = value.strip()
+            if not value:
+                raise ValueError("metadata %r value is empty" % name)
+        result[name] = value
+    return result
+
+
 class Metadata(object):
     def __init__(self, name, value):
         self._name = name
@@ -278,17 +293,7 @@ class Run(object):
         # Metadata dictionary: key=>value, keys and values should be non-empty
         # strings
         if metadata:
-            self._metadata = {}
-            for name, value in metadata.items():
-                _check_metadata(name, value)
-                if isinstance(value, six.string_types):
-                    if '\n' in value or '\r' in value:
-                        raise ValueError("newline characters are not allowed "
-                                         "in metadata values: %r" % value)
-                    value = value.strip()
-                    if not value:
-                        raise ValueError("metadata %r value is empty" % name)
-                self._metadata[name] = value
+            self._metadata = _parse_metadata(metadata)
         else:
             self._metadata = None
 
