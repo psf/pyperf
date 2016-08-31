@@ -141,8 +141,8 @@ Run
    be normalized per loop iteration (total of outter and inner loops).
 
    *warmups* is an optional sequence of ``(loops: int, sample: float)`` tuples
-   where *sample* must be greater than zero. Warmup samples must not be
-   normalized per loop iteration, they must be "raw" samples.
+   where *sample* must be greater than or equal to zero. Warmup samples are
+   "raw samples", they must not be normalized per loop iteration.
 
    Samples must not be equal to zero. If a sample is zero, use more
    loop iterations: see :ref:`Runs, samples, warmups, outter and inner loops

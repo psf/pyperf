@@ -250,7 +250,7 @@ def _check_warmups(warmups):
 
         if not isinstance(sample, float):
             return False
-        if sample <= 0:
+        if sample < 0:
             return False
 
     return True
@@ -264,13 +264,13 @@ class Run(object):
         if warmups is not None and not _check_warmups(warmups):
             raise ValueError("warmups must be a sequence of (loops, sample) "
                              "where loops is a int >= 1 and sample "
-                             "is a float > 0")
+                             "is a float >= 0.0")
 
         if (not samples
            or any(not(isinstance(sample, float) and sample > 0)
                   for sample in samples)):
             raise ValueError("samples must be a non-empty sequence "
-                             "of float > 0")
+                             "of float > 0.0")
 
         if warmups:
             self._warmups = tuple(warmups)

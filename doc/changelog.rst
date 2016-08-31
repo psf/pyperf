@@ -5,6 +5,8 @@ Version 0.7.5
 -------------
 
 * Add ``Benchmark.update_metadata()`` method
+* Warmup samples can now be zero. TextRunner now raises an error if a sample
+  function returns zero for a sample, except of calibration and warmup samples.
 
 Version 0.7.4 (2018-08-18)
 --------------------------

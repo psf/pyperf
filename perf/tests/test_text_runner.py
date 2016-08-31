@@ -21,7 +21,7 @@ def check_args(loops, a, b):
 Result = collections.namedtuple('Result', 'runner bench stdout')
 
 
-class TestRunTextRunner(unittest.TestCase):
+class TestTextRunner(unittest.TestCase):
     def run_text_runner(self, *args, **kwargs):
         def fake_timer():
             t = fake_timer.value
@@ -153,6 +153,84 @@ class TestRunTextRunner(unittest.TestCase):
 
             loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
+
+    def test_sample_func_zero(self):
+        if perf.python_has_jit():
+            # If Python has a JIT, perf forces calibration which is already
+            # tested by test_calibration_zero()
+            self.skipTest("Python has a JIT")
+
+        runner = perf.text_runner.TextRunner('bench')
+        # disable CPU affinity to not pollute stdout
+        runner._cpu_affinity = lambda: None
+        runner.parse_args(['--worker', '-l1'])
+
+        def sample_func(loops):
+            return 0
+
+        with self.assertRaises(ValueError) as cm:
+            runner.bench_sample_func(sample_func)
+        self.assertEqual(str(cm.exception), 'sample function returned zero')
+
+    def test_calibration_zero(self):
+        runner = perf.text_runner.TextRunner('bench')
+        # disable CPU affinity to not pollute stdout
+        runner._cpu_affinity = lambda: None
+        runner.parse_args(['--worker'])
+
+        def sample_func(loops):
+            return 0
+
+        with self.assertRaises(ValueError) as cm:
+            runner.bench_sample_func(sample_func)
+        self.assertIn('error in calibration, loops is too big:',
+                      str(cm.exception))
+
+    def test_calibration(self):
+        runner = perf.text_runner.TextRunner('bench')
+        # disable CPU affinity to not pollute stdout
+        runner._cpu_affinity = lambda: None
+        runner.parse_args(['--worker', '-w2', '-n1', '--min-time=1.0'])
+
+        # Simulate PyPy JIT: running the same function becomes faster
+        # after 2 samples while running warmup samples
+        def sample_func(loops):
+            if loops < 16:
+                return 0
+
+            sample_func.step += 1
+            if sample_func.step == 1:
+                return 3.0
+            elif sample_func.step == 2:
+                return 0.5
+            else:
+                return 1.0
+        sample_func.step = 0
+
+        with tests.capture_stdout():
+            bench = runner.bench_sample_func(sample_func)
+
+        runs = bench.get_runs()
+        self.assertEqual(len(runs), 1)
+
+        run = runs[0]
+        self.assertEqual(run.warmups,
+                         # first calibration samples are zero
+                         ((1, 0.0),
+                          (2, 0.0),
+                          (4, 0.0),
+                          (8, 0.0),
+
+                          # first non-zero calibration sample
+                          (16, 3.0),
+
+                          # warmup 1, JIT triggered, 3.0 => 0.5 for loops=128
+                          (16, 0.5),
+                          # warmup 1, new try with loops x 2
+                          (32, 1.0),
+
+                          # warmup 2
+                          (32, 1.0)))
 
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):

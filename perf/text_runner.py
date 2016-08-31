@@ -634,9 +634,6 @@ class TextRunner:
             else:
                 value = sample
 
-            # FIXME: if the value is zero, drop it in calibration mode,
-            # or raise an error in non-calibration mode
-
             # The most accurate time has a resolution of 1 nanosecond. We
             # compute a difference between two timer values. When formatted to
             # decimal, the difference can show more than 9 decimal digits after
@@ -644,6 +641,10 @@ class TextRunner:
             # files and don't pretend to have a better resolution than 1
             # nanosecond.
             value = round(value, 9)
+
+            if not value and not(is_calibrate or is_warmup):
+                raise ValueError("sample function returned zero")
+
             if is_warmup:
                 samples.append((loops, value))
             else:
