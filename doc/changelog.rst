@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7.5
+-------------
+
+* Add ``Benchmark.add_metadata()`` method
+
 Version 0.7.4 (2018-08-18)
 --------------------------
 

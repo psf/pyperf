@@ -411,6 +411,19 @@ class BenchmarkTests(unittest.TestCase):
         for run in bench.get_runs():
             self.assertEqual(run.warmups, warmups)
 
+    def test_add_metadata(self):
+        bench = perf.Benchmark()
+        for sample in (1.0, 2.0, 3.0):
+            bench.add_run(perf.Run((sample,),
+                                   metadata={'name': 'bench'},
+                                   collect_metadata=False))
+        self.assertEqual(self.get_metadata(bench),
+                         {'name': 'bench'})
+
+        bench.add_metadata({'os': 'linux'})
+        self.assertEqual(self.get_metadata(bench),
+                         {'os': 'linux', 'name': 'bench'})
+
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):

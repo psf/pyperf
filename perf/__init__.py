@@ -438,6 +438,12 @@ class Run(object):
 
         return self._replace(samples=(value,))
 
+    def _add_metadata(self, metadata):
+        # metadata must be parsed by _parse_metadata()
+        metadata2 = dict(self._metadata)
+        metadata2.update(metadata)
+        return self._replace(metadata=metadata2)
+
 
 class Benchmark(object):
     def __init__(self):
@@ -725,6 +731,15 @@ class Benchmark(object):
         new_runs = [run._extract_metadata(name)
                     for run in self._runs]
         self._runs = new_runs
+
+    def add_metadata(self, metadata):
+        """Add metadata to all runs."""
+        metadata = _parse_metadata(metadata)
+        if not metadata:
+            return self
+
+        self._clear_runs_cache()
+        self._runs = [run._add_metadata(metadata) for run in self._runs]
 
 
 class BenchmarkSuite(object):

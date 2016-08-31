@@ -185,6 +185,14 @@ Benchmark
 
    Methods:
 
+   .. method:: add_metadata(metadata: dict)
+
+      Add metadata to all runs of the benchmark.
+
+      See :ref:`Metadata <metadata>`.
+
+      .. versionadded:: 0.7.5
+
    .. method:: add_run(run: Run)
 
       Add a benchmark run: *run* must a :class:`Run` object.
