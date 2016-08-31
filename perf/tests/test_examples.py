@@ -20,18 +20,18 @@ class ExampleTests(unittest.TestCase):
 
     def test_bench_func(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_func.py')
-        # Use -w1 -l1 --min-time=0 to reduce the duration of the test on PyPy
-        cmd = [sys.executable, script, '-p2', '-w1', '-l1', '--min-time=0']
+        # Use -w1 --min-time=0.001 to reduce the duration of the test
+        cmd = [sys.executable, script, '-p2', '-w1', '--min-time=0.001']
         self.check_command(cmd)
 
     def test_bench_func_no_warmup(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_func.py')
-        cmd = [sys.executable, script, '-p2', '-w0', '-l1', '--min-time=0']
+        cmd = [sys.executable, script, '-p2', '-w0', '--min-time=0.001']
         self.check_command(cmd)
 
     def test_bench_sample_func(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_sample_func.py')
-        cmd = [sys.executable, script, '-p2', '-w1', '-l1', '--min-time=0']
+        cmd = [sys.executable, script, '-p2', '-w1', '--min-time=0.001']
         self.check_command(cmd)
 
 
