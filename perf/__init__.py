@@ -297,8 +297,12 @@ class Run(object):
         else:
             self._metadata = None
 
-    def _replace(self, new_samples):
-        run = Run(new_samples, collect_metadata=False)
+    def _replace(self, samples, warmups=True):
+        if warmups:
+            warmups = self._warmups
+        else:
+            warmups = None
+        run = Run(samples, warmups=warmups, collect_metadata=False)
         # share metadata dict since Run metadata is immutable
         run._metadata = self._metadata
         return run
@@ -356,8 +360,7 @@ class Run(object):
         if not self._warmups:
             return self
 
-        # don't pass self._warmups
-        return self._replace(self._samples)
+        return self._replace(self._samples, warmups=False)
 
     def _get_duration(self):
         duration = self._get_metadata('duration', None)

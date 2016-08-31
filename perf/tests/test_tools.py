@@ -396,6 +396,21 @@ class BenchmarkTests(unittest.TestCase):
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 11, 0)))
 
+    def test_extract_metadata(self):
+        warmups = ((1, 5.0),)
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run((1.0,), warmups=warmups,
+                               metadata={'name': 'bench', 'mem_usage': 5},
+                               collect_metadata=False))
+        bench.add_run(perf.Run((2.0,), warmups=warmups,
+                               metadata={'name': 'bench', 'mem_usage': 13},
+                               collect_metadata=False))
+
+        bench._extract_metadata('mem_usage')
+        self.assertEqual(bench.get_samples(), (5, 13))
+        for run in bench.get_runs():
+            self.assertEqual(run.warmups, warmups)
+
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
