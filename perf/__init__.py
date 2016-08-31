@@ -297,14 +297,18 @@ class Run(object):
         else:
             self._metadata = None
 
-    def _replace(self, samples, warmups=True):
+    def _replace(self, samples=None, warmups=True, metadata=None):
+        if samples is None:
+            samples = self._samples
         if warmups:
             warmups = self._warmups
         else:
             warmups = None
+        if metadata is None:
+            # share metadata dict since Run metadata is immutable
+            metadata = self._metadata
         run = Run(samples, warmups=warmups, collect_metadata=False)
-        # share metadata dict since Run metadata is immutable
-        run._metadata = self._metadata
+        run._metadata = metadata
         return run
 
     def _get_metadata(self, name, default):
@@ -360,7 +364,7 @@ class Run(object):
         if not self._warmups:
             return self
 
-        return self._replace(self._samples, warmups=False)
+        return self._replace(warmups=False)
 
     def _get_duration(self):
         duration = self._get_metadata('duration', None)
@@ -432,7 +436,7 @@ class Run(object):
         elif not isinstance(value, float):
             raise TypeError("run metadata %r" % name)
 
-        return self._replace((value,))
+        return self._replace(samples=(value,))
 
 
 class Benchmark(object):
