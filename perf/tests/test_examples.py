@@ -14,23 +14,24 @@ class ExampleTests(unittest.TestCase):
         stdout = proc.communicate()[0]
 
         self.assertRegex(stdout,
-                         r'Median \+- std dev: [0-9]+\.[0-9]+ [mn]s '
-                         r'\+- [0-9]+\.[0-9]+ [mn]s\n')
+                         r'Median \+- std dev: [0-9.]+ [mun]s '
+                         r'\+- [0-9.]+ [mun]s\n')
         self.assertEqual(proc.returncode, 0)
 
     def test_bench_func(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_func.py')
-        cmd = [sys.executable, script, '-p3']
+        # Use -w1 -l1 --min-time=0 to reduce the duration of the test on PyPy
+        cmd = [sys.executable, script, '-p2', '-w1', '-l1', '--min-time=0']
         self.check_command(cmd)
 
     def test_bench_func_no_warmup(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_func.py')
-        cmd = [sys.executable, script, '-w0', '-p3']
+        cmd = [sys.executable, script, '-p2', '-w0', '-l1', '--min-time=0']
         self.check_command(cmd)
 
     def test_bench_sample_func(self):
         script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_sample_func.py')
-        cmd = [sys.executable, script, '-p3']
+        cmd = [sys.executable, script, '-p2', '-w1', '-l1', '--min-time=0']
         self.check_command(cmd)
 
 
