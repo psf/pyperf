@@ -187,14 +187,6 @@ Memory metadata:
 
 * ``mem_max_rss``: Maximum resident set size in bytes (``int``). On Linux,
   kernel 2.6.32 or newer is required.
-* ``mem_peak``: Peak of the memory usage in bytes (``int``), see
-  the ``--track-memory`` option. On Linux, compute the sum of ``Private_Clean``
-  and ``Private_Dirty`` memory mappings of ``/proc/self/smaps``. On Windows,
-  get ``PeakPagefileUsage`` of ``GetProcessMemoryInfo()`` (of the current
-  process): the peak value of the Commit Charge during the lifetime of this
-  process.
-* ``mem_tracemalloc_peak``: Peak of the Python memory traced by tracemalloc,
-  see the ``--tracemalloc`` option
 
 CPU metadata:
 

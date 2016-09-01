@@ -5,8 +5,6 @@ TODO
   sometimes create a sample equals to 0
 * unify calibration and warmup?
 * calibration: don't loose the sample, use it as the first sample?
-* --tracemalloc/--track-memory: use mem_peak as the benchmark value and
-  add an unit (bytes, seconds) to benchmarks!
 * Make benchmark name mandatory?
 * metadata: get Python Mercurial revision and the "+" modified marker
 * Write unit test for compare_to --group-by-speed

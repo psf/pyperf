@@ -502,10 +502,13 @@ class TextRunner:
                                  'run variation. By default, worker processes '
                                  'are pinned to isolate CPUs if isolated CPUs '
                                  'are found.')
-        parser.add_argument('--tracemalloc', action="store_true",
+
+        memory = parser.add_mutually_exclusive_group()
+        memory.add_argument('--tracemalloc', action="store_true",
                             help='Trace memory allocations using tracemalloc')
-        parser.add_argument('--track-memory', action="store_true",
+        memory.add_argument('--track-memory', action="store_true",
                             help='Track memory usage using a thread')
+
         self.argparser = parser
 
     def _process_args(self):
@@ -707,14 +710,8 @@ class TextRunner:
             mem_thread = None
 
         if args.tracemalloc:
-            try:
-                import tracemalloc
-            except ImportError as exc:
-                args.tracemalloc = False
-                print("WARNING: fail to import tracemalloc: %s"
-                       % exc, file=stream)
-            else:
-                tracemalloc.start()
+            import tracemalloc
+            tracemalloc.start()
 
         if args.warmups:
             loops, warmups = self._run_bench(bench, sample_func, loops,
@@ -729,15 +726,27 @@ class TextRunner:
 
         if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
-            if traced_peak:
-                metadata['mem_tracemalloc_peak'] = traced_peak
+            tracemalloc.stop()
+
+            if not traced_peak:
+                raise RuntimeError("tracemalloc didn't trace any Python "
+                                   "memory allocation")
+
+            # drop timings, replace them with the memory peak
+            metadata['unit'] = 'byte'
+            warmups = None
+            samples = (float(traced_peak),)
 
         if mem_thread is not None:
             mem_thread.stop()
-            if mem_thread.peak_usage:
-                # FIXME: rename it to "mem_uss_peak" on Linux
-                # FIXME: rename it to "mem_peak_pagefile" on Windows
-                metadata['mem_peak'] = mem_thread.peak_usage
+            mem_peak = mem_thread.peak_usage
+            if not mem_peak:
+                raise RuntimeError("failed to get the memory peak usage")
+
+            # drop timings, replace them with the memory peak
+            metadata['unit'] = 'byte'
+            warmups = None
+            samples = (float(mem_peak),)
 
         duration = perf.monotonic_clock() - start_time
         metadata['duration'] = duration
