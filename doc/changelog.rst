@@ -4,8 +4,10 @@ Changelog
 Version 0.7.6
 -------------
 
+* ``--tracemalloc`` and ``--track-memory`` now use the memory peak as the
+  unique sample for the run.
 * ``convert``: add ``--remove-all-metadata`` and ``--update-metadata`` commands
-* Add ``unit`` metadata: ``unit=byte`` formats samples as file sizes
+* Add ``unit`` metadata: ``byte``, ``integer`` or ``second``.
 * Run samples can now be integer (not only float).
 
 Version 0.7.5 (2016-09-01)
