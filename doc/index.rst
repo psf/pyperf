@@ -38,6 +38,8 @@ Table Of Content:
 
 See also:
 
+* `performance <https://pypi.python.org/pypi/performance>`_: the Python
+  benchmark suite
 * `pytest-benchmark
   <https://github.com/ionelmc/pytest-benchmark/>`_
 * `boltons.statsutils
