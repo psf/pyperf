@@ -65,8 +65,8 @@ def _display_run(bench, run_index, run,
         max_delta = median * 0.05
         for index, sample in enumerate(samples):
             if raw:
-                sample /= total_loops
-            delta = sample - median
+                sample = float(sample) / total_loops
+            delta = float(sample) - median
             if abs(delta) > max_delta:
                 samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
         return samples_str
@@ -210,7 +210,7 @@ def _display_stats(bench, file=None):
 
     # Minimum
     def format_limit(median, value):
-        return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100 / median)
+        return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100.0 / median)
 
     print("Minimum: %s" % format_limit(median, min(samples)), file=file)
 

@@ -136,7 +136,7 @@ Run
 
    A benchmark run result is made of multiple samples.
 
-   *samples* must be a non-empty sequence of numbers (``float``) greater
+   *samples* must be a non-empty sequence of numbers (integer or float) greater
    than zero. Usually, *samples* is a list of number of seconds. Samples must
    be normalized per loop iteration (total of outter and inner loops).
 

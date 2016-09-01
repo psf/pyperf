@@ -279,7 +279,7 @@ class BenchmarkTests(unittest.TestCase):
         bench._extract_metadata('mem_usage')
         self.assertEqual(bench.get_samples(), (5, 13))
         for run in bench.get_runs():
-            self.assertEqual(run.warmups, warmups)
+            self.assertEqual(run.warmups, ())
 
     def test_remove_all_metadata(self):
         bench = perf.Benchmark()

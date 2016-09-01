@@ -6,6 +6,7 @@ Version 0.7.6
 
 * ``convert``: add ``--remove-all-metadata`` and ``--update-metadata`` commands
 * Add ``unit`` metadata: ``unit=byte`` formats samples as file sizes
+* Run samples can now be integer (not only float).
 
 Version 0.7.5 (2016-09-01)
 --------------------------

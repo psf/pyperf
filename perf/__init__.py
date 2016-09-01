@@ -61,14 +61,11 @@ def _format_timedelta(value):
 
 
 def _format_filesize(size):
-    if isinstance(size, float):
-        size = int(size)
-
     if size < 10 * 1024:
         if size != 1:
-            return '%s bytes' % size
+            return '%.0f bytes' % size
         else:
-            return '%s byte' % size
+            return '%.0f byte' % size
 
     if size > 10 * 1024 * 1024:
         return '%.1f MB' % (size / (1024.0 * 1024.0))
@@ -315,7 +312,7 @@ class Run(object):
                              "is a float >= 0.0")
 
         if (not samples
-           or any(not(isinstance(sample, float) and sample > 0)
+           or any(not(isinstance(sample, _NUMBER_TYPES) and sample > 0)
                   for sample in samples)):
             raise ValueError("samples must be a non-empty sequence "
                              "of float > 0.0")
@@ -485,12 +482,11 @@ class Run(object):
         else:
             metadata = None
 
-        if isinstance(value, int):
-            value = float(value)
-        elif not isinstance(value, float):
-            raise TypeError("run metadata %r" % name)
+        if not isinstance(value, _NUMBER_TYPES):
+            raise TypeError("metadata %r value is not an integer: got %s"
+                            % (name, type(value).__name__))
 
-        return self._replace(samples=(value,), metadata=metadata)
+        return self._replace(samples=(value,), warmups=False, metadata=metadata)
 
     def _remove_all_metadata(self):
         name = self._get_metadata('name', None)
