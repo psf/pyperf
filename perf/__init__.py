@@ -211,11 +211,6 @@ _METADATA = {
 _DEFAULT_METADATA_INFO = _MetadataInfo(_format_metadata, _METADATA_VALUE_TYPES, None, None)
 
 
-def _get_metadata_formatter(name):
-    info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
-    return info.formatter
-
-
 def _check_metadata(name, value):
     info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
     check_value = info.check_value
@@ -262,8 +257,8 @@ class Metadata(object):
         return self._value
 
     def __str__(self):
-        formatter = _get_metadata_formatter(self._name)
-        return formatter(self._value)
+        info = _METADATA.get(self._name, _DEFAULT_METADATA_INFO)
+        return info.formatter(self._value)
 
     def __eq__(self, other):
         if not isinstance(other, Metadata):
@@ -315,7 +310,7 @@ class Run(object):
            or any(not(isinstance(sample, _NUMBER_TYPES) and sample > 0)
                   for sample in samples)):
             raise ValueError("samples must be a non-empty sequence "
-                             "of float > 0.0")
+                             "of number > 0.0")
 
         if warmups:
             self._warmups = tuple(warmups)
