@@ -104,6 +104,9 @@ def create_parser():
     cmd.add_argument('--remove-all-metadata', action="store_true",
                      help='Remove all benchmarks metadata, but keep '
                           'the benchmarks name')
+    cmd.add_argument('--update-metadata', metavar='METADATA',
+                     help='Update metadata: METADATA is a comma-separated '
+                          'list of KEY=VALUE')
 
     # dump
     cmd = subparsers.add_parser('dump', help='Dump the runs')
@@ -777,6 +780,20 @@ def cmd_convert(args):
     if args.remove_warmups:
         for benchmark in suite:
             benchmark._remove_warmups()
+
+    if args.update_metadata:
+        items = [item.strip()
+                 for item in args.update_metadata.split(',')]
+
+        metadata = {}
+        for item in items:
+            if not item:
+                continue
+            key, _, value = item.partition('=')
+            metadata[key] = value
+
+        for benchmark in suite:
+            benchmark.update_metadata(metadata)
 
     if args.extract_metadata:
         name = args.extract_metadata
