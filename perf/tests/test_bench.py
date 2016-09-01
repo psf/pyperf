@@ -281,6 +281,18 @@ class BenchmarkTests(unittest.TestCase):
         for run in bench.get_runs():
             self.assertEqual(run.warmups, warmups)
 
+    def test_remove_all_metadata(self):
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run((1.0,),
+                               metadata={'name': 'bench', 'os': 'win'},
+                               collect_metadata=False))
+        self.assertEqual(self.get_metadata(bench),
+                         {'name': 'bench', 'os': 'win'})
+
+        bench._remove_all_metadata()
+        self.assertEqual(self.get_metadata(bench),
+                         {'name': 'bench'})
+
     def test_update_metadata(self):
         bench = perf.Benchmark()
         for sample in (1.0, 2.0, 3.0):

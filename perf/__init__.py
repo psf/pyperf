@@ -438,6 +438,14 @@ class Run(object):
 
         return self._replace(samples=(value,))
 
+    def _remove_all_metadata(self):
+        name = self._get_metadata('name', None)
+        if name:
+            metadata = {'name': name}
+        else:
+            metadata = {}
+        return self._replace(metadata=metadata)
+
     def _update_metadata(self, metadata):
         if 'inner_loops' in metadata:
             inner_loops = self._get_metadata('inner_loops', None)
@@ -734,8 +742,13 @@ class Benchmark(object):
         return self._dates
 
     def _extract_metadata(self, name):
-        new_runs = [run._extract_metadata(name)
-                    for run in self._runs]
+        new_runs = [run._extract_metadata(name) for run in self._runs]
+        self._clear_runs_cache()
+        self._runs = new_runs
+
+    def _remove_all_metadata(self):
+        new_runs = [run._remove_all_metadata() for run in self._runs]
+        self._clear_runs_cache()
         self._runs = new_runs
 
     def update_metadata(self, metadata):

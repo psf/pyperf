@@ -101,6 +101,9 @@ def create_parser():
                      help='Add benchmark runs of benchmark FILE')
     cmd.add_argument('--extract-metadata', metavar='NAME',
                      help='Use metadata NAME as the new run values')
+    cmd.add_argument('--remove-all-metadata', action="store_true",
+                     help='Remove all benchmarks metadata, but keep '
+                          'the benchmarks name')
 
     # dump
     cmd = subparsers.add_parser('dump', help='Dump the runs')
@@ -791,6 +794,10 @@ def cmd_convert(args):
                       % (name, get_benchmark_name(benchmark)),
                       file=sys.stderr)
                 sys.exit(1)
+
+    if args.remove_all_metadata:
+        for benchmark in suite:
+            benchmark._remove_all_metadata()
 
     if args.remove_outliers:
         for benchmark in suite:
