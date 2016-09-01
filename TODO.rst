@@ -49,8 +49,7 @@ Low priority
 * support --fast + -p1
 * perf CLI: handle FileNotFoundError for input file (need unit test)
 * convert --remove-outliers: more serious algorithm? or configurable percent?
-* support multiple units, or remove _format_samples.
-  Track memory usage in CPython benchmark suite?
+* Track memory usage in CPython benchmark suite?
 * use the calibration at the first warmup sample in raw mode
 * metadata: implement time.get_time_info() on Python 2
 

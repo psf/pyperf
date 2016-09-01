@@ -59,6 +59,33 @@ def _format_timedelta(value):
     return _format_timedeltas((value,))[0]
 
 
+def _format_filesize(size):
+    if isinstance(size, float):
+        size = int(size)
+
+    if size < 10 * 1024:
+        if size != 1:
+            return '%s bytes' % size
+        else:
+            return '%s byte' % size
+
+    if size > 10 * 1024 * 1024:
+        return '%.1f MB' % (size / (1024.0 * 1024.0))
+
+    return '%.1f kB' % (size / 1024.0)
+
+
+def _format_filesizes(sizes):
+    return tuple(_format_filesize(size) for size in sizes)
+
+
+_DEFAULT_UNIT = 'second'
+_SAMPLE_FORMATTERS = {
+    'second': _format_timedeltas,
+    'byte': _format_filesizes,
+}
+
+
 def _format_seconds(seconds):
     if seconds < 1.0:
         return _format_timedelta(seconds)
@@ -134,19 +161,6 @@ def _format_load(load):
         return load
 
 
-def _format_filesize(size):
-    if size < 10 * 1024:
-        if size != 1:
-            return '%s bytes' % size
-        else:
-            return '%s byte' % size
-
-    if size > 10 * 1024 * 1024:
-        return '%.1f MB' % (size / (1024.0 * 1024.0))
-
-    return '%.1f kB' % (size / 1024.0)
-
-
 def _parse_iso8601(date):
     if '.' in date:
         date, floatpart = date.split('.', 1)
@@ -186,6 +200,9 @@ def _check_metadata(name, value):
     if name in ('loops', 'inner_loops', 'mem_max_rss', 'mem_peak', 'mem_tracemalloc_peak'):
         if not(isinstance(value, six.integer_types) and value >= 1):
             raise ValueError("%s must be an integer >= 1" % name)
+
+    if name == 'unit' and value not in _SAMPLE_FORMATTERS:
+        raise ValueError("unknown sample unit: %r" % value)
 
 
 def _parse_metadata(metadata):
@@ -464,7 +481,6 @@ class Benchmark(object):
         self._clear_runs_cache()
         # list of Run objects
         self._runs = []
-        self._format_samples = _format_timedeltas
 
     def get_name(self):
         if not self._runs:
@@ -535,7 +551,8 @@ class Benchmark(object):
                 'python_executable',
                 'python_implementation',
                 'python_unicode',
-                'python_version')
+                'python_version',
+                'unit')
         # ignored:
         # - cpu_affinity
         # - cpu_config
@@ -561,6 +578,14 @@ class Benchmark(object):
 
         self._clear_runs_cache()
         self._runs.append(run)
+
+    def _format_samples(self, samples):
+        unit = 'second'
+        if self._runs:
+            run = self._runs[0]
+            unit = run._get_metadata('unit', unit)
+        formatter = _SAMPLE_FORMATTERS[unit]
+        return formatter(samples)
 
     def _format_sample(self, sample):
         return self._format_samples((sample,))[0]
