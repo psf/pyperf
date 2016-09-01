@@ -80,13 +80,6 @@ def _format_filesizes(sizes):
     return tuple(_format_filesize(size) for size in sizes)
 
 
-_DEFAULT_UNIT = 'second'
-_SAMPLE_FORMATTERS = {
-    'second': _format_timedeltas,
-    'byte': _format_filesizes,
-}
-
-
 def _format_seconds(seconds):
     if seconds < 1.0:
         return _format_timedelta(seconds)
@@ -131,6 +124,17 @@ def _format_number(number, unit=None, units=None):
         return '%s %s' % (number, units)
     else:
         return '%s %s' % (number, unit)
+
+def _format_integers(numbers):
+    return tuple(_format_number(number) for number in numbers)
+
+
+_DEFAULT_UNIT = 'second'
+_UNIT_FORMATTERS = {
+    'second': _format_timedeltas,
+    'byte': _format_filesizes,
+    'integer': _format_integers,
+}
 
 
 def _common_metadata(metadatas):
@@ -178,13 +182,17 @@ _METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
 _NUMBER_TYPES = six.integer_types + (float,)
 
 # Registry of metadata keys
-_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value')
+_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
 def _is_strictly_positive(value):
     return (value >= 1)
 
 
 def _is_positive(value):
+    # special case for load_avg_1min on perf < 0.7.2
+    if isinstance(value, six.string_types):
+        return True
+
     return (value >= 0)
 
 
@@ -193,17 +201,17 @@ def _format_noop(value):
 
 
 _METADATA = {
-    'loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive),
-    'inner_loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive),
+    'loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive, 'integer'),
+    'inner_loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive, 'integer'),
 
-    'duration': _MetadataInfo(_format_seconds, _NUMBER_TYPES, _is_positive),
-    'load_avg_1min': _MetadataInfo(_format_system_load, _NUMBER_TYPES, _is_positive),
+    'duration': _MetadataInfo(_format_seconds, _NUMBER_TYPES, _is_positive, 'second'),
+    'load_avg_1min': _MetadataInfo(_format_system_load, six.string_types + _NUMBER_TYPES, _is_positive, None),
 
-    'mem_max_rss': _MetadataInfo(_format_filesize, six.integer_types, _is_strictly_positive),
-    'unit': _MetadataInfo(_format_noop, str, _SAMPLE_FORMATTERS.__contains__),
+    'mem_max_rss': _MetadataInfo(_format_filesize, six.integer_types, _is_strictly_positive, 'byte'),
+    'unit': _MetadataInfo(_format_noop, six.string_types, _UNIT_FORMATTERS.__contains__, None),
 }
 
-_DEFAULT_METADATA_INFO = _MetadataInfo(_format_metadata, _METADATA_VALUE_TYPES, None)
+_DEFAULT_METADATA_INFO = _MetadataInfo(_format_metadata, _METADATA_VALUE_TYPES, None, None)
 
 
 def _get_metadata_formatter(name):
@@ -471,12 +479,18 @@ class Run(object):
         if value is None:
             raise KeyError("run has no metadata %r" % name)
 
+        info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
+        if info.unit:
+            metadata = dict(self._metadata, unit=info.unit)
+        else:
+            metadata = None
+
         if isinstance(value, int):
             value = float(value)
         elif not isinstance(value, float):
             raise TypeError("run metadata %r" % name)
 
-        return self._replace(samples=(value,))
+        return self._replace(samples=(value,), metadata=metadata)
 
     def _remove_all_metadata(self):
         name = self._get_metadata('name', None)
@@ -607,7 +621,7 @@ class Benchmark(object):
         if self._runs:
             run = self._runs[0]
             unit = run._get_metadata('unit', unit)
-        formatter = _SAMPLE_FORMATTERS[unit]
+        formatter = _UNIT_FORMATTERS[unit]
         return formatter(samples)
 
     def _format_sample(self, sample):

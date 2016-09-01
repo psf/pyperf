@@ -214,7 +214,7 @@ System metadata:
 Other:
 
 * ``perf_version``: Version of the ``perf`` module
-* ``unit``: Unit of samples, ``byte`` or ``second``
+* ``unit``: Unit of samples: ``byte``, ``integer`` or ``second``
 
 See the :func:`perf.metadata.collect_metadata` function.
 
