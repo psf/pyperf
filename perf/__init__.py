@@ -1,4 +1,5 @@
 from __future__ import print_function
+import collections
 import datetime
 import json
 import math
@@ -146,14 +147,15 @@ def _common_metadata(metadatas):
     return metadata
 
 
-def _metadata_formatter(value):
+def _format_metadata(value):
     if not isinstance(value, six.string_types):
         return str(value)
 
     return value
 
 
-def _format_load(load):
+def _format_system_load(load):
+    # Formatter for system load read from /proc/loadavg on Linux (ex: 0.12)
     if isinstance(load, (int, float)):
         return '%.2f' % load
     else:
@@ -173,36 +175,57 @@ def _parse_iso8601(date):
 
 
 _METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
+_NUMBER_TYPES = six.integer_types + (float,)
+
+# Registry of metadata keys
+_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value')
+
+def _is_strictly_positive(value):
+    return (value >= 1)
+
+
+def _is_positive(value):
+    return (value >= 0)
+
+
+def _format_noop(value):
+    return value
+
+
+_METADATA = {
+    'loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive),
+    'inner_loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive),
+
+    'duration': _MetadataInfo(_format_seconds, _NUMBER_TYPES, _is_positive),
+    'load_avg_1min': _MetadataInfo(_format_system_load, _NUMBER_TYPES, _is_positive),
+
+    'mem_max_rss': _MetadataInfo(_format_filesize, six.integer_types, _is_strictly_positive),
+    'unit': _MetadataInfo(_format_noop, str, _SAMPLE_FORMATTERS.__contains__),
+}
+
+_DEFAULT_METADATA_INFO = _MetadataInfo(_format_metadata, _METADATA_VALUE_TYPES, None)
 
 
 def _get_metadata_formatter(name):
-    if name in ('loops', 'inner_loops'):
-        return _format_number
-    if name == 'duration':
-        return _format_seconds
-    if name == 'load_avg_1min':
-        return _format_load
-    if name in ('mem_max_rss', 'mem_peak', 'mem_tracemalloc_peak'):
-        return _format_filesize
-    return _metadata_formatter
+    info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
+    return info.formatter
 
 
 def _check_metadata(name, value):
+    info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
+    check_value = info.check_value
+
     if not isinstance(name, six.string_types):
         raise TypeError("metadata name must be a string, got %s"
                         % type(name).__name__)
 
-    if not isinstance(value, _METADATA_VALUE_TYPES):
-        raise TypeError("metadata name must be str, got %s"
-                        % type(name).__name__)
+    if not isinstance(value, info.types):
+        raise ValueError("invalid metadata %r value type: got %r"
+                        % (name, type(value).__name__))
 
-    # FIXME: use a kind of registry for metadata values?
-    if name in ('loops', 'inner_loops', 'mem_max_rss', 'mem_peak', 'mem_tracemalloc_peak'):
-        if not(isinstance(value, six.integer_types) and value >= 1):
-            raise ValueError("%s must be an integer >= 1" % name)
-
-    if name == 'unit' and value not in _SAMPLE_FORMATTERS:
-        raise ValueError("unknown sample unit: %r" % value)
+    if info.check_value is not None and not info.check_value(value):
+        raise ValueError("invalid metadata %r value: %r"
+                        % (name, value))
 
 
 def _parse_metadata(metadata):
