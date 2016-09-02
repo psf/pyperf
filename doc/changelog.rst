@@ -1,8 +1,11 @@
 Changelog
 =========
 
-Version 0.7.6
--------------
+Version 0.7.6 (2016-09-02)
+--------------------------
+
+Tracking memory usage now works correctly on Linux and Windows. The calibration
+is now done in a the first worker process.
 
 * ``--tracemalloc`` and ``--track-memory`` now use the memory peak as the
   unique sample for the run.

@@ -931,7 +931,9 @@ class TextRunner:
                 stream.flush()
 
             if not args.loops:
-                # Use the first worker to calibrate the benchmark
+                # Use the first worker to calibrate the benchmark. Use a worker
+                # process rather than the main process because worker is a
+                # little bit more isolated and so should be more reliable.
                 first_run = worker_bench.get_runs()[0]
                 args.loops = first_run._get_loops()
                 if verbose:
