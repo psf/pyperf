@@ -31,6 +31,10 @@ Blocker for perf 1.0 (stable API)
 * Clarify run vs process in TextRunner CLI
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29
+* Enhance TextRunner or write a new one to support multiple benchmarks,
+  like pybench or pyperformance
+* Use case: compare performance of multiple python expressions to find the
+  fastest, common timeit use case
 
 
 Low priority
