@@ -637,14 +637,6 @@ class TextRunner:
             else:
                 value = sample
 
-            # The most accurate time has a resolution of 1 nanosecond. We
-            # compute a difference between two timer values. When formatted to
-            # decimal, the difference can show more than 9 decimal digits after
-            # the dot. Round manually to 10^-9 to produce more compact JSON
-            # files and don't pretend to have a better resolution than 1
-            # nanosecond.
-            value = round(value, 9)
-
             if not value and not(is_calibrate or is_warmup):
                 raise ValueError("sample function returned zero")
 

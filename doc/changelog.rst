@@ -9,6 +9,8 @@ Version 0.7.6
 * ``convert``: add ``--remove-all-metadata`` and ``--update-metadata`` commands
 * Add ``unit`` metadata: ``byte``, ``integer`` or ``second``.
 * Run samples can now be integer (not only float).
+* Don't round samples to 1 nanosecond anymore: with a large number of loops
+  (ex: 2^24), rounding reduces the accuracy.
 
 Version 0.7.5 (2016-09-01)
 --------------------------

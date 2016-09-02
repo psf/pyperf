@@ -431,11 +431,6 @@ TextRunner
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
    <pin-cpu>`.
 
-   Samples are rounded to 9 decimal digits using ``round(sample, 9)``. The most
-   accurate clock has a precision of 1 nanosecond. But a time difference can
-   produce more than 9 decimal digits after the dot, because of rounding issues
-   (time delta is stored in base 2, binary, but formatted in base 10, decimal).
-
    Methods:
 
    .. method:: bench_func(func, \*args)
