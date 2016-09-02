@@ -421,8 +421,8 @@ class TextRunner:
 
         # Command list arguments to call the program:
         # (sys.executable, sys.argv[0]) by default. For example,
-        # "python3 -m perf.timeit" sets program_args to
-        # (sys.executable, '-m', 'perf.timeit').
+        # "python3 -m perf timeit" sets program_args to
+        # (sys.executable, '-m', 'perf', 'timeit').
         self.program_args = (sys.executable, sys.argv[0])
 
         # Number of inner-loops of the sample_func for bench_sample_func()
