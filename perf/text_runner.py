@@ -11,6 +11,9 @@ import six
 import statistics   # Python 3.4+, or backport on Python 2.7
 
 import perf
+from perf._utils import (format_timedelta, format_seconds, format_number,
+                         format_cpu_list, parse_cpu_list,
+                         get_isolated_cpus, set_cpu_affinity)
 
 try:
     # Optional dependency
@@ -76,7 +79,7 @@ def _display_run(bench, run_index, run,
     if raw:
         warmups = [('%s (%s)'
                     % (bench._format_sample(raw_sample),
-                       perf._format_number(loops, 'loop')))
+                       format_number(loops, 'loop')))
                    for loops, raw_sample in run.warmups]
         samples = [sample * total_loops for sample in samples]
     else:
@@ -149,7 +152,7 @@ def _display_stats(bench, file=None):
     # Total duration
     duration = bench.get_total_duration()
     if duration:
-        print("Total duration: %s" % perf._format_seconds(duration),
+        print("Total duration: %s" % format_seconds(duration),
               file=file)
 
     # Start/End dates
@@ -168,18 +171,18 @@ def _display_stats(bench, file=None):
     print(file=file)
 
     # Number of samples
-    print("Number of runs: %s" % perf._format_number(nrun), file=file)
-    print("Total number of samples: %s" % perf._format_number(nsample),
+    print("Number of runs: %s" % format_number(nrun), file=file)
+    print("Total number of samples: %s" % format_number(nsample),
           file=file)
 
     nsample_per_run = bench._get_nsample_per_run()
-    text = perf._format_number(nsample_per_run)
+    text = format_number(nsample_per_run)
     if isinstance(nsample_per_run, float):
         text += ' (average)'
     print('Number of samples per run: %s' % text, file=file)
 
     nwarmup = bench._get_nwarmup()
-    text = perf._format_number(nwarmup)
+    text = format_number(nwarmup)
     if isinstance(nwarmup, float):
         text += ' (average)'
     print('Number of warmups per run: %s' % text, file=file)
@@ -189,18 +192,18 @@ def _display_stats(bench, file=None):
     inner_loops = bench._get_inner_loops()
     total_loops = loops * inner_loops
     if isinstance(total_loops, int):
-        text = perf._format_number(total_loops)
+        text = format_number(total_loops)
     else:
         text = "%s (average)" % total_loops
 
     if not(isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
-            loops = perf._format_number(loops, 'outter-loop')
+            loops = format_number(loops, 'outter-loop')
         else:
             loops = '%.1f outter-loops (average)'
 
         if isinstance(inner_loops, int):
-            inner_loops = perf._format_number(inner_loops, 'inner-loop')
+            inner_loops = format_number(inner_loops, 'inner-loop')
         else:
             inner_loops = "%.1f inner-loops (average)" % inner_loops
 
@@ -485,7 +488,7 @@ class TextRunner:
                             help='Minimum duration in seconds of a single '
                                  'sample, used to calibrate the number of '
                                  'loops (default: %s)'
-                            % perf._format_timedelta(min_time))
+                            % format_timedelta(min_time))
         parser.add_argument('--worker', action="store_true",
                             help='worker process, run the benchmark')
         parser.add_argument('-d', '--dump', action="store_true",
@@ -577,26 +580,26 @@ class TextRunner:
         if not cpus:
             # --affinity option is not set: detect isolated CPUs
             isolated = True
-            cpus = perf._get_isolated_cpus()
+            cpus = get_isolated_cpus()
             if not cpus:
                 # no isolated CPUs or unable to get the isolated CPUs
                 return
         else:
             isolated = False
-            cpus = perf._parse_cpu_list(cpus)
+            cpus = parse_cpu_list(cpus)
 
-        if perf._set_cpu_affinity(cpus):
+        if set_cpu_affinity(cpus):
             if self.args.verbose:
                 if isolated:
                     text = ("Pin process to isolated CPUs: %s"
-                            % perf._format_cpu_list(cpus))
+                            % format_cpu_list(cpus))
                 else:
                     text = ("Pin process to CPUs: %s"
-                            % perf._format_cpu_list(cpus))
+                            % format_cpu_list(cpus))
                 print(text, file=stream)
 
             if isolated:
-                self.args.affinity = perf._format_cpu_list(cpus)
+                self.args.affinity = format_cpu_list(cpus)
         else:
             if not isolated:
                 print("ERROR: CPU affinity not available.", file=sys.stderr)
@@ -651,7 +654,7 @@ class TextRunner:
                 if is_warmup or is_calibrate:
                     text = ('%s (%s: %s)'
                             % (text,
-                               perf._format_number(loops, 'loop'),
+                               format_number(loops, 'loop'),
                                bench._format_sample(raw_sample)))
                 text = ("%s %s: %s"
                         % (sample_name, index, text))

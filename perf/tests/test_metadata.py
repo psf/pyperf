@@ -5,6 +5,7 @@ import six
 
 import perf
 from perf import _collect_metadata as perf_metadata
+from perf._metadata import METADATA_VALUE_TYPES
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -31,14 +32,14 @@ class TestMetadata(unittest.TestCase):
             self.assertRegex(key, '^[a-z][a-z0-9_]+$')
 
             # test value
-            self.assertIsInstance(value, perf._METADATA_VALUE_TYPES)
+            self.assertIsInstance(value, METADATA_VALUE_TYPES)
             self.assertNotEqual(value, '')
             if isinstance(value, six.string_types):
                 self.assertEqual(value.strip(), value)
                 self.assertNotIn('\n', value)
 
     def test_collect_cpu_affinity(self):
-        with mock.patch('perf._get_isolated_cpus', return_value={1, 2, 3}):
+        with mock.patch('perf._collect_metadata.get_isolated_cpus', return_value={1, 2, 3}):
             metadata = {}
             perf_metadata.collect_cpu_affinity(metadata, {2, 3}, 4)
             self.assertEqual(metadata['cpu_affinity'],

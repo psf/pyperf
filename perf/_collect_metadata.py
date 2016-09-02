@@ -20,6 +20,7 @@ except ImportError:
     psutil = None
 
 import perf
+from perf._utils import format_timedelta, format_cpu_list, get_isolated_cpus
 
 
 def collect_python_metadata(metadata):
@@ -49,7 +50,7 @@ def collect_python_metadata(metadata):
         info = time.get_clock_info('perf_counter')
         metadata['timer'] = ('%s, resolution: %s'
                              % (info.implementation,
-                                perf._format_timedelta(info.resolution)))
+                                format_timedelta(info.resolution)))
     elif perf.perf_counter == time.clock:
         metadata['timer'] = 'time.clock()'
     elif perf.perf_counter == time.time:
@@ -244,7 +245,7 @@ def format_cpu_infos(infos, cpus):
         # compact output if all CPUs have the same info
         cpu = list(cpus)[0]
         info = infos[cpu]
-        cpus = perf._format_cpu_list(cpus)
+        cpus = format_cpu_list(cpus)
         text = '%s=%s' % (cpus, info)
     return text
 
@@ -381,8 +382,8 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     if set(cpu_affinity) == set(range(cpu_count)):
         return
 
-    isolated = perf._get_isolated_cpus()
-    text = perf._format_cpu_list(cpu_affinity)
+    isolated = get_isolated_cpus()
+    text = format_cpu_list(cpu_affinity)
     if isolated and set(cpu_affinity) <= set(isolated):
         text = '%s (isolated)' % text
     metadata['cpu_affinity'] = text

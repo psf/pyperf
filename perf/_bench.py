@@ -9,8 +9,9 @@ import sys
 import six
 import statistics
 
-from perf._metadata import NUMBER_TYPES, _UNIT_FORMATTERS, parse_metadata, Metadata, _common_metadata, _METADATA, _DEFAULT_METADATA_INFO
-from perf._utils import _parse_iso8601
+from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
+                            _common_metadata, get_metadata_info)
+from perf._utils import parse_iso8601, UNIT_FORMATTERS
 
 
 # Format format history:
@@ -164,7 +165,7 @@ class Run(object):
         date = self._get_metadata('date', None)
         if not date:
             return None
-        return _parse_iso8601(date)
+        return parse_iso8601(date)
 
     def _as_json(self, common_metadata):
         data = {'samples': self._samples}
@@ -218,7 +219,7 @@ class Run(object):
         if value is None:
             raise KeyError("run has no metadata %r" % name)
 
-        info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
+        info = get_metadata_info(name)
         if info.unit:
             metadata = dict(self._metadata, unit=info.unit)
         else:
@@ -358,7 +359,7 @@ class Benchmark(object):
         if self._runs:
             run = self._runs[0]
             unit = run._get_metadata('unit', unit)
-        formatter = _UNIT_FORMATTERS[unit]
+        formatter = UNIT_FORMATTERS[unit]
         return formatter(samples)
 
     def _format_sample(self, sample):

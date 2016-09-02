@@ -238,7 +238,7 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v', '--affinity=3,7'])
 
-        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
+        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
             with tests.capture_stdout() as stdout:
                 runner._cpu_affinity()
 
@@ -251,8 +251,8 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
-        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf._get_isolated_cpus', return_value=[1, 2]):
+        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('perf.text_runner.get_isolated_cpus', return_value=[1, 2]):
                 with tests.capture_stdout() as stdout:
                     runner._cpu_affinity()
 
@@ -265,8 +265,8 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         runner = perf.text_runner.TextRunner('bench')
         runner.parse_args(['-v'])
 
-        with mock.patch('perf._set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf._get_isolated_cpus', return_value=None):
+        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('perf.text_runner.get_isolated_cpus', return_value=None):
                 runner._cpu_affinity()
 
         self.assertFalse(runner.args.affinity)

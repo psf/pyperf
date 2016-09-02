@@ -7,6 +7,8 @@ import os.path
 import sys
 
 from perf._metadata import _common_metadata
+from perf._utils import (format_timedelta, format_seconds, parse_run_list,
+                         get_isolated_cpus, set_cpu_affinity)
 import perf.text_runner
 
 
@@ -553,16 +555,17 @@ def cmd_compare(args):
 
 
 def cmd_metadata():
-    from perf import _metadata as perf_metadata
+    from perf._metadata import Metadata
+    from perf._collect_metadata import collect_metadata
 
-    cpus = perf._get_isolated_cpus()
+    cpus = get_isolated_cpus()
     if cpus:
-        perf._set_cpu_affinity(cpus)
-        # ignore if _set_cpu_affinity() failed
+        set_cpu_affinity(cpus)
+        # ignore if set_cpu_affinity() failed
 
     metadata = {}
-    perf_metadata.collect_metadata(metadata)
-    metadata = {name: perf.Metadata(name, value)
+    collect_metadata(metadata)
+    metadata = {name: Metadata(name, value)
                 for name, value in metadata.items()}
     perf.text_runner._display_metadata(metadata)
 
@@ -674,7 +677,7 @@ def cmd_stats(args):
 
                 duration = suite.get_total_duration()
                 print("Number of benchmarks: %s" % len(suite))
-                print("Total duration: %s" % perf._format_seconds(duration))
+                print("Total duration: %s" % format_seconds(duration))
                 dates = suite.get_dates()
                 if dates:
                     start, end = dates
@@ -765,7 +768,7 @@ def cmd_convert(args):
             runs = args.exclude_runs
             include = False
         try:
-            only_runs = perf._parse_run_list(runs)
+            only_runs = parse_run_list(runs)
         except ValueError as exc:
             print("ERROR: %s (runs: %r)" % (exc, runs), file=sys.stderr)
             sys.exit(1)
@@ -853,7 +856,7 @@ def cmd_slowest(args):
             duration, bench = item
             name = get_benchmark_name(bench)
             print("#%s: %s (%s)"
-                  % (index, name, perf._format_timedelta(duration)))
+                  % (index, name, format_timedelta(duration)))
 
 
 def main():

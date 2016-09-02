@@ -13,7 +13,7 @@ import statistics
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
-def _format_timedeltas(values):
+def format_timedeltas(values):
     ref_value = abs(values[0])
     for i in range(2, -9, -1):
         if ref_value >= 10.0 ** i:
@@ -30,11 +30,11 @@ def _format_timedeltas(values):
     return tuple(fmt % (value * factor,) for value in values)
 
 
-def _format_timedelta(value):
-    return _format_timedeltas((value,))[0]
+def format_timedelta(value):
+    return format_timedeltas((value,))[0]
 
 
-def _format_filesize(size):
+def format_filesize(size):
     if size < 10 * 1024:
         if size != 1:
             return '%.0f bytes' % size
@@ -47,13 +47,13 @@ def _format_filesize(size):
     return '%.1f kB' % (size / 1024.0)
 
 
-def _format_filesizes(sizes):
-    return tuple(_format_filesize(size) for size in sizes)
+def format_filesizes(sizes):
+    return tuple(format_filesize(size) for size in sizes)
 
 
-def _format_seconds(seconds):
+def format_seconds(seconds):
     if seconds < 1.0:
-        return _format_timedelta(seconds)
+        return format_timedelta(seconds)
 
     mins, secs = divmod(seconds, 60)
     if mins:
@@ -62,7 +62,7 @@ def _format_seconds(seconds):
         return '%.1f sec' % secs
 
 
-def _format_number(number, unit=None, units=None):
+def format_number(number, unit=None, units=None):
     plural = (abs(number) > 1)
     if number >= 10000:
         pow10 = 0
@@ -96,19 +96,18 @@ def _format_number(number, unit=None, units=None):
     else:
         return '%s %s' % (number, unit)
 
-def _format_integers(numbers):
-    return tuple(_format_number(number) for number in numbers)
+def format_integers(numbers):
+    return tuple(format_number(number) for number in numbers)
 
 
-_DEFAULT_UNIT = 'second'
-_UNIT_FORMATTERS = {
-    'second': _format_timedeltas,
-    'byte': _format_filesizes,
-    'integer': _format_integers,
+UNIT_FORMATTERS = {
+    'second': format_timedeltas,
+    'byte': format_filesizes,
+    'integer': format_integers,
 }
 
 
-def _parse_iso8601(date):
+def parse_iso8601(date):
     if '.' in date:
         date, floatpart = date.split('.', 1)
         floatpart = float('.' + floatpart)
@@ -133,7 +132,7 @@ _T_DIST_95_CONF_LEVELS = [0, 12.706, 4.303, 3.182, 2.776,
                           2.042]
 
 
-def _tdist95conf_level(df):
+def tdist95conf_level(df):
     """Approximate the 95% confidence interval for Student's T distribution.
 
     Given the degrees of freedom, returns an approximation to the 95%
@@ -164,7 +163,7 @@ def _tdist95conf_level(df):
     return _T_DIST_95_CONF_LEVELS[df]
 
 
-def _pooled_sample_variance(sample1, sample2):
+def pooled_sample_variance(sample1, sample2):
     """Find the pooled sample variance for two samples.
 
     Args:
@@ -184,7 +183,7 @@ def _pooled_sample_variance(sample1, sample2):
     return (math.fsum(squares1) + math.fsum(squares2)) / float(deg_freedom)
 
 
-def _tscore(sample1, sample2):
+def tscore(sample1, sample2):
     """Calculate a t-test score for the difference between two samples.
 
     Args:
@@ -196,7 +195,7 @@ def _tscore(sample1, sample2):
     """
     if len(sample1) != len(sample2):
         raise ValueError("different number of samples")
-    error = _pooled_sample_variance(sample1, sample2) / len(sample1)
+    error = pooled_sample_variance(sample1, sample2) / len(sample1)
     # FIXME: use median?
     diff = statistics.mean(sample1) - statistics.mean(sample2)
     return diff / math.sqrt(error * 2)
@@ -217,12 +216,12 @@ def is_significant(sample1, sample2):
         two-sample T test.
     """
     deg_freedom = len(sample1) + len(sample2) - 2
-    critical_value = _tdist95conf_level(deg_freedom)
-    t_score = _tscore(sample1, sample2)
+    critical_value = tdist95conf_level(deg_freedom)
+    t_score = tscore(sample1, sample2)
     return (abs(t_score) >= critical_value, t_score)
 
 
-def _format_cpu_list(cpus):
+def format_cpu_list(cpus):
     cpus = sorted(cpus)
     parts = []
     first = None
@@ -244,7 +243,7 @@ def _format_cpu_list(cpus):
     return ','.join(parts)
 
 
-def _parse_run_list(run_list):
+def parse_run_list(run_list):
     run_list = run_list.strip()
 
     runs = []
@@ -271,7 +270,7 @@ def _parse_run_list(run_list):
     return [run - 1 for run in runs]
 
 
-def _parse_cpu_list(cpu_list):
+def parse_cpu_list(cpu_list):
     cpu_list = cpu_list.strip()
     if not cpu_list:
         return
@@ -290,7 +289,7 @@ def _parse_cpu_list(cpu_list):
     return cpus
 
 
-def _get_isolated_cpus():
+def get_isolated_cpus():
     path = '/sys/devices/system/cpu/isolated'
     try:
         if six.PY3:
@@ -303,10 +302,10 @@ def _get_isolated_cpus():
         # missing file
         return
 
-    return _parse_cpu_list(isolated)
+    return parse_cpu_list(isolated)
 
 
-def _set_cpu_affinity(cpus):
+def set_cpu_affinity(cpus):
     # Python 3.3 or newer?
     if hasattr(os, 'sched_setaffinity'):
         os.sched_setaffinity(0, cpus)

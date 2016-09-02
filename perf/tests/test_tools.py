@@ -5,6 +5,8 @@ import sys
 import six
 
 import perf
+from perf._utils import format_filesize
+from perf import _utils as utils
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -64,14 +66,18 @@ class TestStatistics(unittest.TestCase):
 
 class TestTools(unittest.TestCase):
     def test_parse_iso8601(self):
-        self.assertEqual(perf._parse_iso8601('2016-07-20T14:06:07'),
+        self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07'),
                          datetime.datetime(2016, 7, 20, 14, 6, 7))
-        self.assertEqual(perf._parse_iso8601('2016-07-20T14:06:07.608319'),
+        self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07.608319'),
                          datetime.datetime(2016, 7, 20, 14, 6, 7, 608319))
 
     def test_timedelta(self):
-        def fmt_delta(seconds):
-            return perf._format_timedelta(seconds)
+        self.assertEqual(utils.format_seconds(316e-4), "31.6 ms")
+        self.assertEqual(utils.format_seconds(15.9), "3 min 15 sec")
+        self.assertEqual(utils.format_seconds(3 * 60 + 15.9), "3 min 15 sec")
+
+    def test_timedelta(self):
+        fmt_delta = utils.format_timedelta
 
         self.assertEqual(fmt_delta(555222), "555222 sec")
 
@@ -90,74 +96,78 @@ class TestTools(unittest.TestCase):
 
     def test_timedelta_stdev(self):
         def fmt_stdev(seconds, stdev):
-            return "%s +- %s" % perf._format_timedeltas((seconds, stdev))
+            return "%s +- %s" % utils.format_timedeltas((seconds, stdev))
 
         self.assertEqual(fmt_stdev(58123, 192), "58123 sec +- 192 sec")
         self.assertEqual(fmt_stdev(100e-3, 0), "100 ms +- 0 ms")
         self.assertEqual(fmt_stdev(102e-3, 3e-3), "102 ms +- 3 ms")
 
     def test_format_number(self):
+        format_number = utils.format_number
+
         # plural
-        self.assertEqual(perf._format_number(0, 'unit'), '0 unit')
-        self.assertEqual(perf._format_number(1, 'unit'), '1 unit')
-        self.assertEqual(perf._format_number(2, 'unit'), '2 units')
-        self.assertEqual(perf._format_number(123, 'unit'), '123 units')
+        self.assertEqual(format_number(0, 'unit'), '0 unit')
+        self.assertEqual(format_number(1, 'unit'), '1 unit')
+        self.assertEqual(format_number(2, 'unit'), '2 units')
+        self.assertEqual(format_number(123, 'unit'), '123 units')
 
         # powers of 10
-        self.assertEqual(perf._format_number(10 ** 3, 'unit'),
+        self.assertEqual(format_number(10 ** 3, 'unit'),
                          '1000 units')
-        self.assertEqual(perf._format_number(10 ** 4, 'unit'),
+        self.assertEqual(format_number(10 ** 4, 'unit'),
                          '10^4 units')
-        self.assertEqual(perf._format_number(10 ** 4 + 1, 'unit'),
+        self.assertEqual(format_number(10 ** 4 + 1, 'unit'),
                          '10001 units')
-        self.assertEqual(perf._format_number(33 * 10 ** 4, 'unit'),
+        self.assertEqual(format_number(33 * 10 ** 4, 'unit'),
                          '330000 units')
 
         # powers of 10
-        self.assertEqual(perf._format_number(2 ** 10, 'unit'),
+        self.assertEqual(format_number(2 ** 10, 'unit'),
                          '1024 units')
-        self.assertEqual(perf._format_number(2 ** 15, 'unit'),
+        self.assertEqual(format_number(2 ** 15, 'unit'),
                          '2^15 units')
-        self.assertEqual(perf._format_number(2 ** 15),
+        self.assertEqual(format_number(2 ** 15),
                          '2^15')
-        self.assertEqual(perf._format_number(2 ** 10 + 1, 'unit'),
+        self.assertEqual(format_number(2 ** 10 + 1, 'unit'),
                          '1025 units')
 
     def test_format_filesize(self):
-        self.assertEqual(perf._format_filesize(0),
+        self.assertEqual(format_filesize(0),
                          '0 bytes')
-        self.assertEqual(perf._format_filesize(1),
+        self.assertEqual(format_filesize(1),
                          '1 byte')
-        self.assertEqual(perf._format_filesize(10 * 1024),
+        self.assertEqual(format_filesize(10 * 1024),
                          '10.0 kB')
-        self.assertEqual(perf._format_filesize(12.4 * 1024 * 1024),
+        self.assertEqual(format_filesize(12.4 * 1024 * 1024),
                          '12.4 MB')
 
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
-        self.assertIsNone(perf._parse_cpu_list(''))
-        self.assertEqual(perf._parse_cpu_list('0'),
+        parse_cpu_list = utils.parse_cpu_list
+
+        self.assertIsNone(parse_cpu_list(''))
+        self.assertEqual(parse_cpu_list('0'),
                          [0])
-        self.assertEqual(perf._parse_cpu_list('0-1,5-6'),
+        self.assertEqual(parse_cpu_list('0-1,5-6'),
                          [0, 1, 5, 6])
-        self.assertEqual(perf._parse_cpu_list('1,3,7'),
+        self.assertEqual(parse_cpu_list('1,3,7'),
                          [1, 3, 7])
 
         # tolerate spaces
-        self.assertEqual(perf._parse_cpu_list(' 1 , 2 '),
+        self.assertEqual(parse_cpu_list(' 1 , 2 '),
                          [1, 2])
 
         # errors
-        self.assertRaises(ValueError, perf._parse_cpu_list, 'x')
-        self.assertRaises(ValueError, perf._parse_cpu_list, '1,')
+        self.assertRaises(ValueError, parse_cpu_list, 'x')
+        self.assertRaises(ValueError, parse_cpu_list, '1,')
 
     def test_format_cpu_list(self):
-        self.assertEqual(perf._format_cpu_list([0]),
+        self.assertEqual(utils.format_cpu_list([0]),
                          '0')
-        self.assertEqual(perf._format_cpu_list([0, 1, 5, 6]),
+        self.assertEqual(utils.format_cpu_list([0, 1, 5, 6]),
                          '0-1,5-6')
-        self.assertEqual(perf._format_cpu_list([1, 3, 7]),
+        self.assertEqual(utils.format_cpu_list([1, 3, 7]),
                          '1,3,7')
 
     def test_get_isolated_cpus(self):
@@ -167,7 +177,7 @@ class CPUToolsTests(unittest.TestCase):
             with mock.patch(BUILTIN_OPEN) as mock_open:
                 mock_file = mock_open.return_value
                 mock_file.readline.return_value = line
-                return perf._get_isolated_cpus()
+                return utils.get_isolated_cpus()
 
         # no isolated CPU
         self.assertIsNone(check_get(''))
@@ -177,7 +187,7 @@ class CPUToolsTests(unittest.TestCase):
 
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
         with mock.patch(BUILTIN_OPEN, side_effect=OSError):
-            self.assertIsNone(perf._get_isolated_cpus())
+            self.assertIsNone(utils.get_isolated_cpus())
 
 
 class MiscTests(unittest.TestCase):
@@ -191,24 +201,26 @@ class MiscTests(unittest.TestCase):
         self.assertIsInstance(jit, bool)
 
     def test_parse_run_list(self):
+        parse_run_list = utils.parse_run_list
+
         with self.assertRaises(ValueError):
-            perf._parse_run_list('')
+            parse_run_list('')
         with self.assertRaises(ValueError):
-            perf._parse_run_list('0')
-        self.assertEqual(perf._parse_run_list('1'),
+            parse_run_list('0')
+        self.assertEqual(parse_run_list('1'),
                          [0])
-        self.assertEqual(perf._parse_run_list('1-2,5-6'),
+        self.assertEqual(parse_run_list('1-2,5-6'),
                          [0, 1, 4, 5])
-        self.assertEqual(perf._parse_run_list('1,3,7'),
+        self.assertEqual(parse_run_list('1,3,7'),
                          [0, 2, 6])
 
         # tolerate spaces
-        self.assertEqual(perf._parse_run_list(' 1 , 2 '),
+        self.assertEqual(parse_run_list(' 1 , 2 '),
                          [0, 1])
 
         # errors
-        self.assertRaises(ValueError, perf._parse_run_list, 'x')
-        self.assertRaises(ValueError, perf._parse_run_list, '1,')
+        self.assertRaises(ValueError, parse_run_list, 'x')
+        self.assertRaises(ValueError, parse_run_list, '1,')
 
     def test_setup_version(self):
         import setup

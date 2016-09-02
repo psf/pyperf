@@ -3,10 +3,11 @@ from __future__ import division, print_function, absolute_import
 import collections
 import six
 
-from perf import _format_number, _format_seconds, _format_filesize, _UNIT_FORMATTERS
+from perf._utils import (format_number, format_seconds, format_filesize,
+                         UNIT_FORMATTERS)
 
 
-_METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
+METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
 NUMBER_TYPES = six.integer_types + (float,)
 
 # Registry of metadata keys
@@ -27,14 +28,14 @@ def _common_metadata(metadatas):
     return metadata
 
 
-def _format_metadata(value):
+def format_metadata(value):
     if not isinstance(value, six.string_types):
         return str(value)
 
     return value
 
 
-def _format_system_load(load):
+def format_system_load(load):
     # Formatter for system load read from /proc/loadavg on Linux (ex: 0.12)
     if isinstance(load, (int, float)):
         return '%.2f' % load
@@ -43,11 +44,11 @@ def _format_system_load(load):
         return load
 
 
-def _is_strictly_positive(value):
+def is_strictly_positive(value):
     return (value >= 1)
 
 
-def _is_positive(value):
+def is_positive(value):
     # special case for load_avg_1min on perf < 0.7.2
     if isinstance(value, six.string_types):
         return True
@@ -55,26 +56,30 @@ def _is_positive(value):
     return (value >= 0)
 
 
-def _format_noop(value):
+def format_noop(value):
     return value
 
 
-_METADATA = {
-    'loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive, 'integer'),
-    'inner_loops': _MetadataInfo(_format_number, six.integer_types, _is_strictly_positive, 'integer'),
+METADATA = {
+    'loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
+    'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
 
-    'duration': _MetadataInfo(_format_seconds, NUMBER_TYPES, _is_positive, 'second'),
-    'load_avg_1min': _MetadataInfo(_format_system_load, six.string_types + NUMBER_TYPES, _is_positive, None),
+    'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
+    'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None),
 
-    'mem_max_rss': _MetadataInfo(_format_filesize, six.integer_types, _is_strictly_positive, 'byte'),
-    'unit': _MetadataInfo(_format_noop, six.string_types, _UNIT_FORMATTERS.__contains__, None),
+    'mem_max_rss': _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte'),
+    'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
 }
 
-_DEFAULT_METADATA_INFO = _MetadataInfo(_format_metadata, _METADATA_VALUE_TYPES, None, None)
+DEFAULT_METADATA_INFO = _MetadataInfo(format_metadata, METADATA_VALUE_TYPES, None, None)
 
 
-def _check_metadata(name, value):
-    info = _METADATA.get(name, _DEFAULT_METADATA_INFO)
+def get_metadata_info(name):
+    return METADATA.get(name, DEFAULT_METADATA_INFO)
+
+
+def check_metadata(name, value):
+    info = get_metadata_info(name)
 
     if not isinstance(name, six.string_types):
         raise TypeError("metadata name must be a string, got %s"
@@ -92,7 +97,7 @@ def _check_metadata(name, value):
 def parse_metadata(metadata):
     result = {}
     for name, value in metadata.items():
-        _check_metadata(name, value)
+        check_metadata(name, value)
         if isinstance(value, six.string_types):
             if '\n' in value or '\r' in value:
                 raise ValueError("newline characters are not allowed "
@@ -118,7 +123,7 @@ class Metadata(object):
         return self._value
 
     def __str__(self):
-        info = _METADATA.get(self._name, _DEFAULT_METADATA_INFO)
+        info = get_metadata_info(self._name)
         return info.formatter(self._value)
 
     def __eq__(self, other):
