@@ -59,6 +59,7 @@ def is_positive(value):
 def format_noop(value):
     return value
 
+BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte')
 
 METADATA = {
     'loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
@@ -67,7 +68,9 @@ METADATA = {
     'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
     'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None),
 
-    'mem_max_rss': _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte'),
+    'mem_max_rss': BYTES,
+    'mem_peak_pagefile_usage': BYTES,
+
     'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
 }
 
