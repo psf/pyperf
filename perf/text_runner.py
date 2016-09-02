@@ -13,7 +13,8 @@ import statistics   # Python 3.4+, or backport on Python 2.7
 import perf
 from perf._utils import (format_timedelta, format_seconds, format_number,
                          format_cpu_list, parse_cpu_list,
-                         get_isolated_cpus, set_cpu_affinity)
+                         get_isolated_cpus, set_cpu_affinity,
+                         MS_WINDOWS)
 
 try:
     # Optional dependency
@@ -551,7 +552,10 @@ class TextRunner:
                 sys.exit(1)
 
         if args.track_memory:
-            from perf._memory import check_tracking_memory
+            if MS_WINDOWS:
+                from perf._win_memory import check_tracking_memory
+            else:
+                from perf._memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
                 print("ERROR: unable to track the memory usage "
@@ -698,11 +702,12 @@ class TextRunner:
             calibrate_warmups = None
 
         if args.track_memory:
-            from perf._memory import PeakMemoryUsageThread
-            mem_thread = PeakMemoryUsageThread()
-            mem_thread.start()
-        else:
-            mem_thread = None
+            if MS_WINDOWS:
+                from perf._win_memory import get_peak_pagefile_usage
+            else:
+                from perf._memory import PeakMemoryUsageThread
+                mem_thread = PeakMemoryUsageThread()
+                mem_thread.start()
 
         if args.tracemalloc:
             import tracemalloc
@@ -732,9 +737,13 @@ class TextRunner:
             warmups = None
             samples = (float(traced_peak),)
 
-        if mem_thread is not None:
-            mem_thread.stop()
-            mem_peak = mem_thread.peak_usage
+        if args.track_memory:
+            if MS_WINDOWS:
+                mem_peak = get_peak_pagefile_usage()
+            else:
+                mem_thread.stop()
+                mem_peak = mem_thread.peak_usage
+
             if not mem_peak:
                 raise RuntimeError("failed to get the memory peak usage")
 

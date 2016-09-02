@@ -10,6 +10,8 @@ import six
 import statistics
 
 
+MS_WINDOWS = (sys.platform == 'win32')
+
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
