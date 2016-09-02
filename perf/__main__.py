@@ -6,6 +6,7 @@ import errno
 import os.path
 import sys
 
+from perf._metadata import _common_metadata
 import perf.text_runner
 
 
@@ -293,7 +294,7 @@ def _display_common_metadata(metadatas):
         # don't display name as metadata, it's already displayed
         metadata.pop('name', None)
 
-    common_metadata = perf._common_metadata(metadatas)
+    common_metadata = _common_metadata(metadatas)
     if common_metadata:
         perf.text_runner._display_metadata(common_metadata,
                                            header='Common metadata:')
