@@ -865,7 +865,13 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, cmd)
 
-        return _bench_suite_from_subprocess(cmd)
+        suite = _bench_suite_from_subprocess(cmd)
+
+        benchmarks = suite.get_benchmarks()
+        if len(benchmarks) != 1:
+            raise ValueError("worker produced %s benchmarks instead of 1"
+                             % len(benchmarks))
+        return benchmarks[0]
 
     def _display_result(self, bench, check_unstable=True):
         stream = self._stream()
@@ -912,20 +918,9 @@ class TextRunner:
         stream = self._stream()
         nprocess = args.processes
 
-        if not args.loops:
-            args.loops, warmups = self._calibrate(bench, sample_func)
-            # drop warmup samples
-
         for process in range(nprocess):
-            run_suite = self._spawn_worker()
-
-            run_benchmarks = run_suite.get_benchmarks()
-            if len(run_benchmarks) != 1:
-                raise ValueError("worker produced %s benchmarks instead of 1"
-                                 % len(run_benchmarks))
-            run_bench = run_benchmarks[0]
-
-            bench.add_runs(run_bench)
+            worker_bench = self._spawn_worker()
+            bench.add_runs(worker_bench)
 
             if verbose:
                 run = bench.get_runs()[-1]
@@ -934,6 +929,14 @@ class TextRunner:
             elif not quiet:
                 print(".", end='', file=stream)
                 stream.flush()
+
+            if not args.loops:
+                # Use the first worker to calibrate the benchmark
+                first_run = worker_bench.get_runs()[0]
+                args.loops = first_run._get_loops()
+                if verbose:
+                    print("Calibration: use %s loops" % format_number(args.loops),
+                          file=stream)
 
         if not quiet:
             print(file=stream)
