@@ -4,7 +4,7 @@ import textwrap
 import six
 
 import perf
-from perf import _metadata as perf_metadata
+from perf import _collect_metadata as perf_metadata
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -163,8 +163,8 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
-            with mock.patch('perf._metadata.get_cpu_boost', return_value=None):
+        with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
+            with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
                 metadata = {}
                 cpu_freq = perf_metadata.collect_cpu_config(metadata, [0, 2])
                 self.assertEqual(metadata['cpu_config'],
@@ -184,7 +184,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
+        with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 2])
             perf_metadata.collect_cpu_model(metadata)
@@ -201,7 +201,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._metadata.open', create=True, side_effect=mock_open):
+        with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 159])
             perf_metadata.collect_cpu_model(metadata)

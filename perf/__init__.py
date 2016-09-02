@@ -319,10 +319,10 @@ class Run(object):
         self._samples = tuple(samples)
 
         if collect_metadata:
-            from perf import _metadata as perf_metadata
+            from perf._collect_metadata import collect_metadata as collect_func
 
             metadata2 = {}
-            perf_metadata.collect_metadata(metadata2)
+            collect_func(metadata2)
 
             if metadata is not None:
                 metadata2.update(metadata)
