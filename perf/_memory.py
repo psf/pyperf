@@ -1,13 +1,53 @@
 from __future__ import division, print_function, absolute_import
 
+import sys
 import threading
 import time
 
-try:
-    import win32api
-    import win32process
-except ImportError:
-    win32api = None
+
+MS_WINDOWS = (sys.platform == 'win32')
+if MS_WINDOWS:
+    try:
+        # Use Python 3.3 _winapi module if available
+        from _winapi import GetCurrentProcess
+    except ImportError:
+        GetCurrentProcess = None
+
+    try:
+        import ctypes
+        from ctypes import wintypes
+    except ImportError:
+        GetProcessMemoryInfo = None
+    else:
+        if GetCurrentProcess is None:
+            GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
+            GetCurrentProcess.argtypes = []
+            GetCurrentProcess.restype = wintypes.HANDLE
+
+        SIZE_T = ctypes.c_size_t
+
+        class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
+            _fields_ = [
+                ('cb', wintypes.DWORD),
+                ('PageFaultCount', wintypes.DWORD),
+                ('PeakWorkingSetSize', SIZE_T),
+                ('WorkingSetSize', SIZE_T),
+                ('QuotaPeakPagedPoolUsage', SIZE_T),
+                ('QuotaPagedPoolUsage', SIZE_T),
+                ('QuotaPeakNonPagedPoolUsage', SIZE_T),
+                ('QuotaNonPagedPoolUsage', SIZE_T),
+                ('PagefileUsage', SIZE_T),
+                ('PeakPagefileUsage', SIZE_T),
+                ('PrivateUsage', SIZE_T),
+            ]
+
+        GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+        GetProcessMemoryInfo.argtypes = [
+            wintypes.HANDLE,
+            ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
+            wintypes.DWORD,
+        ]
+        GetProcessMemoryInfo.restype = wintypes.BOOL
 
 
 # Code to parse Linux /proc/%d/smaps files.
@@ -36,15 +76,21 @@ class PeakMemoryUsageThread(threading.Thread):
         self._done = threading.Event()
         self.sleep = 0.001   # 1 ms
         self._quit = False
-        if win32api is not None:
-            self._handle = win32api.GetCurrentProcess()
+        if MS_WINDOWS:
+            self._handle = GetCurrentProcess()
 
     def get(self):
-        if win32api is not None:
+        if MS_WINDOWS:
             # FIXME: do we really need a thread since the kernel already
             # computes the maximum for us?
-            pmi = win32process.GetProcessMemoryInfo(self._handle)
-            usage = pmi["PeakPagefileUsage"]
+            counters = PROCESS_MEMORY_COUNTERS_EX()
+            ret = GetProcessMemoryInfo(self._handle,
+                                       ctypes.byref(counters),
+                                       ctypes.sizeof(counters))
+            if not ret:
+                raise ctypes.WinError()
+
+            usage = counters.PeakPagefileUsage
         else:
             usage = read_smap_file()
 
@@ -69,8 +115,10 @@ def check_tracking_memory():
     # FIXME: better error message if win32api is not available on Windows
     # FIXME: better error message on platforms != Linux and != Windows
     # FIXME: better error message on platforms on Linux < 2.6.16
-    if win32api is not None:
-        mem_thread.get()
+    if MS_WINDOWS:
+        if GetProcessMemoryInfo is None:
+            return ("missing ctypes module, "
+                    "unable to get GetProcessMemoryInfo()")
     else:
         try:
             mem_thread.get()
