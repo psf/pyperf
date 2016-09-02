@@ -20,7 +20,10 @@ except ImportError:
     psutil = None
 
 import perf
-from perf._utils import format_timedelta, format_cpu_list, get_isolated_cpus
+from perf._utils import (format_timedelta, format_cpu_list,
+                         get_isolated_cpus, MS_WINDOWS)
+if MS_WINDOWS:
+    from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
 
 def collect_python_metadata(metadata):
@@ -174,12 +177,19 @@ def collect_system_metadata(metadata):
     if hostname:
         metadata['hostname'] = hostname
 
+
+def collect_memory_metadata(metadata):
     if resource is not None:
         usage = resource.getrusage(resource.RUSAGE_SELF)
         max_rss = usage.ru_maxrss
         if max_rss:
             metadata['mem_max_rss'] = max_rss * 1024
 
+    # On Windows, use GetProcessMemoryInfo() if available
+    if MS_WINDOWS and not check_tracking_memory():
+        usage = get_peak_pagefile_usage()
+        if usage:
+            metadata['mem_peak_pagefile_usage'] = usage
 
 def get_cpu_boost(cpu):
     if not get_cpu_boost.working:
@@ -435,6 +445,7 @@ def collect_metadata(metadata):
 
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)
+    collect_memory_metadata(metadata)
     collect_cpu_metadata(metadata)
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is

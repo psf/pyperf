@@ -187,6 +187,9 @@ Memory metadata:
 
 * ``mem_max_rss``: Maximum resident set size in bytes (``int``). On Linux,
   kernel 2.6.32 or newer is required.
+* ``mem_peak_pagefile_usage``: Get ``PeakPagefileUsage`` of
+  ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
+  Commit Charge during the lifetime of this process. Only available on Windows.
 
 CPU metadata:
 

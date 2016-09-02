@@ -6,6 +6,9 @@ Version 0.7.6
 
 * ``--tracemalloc`` and ``--track-memory`` now use the memory peak as the
   unique sample for the run.
+* Rewrite code to track memory usage on Windows. Add
+  ``mem_peak_pagefile_usage`` metadata. The ``win32api`` module is no more
+  needed, the code now uses the ``ctypes`` module.
 * ``convert``: add ``--remove-all-metadata`` and ``--update-metadata`` commands
 * Add ``unit`` metadata: ``byte``, ``integer`` or ``second``.
 * Run samples can now be integer (not only float).
