@@ -1,7 +1,6 @@
 import datetime
 import os.path
 import sys
-import tempfile
 
 import six
 

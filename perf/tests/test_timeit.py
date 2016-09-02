@@ -137,7 +137,6 @@ class TestTimeit(unittest.TestCase):
                 self.assertTrue(MIN_SAMPLE <= ms <= MAX_SAMPLE, ms)
 
     def test_append(self):
-        loops = 4
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
             args = [sys.executable,

@@ -166,7 +166,7 @@ class CpuFunctionsTests(unittest.TestCase):
         with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
             with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
                 metadata = {}
-                cpu_freq = perf_metadata.collect_cpu_config(metadata, [0, 2])
+                perf_metadata.collect_cpu_config(metadata, [0, 2])
                 self.assertEqual(metadata['cpu_config'],
                                  '0=driver:DRIVER, governor:GOVERNOR')
 

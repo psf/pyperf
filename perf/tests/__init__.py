@@ -5,11 +5,13 @@ import sys
 import tempfile
 
 try:
-    from unittest import mock   # Python 3.3
+    # Python 3.3
+    from unittest import mock   # noqa
 except ImportError:
     import mock   # noqa
 try:
-    import unittest2 as unittest   # Python 2.7
+    # Python 2.7
+    import unittest2 as unittest   # noqa
 except ImportError:
     import unittest   # noqa
 

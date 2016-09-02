@@ -1,4 +1,5 @@
-from __future__ import print_function
+from __future__ import division, print_function, absolute_import
+
 import argparse
 import errno
 import math
@@ -683,7 +684,6 @@ class TextRunner:
         loops = args.loops
         metadata = dict(self.metadata)
         start_time = perf.monotonic_clock()
-        stream = self._stream()
 
         calibrate = (not loops)
         if calibrate:
