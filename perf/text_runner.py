@@ -23,7 +23,7 @@ except ImportError:
     psutil = None
 
 
-def _bench_suite_from_subprocess(args):
+def _run_cmd(args):
     proc = subprocess.Popen(args,
                             universal_newlines=True,
                             stdout=subprocess.PIPE,
@@ -51,7 +51,7 @@ def _bench_suite_from_subprocess(args):
         raise RuntimeError("%s failed with exit code %s"
                            % (args[0], proc.returncode))
 
-    return perf.BenchmarkSuite.loads(stdout)
+    return stdout
 
 
 def _display_run(bench, run_index, run,
@@ -843,7 +843,7 @@ class TextRunner:
 
         return self._main(sample_func)
 
-    def _spawn_worker(self):
+    def _spawn_worker_suite(self):
         args = self.args
 
         cmd = []
@@ -865,7 +865,11 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, cmd)
 
-        suite = _bench_suite_from_subprocess(cmd)
+        stdout = _run_cmd(cmd)
+        return perf.BenchmarkSuite.loads(stdout)
+
+    def _spawn_worker_bench(self):
+        suite = self._spawn_worker_suite()
 
         benchmarks = suite.get_benchmarks()
         if len(benchmarks) != 1:
@@ -919,7 +923,7 @@ class TextRunner:
         nprocess = args.processes
 
         for process in range(nprocess):
-            worker_bench = self._spawn_worker()
+            worker_bench = self._spawn_worker_bench()
             bench.add_runs(worker_bench)
 
             if verbose:
