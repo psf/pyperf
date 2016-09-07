@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.7.7 (2016-09-07)
+--------------------------
+
+* Reintroduce TextRunner._spawn_worker_suite() as a temporary workaround
+  to fix the pybench benchmark of the performance module.
+
 Version 0.7.6 (2016-09-02)
 --------------------------
 
