@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Make Benchmark._format_samples() public
 * Run workers in a isolated environment (os.environ)
 * "venv/pypy5.0-ec75e7c13ad0/bin/python -m perf timeit -w0 -l1 -n 10 pass -v --worker"
   sometimes create a sample equals to 0
