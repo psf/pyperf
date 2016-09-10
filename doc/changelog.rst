@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.7.8
+-------------
+
+* metadata: add ``python_cflags``, fix ``python_verson`` for PyPy and
+  add also the Mercurial version into ``python_verson`` (if available)
+
 Version 0.7.7 (2016-09-07)
 --------------------------
 

@@ -9,7 +9,6 @@ TODO
 * "venv/pypy5.0-ec75e7c13ad0/bin/python -m perf timeit -w0 -l1 -n 10 pass -v --worker"
   sometimes create a sample equals to 0
 * Make benchmark name mandatory?
-* metadata: get Python Mercurial revision and the "+" modified marker
 * Write unit test for compare_to --group-by-speed
 * Display also stability warnings in compare output
 * Write unit test for tracemalloc and track memory: allocate 30 MB,

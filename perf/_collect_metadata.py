@@ -4,6 +4,7 @@ import collections
 import datetime
 import os
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -27,15 +28,52 @@ if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
 
+def normalize_text(text):
+    text = str(text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+def get_python_version():
+    return version
+
+
 def collect_python_metadata(metadata):
     # Implementation
-    metadata['python_implementation'] = perf.python_implementation()
+    impl = perf.python_implementation()
+    metadata['python_implementation'] = impl
 
+    # Version
     version = platform.python_version()
+
+    match = re.search(r'\[(PyPy [^ ]+)', sys.version)
+    if match:
+        version = '%s (Python %s)' % (match.group(1), version)
+
     bits = platform.architecture()[0]
     if bits:
+        if bits == '64bit':
+            bits = '64-bit'
+        elif bits == '32bit':
+            bits = '32-bit'
         version = '%s (%s)' % (version, bits)
+
+    # '74667320778e' in 'Python 2.7.12+ (2.7:74667320778e,'
+    match = re.search(r'^[^(]+\([^:]+:([a-f0-9]{6,}),', sys.version)
+    if match:
+        revision = match.group(1)
+    else:
+        # 'bbd45126bc691f669c4ebdfbd74456cd274c6b92'
+        # in 'Python 2.7.10 (bbd45126bc691f669c4ebdfbd74456cd274c6b92,'
+        match = re.search(r'^[^(]+\(([a-f0-9]{6,}),', sys.version)
+        if match:
+            revision = match.group(1)
+        else:
+            revision = None
+    if revision:
+        version = '%s rev %s' % (version, revision)
     metadata['python_version'] = version
+
     if sys.executable:
         metadata['python_executable'] = sys.executable
 
@@ -70,6 +108,17 @@ def collect_python_metadata(metadata):
             pass
         else:
             metadata['python_hash_seed'] = hash_seed
+
+    # CFLAGS
+    try:
+        import sysconfig
+    except ImportError:
+        pass
+    else:
+        cflags = sysconfig.get_config_var('CFLAGS')
+        if cflags:
+            cflags = normalize_text(cflags)
+            metadata['python_cflags'] = cflags
 
 
 def open_text(path):
