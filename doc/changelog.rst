@@ -4,6 +4,8 @@ Changelog
 Version 0.7.8
 -------------
 
+* Worker child processes are now run in a fresh environment: environment
+  variables are removed, to enhance reproductability.
 * metadata: add ``python_cflags``, fix ``python_verson`` for PyPy and
   add also the Mercurial version into ``python_verson`` (if available)
 

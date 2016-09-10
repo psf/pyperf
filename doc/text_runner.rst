@@ -94,6 +94,7 @@ Option::
 
     [-h/--help]
     [--affinity=CPU_LIST]
+    [--inherit-environ=VARS]
     [--track-memory]
     [--tracemalloc]
 
@@ -101,6 +102,10 @@ Option::
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if
   isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+* ``--inherit-environ=VARS``: ``VARS`` is a comma-separated list of environment
+  variable names which are inherited by worker child processes. By default,
+  only the following variables are inherited: ``PATH``, ``HOME``, ``TEMP``,
+  ``COMSPEC`` and ``SystemRoot``.
 * ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
   allocation and get the peak of memory usage in metadata
   (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
@@ -112,6 +117,10 @@ Option::
   ``/proc/self/smaps``. On Windows, get ``PeakPagefileUsage`` of
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process.
+
+.. versionchanged:: 0.7.8
+
+   Added ``--inherit-environ=VARS``.
 
 
 Internal usage only

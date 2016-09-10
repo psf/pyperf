@@ -23,11 +23,12 @@ except ImportError:
     psutil = None
 
 
-def _run_cmd(args):
+def _run_cmd(args, env):
     proc = subprocess.Popen(args,
                             universal_newlines=True,
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+                            stderr=subprocess.PIPE,
+                            env=env)
 
     try:
         if six.PY3:
@@ -120,6 +121,10 @@ class TextRunner:
                 raise ValueError("value must be >= 0")
             return value
 
+        def comma_separated(values):
+            values = [value.strip() for value in values.split(',')]
+            return list(filter(None, values))
+
         if _argparser is not None:
             parser = _argparser
         else:
@@ -182,6 +187,11 @@ class TextRunner:
                                  'run variation. By default, worker processes '
                                  'are pinned to isolate CPUs if isolated CPUs '
                                  'are found.')
+        parser.add_argument("--inherit-environ", metavar='VARS',
+                            type=comma_separated,
+                            help='Comma-separated list of environment '
+                                 'variables inherited by worker child '
+                                 'processes.')
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -518,6 +528,19 @@ class TextRunner:
 
         return self._main(sample_func)
 
+    def _create_environ(self):
+        env = {}
+
+        # FIXME: copy the locale? LC_ALL, LANG, LC_*
+        copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
+        if self.args.inherit_environ:
+            copy_env.extend(self.args.inherit_environ)
+
+        for name in copy_env:
+            if name in os.environ:
+                env[name] = os.environ[name]
+        return env
+
     def _spawn_worker_suite(self):
         args = self.args
 
@@ -540,7 +563,8 @@ class TextRunner:
         if self.prepare_subprocess_args:
             self.prepare_subprocess_args(self, cmd)
 
-        stdout = _run_cmd(cmd)
+        env = self._create_environ()
+        stdout = _run_cmd(cmd, env=env)
         return perf.BenchmarkSuite.loads(stdout)
 
     def _spawn_worker_bench(self):
