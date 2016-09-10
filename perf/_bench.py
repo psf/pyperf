@@ -354,7 +354,7 @@ class Benchmark(object):
         self._clear_runs_cache()
         self._runs.append(run)
 
-    def _format_samples(self, samples):
+    def format_samples(self, samples):
         unit = 'second'
         if self._runs:
             run = self._runs[0]
@@ -362,8 +362,8 @@ class Benchmark(object):
         formatter = UNIT_FORMATTERS[unit]
         return formatter(samples)
 
-    def _format_sample(self, sample):
-        return self._format_samples((sample,))[0]
+    def format_sample(self, sample):
+        return self.format_samples((sample,))[0]
 
     def get_nrun(self):
         return len(self._runs)
@@ -403,10 +403,10 @@ class Benchmark(object):
             samples = self.get_samples()
             numbers = [self.median()]
             numbers.append(statistics.stdev(samples))
-            numbers = self._format_samples(numbers)
+            numbers = self.format_samples(numbers)
             text = '%s +- %s' % numbers
         else:
-            text = self._format_sample(self.median())
+            text = self.format_sample(self.median())
         return text
 
     def __str__(self):

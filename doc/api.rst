@@ -186,19 +186,6 @@ Benchmark
 
    Methods:
 
-   .. method:: update_metadata(metadata: dict)
-
-      Update metadata of all runs of the benchmark.
-
-      The benchmark must contain at least one run.
-
-      If the ``inner_loops`` metadata is already set and its value is modified,
-      an exception is raised.
-
-      See :ref:`Metadata <metadata>`.
-
-      .. versionadded:: 0.7.5
-
    .. method:: add_run(run: Run)
 
       Add a benchmark run: *run* must a :class:`Run` object.
@@ -226,6 +213,18 @@ Benchmark
 
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
+
+   .. method:: format_sample(sample) -> str
+
+      Format a sample including the unit.
+
+      .. versionadded:: 0.7.8
+
+   .. method:: format_samples(samples) -> str
+
+      Format samples including the unit.
+
+      .. versionadded:: 0.7.8
 
    .. method:: get_dates() -> tuple
 
@@ -312,6 +311,19 @@ Benchmark
 
       Format the result as ``Median +- std dev: ... +- ...`` (median +-
       standard deviation) string (``str``).
+
+   .. method:: update_metadata(metadata: dict)
+
+      Update metadata of all runs of the benchmark.
+
+      The benchmark must contain at least one run.
+
+      If the ``inner_loops`` metadata is already set and its value is modified,
+      an exception is raised.
+
+      See :ref:`Metadata <metadata>`.
+
+      .. versionadded:: 0.7.5
 
 
 BenchmarkSuite

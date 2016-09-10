@@ -62,7 +62,7 @@ def _display_run(bench, run_index, run,
     inner_loops = run._get_inner_loops()
 
     def format_samples(samples, percent=True):
-        samples_str = [bench._format_sample(sample) for sample in samples]
+        samples_str = [bench.format_sample(sample) for sample in samples]
         if not percent:
             return samples_str
 
@@ -79,7 +79,7 @@ def _display_run(bench, run_index, run,
     samples = run.samples
     if raw:
         warmups = [('%s (%s)'
-                    % (bench._format_sample(raw_sample),
+                    % (bench.format_sample(raw_sample),
                        format_number(loops, 'loop')))
                    for loops, raw_sample in run.warmups]
         samples = [sample * total_loops for sample in samples]
@@ -143,7 +143,7 @@ def _display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
 
 
 def _display_stats(bench, file=None):
-    fmt = bench._format_sample
+    fmt = bench.format_sample
     samples = bench.get_samples()
 
     nrun = bench.get_nrun()
@@ -165,9 +165,9 @@ def _display_stats(bench, file=None):
 
     # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()
-    print("Raw sample minimum: %s" % bench._format_sample(min(raw_samples)),
+    print("Raw sample minimum: %s" % bench.format_sample(min(raw_samples)),
           file=file)
-    print("Raw sample maximum: %s" % bench._format_sample(max(raw_samples)),
+    print("Raw sample maximum: %s" % bench.format_sample(max(raw_samples)),
           file=file)
     print(file=file)
 
@@ -227,10 +227,10 @@ def _display_stats(bench, file=None):
     if len(samples) > 2:
         stdev = statistics.stdev(samples, mean)
         print("Mean +- std dev: %s +- %s"
-              % bench._format_samples((mean, stdev)),
+              % bench.format_samples((mean, stdev)),
               file=file)
     else:
-        print("Mean: %s" % bench._format_sample(mean), file=file)
+        print("Mean: %s" % bench.format_sample(mean), file=file)
 
     # Maximum
     print("Maximum: %s" % format_limit(median, max(samples)), file=file)
@@ -278,7 +278,7 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
-        sample_width = max([len(bench._format_sample(bucket * sample_k))
+        sample_width = max([len(bench.format_sample(bucket * sample_k))
                             for bucket in range(bucket_min, bucket_max + 1)])
         width = columns - sample_width
 
@@ -291,7 +291,7 @@ def _display_histogram(benchmarks, bins=20, extend=False, file=None):
         for bucket in range(bucket_min, bucket_max + 1):
             count = counter.get(bucket, 0)
             linelen = int(round(count * line_k))
-            text = bench._format_sample(bucket * sample_k)
+            text = bench.format_sample(bucket * sample_k)
             line = ('#' * linelen) or '|'
             print("{:>{}}: {:>{}} {}".format(text, sample_width,
                                              count, count_width, line),
@@ -330,7 +330,7 @@ def _warn_if_bench_unstable(bench):
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(bench._get_raw_samples())
-    text = bench._format_sample(shortest)
+    text = bench.format_sample(shortest)
     if shortest < 1e-3:
         if shortest < 1e-6:
             warn("ERROR: the benchmark may be very unstable, "
@@ -654,12 +654,12 @@ class TextRunner:
                 samples.append(value)
 
             if args.verbose:
-                text = bench._format_sample(sample)
+                text = bench.format_sample(sample)
                 if is_warmup or is_calibrate:
                     text = ('%s (%s: %s)'
                             % (text,
                                format_number(loops, 'loop'),
-                               bench._format_sample(raw_sample)))
+                               bench.format_sample(raw_sample)))
                 text = ("%s %s: %s"
                         % (sample_name, index, text))
                 print(text, file=stream)
