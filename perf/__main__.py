@@ -7,6 +7,9 @@ import os.path
 import sys
 
 from perf._metadata import _common_metadata
+from perf._cli import (display_runs, display_stats, display_metadata,
+                       warn_if_bench_unstable, display_histogram,
+                       display_benchmark)
 from perf._utils import (format_timedelta, format_seconds, parse_run_list,
                          get_isolated_cpus, set_cpu_affinity)
 import perf.text_runner
@@ -298,8 +301,7 @@ def _display_common_metadata(metadatas):
 
     common_metadata = _common_metadata(metadatas)
     if common_metadata:
-        perf.text_runner._display_metadata(common_metadata,
-                                           header='Common metadata:')
+        display_metadata(common_metadata, header='Common metadata:')
         print()
 
     for key in common_metadata:
@@ -567,7 +569,7 @@ def cmd_metadata():
     collect_metadata(metadata)
     metadata = {name: Metadata(name, value)
                 for name, value in metadata.items()}
-    perf.text_runner._display_metadata(metadata)
+    display_metadata(metadata)
 
 
 def cmd_show(args):
@@ -583,7 +585,7 @@ def cmd_show(args):
         use_title = False
         if not args.quiet:
             for index, item in enumerate(data):
-                warnings = perf.text_runner._warn_if_bench_unstable(item.benchmark)
+                warnings = warn_if_bench_unstable(item.benchmark)
 
                 if warnings:
                     use_title = True
@@ -605,14 +607,14 @@ def cmd_show(args):
             if args.metadata:
                 metadata = metadatas[index]
                 if metadata:
-                    perf.text_runner._display_metadata(metadata)
+                    display_metadata(metadata)
                     print()
 
-            perf.text_runner._display_benchmark(item.benchmark,
-                                                hist=args.hist,
-                                                stats=args.stats,
-                                                dump=args.dump,
-                                                check_unstable=not args.quiet)
+            display_benchmark(item.benchmark,
+                              hist=args.hist,
+                              stats=args.stats,
+                              dump=args.dump,
+                              check_unstable=not args.quiet)
 
             if not item.is_last:
                 print()
@@ -648,10 +650,10 @@ def cmd_dump(args):
         if use_titles:
             display_title(item.name, 2)
 
-        perf.text_runner._display_runs(item.benchmark,
-                                       quiet=args.quiet,
-                                       verbose=args.verbose,
-                                       raw=args.raw)
+        display_runs(item.benchmark,
+                     quiet=args.quiet,
+                     verbose=args.verbose,
+                     raw=args.raw)
         if not item.is_last:
             print()
 
@@ -687,7 +689,7 @@ def cmd_stats(args):
 
         if use_titles:
             display_title(item.name, 2)
-        perf.text_runner._display_stats(item.benchmark)
+        display_stats(item.benchmark)
         if not item.is_last:
             print()
 
@@ -708,8 +710,8 @@ def cmd_hist(args):
         benchmarks = [(benchmark, filename if show_filename else None)
                       for benchmark, title, filename in benchmarks]
 
-        perf.text_runner._display_histogram(benchmarks, bins=args.bins,
-                                            extend=args.extend)
+        display_histogram(benchmarks, bins=args.bins,
+                          extend=args.extend)
 
         if not(is_last or ignored):
             print()
@@ -718,8 +720,8 @@ def cmd_hist(args):
         for bench in ignored:
             name = get_benchmark_name(bench)
             print("[ %s ]" % name)
-            perf.text_runner._display_histogram([name], bins=args.bins,
-                                                extend=args.extend)
+            display_histogram([name], bins=args.bins,
+                              extend=args.extend)
 
 
 def fatal_missing_benchmark(suite, name):

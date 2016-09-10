@@ -34,10 +34,6 @@ def normalize_text(text):
     return text.strip()
 
 
-def get_python_version():
-    return version
-
-
 def collect_python_metadata(metadata):
     # Implementation
     impl = perf.python_implementation()
