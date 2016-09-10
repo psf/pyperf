@@ -1,6 +1,8 @@
 TODO
 ====
 
+* perf timeit: add --inner-loops=N parameter, if the statement is explicitly
+  copied N items
 * Pass Python arguments to subprocesses like -I, -O, etc.
 * Make Benchmark._format_samples() public
 * Run workers in a isolated environment (os.environ)
