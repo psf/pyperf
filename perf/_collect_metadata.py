@@ -1,5 +1,6 @@
 from __future__ import division, print_function, absolute_import
 
+import collections
 import datetime
 import os
 import platform
@@ -236,28 +237,18 @@ def get_cpu_boost(cpu):
 get_cpu_boost.working = True
 
 
-def format_cpu_infos(infos, cpus):
-    if len(infos) == len(cpus):
-        merge = (len(set(infos[cpu] for cpu in cpus)) == 1)
-    else:
-        merge = False
-    if not merge:
-        text = []
-        for cpu in sorted(cpus):
-            try:
-                info = infos[cpu]
-            except KeyError:
-                pass
-            else:
-                text.append('%s=%s' % (cpu, info))
-        text = ', '.join(text)
-    else:
-        # compact output if all CPUs have the same info
-        cpu = list(cpus)[0]
-        info = infos[cpu]
+def format_cpu_infos(infos):
+    groups = collections.defaultdict(list)
+    for cpu, info in infos.items():
+        groups[info].append(cpu)
+
+    items = [(cpus, info) for info, cpus in  groups.items()]
+    items.sort()
+    text = []
+    for cpus, info in items:
         cpus = format_cpu_list(cpus)
-        text = '%s=%s' % (cpus, info)
-    return text
+        text.append('%s=%s' % (cpus, info))
+    return ', '.join(text)
 
 
 def collect_cpu_freq(metadata, cpus):
@@ -290,7 +281,7 @@ def collect_cpu_freq(metadata, cpus):
     if not cpu_freq:
         return
 
-    metadata['cpu_freq'] = format_cpu_infos(cpu_freq, cpus)
+    metadata['cpu_freq'] = format_cpu_infos(cpu_freq)
 
 
 def get_cpu_config(cpu):
@@ -336,7 +327,7 @@ def collect_cpu_config(metadata, cpus):
             configs[cpu] = config
     if not configs:
         return
-    metadata['cpu_config'] = format_cpu_infos(configs, cpus)
+    metadata['cpu_config'] = format_cpu_infos(configs)
 
 
 def get_cpu_temperature(path, cpu_temp):
