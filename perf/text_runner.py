@@ -31,15 +31,14 @@ def _run_cmd(args, env):
                             env=env)
 
     try:
-        if six.PY3:
-            with proc:
-                stdout, stderr = proc.communicate()
-        else:
-            stdout, stderr = proc.communicate()
+        stdout, stderr = proc.communicate()
     except:
+        proc.stdout.close()
+        proc.stderr.close()
         try:
             proc.kill()
         except OSError:
+            # process already exited
             pass
         proc.wait()
         raise
