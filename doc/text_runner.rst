@@ -41,7 +41,7 @@ samples), and 10 warmups.
 * ``MIN_TIME``: Minimum duration of a single raw sample in seconds
   (default: ``100 ms``)
 
-The :ref:`Runs, samples, warmups, outter and inner loops <loops>` section
+The :ref:`Runs, samples, warmups, outer and inner loops <loops>` section
 explains the purpose of these parameters and how to configure them.
 
 

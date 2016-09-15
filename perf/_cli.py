@@ -150,9 +150,9 @@ def display_stats(bench, file=None):
 
     if not(isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
-            loops = format_number(loops, 'outter-loop')
+            loops = format_number(loops, 'outer-loop')
         else:
-            loops = '%.1f outter-loops (average)'
+            loops = '%.1f outer-loops (average)'
 
         if isinstance(inner_loops, int):
             inner_loops = format_number(inner_loops, 'inner-loop')

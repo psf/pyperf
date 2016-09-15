@@ -13,12 +13,12 @@ Pass ``--help`` to the script to see the command line options automatically
 added by ``perf``.
 
 The ``mydict[key]`` instruction is repeated 10 times to reduce the cost of the
-outter ``range(loops)`` loop. To adjust the final result,
+outer ``range(loops)`` loop. To adjust the final result,
 ``runner.inner_loops`` is set to ``10``, the number of times that
 ``mydict[key]`` is repeated.
 
 The repeatition is needed on such microbenchmark where the measured instruction
-takes less than 1 microsecond. In this case, the cost the outter loop is non
+takes less than 1 microsecond. In this case, the cost the outer loop is non
 negligible.
 
 
@@ -138,14 +138,14 @@ Run
 
    *samples* must be a non-empty sequence of numbers (integer or float) greater
    than zero. Usually, *samples* is a list of number of seconds. Samples must
-   be normalized per loop iteration (total of outter and inner loops).
+   be normalized per loop iteration (total of outer and inner loops).
 
    *warmups* is an optional sequence of ``(loops: int, sample: float)`` tuples
    where *sample* must be greater than or equal to zero. Warmup samples are
    "raw samples", they must not be normalized per loop iteration.
 
    Samples must not be equal to zero. If a sample is zero, use more
-   loop iterations: see :ref:`Runs, samples, warmups, outter and inner loops
+   loop iterations: see :ref:`Runs, samples, warmups, outer and inner loops
    <loops>`.
 
    Set *collect_metadata* to false to not collect system metadata.
@@ -163,7 +163,7 @@ Run
    .. method:: get_total_loops() -> int
 
       Get the total number of loops of the benchmark run:
-      outter-loops x inner-loops.
+      outer-loops x inner-loops.
 
    Attributes:
 

@@ -33,7 +33,7 @@ Optional dependencies:
 
 .. _loops:
 
-Runs, samples, warmups, outter and inner loops
+Runs, samples, warmups, outer and inner loops
 ==============================================
 
 The ``perf`` module uses 5 options to configure benchmarks:
@@ -43,7 +43,7 @@ The ``perf`` module uses 5 options to configure benchmarks:
   calls "samples"
 * "warmups": Number of samples per run used to warmup the benchmark,
   ``-w/--warmups`` command line option
-* "loops": Number of outter-loop iterations per sample,  ``-l/--loops`` command
+* "loops": Number of outer-loop iterations per sample,  ``-l/--loops`` command
   line option
 * "inner_loops": Number of inner-loop iterations per sample, hardcoded in
   benchmark.
@@ -61,7 +61,7 @@ The "warmups" parameter should be configured by analyzing manually samples.
 Usually, skipping the first sample is enough to warmup the benchmark.
 Sometimes, more samples should be skipped to warmup the benchmark.
 
-By default, the number of outter-loops is automatically computed by calibrating
+By default, the number of outer-loops is automatically computed by calibrating
 the benchmark: a sample should take betwen 100 ms and 1 sec (values
 configurable using ``--min-time`` and ``--max-time`` command line options).
 
@@ -163,7 +163,7 @@ Benchmark:
 
 * ``date``: date when the benchmark run started, formatted as ISO 8601
 * ``duration``: total duration of the benchmark run in seconds (``float``)
-* ``loops``: number of outter-loops per sample (``int``)
+* ``loops``: number of outer-loops per sample (``int``)
 * ``inner_loops``: number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
   available
