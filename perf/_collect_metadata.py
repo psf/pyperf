@@ -23,6 +23,7 @@ except ImportError:
 
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
+                         parse_cpu_list,
                          get_isolated_cpus, MS_WINDOWS)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
@@ -130,6 +131,8 @@ def first_line(path, default=None):
         try:
             line = fp.readline()
         finally:
+            # don't use context manager to support StringIO on Python 2
+            # for unit tests
             fp.close()
         return line.rstrip()
     except IOError:
@@ -145,6 +148,8 @@ def read_proc(path):
             for line in fp:
                 yield line.rstrip()
         finally:
+            # don't use context manager to support StringIO on Python 2
+            # for unit tests
             fp.close()
     except (OSError, IOError):
         return
@@ -358,18 +363,21 @@ def get_cpu_config(cpu):
     if scaling_governor:
         info.append('governor:%s' % scaling_governor)
 
-    if not info:
-        return None
-
-    return ', '.join(info)
+    return info
 
 
 def collect_cpu_config(metadata, cpus):
+    nohz_full = first_line('/sys/devices/system/cpu/nohz_full')
+    if nohz_full:
+        nohz_full = parse_cpu_list(nohz_full)
+
     configs = {}
     for cpu in cpus:
         config = get_cpu_config(cpu)
+        if nohz_full and cpu in nohz_full:
+            config.append('nohz_full')
         if config:
-            configs[cpu] = config
+            configs[cpu] = ', '.join(config)
     if not configs:
         return
     metadata['cpu_config'] = format_cpu_infos(configs)

@@ -158,6 +158,8 @@ class CpuFunctionsTests(unittest.TestCase):
                 data = 'DRIVER\n'
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
                 data = 'GOVERNOR\n'
+            elif filename.startswith('/sys/devices/system/cpu/nohz_full'):
+                data = '2-3'
             elif filename.startswith('/sys/devices/system/cpu/cpu2'):
                 raise IOError
             else:
@@ -169,7 +171,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 metadata = {}
                 perf_metadata.collect_cpu_config(metadata, [0, 2])
                 self.assertEqual(metadata['cpu_config'],
-                                 '0=driver:DRIVER, governor:GOVERNOR')
+                                 '0=driver:DRIVER, governor:GOVERNOR, 2=nohz_full')
 
     def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
