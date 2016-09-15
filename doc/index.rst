@@ -42,5 +42,7 @@ See also:
   benchmark suite
 * `pytest-benchmark
   <https://github.com/ionelmc/pytest-benchmark/>`_
+* `Python speed mailing list
+  <https://mail.python.org/mailman/listinfo/speed>`_
 * `boltons.statsutils
   <http://boltons.readthedocs.io/en/latest/statsutils.html>`_
