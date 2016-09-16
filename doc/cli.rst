@@ -296,6 +296,12 @@ metadata
 Collect metadata::
 
     python3 -m perf metadata
+        [--affinity=CPU_LIST]
+
+Options:
+
+* ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
+  See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
 
 Example::
 
