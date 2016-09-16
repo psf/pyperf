@@ -39,15 +39,13 @@ class TestMetadata(unittest.TestCase):
                 self.assertNotIn('\n', value)
 
     def test_collect_cpu_affinity(self):
-        with mock.patch('perf._collect_metadata.get_isolated_cpus', return_value={1, 2, 3}):
-            metadata = {}
-            perf_metadata.collect_cpu_affinity(metadata, {2, 3}, 4)
-            self.assertEqual(metadata['cpu_affinity'],
-                             '2-3 (isolated)')
+        metadata = {}
+        perf_metadata.collect_cpu_affinity(metadata, {2, 3}, 4)
+        self.assertEqual(metadata['cpu_affinity'], '2-3')
 
-            metadata = {}
-            perf_metadata.collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
-            self.assertNotIn('cpu_affinity', metadata)
+        metadata = {}
+        perf_metadata.collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
+        self.assertNotIn('cpu_affinity', metadata)
 
 
 class CpuFunctionsTests(unittest.TestCase):
@@ -166,12 +164,14 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
-            with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
-                metadata = {}
-                perf_metadata.collect_cpu_config(metadata, [0, 2])
-                self.assertEqual(metadata['cpu_config'],
-                                 '0=driver:DRIVER, governor:GOVERNOR, 2=nohz_full')
+        with mock.patch('perf._collect_metadata.get_isolated_cpus', return_value=[2]):
+            with mock.patch('perf._collect_metadata.open', create=True, side_effect=mock_open):
+                with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
+                    metadata = {}
+                    perf_metadata.collect_cpu_config(metadata, [0, 2])
+
+        self.assertEqual(metadata['cpu_config'],
+                         '0=driver:DRIVER, governor:GOVERNOR, 2=nohz_full, isolated')
 
     def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):

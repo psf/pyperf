@@ -371,11 +371,17 @@ def collect_cpu_config(metadata, cpus):
     if nohz_full:
         nohz_full = parse_cpu_list(nohz_full)
 
+    isolated = get_isolated_cpus()
+    if isolated:
+        isolated = set(isolated)
+
     configs = {}
     for cpu in cpus:
         config = get_cpu_config(cpu)
         if nohz_full and cpu in nohz_full:
             config.append('nohz_full')
+        if isolated and cpu in isolated:
+            config.append('isolated')
         if config:
             configs[cpu] = ', '.join(config)
     if not configs:
@@ -436,11 +442,7 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     if set(cpu_affinity) == set(range(cpu_count)):
         return
 
-    isolated = get_isolated_cpus()
-    text = format_cpu_list(cpu_affinity)
-    if isolated and set(cpu_affinity) <= set(isolated):
-        text = '%s (isolated)' % text
-    metadata['cpu_affinity'] = text
+    metadata['cpu_affinity'] = format_cpu_list(cpu_affinity)
 
 
 def collect_cpu_model(metadata):

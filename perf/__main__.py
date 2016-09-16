@@ -11,7 +11,7 @@ from perf._cli import (display_runs, display_stats, display_metadata,
                        warn_if_bench_unstable, display_histogram,
                        display_benchmark)
 from perf._utils import (format_timedelta, format_seconds, parse_run_list,
-                         get_isolated_cpus, set_cpu_affinity)
+                         get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
 import perf.text_runner
 
 
@@ -71,7 +71,10 @@ def create_parser():
     input_filenames(cmd)
 
     # metadata
-    subparsers.add_parser('metadata')
+    cmd = subparsers.add_parser('metadata')
+    cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
+                     help='Specify CPU affinity. '
+                          'By default, use isolated CPUs.')
 
     # timeit
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
@@ -556,12 +559,18 @@ def cmd_compare(args):
     compare_suites(data, args.action == 'compare', by_speed, args)
 
 
-def cmd_metadata():
+def cmd_metadata(args):
     from perf._metadata import Metadata
     from perf._collect_metadata import collect_metadata
 
-    cpus = get_isolated_cpus()
+    cpus = args.affinity
     if cpus:
+        cpus = parse_cpu_list(cpus)
+        if not set_cpu_affinity(cpus):
+            print("ERROR: failed to set the CPU affinity")
+            sys.exit(1)
+    else:
+        cpus = get_isolated_cpus()
         set_cpu_affinity(cpus)
         # ignore if set_cpu_affinity() failed
 
@@ -872,7 +881,7 @@ def main():
             'compare_to': functools.partial(cmd_compare, args),
             'hist': functools.partial(cmd_hist, args),
             'stats': functools.partial(cmd_stats, args),
-            'metadata': cmd_metadata,
+            'metadata': functools.partial(cmd_metadata, args),
             'timeit': functools.partial(cmd_timeit, args, timeit_runner),
             'convert': functools.partial(cmd_convert, args),
             'dump': functools.partial(cmd_dump, args),

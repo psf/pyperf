@@ -4,7 +4,7 @@ Changelog
 Version 0.7.9
 -------------
 
-* metadata: add ``nohz_full`` to ``cpu_config``
+* metadata: add ``nohz_full`` and ``isolated`` to ``cpu_config``
 
 Version 0.7.8 (2016-09-10)
 --------------------------
