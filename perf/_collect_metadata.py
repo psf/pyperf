@@ -367,7 +367,7 @@ def get_cpu_config(cpu):
 
 
 def collect_cpu_config(metadata, cpus):
-    nohz_full = first_line('/sys/devices/system/cpu/nohz_full')
+    nohz_full = first_line('/sys/devices/system/cpu/nohz_full', default='')
     if nohz_full:
         nohz_full = parse_cpu_list(nohz_full)
 
