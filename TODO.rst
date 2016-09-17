@@ -1,6 +1,10 @@
 TODO
 ====
 
+* Enhance TextRunner or write a new class to support multiple benchmarks.
+  Use case: pybench
+  Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
+
 * perf timeit: add --inner-loops=N parameter, if the statement is explicitly
   copied N items
 * Pass Python arguments to subprocesses like -I, -O, etc.
