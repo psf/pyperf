@@ -9,6 +9,8 @@ Version 0.7.9
 * metadata: add ``nohz_full`` and ``isolated`` to ``cpu_config``
 * add ``--affinity`` option to the ``metadata`` command
 * ``convert``: fix ``--remove-all-metadata``, keep the unit
+* metadata: fix regex to get the Mercurial revision for ``python_version``,
+  support also locally modified source code (revision ending with "+")
 
 Version 0.7.8 (2016-09-10)
 --------------------------
@@ -16,8 +18,8 @@ Version 0.7.8 (2016-09-10)
 * Worker child processes are now run in a fresh environment: environment
   variables are removed, to enhance reproductability.
 * Add ``--inherit-environ`` command line argument.
-* metadata: add ``python_cflags``, fix ``python_verson`` for PyPy and
-  add also the Mercurial version into ``python_verson`` (if available)
+* metadata: add ``python_cflags``, fix ``python_version`` for PyPy and
+  add also the Mercurial version into ``python_version`` (if available)
 
 Version 0.7.7 (2016-09-07)
 --------------------------

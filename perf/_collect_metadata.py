@@ -56,19 +56,19 @@ def collect_python_metadata(metadata):
         version = '%s (%s)' % (version, bits)
 
     # '74667320778e' in 'Python 2.7.12+ (2.7:74667320778e,'
-    match = re.search(r'^[^(]+\([^:]+:([a-f0-9]{6,}),', sys.version)
+    match = re.search(r'^[^(]+\([^:]+:([a-f0-9]{6,}\+?),', sys.version)
     if match:
         revision = match.group(1)
     else:
         # 'bbd45126bc691f669c4ebdfbd74456cd274c6b92'
         # in 'Python 2.7.10 (bbd45126bc691f669c4ebdfbd74456cd274c6b92,'
-        match = re.search(r'^[^(]+\(([a-f0-9]{6,}),', sys.version)
+        match = re.search(r'^[^(]+\(([a-f0-9]{6,}\+?),', sys.version)
         if match:
             revision = match.group(1)
         else:
             revision = None
     if revision:
-        version = '%s rev %s' % (version, revision)
+        version = '%s revision %s' % (version, revision)
     metadata['python_version'] = version
 
     if sys.executable:
