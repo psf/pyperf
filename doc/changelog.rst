@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.7.9
--------------
+Version 0.7.9 (2016-09-17)
+--------------------------
 
 * Add :meth:`Benchmark.get_unit` method
 * Add :meth:`BenchmarkSuite.get_metadata` method
