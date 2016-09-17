@@ -397,6 +397,18 @@ BenchmarkSuite
       Return ``(None, None)`` if no benchmark has dates, or if the suite
       doesn't contain any benchmark.
 
+   .. method:: get_metadata() -> dict
+
+      Get metadata common to all benchmarks (common to all runs of all
+      benchmarks).
+
+      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+
+      See the :meth:`perf.Benchmark.get_metadata` method
+      and :ref:`Metadata <metadata>`.
+
+      .. versionadded:: 0.7.9
+
    .. method:: get_total_duration() -> float
 
       Get the total duration of all benchmarks in seconds.

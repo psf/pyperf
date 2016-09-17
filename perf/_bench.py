@@ -583,6 +583,10 @@ class BenchmarkSuite(object):
             names.append(name)
         return names
 
+    def get_metadata(self):
+        metadatas = [bench.get_metadata() for bench in self._benchmarks]
+        return _common_metadata(metadatas)
+
     def __len__(self):
         return len(self._benchmarks)
 

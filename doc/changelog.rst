@@ -4,9 +4,10 @@ Changelog
 Version 0.7.9
 -------------
 
+* Add :meth:`Benchmark.get_unit` method
+* Add :meth:`BenchmarkSuite.get_metadata` method
 * metadata: add ``nohz_full`` and ``isolated`` to ``cpu_config``
 * add ``--affinity`` option to the ``metadata`` command
-* Add :meth:`Benchmark.get_unit` method
 * ``convert``: fix ``--remove-all-metadata``, keep the unit
 
 Version 0.7.8 (2016-09-10)

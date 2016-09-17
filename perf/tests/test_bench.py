@@ -418,6 +418,28 @@ class TestBenchmarkSuite(unittest.TestCase):
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 11, 0)))
 
+    def get_metadata(self, suite):
+        metadata = suite.get_metadata()
+        result = {}
+        for name, obj in metadata.items():
+            self.assertEqual(obj.name, name)
+            result[obj.name] = obj.value
+        return result
+
+    def test_get_metadata(self):
+        suite = perf.BenchmarkSuite()
+
+        for name in ('a', 'b'):
+            bench = perf.Benchmark()
+            run = perf.Run([1.0],
+                            metadata={'name': name, 'os': 'linux'},
+                            collect_metadata=False)
+            bench.add_run(run)
+            suite.add_benchmark(bench)
+
+        self.assertEqual(self.get_metadata(suite),
+                         {'os': 'linux'})
+
 
 if __name__ == "__main__":
     unittest.main()
