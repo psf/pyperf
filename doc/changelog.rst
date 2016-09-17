@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.7.10
+--------------
+
+* Fix metadata when there is no isolated CPU
+* Fix collecting metadata when /sys/devices/system/cpu/nohz_full doesn't exist
+
 Version 0.7.9 (2016-09-17)
 --------------------------
 

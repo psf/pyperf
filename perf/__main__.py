@@ -571,8 +571,9 @@ def cmd_metadata(args):
             sys.exit(1)
     else:
         cpus = get_isolated_cpus()
-        set_cpu_affinity(cpus)
-        # ignore if set_cpu_affinity() failed
+        if cpus:
+            set_cpu_affinity(cpus)
+            # ignore if set_cpu_affinity() failed
 
     metadata = {}
     collect_metadata(metadata)
