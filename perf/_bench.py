@@ -354,11 +354,15 @@ class Benchmark(object):
         self._clear_runs_cache()
         self._runs.append(run)
 
-    def format_samples(self, samples):
+    def get_unit(self):
         unit = 'second'
         if self._runs:
             run = self._runs[0]
             unit = run._get_metadata('unit', unit)
+        return unit
+
+    def format_samples(self, samples):
+        unit = self.get_unit()
         formatter = UNIT_FORMATTERS[unit]
         return formatter(samples)
 

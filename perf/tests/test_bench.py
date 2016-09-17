@@ -115,6 +115,7 @@ class BenchmarkTests(unittest.TestCase):
             bench.add_run(run)
 
         self.assertEqual(bench.get_samples(), samples)
+        self.assertEqual(bench.get_unit(), 'second')
         self.assertEqual(bench._get_raw_samples(), list(raw_samples))
         self.assertEqual(bench.get_nrun(), 3)
 
@@ -139,6 +140,13 @@ class BenchmarkTests(unittest.TestCase):
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
                          'Median +- std dev: 1.50 sec +- 0.50 sec')
+
+    def test_get_unit(self):
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run((1.0,),
+                               metadata={'name': 'bench', 'unit': 'byte'},
+                               collect_metadata=False))
+        self.assertEqual(bench.get_unit(), 'byte')
 
     def test_json(self):
         samples = (1.0, 1.5, 2.0)

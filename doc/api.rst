@@ -288,6 +288,16 @@ Benchmark
       Return an ``int`` if all runs have the same number of
       loops, return the average as a ``float`` otherwise.
 
+   .. method:: get_unit() -> str
+
+      Get the unit of samples:
+
+      * ``'byte'``: File size in bytes
+      * ``'integer'``: Integer number
+      * ``'second'``: Duration in seconds
+
+      .. versionadded:: 0.7.9
+
    .. classmethod:: load(file) -> Benchmark
 
       Load a benchmark from a JSON file which was created by :meth:`dump`.
