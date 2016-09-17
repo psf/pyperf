@@ -292,14 +292,14 @@ class BenchmarkTests(unittest.TestCase):
     def test_remove_all_metadata(self):
         bench = perf.Benchmark()
         bench.add_run(perf.Run((1.0,),
-                               metadata={'name': 'bench', 'os': 'win'},
+                               metadata={'name': 'bench', 'os': 'win', 'unit': 'byte'},
                                collect_metadata=False))
         self.assertEqual(self.get_metadata(bench),
-                         {'name': 'bench', 'os': 'win'})
+                         {'name': 'bench', 'os': 'win', 'unit': 'byte'})
 
         bench._remove_all_metadata()
         self.assertEqual(self.get_metadata(bench),
-                         {'name': 'bench'})
+                         {'name': 'bench', 'unit': 'byte'})
 
     def test_update_metadata(self):
         bench = perf.Benchmark()

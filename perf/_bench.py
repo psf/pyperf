@@ -233,10 +233,12 @@ class Run(object):
 
     def _remove_all_metadata(self):
         name = self._get_metadata('name', None)
+        unit = self._get_metadata('unit', None)
+        metadata = {}
         if name:
-            metadata = {'name': name}
-        else:
-            metadata = {}
+            metadata['name'] = name
+        if unit:
+            metadata['unit'] = unit
         return self._replace(metadata=metadata)
 
     def _update_metadata(self, metadata):

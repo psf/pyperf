@@ -277,8 +277,8 @@ Operations:
 * ``--remove-warmups``: remove warmup samples
 * ``--add=FILE``: Add benchmark runs of benchmark *FILE*
 * ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values
-* ``--remove-all-metadata``: Remove all benchmarks metadata, but keep the
-  benchmarks name
+* ``--remove-all-metadata``: Remove all benchmarks metadata except ``name`` and
+  ``unit``.
 * ``--update-metadata=METADATA``: Update metadata: ``METADATA`` is a
   comma-separated list of ``KEY=VALUE``
 
