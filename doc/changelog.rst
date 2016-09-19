@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.7.11 (2016-09-19)
+---------------------------
+
+* Fix metadata when NOHZ is not used: when /sys/devices/system/cpu/nohz_full
+  contains ' (null)\n'
+
 Version 0.7.10 (2016-09-17)
 ---------------------------
 

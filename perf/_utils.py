@@ -274,6 +274,10 @@ def parse_run_list(run_list):
 
 def parse_cpu_list(cpu_list):
     cpu_list = cpu_list.strip()
+    # /sys/devices/system/cpu/nohz_full returns ' (null)\n' when NOHZ full
+    # is not used
+    if cpu_list == '(null)':
+        return
     if not cpu_list:
         return
 
