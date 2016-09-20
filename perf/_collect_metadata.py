@@ -140,6 +140,7 @@ def first_line(path, default=None):
             return default
         raise
 
+
 def read_proc(path):
     path = os.path.join('/proc', path)
     try:
@@ -242,6 +243,7 @@ def collect_memory_metadata(metadata):
         if usage:
             metadata['mem_peak_pagefile_usage'] = usage
 
+
 def get_cpu_boost(cpu):
     if not get_cpu_boost.working:
         return
@@ -292,7 +294,7 @@ def format_cpu_infos(infos):
     for cpu, info in infos.items():
         groups[info].append(cpu)
 
-    items = [(cpus, info) for info, cpus in  groups.items()]
+    items = [(cpus, info) for info, cpus in groups.items()]
     items.sort()
     text = []
     for cpus, info in items:

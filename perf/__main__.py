@@ -223,7 +223,7 @@ class Benchmarks:
     def _group_by_name_names(self):
         def suite_to_name_set(suite):
             result = set()
-            for  bench in suite:
+            for bench in suite:
                 name = bench.get_name()
                 if name:
                     result.add(name)
@@ -503,8 +503,6 @@ def compare_suites_by_speed(all_results, show_name, args):
             text = result.oneliner(verbose=False)
             print("- %s: %s" % (name, text))
         print()
-
-
 
     if not args.quiet and not_significant:
         print("Benchmark hidden because not significant (%s): %s"

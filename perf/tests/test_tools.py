@@ -71,12 +71,12 @@ class TestTools(unittest.TestCase):
         self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07.608319'),
                          datetime.datetime(2016, 7, 20, 14, 6, 7, 608319))
 
-    def test_timedelta(self):
+    def test_format_seconds(self):
         self.assertEqual(utils.format_seconds(316e-4), "31.6 ms")
-        self.assertEqual(utils.format_seconds(15.9), "3 min 15 sec")
-        self.assertEqual(utils.format_seconds(3 * 60 + 15.9), "3 min 15 sec")
+        self.assertEqual(utils.format_seconds(15.9), "15.9 sec")
+        self.assertEqual(utils.format_seconds(3 * 60 + 15.9), "3 min 16 sec")
 
-    def test_timedelta(self):
+    def test_format_timedelta(self):
         fmt_delta = utils.format_timedelta
 
         self.assertEqual(fmt_delta(555222), "555222 sec")

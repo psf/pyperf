@@ -98,6 +98,7 @@ def format_number(number, unit=None, units=None):
     else:
         return '%s %s' % (number, unit)
 
+
 def format_integers(numbers):
     return tuple(format_number(number) for number in numbers)
 

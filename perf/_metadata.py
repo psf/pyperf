@@ -90,11 +90,11 @@ def check_metadata(name, value):
 
     if not isinstance(value, info.types):
         raise ValueError("invalid metadata %r value type: got %r"
-                        % (name, type(value).__name__))
+                         % (name, type(value).__name__))
 
     if info.check_value is not None and not info.check_value(value):
         raise ValueError("invalid metadata %r value: %r"
-                        % (name, value))
+                         % (name, value))
 
 
 def parse_metadata(metadata):

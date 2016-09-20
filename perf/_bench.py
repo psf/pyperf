@@ -436,7 +436,7 @@ class Benchmark(object):
 
         if common_metadata:
             bench._common_metadata = {name: Metadata(name, value)
-                                     for name, value in common_metadata.items()}
+                                      for name, value in common_metadata.items()}
         else:
             bench._common_metadata = {}
         return bench
@@ -620,7 +620,6 @@ class BenchmarkSuite(object):
         else:
             raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
                             % type(result).__name__)
-
 
     def get_benchmark(self, name):
         if not name:

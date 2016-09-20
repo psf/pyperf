@@ -6,7 +6,7 @@ from perf._utils import format_seconds, format_number
 
 
 def display_run(bench, run_index, run,
-                 common_metadata=None, raw=False, verbose=0, file=None):
+                common_metadata=None, raw=False, verbose=0, file=None):
     show_warmup = (verbose >= 0)
 
     total_loops = run.get_total_loops()
@@ -305,7 +305,7 @@ def display_metadata(metadata, header="Metadata:", file=None):
 
 
 def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
-                       dump=False, stats=False, hist=False):
+                      dump=False, stats=False, hist=False):
     if metadata:
         display_metadata(bench.get_metadata(), file=file)
         print(file=file)
@@ -328,6 +328,3 @@ def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
             print(line, file=file)
 
     print(str(bench), file=file)
-
-
-

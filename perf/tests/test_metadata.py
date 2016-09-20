@@ -3,7 +3,6 @@ import textwrap
 
 import six
 
-import perf
 from perf import _collect_metadata as perf_metadata
 from perf._metadata import METADATA_VALUE_TYPES
 from perf.tests import mock
