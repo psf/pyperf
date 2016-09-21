@@ -66,6 +66,7 @@ METADATA = {
     'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
 
     'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
+    'uptime': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
     'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None),
 
     'mem_max_rss': BYTES,

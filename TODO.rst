@@ -5,6 +5,10 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* perf timeit, maybe also TextRunner: add --python cmdline option?
+* Store date and boot_time as datetime.datetime in Python, but keep string for
+  JSON? It would allow to store microsecond resolution in JSON, but display
+  second resolution.
 * perf timeit: add --inner-loops=N parameter, if the statement is explicitly
   copied N items
 * Pass Python arguments to subprocesses like -I, -O, etc.

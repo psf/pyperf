@@ -212,7 +212,8 @@ System metadata:
   minute
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
   (processes, threads)
-* ``uptime``: Duration since the system boot
+* ``uptime``: Duration since the system boot (``float``, number of seconds
+  since ``boot_time``)
 
 Other:
 

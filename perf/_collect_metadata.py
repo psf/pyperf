@@ -238,7 +238,7 @@ def collect_system_metadata(metadata):
         metadata['boot_time'] = format_datetime(btime)
 
         now = datetime.datetime.now()
-        metadata['uptime'] = format_datetime_timedelta(now - btime)
+        metadata['uptime'] = (now - btime).total_seconds()
         break
 
 
@@ -499,11 +499,6 @@ def collect_cpu_metadata(metadata):
 def format_datetime(dt):
     dt = dt.replace(microsecond=0)
     return dt.isoformat()
-
-
-def format_datetime_timedelta(delta):
-    seconds = delta.total_seconds()
-    return format_seconds(seconds)
 
 
 def collect_metadata(metadata):
