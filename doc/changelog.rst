@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.7.12
+--------------
+
+* metadata: add ``boot_time`` and ``uptime`` on Linux
+
 Version 0.7.11 (2016-09-19)
 ---------------------------
 

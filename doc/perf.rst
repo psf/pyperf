@@ -204,6 +204,7 @@ System metadata:
 
 * ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
   ``disabled``
+* ``boot_time``: Datetime of the system boot
 * ``hostname``: Host name
 * ``platform``: short string describing the platform
 * ``load_avg_1min``: Load average figures giving the number of jobs in the run
@@ -211,6 +212,7 @@ System metadata:
   minute
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
   (processes, threads)
+* ``uptime``: Duration since the system boot
 
 Other:
 

@@ -72,9 +72,16 @@ class TestTools(unittest.TestCase):
                          datetime.datetime(2016, 7, 20, 14, 6, 7, 608319))
 
     def test_format_seconds(self):
-        self.assertEqual(utils.format_seconds(316e-4), "31.6 ms")
-        self.assertEqual(utils.format_seconds(15.9), "15.9 sec")
-        self.assertEqual(utils.format_seconds(3 * 60 + 15.9), "3 min 16 sec")
+        self.assertEqual(utils.format_seconds(0),
+                         "0 sec")
+        self.assertEqual(utils.format_seconds(316e-4),
+                         "31.6 ms")
+        self.assertEqual(utils.format_seconds(15.9),
+                         "15.9 sec")
+        self.assertEqual(utils.format_seconds(3 * 60 + 15.9),
+                         "3 min 15.9 sec")
+        self.assertEqual(utils.format_seconds(404683.5876653),
+                         "4 day 16 hour 24 min")
 
     def test_format_timedelta(self):
         fmt_delta = utils.format_timedelta
@@ -106,7 +113,7 @@ class TestTools(unittest.TestCase):
         format_number = utils.format_number
 
         # plural
-        self.assertEqual(format_number(0, 'unit'), '0 unit')
+        self.assertEqual(format_number(0, 'unit'), '0 units')
         self.assertEqual(format_number(1, 'unit'), '1 unit')
         self.assertEqual(format_number(2, 'unit'), '2 units')
         self.assertEqual(format_number(123, 'unit'), '123 units')

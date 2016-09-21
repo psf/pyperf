@@ -54,18 +54,32 @@ def format_filesizes(sizes):
 
 
 def format_seconds(seconds):
+    # Coarse but human readable duration
+    if not seconds:
+        return '0 sec'
+
     if seconds < 1.0:
         return format_timedelta(seconds)
 
-    mins, secs = divmod(seconds, 60)
+    mins, secs = divmod(seconds, 60.0)
+    mins = int(mins)
+    hours, mins = divmod(mins, 60)
+    days, hours = divmod(hours, 24)
+
+    parts = []
+    if days:
+        parts.append("%.0f day" % days)
+    if hours:
+        parts.append("%.0f hour" % hours)
     if mins:
-        return '%.0f min %.0f sec' % (mins, secs)
-    else:
-        return '%.1f sec' % secs
+        parts.append("%.0f min" % mins)
+    if secs and len(parts) <= 2:
+        parts.append('%.1f sec' % secs)
+    return ' '.join(parts)
 
 
 def format_number(number, unit=None, units=None):
-    plural = (abs(number) > 1)
+    plural = (not number or abs(number) > 1)
     if number >= 10000:
         pow10 = 0
         x = number

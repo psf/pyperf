@@ -23,7 +23,7 @@ except ImportError:
 
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
-                         parse_cpu_list,
+                         parse_cpu_list, format_seconds,
                          get_isolated_cpus, MS_WINDOWS)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
@@ -228,6 +228,18 @@ def collect_system_metadata(metadata):
     hostname = socket.gethostname()
     if hostname:
         metadata['hostname'] = hostname
+
+    # Boot time
+    for line in read_proc("stat"):
+        if not line.startswith("btime "):
+            continue
+        seconds = int(line[6:])
+        btime = datetime.datetime.fromtimestamp(seconds)
+        metadata['boot_time'] = format_datetime(btime)
+
+        now = datetime.datetime.now()
+        metadata['uptime'] = format_datetime_timedelta(now - btime)
+        break
 
 
 def collect_memory_metadata(metadata):
@@ -484,12 +496,21 @@ def collect_cpu_metadata(metadata):
     collect_cpu_temperatures(metadata)
 
 
+def format_datetime(dt):
+    dt = dt.replace(microsecond=0)
+    return dt.isoformat()
+
+
+def format_datetime_timedelta(delta):
+    seconds = delta.total_seconds()
+    return format_seconds(seconds)
+
+
 def collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
-    date = datetime.datetime.now().isoformat()
-    # FIXME: Move date to a regular run attribute with type datetime.datetime?
-    metadata['date'] = date.split('.', 1)[0]
+    now = datetime.datetime.now()
+    metadata['date'] = format_datetime(now)
 
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)
