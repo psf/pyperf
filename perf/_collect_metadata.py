@@ -23,7 +23,7 @@ except ImportError:
 
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
-                         parse_cpu_list, format_seconds,
+                         parse_cpu_list,
                          get_isolated_cpus, MS_WINDOWS)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
