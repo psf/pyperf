@@ -4,6 +4,7 @@ env:
   - TOXENV=py34
   - TOXENV=pypy
   - TOXENV=doc
+  - TOXENV=pep8
 # upgrade setuptools to support environment markers
 # in install_requires of setup.py
 install: pip install -U setuptools tox
