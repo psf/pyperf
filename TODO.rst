@@ -5,6 +5,8 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* metadata: voluntary_ctxt_switches and nonvoluntary_ctxt_switches of
+  /proc/self/status?
 * perf timeit, maybe also TextRunner: add --python cmdline option?
 * Store date and boot_time as datetime.datetime in Python, but keep string for
   JSON? It would allow to store microsecond resolution in JSON, but display
