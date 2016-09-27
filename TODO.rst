@@ -5,6 +5,7 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* emit a warning when nohz_full is enabled on at least one CPU
 * metadata: voluntary_ctxt_switches and nonvoluntary_ctxt_switches of
   /proc/self/status?
 * perf timeit, maybe also TextRunner: add --python cmdline option?
