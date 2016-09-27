@@ -630,7 +630,6 @@ class TextRunner:
                 display_run(bench, run_index, run, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
-                stream.flush()
 
             if not args.loops:
                 # Use the first worker to calibrate the benchmark. Use a worker
@@ -641,6 +640,8 @@ class TextRunner:
                 if verbose:
                     print("Calibration: use %s loops" % format_number(args.loops),
                           file=stream)
+
+            stream.flush()
 
         if not quiet:
             print(file=stream)
