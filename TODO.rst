@@ -8,7 +8,7 @@ TODO
 * Incompatible change: TextRunner.program_args, drop first parameter
 * emit a warning when nohz_full is enabled on at least one CPU
 * metadata: voluntary_ctxt_switches and nonvoluntary_ctxt_switches of
-  /proc/self/status?
+  /proc/self/status? or/and read /proc/interrupts to count interruptions?
 * perf timeit, maybe also TextRunner: add --python cmdline option?
 * Store date and boot_time as datetime.datetime in Python, but keep string for
   JSON? It would allow to store microsecond resolution in JSON, but display
