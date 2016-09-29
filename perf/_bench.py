@@ -136,16 +136,14 @@ class Run(object):
         return self._get_loops() * self._get_inner_loops()
 
     def _get_raw_samples(self, warmups=False):
-        inner_loops = self._get_inner_loops()
-
         if warmups and self._warmups:
             # FIXME: store the number of loops in each warmup sample
             raw_samples = [raw_sample for loops, raw_sample in self._warmups]
         else:
             raw_samples = []
 
-        sample_loops = self._get_loops() * inner_loops
-        raw_samples.extend(sample * sample_loops for sample in self._samples)
+        total_loops = self.get_total_loops()
+        raw_samples.extend(sample * total_loops for sample in self._samples)
         return tuple(raw_samples)
 
     def _remove_warmups(self):
