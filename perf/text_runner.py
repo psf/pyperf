@@ -376,6 +376,8 @@ class TextRunner:
         metadata = dict(self.metadata)
         start_time = perf.monotonic_clock()
 
+        self._cpu_affinity()
+
         calibrate = (not loops)
         if calibrate:
             loops, calibrate_warmups = self._calibrate(bench, sample_func)
@@ -452,8 +454,6 @@ class TextRunner:
 
     def _main(self, sample_func):
         args = self.parse_args()
-
-        self._cpu_affinity()
 
         bench = perf.Benchmark()
 
