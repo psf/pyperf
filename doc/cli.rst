@@ -336,6 +336,8 @@ Usage
 
     python3 -m perf timeit [options] [-s SETUP] stmt [stmt ...]
 
+The ``--python=PYTHON`` option can be used to test a different Python version.
+
 See :ref:`TextRunner CLI <textrunner_cli>` for options.
 
 .. note::

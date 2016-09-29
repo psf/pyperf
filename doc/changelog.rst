@@ -4,6 +4,7 @@ Changelog
 Version 0.7.12
 --------------
 
+* Add ``--python`` command line option
 * TextRunner don't set CPU affinity of the main process, only on worker
   processes. It may help a little bit when using NOHZ_FULL.
 * metadata: add ``boot_time`` and ``uptime`` on Linux

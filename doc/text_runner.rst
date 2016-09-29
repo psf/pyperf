@@ -93,11 +93,15 @@ Misc
 Option::
 
     [-h/--help]
+    [--python=PYTHON]
     [--affinity=CPU_LIST]
     [--inherit-environ=VARS]
     [--track-memory]
     [--tracemalloc]
 
+* ``--python=PYTHON``: Python executable. By default, use the running Python
+  (``sys.executable``). The Python executable must have the ``perf`` module
+  installed.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if
