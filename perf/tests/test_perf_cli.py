@@ -1,6 +1,5 @@
 import os
 import sys
-import tempfile
 import textwrap
 
 import perf
@@ -47,9 +46,9 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         suite.add_benchmark(bench1)
         suite.add_benchmark(bench2)
 
-        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-            suite.dump(tmp.name)
-            stdout = self.run_command('show', '--metadata', tmp.name)
+        with tests.temporary_file() as tmp_name:
+            suite.dump(tmp_name)
+            stdout = self.run_command('show', '--metadata', tmp_name)
 
         expected = textwrap.dedent("""
             Common metadata:
@@ -345,9 +344,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):
         bench = self.create_bench((1.0, 1.5, 2.0))
 
-        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-            bench.dump(tmp.name)
-            stdout = self.run_command('convert', tmp.name, '--stdout')
+        with tests.temporary_file() as tmp_name:
+            bench.dump(tmp_name)
+            stdout = self.run_command('convert', tmp_name, '--stdout')
 
         self.assertEqual(stdout,
                          tests.benchmark_as_json(bench))
@@ -355,9 +354,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_indent(self):
         bench = self.create_bench((1.0, 1.5, 2.0))
 
-        with tempfile.NamedTemporaryFile(mode="w+") as tmp:
-            bench.dump(tmp.name)
-            stdout = self.run_command('convert', tmp.name,
+        with tests.temporary_file() as tmp_name:
+            bench.dump(tmp_name)
+            stdout = self.run_command('convert', tmp_name,
                                       '--indent', '--stdout')
 
         self.assertEqual(stdout,

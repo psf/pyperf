@@ -1,6 +1,8 @@
 import collections
 import contextlib
+import errno
 import io
+import os
 import shutil
 import subprocess
 import sys
@@ -53,6 +55,19 @@ def compare_benchmarks(testcase, bench1, bench2):
     json1 = benchmark_as_json(bench1, compact=False)
     json2 = benchmark_as_json(bench2, compact=False)
     testcase.assertEqual(json1, json2)
+
+
+@contextlib.contextmanager
+def temporary_file():
+    tmp_filename = tempfile.mktemp()
+    try:
+        yield tmp_filename
+    finally:
+        try:
+            os.unlink(tmp_filename)
+        except OSError as exc:
+            if exc.errno != errno.ENOENT:
+                raise
 
 
 @contextlib.contextmanager
