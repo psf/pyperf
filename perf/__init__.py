@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import
 
-__version__ = '0.7.12'
+__version__ = '0.7.13'
 
 # Clocks
 try:
