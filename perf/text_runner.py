@@ -14,7 +14,7 @@ from perf._cli import display_run, display_benchmark
 from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
                          get_isolated_cpus, set_cpu_affinity,
-                         MS_WINDOWS)
+                         MS_WINDOWS, popen_communicate)
 
 try:
     # Optional dependency
@@ -98,18 +98,7 @@ def _run_cmd(args, env):
                             stderr=subprocess.PIPE,
                             env=env)
 
-    try:
-        stdout, stderr = proc.communicate()
-    except:
-        proc.stdout.close()
-        proc.stderr.close()
-        try:
-            proc.kill()
-        except OSError:
-            # process already exited
-            pass
-        proc.wait()
-        raise
+    stdout, stderr = popen_communicate(proc)
 
     if proc.returncode:
         sys.stdout.write(stdout)

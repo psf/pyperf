@@ -356,3 +356,23 @@ def python_implementation():
 
 def python_has_jit():
     return (python_implementation() == 'pypy')
+
+
+def popen_communicate(proc):
+    try:
+        return proc.communicate()
+    except:
+        # Close pipes
+        if proc.stdin:
+            proc.stdin.close()
+        if proc.stdout:
+            proc.stdout.close()
+        if proc.stderr:
+            proc.stderr.close()
+        try:
+            proc.kill()
+        except OSError:
+            # process already terminated
+            pass
+        proc.wait()
+        raise

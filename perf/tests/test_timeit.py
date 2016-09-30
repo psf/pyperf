@@ -2,8 +2,6 @@ import errno
 import os.path
 import re
 import shutil
-import six
-import subprocess
 import sys
 import tempfile
 
@@ -40,11 +38,9 @@ class TestTimeit(unittest.TestCase):
                 '-s', 'import time',
                 SLEEP)
         args = PERF_TIMEIT + args
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True)
-        stdout = proc.communicate()[0]
-        self.assertEqual(proc.returncode, 0)
+        cmd = tests.get_output(args)
+        self.assertEqual(cmd.returncode, 0)
+        self.assertEqual(cmd.stderr, '')
 
         match = re.search(r'Warmup 1: ([0-9.]+) ms \(1 loop: [0-9.]+ ms\)\n'
                           r'\n'
@@ -57,8 +53,8 @@ class TestTimeit(unittest.TestCase):
                           r'Median \+- std dev: (?P<median>[0-9.]+) ms \+-'
                           ' (?P<stdev>[0-9.]+) ms\n'
                           r'$',
-                          stdout)
-        self.assertIsNotNone(match, repr(stdout))
+                          cmd.stdout)
+        self.assertIsNotNone(match, repr(cmd.stdout))
 
         values = [float(match.group(i)) for i in range(1, 4)]
         for value in values:
@@ -79,19 +75,17 @@ class TestTimeit(unittest.TestCase):
                 '-s', 'import time',
                 SLEEP)
         args = PERF_TIMEIT + args
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True)
-        stdout = proc.communicate()[0]
-        self.assertEqual(proc.returncode, 0)
+        cmd = tests.get_output(args)
+        self.assertEqual(cmd.returncode, 0)
+        self.assertEqual(cmd.stderr, '')
 
         # ignore lines before to ignore random warnings like
         # "ERROR: the benchmark is very unstable"
         match = re.search(r'Median \+- std dev: (?P<median>[0-9.]+) ms'
                           r' \+- (?P<stdev>[0-9.]+) ms'
                           r'$',
-                          stdout.rstrip())
-        self.assertIsNotNone(match, repr(stdout))
+                          cmd.stdout.rstrip())
+        self.assertIsNotNone(match, repr(cmd.stdout))
 
         # Tolerate large differences on busy systems
         median = float(match.group('median'))
@@ -101,15 +95,8 @@ class TestTimeit(unittest.TestCase):
         self.assertLessEqual(stdev, MAX_STDEV)
 
     def run_timeit(self, args):
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                universal_newlines=True)
-        if six.PY3:
-            with proc:
-                proc.communicate()
-        else:
-            proc.communicate()
-        self.assertEqual(proc.returncode, 0)
+        cmd = tests.get_output(args)
+        self.assertEqual(cmd.returncode, 0, cmd.stdout + cmd.stderr)
 
     def run_timeit_bench(self, args):
         with tests.temporary_directory() as tmpdir:
@@ -160,15 +147,11 @@ class TestTimeit(unittest.TestCase):
 
     def test_cli_snippet_error(self):
         args = PERF_TIMEIT + ('x+1',)
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True)
-        stdout, stderr = proc.communicate()
-        self.assertEqual(proc.returncode, 1)
+        cmd = tests.get_output(args)
+        self.assertEqual(cmd.returncode, 1)
 
-        self.assertIn('Traceback (most recent call last):', stderr)
-        self.assertIn("NameError", stderr)
+        self.assertIn('Traceback (most recent call last):', cmd.stderr)
+        self.assertIn("NameError", cmd.stderr)
 
     # When the PyPy program is copied, it fails with "Library path not found"
     @unittest.skipIf(perf.python_implementation() == 'pypy',
@@ -187,12 +170,7 @@ class TestTimeit(unittest.TestCase):
                     '--python', tmp_exe,
                     '--inherit-env', 'PYTHONPATH')
             args = PERF_TIMEIT + args + FAST_BENCH_ARGS
-            proc = subprocess.Popen(args,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True,
-                                    env=env)
-            stdout, stderr = proc.communicate()
+            cmd = tests.get_output(args, env=env)
         finally:
             try:
                 os.unlink(tmp_exe)
@@ -200,8 +178,8 @@ class TestTimeit(unittest.TestCase):
                 if exc.errno != errno.ENOENT:
                     raise
 
-        self.assertEqual(proc.returncode, 0, repr(stdout + stderr))
-        self.assertIn("python_executable: %s" % tmp_exe, stdout)
+        self.assertEqual(cmd.returncode, 0, repr(cmd.stdout + cmd.stderr))
+        self.assertIn("python_executable: %s" % tmp_exe, cmd.stdout)
 
     def test_name(self):
         name = 'myname'

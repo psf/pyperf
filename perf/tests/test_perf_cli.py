@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import tempfile
 import textwrap
@@ -27,16 +26,11 @@ class BaseTestCase(object):
     def run_command(self, *args, **kwargs):
         cmd = [sys.executable, '-m', 'perf']
         cmd.extend(args)
-        proc = subprocess.Popen(cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True,
-                                **kwargs)
-        stdout, stderr = proc.communicate()
 
-        self.assertEqual(stderr, '')
+        proc = tests.get_output(cmd, **kwargs)
+        self.assertEqual(proc.stderr, '')
         self.assertEqual(proc.returncode, 0)
-        return stdout
+        return proc.stdout
 
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):

@@ -1,6 +1,8 @@
+import collections
 import contextlib
 import io
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -14,6 +16,8 @@ try:
     import unittest2 as unittest   # noqa
 except ImportError:
     import unittest   # noqa
+
+from perf._utils import popen_communicate
 
 
 @contextlib.contextmanager
@@ -58,3 +62,16 @@ def temporary_directory():
         yield tmpdir
     finally:
         shutil.rmtree(tmpdir)
+
+
+ProcResult = collections.namedtuple('ProcResult', 'returncode stdout stderr')
+
+
+def get_output(cmd, **kw):
+    proc = subprocess.Popen(cmd,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            universal_newlines=True,
+                            **kw)
+    stdout, stderr = popen_communicate(proc)
+    return ProcResult(proc.returncode, stdout, stderr)
