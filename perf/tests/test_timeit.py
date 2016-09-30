@@ -1,13 +1,15 @@
+import errno
 import os.path
 import re
-import subprocess
+import shutil
 import six
+import subprocess
 import sys
-import unittest
+import tempfile
 
 import perf
 from perf import tests
-from perf.text_runner import _which as which
+from perf.tests import unittest
 
 
 SLEEP = 'time.sleep(1e-3)'
@@ -171,38 +173,41 @@ class TestTimeit(unittest.TestCase):
         self.assertIn('Traceback (most recent call last):', stderr)
         self.assertIn("NameError", stderr)
 
-    def check_python_option(self, python):
-        path = os.path.realpath(os.path.dirname(perf.__file__))
-        env = dict(os.environ)
-        env['PYTHONPATH'] = path
+    # When the PyPy program is copied, it fails with "Library path not found"
+    @unittest.skipIf(perf.python_implementation() == 'pypy',
+                     'pypy program cannot be copied')
+    def test_python_option(self):
+        # Ensure that paths are absolute
+        paths = [os.path.realpath(path) for path in sys.path]
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join(paths))
 
-        abs_python = which(python, path=os.defpath)
-        if not abs_python:
-            self.skipTest('missing Python executable: %s' % python)
-        python = os.path.realpath(abs_python)
+        tmp_exe = tempfile.mktemp()
+        try:
+            shutil.copy2(sys.executable, tmp_exe)
 
-        # Run benchmark to check if --python works
-        args = [sys.executable,
-                '-m', 'perf', 'timeit',
-                '--metadata', '--debug-single-sample',
-                '--python', python,
-                '-s', 'import time',
-                SLEEP]
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True,
-                                env=env)
-        stdout, stderr = proc.communicate()
-        self.assertEqual(proc.returncode, 0, stderr)
+            # Run benchmark to check if --python works
+            args = [sys.executable,
+                    '-m', 'perf', 'timeit',
+                    '--metadata', '--debug-single-sample',
+                    '--python', tmp_exe,
+                    '--inherit-env', 'PYTHONPATH',
+                    '-s', 'import time',
+                    SLEEP]
+            proc = subprocess.Popen(args,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True,
+                                    env=env)
+            stdout, stderr = proc.communicate()
+        finally:
+            try:
+                os.unlink(tmp_exe)
+            except OSError as exc:
+                if exc.errno != errno.ENOENT:
+                    raise
 
-        self.assertIn("python_executable: %s" % python, stdout)
-
-    def test_python_option_py2(self):
-        self.check_python_option('python2')
-
-    def test_python_option_py3(self):
-        self.check_python_option('python3')
+        self.assertEqual(proc.returncode, 0, repr(stdout + stderr))
+        self.assertIn("python_executable: %s" % tmp_exe, stdout)
 
 
 if __name__ == "__main__":
