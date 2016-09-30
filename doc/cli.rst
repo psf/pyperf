@@ -338,6 +338,7 @@ Usage
         [options]
         [--name NAME]
         [--python PYTHON]
+        [--compare-to PYTHON2]
         [--inner-loops INNER_LOOPS]
         [-s SETUP]
         stmt [stmt ...]
@@ -355,6 +356,8 @@ Options:
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``perf`` module
   installed.
+* ``--compare-to=PYTHON2``: Run benchmark on the Python executable ``PYTHON``,
+  run benchmark on Python executable ``PYTHON2``, and then compare results.
 * ``[options]``: see :ref:`TextRunner CLI <textrunner_cli>` for more options.
 
 .. note::

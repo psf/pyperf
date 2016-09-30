@@ -4,8 +4,8 @@ Changelog
 Version 0.7.12
 --------------
 
-* ``timeit``: add ``--name`` and ``--inner-loops`` options
 * Add ``--python`` command line option
+* ``timeit``: add ``--name``, ``--inner-loops`` and ``--compare-to`` options
 * TextRunner don't set CPU affinity of the main process, only on worker
   processes. It may help a little bit when using NOHZ_FULL.
 * metadata: add ``boot_time`` and ``uptime`` on Linux

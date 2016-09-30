@@ -11,9 +11,9 @@ from perf._metadata import _common_metadata
 from perf._cli import (display_runs, display_stats, display_metadata,
                        warn_if_bench_unstable, display_histogram,
                        display_benchmark, display_title, get_benchmark_name)
+from perf._timeit import TimeitRunner
 from perf._utils import (format_timedelta, format_seconds, parse_run_list,
                          get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
-import perf.text_runner
 
 
 def create_parser():
@@ -79,19 +79,7 @@ def create_parser():
 
     # timeit
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
-    bench_name = 'timeit'
-    timeit_runner = perf.text_runner.TextRunner(name=bench_name, _argparser=cmd)
-    cmd.add_argument('--name',
-                     help='Benchmark name (default: %r)' % bench_name)
-    cmd.add_argument('-s', '--setup', action='append', default=[],
-                     help='setup statements')
-    cmd.add_argument('--inner-loops',
-                     type=int,
-                     help='Number of inner loops per sample. For example, '
-                          'the number of times that the code is copied '
-                          'manually multiple times to reduce the overhead '
-                          'of the outer loop.')
-    cmd.add_argument('stmt', nargs='+', help='executed statements')
+    timeit_runner = TimeitRunner(_argparser=cmd)
 
     # convert
     cmd = subparsers.add_parser('convert', help='Modify benchmarks')

@@ -6,6 +6,23 @@ import perf
 from perf._cli import display_title, get_benchmark_name
 
 
+def is_significant(bench1, bench2):
+    samples1 = bench1.get_samples()
+    samples2 = bench2.get_samples()
+
+    if len(samples1) == 1 and len(samples2) == 1:
+        # FIXME: is it ok to consider that comparison between two samples
+        # is significant?
+        return (True, None)
+
+    try:
+        significant, t_score = perf.is_significant(samples1, samples2)
+        return (significant, t_score)
+    except Exception:
+        # FIXME: fix the root bug, don't work around it
+        return (True, None)
+
+
 class CompareResults(list):
     def __init__(self, name):
         self.name = name
@@ -25,37 +42,21 @@ class CompareResult(object):
         self._t_score = None
         self._speed = None
 
-    def _get_significant(self):
-        ref_samples = self.ref.benchmark.get_samples()
-        changed_samples = self.changed.benchmark.get_samples()
-
-        if len(ref_samples) == 1 and len(changed_samples) == 1:
-            # FIXME: is it ok to consider that comparison between two samples
-            # is significant?
-            self._significant = True
-            self._tscore = None
-            return
-
-        try:
-            significant, t_score = perf.is_significant(ref_samples,
-                                                       changed_samples)
-            self._significant = significant
-            self._t_score = t_score
-        except Exception:
-            # FIXME: fix the root bug, don't work around it
-            self._significant = True
-            self._t_score = None
+    def _set_significant(self):
+        bench1 = self.ref.benchmark
+        bench2 = self.changed.benchmark
+        self._significant, self._t_score = is_significant(bench1, bench2)
 
     @property
     def significant(self):
         if self._significant is None:
-            self._get_significant()
+            self._set_significant()
         return self._significant
 
     @property
     def t_score(self):
         if self._significant is None:
-            self._get_significant()
+            self._set_significant()
         return self._t_score
 
     @property
@@ -66,13 +67,14 @@ class CompareResult(object):
             self._speed = ref_avg / changed_avg
         return self._speed
 
-    def oneliner(self, verbose=True):
+    def oneliner(self, verbose=True, show_name=True):
         ref_text = self.ref.benchmark.format()
         chg_text = self.changed.benchmark.format()
         if verbose:
-            text = ("Median +- std dev: [%s] %s -> [%s] %s"
-                    % (self.ref.name, ref_text,
-                       self.changed.name, chg_text))
+            if show_name:
+                ref_text = "[%s] %s" % (self.ref.name, ref_text)
+                chg_text = "[%s] %s" % (self.changed.name, chg_text)
+            text = "Median +- std dev: %s -> %s" % (ref_text, chg_text)
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
@@ -85,8 +87,8 @@ class CompareResult(object):
             text = "%s: %.2fx slower" % (text, 1.0 / speed)
         return text
 
-    def format(self, verbose=True):
-        text = self.oneliner()
+    def format(self, verbose=True, show_name=True):
+        text = self.oneliner(show_name=show_name)
         lines = [text]
 
         # significant?
@@ -228,5 +230,10 @@ def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
 
-def timeit_compare_benchs(bench1, bench2):
-    pass
+def timeit_compare_benchs(bench1, bench2, args):
+    data1 = CompareData('PYTHON1', bench1)
+    data2 = CompareData('PYTHON2', bench2)
+    compare = CompareResult(data1, data2)
+    lines = compare.format(show_name=False, verbose=args.verbose)
+    for line in lines:
+        print(line)
