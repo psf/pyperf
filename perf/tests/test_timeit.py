@@ -12,6 +12,12 @@ from perf import tests
 from perf.tests import unittest
 
 
+PERF_TIMEIT = (sys.executable, '-m', 'perf', 'timeit')
+# We only need a statement taking longer than 0 nanosecond
+FAST_BENCH_ARGS = ('--debug-single-sample',
+                   '-s', 'import time',
+                   'time.sleep(1e-6)')
+
 SLEEP = 'time.sleep(1e-3)'
 # The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
 # systems. The unit test doesn't test the system but more the output format.
@@ -24,9 +30,7 @@ MAX_STDEV = 10.0  # ms
 
 class TestTimeit(unittest.TestCase):
     def test_worker_verbose(self):
-        args = [sys.executable,
-                '-m', 'perf', 'timeit',
-                '--worker',
+        args = ('--worker',
                 '-w', '1',
                 '-n', '2',
                 '-l', '1',
@@ -34,7 +38,8 @@ class TestTimeit(unittest.TestCase):
                 '--metadata',
                 '-v',
                 '-s', 'import time',
-                SLEEP]
+                SLEEP)
+        args = PERF_TIMEIT + args
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 universal_newlines=True)
@@ -66,15 +71,14 @@ class TestTimeit(unittest.TestCase):
         self.assertLessEqual(stdev, MAX_STDEV)
 
     def test_cli(self):
-        args = [sys.executable,
-                '-m', 'perf', 'timeit',
-                '-p', '2',
+        args = ('-p', '2',
                 '-w', '1',
                 '-n', '3',
                 '-l', '4',
                 '--min-time', '0.001',
                 '-s', 'import time',
-                SLEEP]
+                SLEEP)
+        args = PERF_TIMEIT + args
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 universal_newlines=True)
@@ -107,25 +111,24 @@ class TestTimeit(unittest.TestCase):
             proc.communicate()
         self.assertEqual(proc.returncode, 0)
 
-    def test_output(self):
-        loops = 4
+    def run_timeit_bench(self, args):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
-            args = [sys.executable,
-                    '-m', 'perf', 'timeit',
-                    '-p', '2',
-                    '-w', '1',
-                    '-n', '3',
-                    '-l', str(loops),
-                    '--min-time', '0.001',
-                    '--output', filename,
-                    '--name', 'test_output',
-                    '-s', 'import time',
-                    SLEEP]
+            args += ('--output', filename)
             self.run_timeit(args)
-            bench = perf.Benchmark.load(filename)
+            return perf.Benchmark.load(filename)
 
-        self.assertEqual(bench.get_name(), 'test_output')
+    def test_output(self):
+        loops = 4
+        args = ('-p', '2',
+                '-w', '1',
+                '-n', '3',
+                '-l', str(loops),
+                '--min-time', '0.001',
+                '-s', 'import time',
+                SLEEP)
+        args = PERF_TIMEIT + args
+        bench = self.run_timeit_bench(args)
 
         # FIXME: skipped test, since calibration continues during warmup
         if not perf.python_has_jit():
@@ -145,15 +148,7 @@ class TestTimeit(unittest.TestCase):
     def test_append(self):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
-            args = [sys.executable,
-                    '-m', 'perf', 'timeit',
-                    '-p', '1',
-                    '-n', '1',
-                    '-l', '1',
-                    '-w', '0',
-                    '--append', filename,
-                    '-s', 'import time',
-                    SLEEP]
+            args = PERF_TIMEIT + ('--append', filename) + FAST_BENCH_ARGS
 
             self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
@@ -164,8 +159,7 @@ class TestTimeit(unittest.TestCase):
             self.assertEqual(bench.get_nsample(), 2)
 
     def test_cli_snippet_error(self):
-        args = [sys.executable,
-                '-m', 'perf', 'timeit', 'x+1']
+        args = PERF_TIMEIT + ('x+1',)
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
@@ -189,13 +183,10 @@ class TestTimeit(unittest.TestCase):
             shutil.copy2(sys.executable, tmp_exe)
 
             # Run benchmark to check if --python works
-            args = [sys.executable,
-                    '-m', 'perf', 'timeit',
-                    '--metadata', '--debug-single-sample',
+            args = ('--metadata',
                     '--python', tmp_exe,
-                    '--inherit-env', 'PYTHONPATH',
-                    '-s', 'import time',
-                    SLEEP]
+                    '--inherit-env', 'PYTHONPATH')
+            args = PERF_TIMEIT + args + FAST_BENCH_ARGS
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
@@ -211,6 +202,21 @@ class TestTimeit(unittest.TestCase):
 
         self.assertEqual(proc.returncode, 0, repr(stdout + stderr))
         self.assertIn("python_executable: %s" % tmp_exe, stdout)
+
+    def test_name(self):
+        name = 'myname'
+        args = PERF_TIMEIT + ('--name', name) + FAST_BENCH_ARGS
+        bench = self.run_timeit_bench(args)
+
+        self.assertEqual(bench.get_name(), name)
+
+    def test_inner_loops(self):
+        inner_loops = 17
+        args = PERF_TIMEIT + ('--inner-loops', str(inner_loops)) + FAST_BENCH_ARGS
+        bench = self.run_timeit_bench(args)
+
+        metadata = bench.get_metadata()
+        self.assertEqual(metadata['inner_loops'].value, inner_loops)
 
 
 if __name__ == "__main__":

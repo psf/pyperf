@@ -5,16 +5,14 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* Add Benchmark.get_metadata_values() to avoid Benchmark objects
 * Incompatible change: TextRunner.program_args, drop first parameter
 * emit a warning when nohz_full is enabled on at least one CPU
 * metadata: voluntary_ctxt_switches and nonvoluntary_ctxt_switches of
   /proc/self/status? or/and read /proc/interrupts to count interruptions?
-* perf timeit, maybe also TextRunner: add --python cmdline option?
 * Store date and boot_time as datetime.datetime in Python, but keep string for
   JSON? It would allow to store microsecond resolution in JSON, but display
   second resolution.
-* perf timeit: add --inner-loops=N parameter, if the statement is explicitly
-  copied N items
 * Pass Python arguments to subprocesses like -I, -O, etc.
 * "venv/pypy5.0-ec75e7c13ad0/bin/python -m perf timeit -w0 -l1 -n 10 pass -v --worker"
   sometimes create a sample equals to 0

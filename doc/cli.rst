@@ -338,6 +338,7 @@ Usage
         [options]
         [--name NAME]
         [--python PYTHON]
+        [--inner-loops INNER_LOOPS]
         [-s SETUP]
         stmt [stmt ...]
 
@@ -348,6 +349,9 @@ Options:
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
   The option can be specified multiple times.
 * ``--name=NAME``: Benchmark name (default: ``timeit``).
+* ``--inner-loops=INNER_LOOPS``: Number of inner loops per sample. For example,
+  the number of times that the code is copied manually multiple times to reduce
+  the overhead of the outer loop.
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``perf`` module
   installed.

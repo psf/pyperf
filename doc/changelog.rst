@@ -4,7 +4,7 @@ Changelog
 Version 0.7.12
 --------------
 
-* ``timeit``: add ``--name`` option
+* ``timeit``: add ``--name`` and ``--inner-loops`` options
 * Add ``--python`` command line option
 * TextRunner don't set CPU affinity of the main process, only on worker
   processes. It may help a little bit when using NOHZ_FULL.

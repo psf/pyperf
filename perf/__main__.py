@@ -84,6 +84,12 @@ def create_parser():
                      help='Benchmark name (default: %r)' % bench_name)
     cmd.add_argument('-s', '--setup', action='append', default=[],
                      help='setup statements')
+    cmd.add_argument('--inner-loops',
+                     type=int,
+                     help='Number of inner loops per sample. For example, '
+                          'the number of times that the code is copied '
+                          'manually multiple times to reduce the overhead '
+                          'of the outer loop.')
     cmd.add_argument('stmt', nargs='+', help='executed statements')
 
     # convert
