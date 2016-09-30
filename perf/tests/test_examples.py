@@ -10,7 +10,7 @@ ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 class ExampleTests(unittest.TestCase):
     def check_command(self, cmd, nproc=3):
-        cmd = [sys.executable] + cmd
+        cmd = [sys.executable] + cmd + ["--inherit-env=PYTHONPATH"]
         proc = tests.get_output(cmd)
 
         self.assertRegex(proc.stdout,
