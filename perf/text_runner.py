@@ -10,7 +10,7 @@ import sys
 import six
 
 import perf
-from perf._cli import display_run, display_benchmark
+from perf._cli import display_run, display_benchmark, multiline_output
 from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
                          get_isolated_cpus, set_cpu_affinity,
@@ -109,6 +109,17 @@ def _run_cmd(args, env):
                            % (args[0], proc.returncode))
 
     return stdout
+
+
+def _abs_executable(python):
+    # Replace "~" with the user home directory
+    python = os.path.expanduser(python)
+    # Try to the absolute path to the binary
+    abs_python = _which(python)
+    if not abs_python:
+        print("ERROR: Unable to locate the Python executable: %r" % python)
+        sys.exit(1)
+    return os.path.realpath(abs_python)
 
 
 class TextRunner:
@@ -264,6 +275,9 @@ class TextRunner:
 
         self.argparser = parser
 
+    def _multiline_output(self):
+        return self.args.verbose or multiline_output(self.args)
+
     def _process_args(self):
         args = self.args
 
@@ -310,15 +324,7 @@ class TextRunner:
                       "(--track-memory): %s" % err_msg)
                 sys.exit(1)
 
-        # Replace "~" with the user home directory
-        args.python = os.path.expanduser(args.python)
-        # Try to the absolute path to the binary
-        abs_python = _which(args.python)
-        if not abs_python:
-            print("ERROR: Unable to locate the Python executable: %r"
-                  % args.python)
-            sys.exit(1)
-        args.python = os.path.realpath(abs_python)
+        args.python = _abs_executable(args.python)
 
     def parse_args(self, args=None):
         if self.args is None:
@@ -536,6 +542,7 @@ class TextRunner:
                 self._worker(bench, sample_func)
             else:
                 self._spawn_workers(bench)
+                self._display_result(bench)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
@@ -720,5 +727,3 @@ class TextRunner:
 
         if not quiet:
             print(file=stream)
-
-        self._display_result(bench)

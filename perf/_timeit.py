@@ -8,8 +8,9 @@ import sys
 import timeit
 
 import perf
-from perf._cli import display_title
-from perf.text_runner import TextRunner
+from perf._cli import display_title, warn_if_bench_unstable
+from perf._utils import get_python_names
+from perf.text_runner import TextRunner, _abs_executable
 
 
 class TimeitRunner(TextRunner):
@@ -29,17 +30,24 @@ class TimeitRunner(TextRunner):
                               'the number of times that the code is copied '
                               'manually multiple times to reduce the overhead '
                               'of the outer loop.')
-        cmd.add_argument("--compare-to", metavar="PYTHON2",
-                         help='Run benchmark on the Python executable PYTHON, '
-                              'run benchmark on Python executable PYTHON2, '
-                              'and then compare results')
+        cmd.add_argument("--compare-to", metavar="REF_PYTHON",
+                         help='Run benchmark on the Python executable REF_PYTHON, '
+                              'run benchmark on Python executable PYTHON, '
+                              'and then compare REF_PYTHON result to PYTHON result')
         cmd.add_argument('stmt', nargs='+', help='executed statements')
 
-    def bench_compare(self, python):
-        self.args.python = python
-        self.args.compare = None
-        self.args.output = None
-        self.args.append = None
+    def _process_args(self):
+        TextRunner._process_args(self)
+        args = self.args
+        if args.compare_to:
+            args.compare_to = _abs_executable(args.compare_to)
+
+    def bench_compare(self, python, loops):
+        args = self.args
+        args.loops = loops
+        args.python = python
+        args.compare = None
+
         bench = perf.Benchmark()
         self._spawn_workers(bench)
         return bench
@@ -95,20 +103,46 @@ def prepare_args(runner, cmd):
 def cmd_compare(runner, timer):
     from perf._compare import timeit_compare_benchs
 
+    args = runner.args
+    for option in ('output', 'append', 'worker'):
+        if getattr(args, option):
+            print("ERROR: --%s option is not supported in compare mode"
+                  % option)
+            sys.exit(1)
+
     # need a local copy, because bench_compare() modifies args
-    python1 = runner.args.python
-    python2 = runner.args.compare_to
+    loops = args.loops
+    python1 = args.compare_to
+    python2 = args.python
+    name1, name2 = get_python_names(python1, python2)
 
-    display_title('Benchmark %s' % python1)
-    bench1 = runner.bench_compare(python1)
-    print()
+    multiline = runner._multiline_output()
 
-    display_title('Benchmark %s' % python2)
-    bench2 = runner.bench_compare(python2)
-    print()
+    benchs = []
+    for python, name in ((python1, name1), (python2, name2)):
+        if multiline:
+            display_title('Benchmark %s' % name)
+        elif not args.quiet:
+            print(name, end=': ')
 
-    display_title('Compare')
-    timeit_compare_benchs(bench1, bench2, runner.args)
+        bench = runner.bench_compare(python, loops)
+        benchs.append(bench)
+        if multiline:
+            runner._display_result(bench)
+
+        if multiline:
+            print()
+        elif not args.quiet:
+            warnings = warn_if_bench_unstable(bench)
+            for line in warnings:
+                print(line)
+
+    bench1, bench2 = benchs
+    if multiline:
+        display_title('Compare')
+    elif not args.quiet:
+        print()
+    timeit_compare_benchs(name1, bench1, name2, bench2, args)
 
 
 def main(runner):

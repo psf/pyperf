@@ -376,3 +376,12 @@ def popen_communicate(proc):
             pass
         proc.wait()
         raise
+
+
+def get_python_names(python1, python2):
+    name1 = os.path.basename(python1)
+    name2 = os.path.basename(python2)
+    if name1 != name2:
+        return (name1, name2)
+
+    return (python1, python2)

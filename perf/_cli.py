@@ -343,3 +343,7 @@ def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
 def get_benchmark_name(benchmark):
     # FIXME: better fallback value
     return benchmark.get_name() or '<no name>'
+
+
+def multiline_output(args):
+    return (args.hist or args.stats or args.dump or args.metadata)

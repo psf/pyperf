@@ -10,7 +10,8 @@ import perf
 from perf._metadata import _common_metadata
 from perf._cli import (display_runs, display_stats, display_metadata,
                        warn_if_bench_unstable, display_histogram,
-                       display_benchmark, display_title, get_benchmark_name)
+                       display_benchmark, display_title, get_benchmark_name,
+                       multiline_output)
 from perf._timeit import TimeitRunner
 from perf._utils import (format_timedelta, format_seconds, parse_run_list,
                          get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
@@ -350,7 +351,7 @@ def cmd_show(args):
         metadatas = [item.benchmark.get_metadata() for item in data]
         _display_common_metadata(metadatas)
 
-    if args.hist or args.stats or args.dump or args.metadata:
+    if multiline_output(args):
         use_title = True
     else:
         use_title = False

@@ -4,6 +4,7 @@ import re
 import shutil
 import sys
 import tempfile
+import textwrap
 
 import perf
 from perf import tests
@@ -15,6 +16,10 @@ PERF_TIMEIT = (sys.executable, '-m', 'perf', 'timeit')
 FAST_BENCH_ARGS = ('--debug-single-sample',
                    '-s', 'import time',
                    'time.sleep(1e-6)')
+# test with a least with two samples
+COMPARE_BENCH = ('-l1', '-p1', '-w0', '-n3',
+                 '-s', 'import time',
+                 'time.sleep(1e-6)')
 
 SLEEP = 'time.sleep(1e-3)'
 # The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
@@ -195,6 +200,56 @@ class TestTimeit(unittest.TestCase):
 
         metadata = bench.get_metadata()
         self.assertEqual(metadata['inner_loops'].value, inner_loops)
+
+    def test_compare(self):
+        args = PERF_TIMEIT + ('--compare', sys.executable) + COMPARE_BENCH
+        cmd = tests.get_output(args)
+
+        # ".*" and DOTALL ignore stability warnings
+        expected = textwrap.dedent(r'''
+            .*: \.
+            .*
+            .*: \.
+            .*
+
+            (?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
+        ''').strip()
+        expected = re.compile(expected, flags=re.DOTALL)
+        self.assertRegex(cmd.stdout, expected)
+
+    def test_compare_verbose(self):
+        args = PERF_TIMEIT + ('--compare', sys.executable, '--verbose')
+        args += COMPARE_BENCH
+        cmd = tests.get_output(args)
+
+        expected = textwrap.dedent('''
+            Benchmark .*
+            ==========+
+
+            .*
+            Median \+- std dev: .*
+
+            Benchmark .*
+            ==========+
+
+            .*
+            Median \+- std dev: .*
+
+            Compare
+            =======
+
+            Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
+        ''').strip()
+        expected = re.compile(expected, flags=re.DOTALL)
+        self.assertRegex(cmd.stdout, expected)
+
+    def test_compare_quiet(self):
+        args = PERF_TIMEIT + ('--compare', sys.executable, '--quiet')
+        args += COMPARE_BENCH
+        cmd = tests.get_output(args)
+
+        expected = '(?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
+        self.assertRegex(cmd.stdout, expected)
 
 
 if __name__ == "__main__":

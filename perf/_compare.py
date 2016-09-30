@@ -67,7 +67,10 @@ class CompareResult(object):
             self._speed = ref_avg / changed_avg
         return self._speed
 
-    def oneliner(self, verbose=True, show_name=True):
+    def oneliner(self, verbose=True, show_name=True, check_significant=True):
+        if check_significant and not self.significant:
+            return "Not significant!"
+
         ref_text = self.ref.benchmark.format()
         chg_text = self.changed.benchmark.format()
         if verbose:
@@ -88,7 +91,7 @@ class CompareResult(object):
         return text
 
     def format(self, verbose=True, show_name=True):
-        text = self.oneliner(show_name=show_name)
+        text = self.oneliner(show_name=show_name, check_significant=False)
         lines = [text]
 
         # significant?
@@ -230,10 +233,14 @@ def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
 
-def timeit_compare_benchs(bench1, bench2, args):
-    data1 = CompareData('PYTHON1', bench1)
-    data2 = CompareData('PYTHON2', bench2)
+def timeit_compare_benchs(name1, bench1, name2, bench2, args):
+    data1 = CompareData(name1, bench1)
+    data2 = CompareData(name2, bench2)
     compare = CompareResult(data1, data2)
-    lines = compare.format(show_name=False, verbose=args.verbose)
-    for line in lines:
+    if not args.quiet:
+        lines = compare.format(verbose=args.verbose)
+        for line in lines:
+            print(line)
+    else:
+        line = compare.oneliner()
         print(line)

@@ -64,7 +64,7 @@ class TestStatistics(unittest.TestCase):
         pass
 
 
-class TestTools(unittest.TestCase):
+class TestUtils(unittest.TestCase):
     def test_parse_iso8601(self):
         self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07'),
                          datetime.datetime(2016, 7, 20, 14, 6, 7))
@@ -147,6 +147,15 @@ class TestTools(unittest.TestCase):
                          '10.0 kB')
         self.assertEqual(format_filesize(12.4 * 1024 * 1024),
                          '12.4 MB')
+
+    def test_get_python_names(self):
+        self.assertEqual(utils.get_python_names('/usr/bin/python2.7',
+                                                '/usr/bin/python3.5'),
+                         ('python2.7', 'python3.5'))
+
+        self.assertEqual(utils.get_python_names('/bin/python2.7',
+                                                '/usr/bin/python2.7'),
+                         ('/bin/python2.7', '/usr/bin/python2.7'))
 
 
 class CPUToolsTests(unittest.TestCase):

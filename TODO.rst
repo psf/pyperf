@@ -5,6 +5,8 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* timeit compare: write result as JSON into one or two files?
+* compare: don't write "Median +- std dev" when there is a single sample
 * Add Benchmark.get_metadata_values() to avoid Benchmark objects
 * Incompatible change: TextRunner.program_args, drop first parameter
 * emit a warning when nohz_full is enabled on at least one CPU
