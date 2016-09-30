@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.7.12
---------------
+Version 0.7.12 (2016-09-30)
+---------------------------
 
 * Add ``--python`` command line option
 * ``timeit``: add ``--name``, ``--inner-loops`` and ``--compare-to`` options
