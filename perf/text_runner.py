@@ -546,7 +546,7 @@ class TextRunner:
             if args.worker:
                 self._worker(bench, sample_func)
             else:
-                self._spawn_workers(bench, sample_func)
+                self._spawn_workers(bench)
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
@@ -699,7 +699,7 @@ class TextRunner:
         if args.output:
             bench.dump(args.output)
 
-    def _spawn_workers(self, bench, sample_func):
+    def _spawn_workers(self, bench):
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
