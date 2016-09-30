@@ -39,6 +39,7 @@ def create_timer(runner):
 
 
 def prepare_args(runner, cmd):
+    cmd.extend(('--name', runner.name))
     for setup in runner.args.setup:
         cmd.extend(("--setup", setup))
     cmd.extend(runner.args.stmt)
@@ -54,11 +55,15 @@ def sample_func(loops, timer):
 
 
 def main(runner):
-    runner.args.setup = _format_stmt(runner.args.setup)
-    runner.args.stmt = _format_stmt(runner.args.stmt)
+    args = runner.args
 
-    runner.metadata['timeit_setup'] = _stmt_metadata(runner.args.setup)
-    runner.metadata['timeit_stmt'] = _stmt_metadata(runner.args.stmt)
+    args.setup = _format_stmt(args.setup)
+    args.stmt = _format_stmt(args.stmt)
+
+    if args.name:
+        runner.name = args.name
+    runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
+    runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
     runner.program_args = (sys.executable, '-m', 'perf', 'timeit')
     runner.prepare_subprocess_args = prepare_args

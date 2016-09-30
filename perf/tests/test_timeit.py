@@ -119,10 +119,13 @@ class TestTimeit(unittest.TestCase):
                     '-l', str(loops),
                     '--min-time', '0.001',
                     '--output', filename,
+                    '--name', 'test_output',
                     '-s', 'import time',
                     SLEEP]
             self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
+
+        self.assertEqual(bench.get_name(), 'test_output')
 
         # FIXME: skipped test, since calibration continues during warmup
         if not perf.python_has_jit():

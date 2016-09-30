@@ -334,11 +334,24 @@ Usage
 
 ``perf timeit`` usage::
 
-    python3 -m perf timeit [options] [-s SETUP] stmt [stmt ...]
+    python3 -m perf timeit
+        [options]
+        [--name NAME]
+        [--python PYTHON]
+        [-s SETUP]
+        stmt [stmt ...]
 
-The ``--python=PYTHON`` option can be used to test a different Python version.
+Options:
 
-See :ref:`TextRunner CLI <textrunner_cli>` for options.
+* ``stmt``: Python code executed in the benchmark.
+  Multiple statements can be used.
+* ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
+  The option can be specified multiple times.
+* ``--name=NAME``: Benchmark name (default: ``timeit``).
+* ``--python=PYTHON``: Python executable. By default, use the running Python
+  (``sys.executable``). The Python executable must have the ``perf`` module
+  installed.
+* ``[options]``: see :ref:`TextRunner CLI <textrunner_cli>` for more options.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
