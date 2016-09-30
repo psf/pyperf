@@ -9,6 +9,7 @@ Version 0.7.12
 * TextRunner don't set CPU affinity of the main process, only on worker
   processes. It may help a little bit when using NOHZ_FULL.
 * metadata: add ``boot_time`` and ``uptime`` on Linux
+* metadata: add idle driver to ``cpu_config``
 
 Version 0.7.11 (2016-09-19)
 ---------------------------

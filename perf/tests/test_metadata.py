@@ -161,6 +161,8 @@ class CpuFunctionsTests(unittest.TestCase):
                 data = nohz_full
             elif filename.startswith('/sys/devices/system/cpu/cpu2'):
                 raise IOError
+            elif filename == '/sys/devices/system/cpu/cpuidle/current_driver':
+                data = 'IDLE_DRV\n'
             else:
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
@@ -171,7 +173,9 @@ class CpuFunctionsTests(unittest.TestCase):
                     metadata = {}
                     perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
-                         '0=driver:DRIVER, governor:GOVERNOR, 2=nohz_full, isolated')
+                         '0=driver:DRIVER, governor:GOVERNOR; '
+                         '2=nohz_full, isolated; '
+                         'idle:IDLE_DRV')
 
         nohz_full = '  (null)\n'
         with mock.patch('perf._collect_metadata.get_isolated_cpus'):
@@ -180,7 +184,8 @@ class CpuFunctionsTests(unittest.TestCase):
                     metadata = {}
                     perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
-                         '0=driver:DRIVER, governor:GOVERNOR')
+                         '0=driver:DRIVER, governor:GOVERNOR; '
+                         'idle:IDLE_DRV')
 
     def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):

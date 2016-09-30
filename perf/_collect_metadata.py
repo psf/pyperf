@@ -312,7 +312,7 @@ def format_cpu_infos(infos):
     for cpus, info in items:
         cpus = format_cpu_list(cpus)
         text.append('%s=%s' % (cpus, info))
-    return ', '.join(text)
+    return text
 
 
 def collect_cpu_freq(metadata, cpus):
@@ -345,7 +345,7 @@ def collect_cpu_freq(metadata, cpus):
     if not cpu_freq:
         return
 
-    metadata['cpu_freq'] = format_cpu_infos(cpu_freq)
+    metadata['cpu_freq'] = ', '.join(format_cpu_infos(cpu_freq))
 
 
 def get_cpu_config(cpu):
@@ -398,9 +398,15 @@ def collect_cpu_config(metadata, cpus):
             config.append('isolated')
         if config:
             configs[cpu] = ', '.join(config)
-    if not configs:
+    config = format_cpu_infos(configs)
+
+    cpuidle = first_line('/sys/devices/system/cpu/cpuidle/current_driver', default='')
+    if cpuidle:
+        config.append('idle:%s' % cpuidle)
+
+    if not config:
         return
-    metadata['cpu_config'] = format_cpu_infos(configs)
+    metadata['cpu_config'] = '; '.join(config)
 
 
 def get_cpu_temperature(path, cpu_temp):
