@@ -207,9 +207,9 @@ class TestTimeit(unittest.TestCase):
 
         # ".*" and DOTALL ignore stability warnings
         expected = textwrap.dedent(r'''
-            .*: \.
+            .*: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
-            .*: \.
+            .*: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
 
             (?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)

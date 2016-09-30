@@ -49,7 +49,7 @@ class TimeitRunner(TextRunner):
         args.compare = None
 
         bench = perf.Benchmark()
-        self._spawn_workers(bench)
+        self._spawn_workers(bench, newline=False)
         return bench
 
 
@@ -129,6 +129,8 @@ def cmd_compare(runner, timer):
         benchs.append(bench)
         if multiline:
             runner._display_result(bench)
+        elif not args.quiet:
+            print(' %s' % bench.format())
 
         if multiline:
             print()

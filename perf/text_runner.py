@@ -695,7 +695,7 @@ class TextRunner:
         if args.output:
             bench.dump(args.output)
 
-    def _spawn_workers(self, bench):
+    def _spawn_workers(self, bench, newline=True):
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
@@ -725,5 +725,5 @@ class TextRunner:
 
             stream.flush()
 
-        if not quiet:
+        if not quiet and newline:
             print(file=stream)
