@@ -153,6 +153,7 @@ class CpuFunctionsTests(unittest.TestCase):
         nohz_full = '2-3\n'
 
         def mock_open(filename, *args, **kw):
+            filename = os.path.normpath(filename)
             if filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
                 data = 'DRIVER\n'
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
