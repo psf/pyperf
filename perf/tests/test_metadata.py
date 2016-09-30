@@ -153,7 +153,7 @@ class CpuFunctionsTests(unittest.TestCase):
         nohz_full = '2-3\n'
 
         def mock_open(filename, *args, **kw):
-            filename = os.path.normpath(filename)
+            filename = filename.replace('\\', '/')
             if filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
                 data = 'DRIVER\n'
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
@@ -190,6 +190,7 @@ class CpuFunctionsTests(unittest.TestCase):
 
     def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
+            filename = filename.replace('\\', '/')
             if filename == '/proc/cpuinfo':
                 data = self.INTEL_CPU_INFO
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
@@ -213,6 +214,7 @@ class CpuFunctionsTests(unittest.TestCase):
 
     def test_power8_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
+            filename = filename.replace('\\', '/')
             if filename == '/proc/cpuinfo':
                 data = self.POWER8_CPUINFO
             else:

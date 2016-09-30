@@ -45,7 +45,7 @@ def capture_stderr():
 
 
 def benchmark_as_json(benchmark, compact=True):
-    with tempfile.NamedTemporaryFile('r') as tmp:
+    with tempfile.NamedTemporaryFile('w+') as tmp:
         benchmark.dump(tmp.name, compact=compact)
         tmp.seek(0)
         return tmp.read()
