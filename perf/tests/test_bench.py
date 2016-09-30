@@ -1,7 +1,7 @@
 import datetime
-import tempfile
 
 import perf
+from perf import tests
 from perf.tests import unittest
 
 
@@ -161,9 +161,9 @@ class BenchmarkTests(unittest.TestCase):
                            collect_metadata=False)
             bench.add_run(run)
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            bench.dump(tmp.name)
-            bench = perf.Benchmark.load(tmp.name)
+        with tests.temporary_file() as tmp_name:
+            bench.dump(tmp_name)
+            bench = perf.Benchmark.load(tmp_name)
 
         for run in bench.get_runs():
             self.assertEqual(run._get_loops(), 100)
@@ -354,8 +354,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         suite.add_benchmark(self.benchmark('telco'))
         suite.add_benchmark(self.benchmark('go'))
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            filename = tmp.name
+        with tests.temporary_file() as filename:
             suite.dump(filename)
             suite = perf.BenchmarkSuite.load(filename)
 
