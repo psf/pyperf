@@ -5,6 +5,16 @@ import statistics
 from perf._utils import format_seconds, format_number
 
 
+def display_title(title, level=1):
+    print(title)
+    if level == 1:
+        char = '='
+    else:
+        char = '-'
+    print(char * len(title))
+    print()
+
+
 def display_run(bench, run_index, run,
                 common_metadata=None, raw=False, verbose=0, file=None):
     show_warmup = (verbose >= 0)
@@ -328,3 +338,8 @@ def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
             print(line, file=file)
 
     print(str(bench), file=file)
+
+
+def get_benchmark_name(benchmark):
+    # FIXME: better fallback value
+    return benchmark.get_name() or '<no name>'
