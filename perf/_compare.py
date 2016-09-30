@@ -77,7 +77,11 @@ class CompareResult(object):
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
-            text = "Median +- std dev: %s -> %s" % (ref_text, chg_text)
+            if (self.ref.benchmark.get_nsample() > 1
+               or self.changed.benchmark.get_nsample() > 1):
+                text = "Median +- std dev: %s -> %s" % (ref_text, chg_text)
+            else:
+                text = "Median: %s -> %s" % (ref_text, chg_text)
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
