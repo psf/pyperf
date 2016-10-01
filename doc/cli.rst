@@ -370,7 +370,7 @@ Example
 
 Example::
 
-    $ python3 -m perf timeit '" abc ".strip()
+    $ python3 -m perf timeit '" abc ".strip()'
     .........................
     Median +- std dev: 113 ns +- 2 ns
 
