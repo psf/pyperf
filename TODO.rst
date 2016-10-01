@@ -5,6 +5,9 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
+* doc: clarify difference between compare & compare_to
+* doc: more CLI examples
+* doc: timeit, mention -o option
 * timeit compare: write result as JSON into one or two files?
 * Add Benchmark.get_metadata_values() to avoid Benchmark objects
 * Incompatible change: TextRunner.program_args, drop first parameter
