@@ -355,7 +355,10 @@ def python_implementation():
 
 
 def python_has_jit():
-    return (python_implementation() == 'pypy')
+    if python_implementation() == 'pypy':
+        return sys.pypy_translation_info["translation.jit"]
+
+    return False
 
 
 def popen_communicate(proc):
