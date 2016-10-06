@@ -120,6 +120,9 @@ See also:
   <http://hdrhistogram.github.io/HdrHistogram/>`_: "look at the entire
   percentile spectrum"
 
+See also `Multimodal distribution
+<https://en.wikipedia.org/wiki/Multimodal_distribution>`_.
+
 
 .. _stable_bench:
 
