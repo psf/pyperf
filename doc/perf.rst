@@ -90,6 +90,9 @@ Minimum versus average and standard deviation
 
 Links:
 
+* `Statistically Rigorous Java Performance Evaluation
+  <http://buytaert.net/statistically-rigorous-java-performance-evaluation>`_
+  by Andy Georges, Dries Buytaert and Lieven Eeckhout, 2007
 * `Benchmarking: minimum vs average
   <http://blog.kevmod.com/2016/06/benchmarking-minimum-vs-average/>`_
   (June 2016) by Kevin Modzelewski
@@ -98,6 +101,9 @@ Links:
   (May 2016) by Victor Stinner
 * Median versus Mean: `perf issue #1: Use a better measures than average and
   standard <https://github.com/haypo/perf/issues/1>`_
+* timeit module of PyPy now uses average:
+  `change timeit to report the average +- stdandard deviation
+  <https://bitbucket.org/pypy/pypy/commits/fb6bb835369e>`_
 
 
 Distribution
