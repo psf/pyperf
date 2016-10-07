@@ -89,6 +89,7 @@ class TestTextRunner(unittest.TestCase):
         self.assertRegex(result.stdout,
                          r'^'
                          r'(?:Calibration [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
+                         r'Calibration: use [0-9^]+ loops\n'
                          r'\n'
                          r'(?:Warmup [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
                          r'\n'

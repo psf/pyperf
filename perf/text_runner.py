@@ -439,6 +439,9 @@ class TextRunner:
             index += 1
 
         if args.verbose:
+            if is_calibrate:
+                print("Calibration: use %s loops" % format_number(loops),
+                      file=stream)
             print(file=stream)
 
         # Run collects metadata
