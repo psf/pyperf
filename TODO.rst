@@ -6,7 +6,6 @@ TODO
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
 * Update stats for calibration run
-* --debug-single-sample must spawn a worker
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
 * doc: timeit, mention -o option
