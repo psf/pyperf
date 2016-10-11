@@ -345,6 +345,15 @@ class BenchmarkTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             bench.update_metadata({'inner_loops': 8})
 
+    def test_calibration(self):
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run([], warmups=[(100, 1.0)],
+                               metadata={'loops': 100},
+                               collect_metadata=False))
+        self.assertEqual(str(bench), 'Calibration: 100 loops')
+        self.assertEqual(bench.format(), '<calibration: 100 loops>')
+        self.assertRaises(ValueError, bench.median)
+
 
 class TestBenchmarkSuite(unittest.TestCase):
     def benchmark(self, name):

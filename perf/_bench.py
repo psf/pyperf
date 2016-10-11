@@ -11,7 +11,7 @@ import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
                             _common_metadata, get_metadata_info)
-from perf._utils import parse_iso8601, UNIT_FORMATTERS
+from perf._utils import format_number, parse_iso8601, UNIT_FORMATTERS
 
 
 # Format format history:
@@ -99,6 +99,9 @@ class Run(object):
         run = Run(samples, warmups=warmups, collect_metadata=False)
         run._metadata = metadata
         return run
+
+    def _is_calibration(self):
+        return (not self.samples)
 
     def _get_metadata(self, name, default):
         if self._metadata:
@@ -399,7 +402,19 @@ class Benchmark(object):
             raw_samples.extend(run._get_raw_samples(warmups))
         return raw_samples
 
+    def _only_calibration(self):
+        if len(self._runs) == 1:
+            run = self._runs[0]
+            if run._is_calibration():
+                return run._get_loops()
+
+        return None
+
     def format(self):
+        loops = self._only_calibration()
+        if loops is not None:
+            return '<calibration: %s>' % format_number(loops, 'loop')
+
         nrun = self.get_nrun()
         if not nrun:
             return '<no run>'
@@ -415,6 +430,10 @@ class Benchmark(object):
         return text
 
     def __str__(self):
+        loops = self._only_calibration()
+        if loops is not None:
+            return 'Calibration: %s' % format_number(loops, 'loop')
+
         text = self.format()
         if self.get_nsample() >= 2:
             return 'Median +- std dev: %s' % text
