@@ -2,7 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import statistics
 
-from perf._utils import format_seconds, format_number
+from perf._utils import format_seconds, format_number, format_timedelta
 
 
 def display_title(title, level=1):
@@ -17,6 +17,13 @@ def display_title(title, level=1):
 
 def display_run(bench, run_index, run,
                 common_metadata=None, raw=False, verbose=0, file=None):
+    if run._is_calibration():
+        print("Run %s: calibrate" % (run_index,), file=file)
+        for loops, sample in run.warmups:
+            print("- %s: %s" % (format_number(loops, 'loop'),
+                                format_timedelta(sample)))
+        return
+
     show_warmup = (verbose >= 0)
 
     total_loops = run.get_total_loops()

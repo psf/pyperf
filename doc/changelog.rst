@@ -4,6 +4,9 @@ Changelog
 Version 0.7.13
 --------------
 
+* Calibratation is now done in a dedicated process to avoid side effect on the
+  first process. This change is important if Python has a JIT compiler, to
+  get more reliable timings on the first worker computing samples.
 * Run constructor now accepts an empty list of samples. Moreover, it also
   accepts ``int`` and ``long`` number types for warmup sample values, not only
   ``float``.
@@ -22,7 +25,7 @@ Version 0.7.11 (2016-09-19)
 ---------------------------
 
 * Fix metadata when NOHZ is not used: when /sys/devices/system/cpu/nohz_full
-  contains ' (null)\n'
+  contains `` (null)\n``
 
 Version 0.7.10 (2016-09-17)
 ---------------------------

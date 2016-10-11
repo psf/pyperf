@@ -10,13 +10,13 @@ Loop iterations
 
 Options::
 
-    [--rigorous]
-    [--fast]
-    [-p PROCESSES/--processes=PROCESSES]
-    [-n SAMPLES/--samples=SAMPLES]
-    [-l LOOPS/--loops=LOOPS]
-    [-w WARMUPS/--warmups=WARMUPS]
-    [--min-time=MIN_TIME]
+    --rigorous
+    --fast
+    -p PROCESSES/--processes=PROCESSES
+    -n SAMPLES/--samples=SAMPLES
+    -l LOOPS/--loops=LOOPS
+    -w WARMUPS/--warmups=WARMUPS
+    --min-time=MIN_TIME
 
 Default (no JIT, ex: CPython): 20 processes, 3 samples per process (total: 60
 samples), and 1 warmup.
@@ -50,12 +50,12 @@ Output options
 
 Options::
 
-    [-d/--dump]
-    [-m/--metadata]
-    [-g/--hist]
-    [-t/--stats]
-    [-v/--verbose]
-    [-q/--quiet]
+    -d/--dump
+    -m/--metadata
+    -g/--hist
+    -t/--stats
+    -v/--verbose
+    -q/--quiet
 
 * ``--dump`` displays the benchmark run results,
   see :ref:`perf dump <dump_cmd>` command
@@ -74,9 +74,9 @@ JSON output
 
 Options::
 
-    [-o FILENAME/--output=FILENAME]
-    [--append=FILENAME]
-    [--stdout]
+    -o FILENAME/--output=FILENAME
+    --append=FILENAME
+    --stdout
 
 * ``--output=FILENAME`` writes the benchmark result as JSON into *FILENAME*
 * ``--append=FILENAME`` appends the benchmark runs to benchmarks of the JSON
@@ -92,12 +92,12 @@ Misc
 
 Option::
 
-    [-h/--help]
-    [--python=PYTHON]
-    [--affinity=CPU_LIST]
-    [--inherit-environ=VARS]
-    [--track-memory]
-    [--tracemalloc]
+    -h/--help
+    --python=PYTHON
+    --affinity=CPU_LIST
+    --inherit-environ=VARS
+    --track-memory
+    --tracemalloc
 
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``perf`` module
@@ -133,9 +133,10 @@ Internal usage only
 The following options are used internally by perf and should not be used
 explicitly::
 
-    [--worker]
-    [--debug-single-sample]
+    --worker
+    --calibrate
+    --debug-single-sample
 
 * ``--worker``: a worker process, run the benchmark in the running processs
+* ``--calibrate``: only calibrate the benchmark, don't compute samples
 * ``--debug-single-sample``: Debug mode, only produce a single sample
-

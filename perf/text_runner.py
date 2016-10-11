@@ -242,6 +242,9 @@ class TextRunner:
                             % format_timedelta(min_time))
         parser.add_argument('--worker', action="store_true",
                             help='worker process, run the benchmark')
+        parser.add_argument('--calibrate', action="store_true",
+                            help="only calibrate the benchmark, "
+                                 "don't compute samples")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -300,6 +303,15 @@ class TextRunner:
             args.samples = 1
             args.loops = 1
             args.min_time = 1e-9
+
+        if args.calibrate:
+            if not args.worker:
+                print("ERROR: Calibration can only be done "
+                      "in a worker process")
+                sys.exit(1)
+            # calibration samples will be stored as warmup samples
+            args.warmups = 0
+            args.samples = 0
 
         filename = args.output
         if filename and os.path.exists(filename):
@@ -624,7 +636,7 @@ class TextRunner:
                 env[name] = os.environ[name]
         return env
 
-    def _spawn_worker_suite(self):
+    def _spawn_worker_suite(self, calibrate=False):
         args = self.args
 
         cmd = []
@@ -635,6 +647,8 @@ class TextRunner:
                     '--warmups', str(args.warmups),
                     '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))
+        if calibrate:
+            cmd.append('--calibrate')
         if args.verbose:
             cmd.append('-' + 'v' * args.verbose)
         if args.affinity:
@@ -651,8 +665,8 @@ class TextRunner:
         stdout = _run_cmd(cmd, env=env)
         return perf.BenchmarkSuite.loads(stdout)
 
-    def _spawn_worker_bench(self):
-        suite = self._spawn_worker_suite()
+    def _spawn_worker_bench(self, calibrate=False):
+        suite = self._spawn_worker_suite(calibrate)
 
         benchmarks = suite.get_benchmarks()
         if len(benchmarks) != 1:
@@ -704,19 +718,23 @@ class TextRunner:
         quiet = args.quiet
         stream = self._stream()
         nprocess = args.processes
+        need_calibration = (not args.loops)
+        if need_calibration:
+            nprocess += 1
+        calibrate = need_calibration
 
-        for process in range(nprocess):
-            worker_bench = self._spawn_worker_bench()
+        for process in range(1, nprocess + 1):
+            worker_bench = self._spawn_worker_bench(calibrate)
             bench.add_runs(worker_bench)
 
             if verbose:
                 run = bench.get_runs()[-1]
-                run_index = '%s/%s' % (1 + process, nprocess)
+                run_index = '%s/%s' % (process, nprocess)
                 display_run(bench, run_index, run, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
 
-            if not args.loops:
+            if calibrate:
                 # Use the first worker to calibrate the benchmark. Use a worker
                 # process rather than the main process because worker is a
                 # little bit more isolated and so should be more reliable.
@@ -725,6 +743,7 @@ class TextRunner:
                 if verbose:
                     print("Calibration: use %s loops" % format_number(args.loops),
                           file=stream)
+            calibrate = False
 
             stream.flush()
 

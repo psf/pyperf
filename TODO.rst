@@ -5,7 +5,6 @@ TODO
   Use case: pybench
   Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
 
-* use a worker dedicated to calibration
 * --debug-single-sample must spawn a worker
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
