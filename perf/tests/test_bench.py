@@ -1,8 +1,13 @@
 import datetime
 
+import six
+
 import perf
 from perf import tests
 from perf.tests import unittest
+
+
+NUMBER_TYPES = six.integer_types + (float,)
 
 
 class RunTests(unittest.TestCase):
@@ -27,10 +32,11 @@ class RunTests(unittest.TestCase):
         self.assertEqual(run.get_total_loops(), 1)
 
     def test_constructor(self):
-        # need at least 2 samples
+        # need at least one sample or one warmup sample
         with self.assertRaises(ValueError):
             perf.Run([], collect_metadata=False)
         perf.Run([1.0], collect_metadata=False)
+        perf.Run([], warmups=[(4, 1.0)], collect_metadata=False)
 
         # number of loops
         with self.assertRaises(ValueError):
@@ -50,6 +56,17 @@ class RunTests(unittest.TestCase):
         run = perf.Run([1.0], metadata={'load_avg_1min': 0.0},
                        collect_metadata=False)
         self.assertEqual(run.get_metadata()['load_avg_1min'].value, 0.0)
+
+    def test_number_types(self):
+        # ensure that all types of numbers are accepted
+        for number_type in NUMBER_TYPES:
+            run = perf.Run([number_type(1)], collect_metadata=False)
+            self.assertIsInstance(run.samples[0], number_type)
+
+            run = perf.Run([5], warmups=[(4, number_type(3))],
+                           collect_metadata=False)
+            self.assertEqual(run.warmups, ((4, 3),))
+            self.assertIsInstance(run.warmups[0][1], number_type)
 
     def test_get_date(self):
         date = datetime.datetime.now()

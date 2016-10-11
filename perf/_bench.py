@@ -36,7 +36,7 @@ def _check_warmups(warmups):
         if loops < 1:
             return False
 
-        if not isinstance(sample, float):
+        if not isinstance(sample, NUMBER_TYPES):
             return False
         if sample < 0:
             return False
@@ -49,22 +49,23 @@ class Run(object):
 
     def __init__(self, samples, warmups=None,
                  metadata=None, collect_metadata=True):
+        if any(not(isinstance(sample, NUMBER_TYPES) and sample > 0)
+               for sample in samples):
+            raise ValueError("samples must be a sequence of number > 0.0")
+
         if warmups is not None and not _check_warmups(warmups):
             raise ValueError("warmups must be a sequence of (loops, sample) "
                              "where loops is a int >= 1 and sample "
                              "is a float >= 0.0")
-
-        if (not samples
-           or any(not(isinstance(sample, NUMBER_TYPES) and sample > 0)
-                  for sample in samples)):
-            raise ValueError("samples must be a non-empty sequence "
-                             "of number > 0.0")
 
         if warmups:
             self._warmups = tuple(warmups)
         else:
             self._warmups = None
         self._samples = tuple(samples)
+
+        if not self._samples and not self._warmups:
+            raise ValueError("samples and warmups are empty sequence")
 
         if collect_metadata:
             from perf._collect_metadata import collect_metadata as collect_func
@@ -282,7 +283,7 @@ class Benchmark(object):
             return values[0]
 
         # Compute the mean (float)
-        return float(sum(values)) / len(values)
+        return math.fsum(values) / len(values)
 
     def _get_nwarmup(self):
         return self._get_run_property(lambda run: len(run.warmups))

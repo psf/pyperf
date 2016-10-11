@@ -136,13 +136,16 @@ Run
 
    A benchmark run result is made of multiple samples.
 
-   *samples* must be a non-empty sequence of numbers (integer or float) greater
+   *samples* must be a sequence of numbers (integer or float) greater
    than zero. Usually, *samples* is a list of number of seconds. Samples must
    be normalized per loop iteration (total of outer and inner loops).
 
    *warmups* is an optional sequence of ``(loops: int, sample: float)`` tuples
    where *sample* must be greater than or equal to zero. Warmup samples are
    "raw samples", they must not be normalized per loop iteration.
+
+   *samples* and/or *warmups* must be a non-empty sequence. If *samples* is
+   empty, the run is a calibration run.
 
    Samples must not be equal to zero. If a sample is zero, use more
    loop iterations: see :ref:`Runs, samples, warmups, outer and inner loops
@@ -169,11 +172,11 @@ Run
 
    .. attribute:: samples
 
-      Benchmark run samples (``tuple`` of ``float``).
+      Benchmark run samples (``tuple`` of numbers).
 
    .. attribute:: warmups
 
-      Benchmark warmup samples (``tuple`` of ``float``).
+      Benchmark warmup samples (``tuple`` of numbers).
 
 
 
@@ -270,7 +273,7 @@ Benchmark
 
       Get the list of :class:`perf.Run` objects.
 
-   .. method:: get_samples() -> List[float]
+   .. method:: get_samples()
 
       Get samples of all runs (values are average per loop iteration).
 
@@ -309,13 +312,13 @@ Benchmark
 
       Load a benchmark from a JSON string.
 
-   .. method:: median() -> float
+   .. method:: median()
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
       :meth:`get_samples`.
 
-      The median cannot be zero: :meth:`add_run` raises an error if a sample is
-      equal to zero.
+      The median cannot be equal to zero: :meth:`add_run` raises an error
+      if a sample is equal to zero.
 
    .. method:: __str__() -> str
 
