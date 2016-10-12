@@ -281,7 +281,9 @@ class Benchmark(object):
         if not self._runs:
             raise ValueError("the benchmark has no run")
 
-        values = [get_property(run) for run in self._runs]
+        # ignore calibration runs
+        values = [get_property(run) for run in self._runs
+                  if not run._is_calibration()]
         if len(set(values)) == 1:
             return values[0]
 
@@ -403,6 +405,8 @@ class Benchmark(object):
         return raw_samples
 
     def _only_calibration(self):
+        # If the benchmark only contains a single run which is a calibration
+        # run: return the number of loops, otherwise return None
         if len(self._runs) == 1:
             run = self._runs[0]
             if run._is_calibration():
