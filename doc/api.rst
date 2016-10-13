@@ -204,11 +204,14 @@ Benchmark
       See :meth:`perf.BenchmarkSuite.add_runs` method and :func:`add_runs`
       function.
 
-   .. method:: dump(file, compact=True)
+   .. method:: dump(file, compact=True, replace=False)
 
       Dump the benchmark as JSON into *file*.
 
       *file* can be a filename, or a file object open for write.
+
+      If *file* is a filename and *replace* is false, the function fails if the
+      file already exists.
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 
@@ -363,11 +366,14 @@ BenchmarkSuite
 
       See :meth:`perf.Benchmark.add_runs` method and :func:`add_runs` function.
 
-   .. function:: dump(file, compact=True)
+   .. function:: dump(file, compact=True, replace=False)
 
       Dump the benchmark suite as JSON into *file*.
 
       *file* can be: a filename, or a file object open for write.
+
+      If *file* is a filename and *replace* is false, the function fails if the
+      file already exists.
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 

@@ -46,7 +46,6 @@ Low priority
 ============
 
 * add metadata: sys.getcheckinterval, py3: GIL milliseconds? GC enabled?
-* really avoid removing existing file: open(name, 'x')
 * convert: save the operations made on data in metadata?
 * configurable clock? see pybench
 * reimplement metdata for compare?

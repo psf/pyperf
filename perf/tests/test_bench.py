@@ -1,4 +1,5 @@
 import datetime
+import errno
 
 import six
 
@@ -193,6 +194,26 @@ class BenchmarkTests(unittest.TestCase):
 
         self.check_runs(bench, [(1, 3.0)], samples)
 
+    def create_dummy_benchmark(self):
+        samples = (1.0, 2.0, 3.0)
+        bench = perf.Benchmark()
+        bench.add_run(perf.Run(samples, metadata={'name': 'bench'}))
+        return bench
+
+    def test_dump_replace(self):
+        bench = self.create_dummy_benchmark()
+
+        with tests.temporary_file() as tmp_name:
+            bench.dump(tmp_name)
+
+            # dump() must not override an existing file by default
+            with self.assertRaises(OSError) as cm:
+                bench.dump(tmp_name)
+            self.assertEqual(cm.exception.errno, errno.EEXIST)
+
+            # ok if replace is true
+            bench.dump(tmp_name, replace=True)
+
     def test__add_benchmark_run(self):
         # bench 1
         samples = (1.0, 2.0, 3.0)
@@ -375,10 +396,20 @@ class TestBenchmarkSuite(unittest.TestCase):
         with self.assertRaises(KeyError):
             suite.get_benchmark('non_existent')
 
-    def test_json(self):
+    def create_dummy_suite(self):
         suite = perf.BenchmarkSuite()
         suite.add_benchmark(self.benchmark('telco'))
         suite.add_benchmark(self.benchmark('go'))
+        return suite
+
+    def check_dummy_suite(self, suite):
+        benchmarks = suite.get_benchmarks()
+        self.assertEqual(len(benchmarks), 2)
+        self.assertEqual(benchmarks[0].get_name(), 'go')
+        self.assertEqual(benchmarks[1].get_name(), 'telco')
+
+    def test_json(self):
+        suite = self.create_dummy_suite()
 
         with tests.temporary_file() as filename:
             suite.dump(filename)
@@ -386,10 +417,21 @@ class TestBenchmarkSuite(unittest.TestCase):
 
         self.assertEqual(suite.filename, filename)
 
-        benchmarks = suite.get_benchmarks()
-        self.assertEqual(len(benchmarks), 2)
-        self.assertEqual(benchmarks[0].get_name(), 'go')
-        self.assertEqual(benchmarks[1].get_name(), 'telco')
+        self.check_dummy_suite(suite)
+
+    def test_dump_replace(self):
+        suite = self.create_dummy_suite()
+
+        with tests.temporary_file() as tmp_name:
+            suite.dump(tmp_name)
+
+            # dump() must not override an existing file by default
+            with self.assertRaises(OSError) as cm:
+                suite.dump(tmp_name)
+            self.assertEqual(cm.exception.errno, errno.EEXIST)
+
+            # ok if replace is true
+            suite.dump(tmp_name, replace=True)
 
     def test_add_runs(self):
         # bench 1

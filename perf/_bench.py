@@ -488,10 +488,10 @@ class Benchmark(object):
             raise ValueError("expected 1 benchmark, got %s" % len(benchmarks))
         return benchmarks[0]
 
-    def dump(self, file, compact=True):
+    def dump(self, file, compact=True, replace=False):
         suite = BenchmarkSuite()
         suite.add_benchmark(self)
-        suite.dump(file, compact=compact)
+        suite.dump(file, compact=compact, replace=replace)
 
     def _filter_runs(self, include, only_runs):
         if include:
@@ -715,7 +715,7 @@ class BenchmarkSuite(object):
         bench_file = json.loads(string)
         return cls._json_load(None, bench_file)
 
-    def dump(self, file, compact=True):
+    def dump(self, file, compact=True, replace=False):
         benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
 
@@ -728,10 +728,14 @@ class BenchmarkSuite(object):
             fp.flush()
 
         if isinstance(file, (bytes, six.text_type)):
+            flags = os.O_WRONLY | os.O_CREAT
+            if not replace:
+                flags |= os.O_EXCL
+            fd = os.open(file, flags)
             if six.PY3:
-                fp = open(file, "w", encoding="utf-8")
+                fp = open(fd, "w", encoding="utf-8")
             else:
-                fp = open(file, "wb")
+                fp = os.fdopen(fd, "wb")
             with fp:
                 dump(data, fp, compact)
         else:
@@ -783,4 +787,4 @@ def add_runs(filename, result):
     else:
         suite = BenchmarkSuite()
     suite.add_runs(result)
-    suite.dump(filename)
+    suite.dump(filename, replace=True)

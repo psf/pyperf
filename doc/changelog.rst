@@ -16,6 +16,9 @@ Version 0.7.13
   a specific benchmark function by its identifier.
 * TextRunner now supports calling more than one benchmark function using
   ``--worker-task`` internally.
+* Benchmark.dump() and BenchmarkSuite.dump() now fails by default if the
+  file already exists. Set the new *replace* parameter to true to allow to
+  replace an existing file.
 
 Version 0.7.12 (2016-09-30)
 ---------------------------
