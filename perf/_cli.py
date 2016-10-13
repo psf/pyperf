@@ -105,6 +105,8 @@ def display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
         common_metadata = None
 
     for run_index, run in enumerate(runs, 1):
+        if quiet and run._is_calibration():
+            continue
         display_run(bench, run_index, run,
                     common_metadata=common_metadata,
                     verbose=verbose, raw=raw, file=file)

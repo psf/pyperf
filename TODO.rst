@@ -1,7 +1,6 @@
 TODO
 ====
 
-* dump -q: hide calibration runs
 * BenchmarkSuite: accept list of benchmarks in constructor
 * BenchmarkSuite: error in constructor if it doesn't get at least one
   benchmark?
