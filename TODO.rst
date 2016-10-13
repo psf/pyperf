@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Add TextRunner.timeit()
+* Rename TextRunner.prepare_subprocess_args?
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
 * doc: timeit, mention -o option
