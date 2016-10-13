@@ -239,6 +239,8 @@ class Runner:
                 print("ERROR: Calibration can only be done "
                       "in a worker process")
                 sys.exit(1)
+
+            args.loops = 0
             # calibration samples will be stored as warmup samples
             args.warmups = 0
             args.samples = 0
