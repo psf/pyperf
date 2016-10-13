@@ -9,8 +9,8 @@ import timeit
 
 import perf
 from perf._cli import display_title, warn_if_bench_unstable
-from perf._utils import get_python_names
-from perf._text_runner import TextRunner, _abs_executable
+from perf._utils import get_python_names, abs_executable
+from perf._text_runner import TextRunner
 
 
 _DEFAULT_NAME = 'timeit'
@@ -41,7 +41,7 @@ class TimeitRunner(TextRunner):
         TextRunner._process_args(self)
         args = self.args
         if args.compare_to:
-            args.compare_to = _abs_executable(args.compare_to)
+            args.compare_to = abs_executable(args.compare_to)
 
     def bench_compare(self, python, loops):
         args = self.args
