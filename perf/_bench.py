@@ -120,6 +120,12 @@ class Run(object):
     def _is_calibration(self):
         return (not self.samples)
 
+    def _has_metadata(self, name):
+        if self._metadata:
+            return (name in self._metadata)
+        else:
+            return False
+
     def _get_metadata(self, name, default):
         if self._metadata:
             return self._metadata.get(name, default)
@@ -279,6 +285,11 @@ class Benchmark(object):
         run = runs[0]
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
+
+        # A benchmark must have a name
+        if not run._has_metadata('name'):
+            raise ValueError("A benchmark must have a name: "
+                             "the run has no name metadata")
 
         # list of Run objects
         self._runs = [run]
@@ -580,13 +591,7 @@ class BenchmarkSuite(object):
         self._benchmarks = []
 
     def get_benchmark_names(self):
-        names = []
-        for bench in self:
-            name = bench.get_name()
-            if not name:
-                raise ValueError("a benchmark has no name")
-            names.append(name)
-        return names
+        return [bench.get_name() for bench in self]
 
     def get_metadata(self):
         metadatas = [bench.get_metadata() for bench in self._benchmarks]

@@ -14,6 +14,10 @@ class BaseTestCase(object):
     maxDiff = 100 * 80
 
     def create_bench(self, samples, metadata=None):
+        if metadata is None:
+            metadata = {'name': 'bench'}
+        elif 'name' not in metadata:
+            metadata['name'] = 'bench'
         runs = []
         for sample in samples:
             run = perf.Run([sample],

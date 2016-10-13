@@ -187,7 +187,8 @@ Benchmark
 
    A benchmark is made of multiple :class:`Run` objects.
 
-   *runs* must be non-empty sequence of :class:`Run` objects.
+   *runs* must be non-empty sequence of :class:`Run` objects. Runs must
+   have a ``name`` metadata (all runs must have the same name).
 
    Methods:
 

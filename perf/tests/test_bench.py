@@ -70,6 +70,11 @@ class RunTests(unittest.TestCase):
                        collect_metadata=False)
         self.assertEqual(run.get_metadata()['load_avg_1min'].value, 0.0)
 
+    def test_name(self):
+        # name must be non-empty
+        with self.assertRaises(ValueError):
+            perf.Run([1.0], metadata={'name': '   '})
+
     def test_number_types(self):
         # ensure that all types of numbers are accepted
         for number_type in NUMBER_TYPES:
@@ -98,6 +103,12 @@ class BenchmarkTests(unittest.TestCase):
         for sample, run in zip(samples, runs):
             self.assertEqual(run.warmups, tuple(warmups))
             self.assertEqual(run.samples, (sample,))
+
+    def test_name(self):
+        # no name metadata
+        run = perf.Run([1.0])
+        with self.assertRaises(ValueError):
+            perf.Benchmark([run])
 
     def test_add_run(self):
         metadata = {'name': 'bench', 'hostname': 'toto'}

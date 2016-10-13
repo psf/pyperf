@@ -7,6 +7,7 @@ Version 0.8.0
 Incompatible API changes:
 
 * Benchmark constructor now requires a non-empty sequence of Run objects.
+* A benchmark must now have a name: all runs must have a name metadata.
 
 Changes:
 

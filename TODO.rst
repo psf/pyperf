@@ -16,15 +16,13 @@ TODO
 * Pass Python arguments to subprocesses like -I, -O, etc.
 * "venv/pypy5.0-ec75e7c13ad0/bin/python -m perf timeit -w0 -l1 -n 10 pass -v --worker"
   sometimes create a sample equals to 0
-* Make benchmark name mandatory?
 * Write unit test for compare_to --group-by-speed
 * Display also stability warnings in compare output
 * Write unit test for tracemalloc and track memory: allocate 30 MB,
   check usage >= 30 MB
 * Add CLI option to sort benchmarks by start date, not by name
 * Enhance TextRunner to be able to run multiple benchmarks
-* BenchmarkSuite.get_benchmarks(): don't sort by name? Error if a benchmark
-  has no name?
+* BenchmarkSuite.get_benchmarks(): don't sort by name?
 * Remove BenchmarkSuite.__iter__()?
 * support BenchmarkSuite directly in TextRunner for pybench
 * find a memory efficient storage for common metadata in Run.
