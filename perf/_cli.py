@@ -21,7 +21,7 @@ def display_run(bench, run_index, run,
         print("Run %s: calibrate" % (run_index,), file=file)
         for loops, sample in run.warmups:
             print("- %s: %s" % (format_number(loops, 'loop'),
-                                format_timedelta(sample)))
+                                format_timedelta(sample)), file=file)
         return
 
     show_warmup = (verbose >= 0)
