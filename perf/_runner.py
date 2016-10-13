@@ -395,7 +395,9 @@ class Runner:
         # Run collects metadata
         return (loops, samples)
 
-    def _calibrate(self, metadata, sample_func, inner_loops):
+    def _calibrate(self, sample_func, metadata=None, inner_loops=None):
+        if metadata:
+            metadata = {}
         return self._run_bench(metadata, sample_func, inner_loops,
                                loops=1, nsample=1,
                                calibrate=True,
@@ -411,7 +413,7 @@ class Runner:
 
         calibrate = (not loops)
         if calibrate:
-            loops, calibrate_warmups = self._calibrate(metadata, sample_func,
+            loops, calibrate_warmups = self._calibrate(sample_func, metadata,
                                                        inner_loops)
         else:
             if perf.python_has_jit():
