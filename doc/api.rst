@@ -183,11 +183,11 @@ Run
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(runs=())
+.. class:: perf.Benchmark(runs)
 
    A benchmark is made of multiple :class:`Run` objects.
 
-   *runs* is a sequence of :class:`Run` objects (empty by default).
+   *runs* must be non-empty sequence of :class:`Run` objects.
 
    Methods:
 

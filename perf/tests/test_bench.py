@@ -11,6 +11,18 @@ from perf.tests import unittest
 NUMBER_TYPES = six.integer_types + (float,)
 
 
+def create_run(samples=None, warmups=None, metadata=None):
+    if samples is None:
+        samples = (1.0,)
+    if metadata is None:
+        metadata = {'name': 'bench'}
+    elif 'name' not in metadata:
+        metadata['name'] = 'bench'
+    return perf.Run(samples, warmups,
+                    metadata=metadata,
+                    collect_metadata=False)
+
+
 class RunTests(unittest.TestCase):
     def test_attr(self):
         run = perf.Run((2.0, 3.0),
@@ -87,38 +99,29 @@ class BenchmarkTests(unittest.TestCase):
             self.assertEqual(run.warmups, tuple(warmups))
             self.assertEqual(run.samples, (sample,))
 
-    def create_run(self, samples=None, warmups=None, metadata=None):
-        if samples is None:
-            samples = (1.0,)
-        if metadata is None:
-            metadata = {'name': 'bench'}
-        return perf.Run(samples, warmups,
-                        metadata=metadata,
-                        collect_metadata=False)
-
     def test_add_run(self):
         metadata = {'name': 'bench', 'hostname': 'toto'}
-        runs = [self.create_run(metadata=metadata)]
+        runs = [create_run(metadata=metadata)]
         bench = perf.Benchmark(runs)
 
         # expect Run, not list
         self.assertRaises(TypeError, bench.add_run, [1.0])
 
-        bench.add_run(self.create_run(metadata=metadata))
+        bench.add_run(create_run(metadata=metadata))
 
         # incompatible: name is different
         metadata = {'name': 'bench2', 'hostname': 'toto'}
         with self.assertRaises(ValueError):
-            bench.add_run(self.create_run(metadata=metadata))
+            bench.add_run(create_run(metadata=metadata))
 
         # incompatible: hostname is different
         metadata = {'name': 'bench', 'hostname': 'homer'}
         with self.assertRaises(ValueError):
-            bench.add_run(self.create_run(metadata=metadata))
+            bench.add_run(create_run(metadata=metadata))
 
         # compatible (same metadata)
         metadata = {'name': 'bench', 'hostname': 'toto'}
-        bench.add_run(self.create_run(metadata=metadata))
+        bench.add_run(create_run(metadata=metadata))
 
     def get_metadata(self, bench):
         metadata = bench.get_metadata()
@@ -207,7 +210,7 @@ class BenchmarkTests(unittest.TestCase):
         self.check_runs(bench, [(1, 3.0)], samples)
 
     def create_dummy_benchmark(self):
-        runs = [self.create_run()]
+        runs = [create_run()]
         return perf.Benchmark(runs)
 
     def test_dump_replace(self):
@@ -226,26 +229,26 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_add_runs(self):
         samples1 = (1.0, 2.0, 3.0)
-        bench = perf.Benchmark([self.create_run(samples1)])
+        bench = perf.Benchmark([create_run(samples1)])
 
         samples2 = (4.0, 5.0, 6.0)
-        bench2 = perf.Benchmark([self.create_run(samples2)])
+        bench2 = perf.Benchmark([create_run(samples2)])
 
         bench.add_runs(bench2)
         self.assertEqual(bench.get_samples(), samples1 + samples2)
 
     def test__get_nsample_per_run(self):
         # exact
-        runs = [self.create_run([1.0, 2.0, 3.0]),
-                self.create_run([4.0, 5.0, 6.0])]
+        runs = [create_run([1.0, 2.0, 3.0]),
+                create_run([4.0, 5.0, 6.0])]
         bench = perf.Benchmark(runs)
         nsample = bench._get_nsample_per_run()
         self.assertEqual(nsample, 3)
         self.assertIsInstance(nsample, int)
 
         # average
-        runs = [self.create_run([1.0, 2.0, 3.0, 4.0]),
-                self.create_run([5.0, 6.0])]
+        runs = [create_run([1.0, 2.0, 3.0, 4.0]),
+                create_run([5.0, 6.0])]
         bench = perf.Benchmark(runs)
         nsample = bench._get_nsample_per_run()
         self.assertEqual(nsample, 3.0)
@@ -253,66 +256,55 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_get_warmups(self):
         # exact
-        runs = [self.create_run((1.0, 2.0, 3.0), warmups=[(1, 1.0)]),
-                self.create_run((5.0, 6.0), warmups=[(1, 4.0)])]
+        runs = [create_run((1.0, 2.0, 3.0), warmups=[(1, 1.0)]),
+                create_run((5.0, 6.0), warmups=[(1, 4.0)])]
         bench = perf.Benchmark(runs)
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, int)
 
         # average
-        runs = [self.create_run([3.0], warmups=[(1, 1.0), (1, 2.0)]),
-                self.create_run([4.0, 5.0, 6.0])]
+        runs = [create_run([3.0], warmups=[(1, 1.0), (1, 2.0)]),
+                create_run([4.0, 5.0, 6.0])]
         bench = perf.Benchmark(runs)
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, float)
 
     def test_get_nsample(self):
-        bench = perf.Benchmark()
-        self.assertEqual(bench.get_nsample(), 0)
-
-        bench = perf.Benchmark([self.create_run([2.0, 3.0])])
+        bench = perf.Benchmark([create_run([2.0, 3.0])])
         self.assertEqual(bench.get_nsample(), 2)
 
-        bench.add_run(self.create_run([5.0]))
+        bench.add_run(create_run([5.0]))
         self.assertEqual(bench.get_nsample(), 3)
 
     def test_get_runs(self):
-        run1 = self.create_run([1.0])
-        run2 = self.create_run([2.0])
+        run1 = create_run([1.0])
+        run2 = create_run([2.0])
 
         bench = perf.Benchmark([run1, run2])
         self.assertEqual(bench.get_runs(), [run1, run2])
 
     def test_get_total_duration(self):
-        bench = perf.Benchmark()
-        self.assertEqual(bench.get_total_duration(), 0.0)
-
         # use duration metadata
-        runs = [self.create_run([0.1], metadata={'duration': 1.0}),
-                self.create_run([0.1], metadata={'duration': 2.0})]
+        runs = [create_run([0.1], metadata={'duration': 1.0}),
+                create_run([0.1], metadata={'duration': 2.0})]
         bench = perf.Benchmark(runs)
         self.assertEqual(bench.get_total_duration(), 3.0)
 
         # run without duration metadata
-        bench.add_run(self.create_run([5.0], metadata={}))
+        bench.add_run(create_run([5.0], metadata={}))
         self.assertEqual(bench.get_total_duration(), 8.0)
 
     def test_get_dates(self):
-        bench = perf.Benchmark()
-        self.assertEqual(bench.get_dates(), ())
-
-        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0},
-                       collect_metadata=False)
-        bench = perf.Benchmark([run])
+        metadata = {'date': '2016-07-20T14:06:00', 'duration': 60.0}
+        bench = perf.Benchmark([create_run(metadata=metadata)])
         self.assertEqual(bench.get_dates(),
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 7, 0)))
 
-        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:10:00', 'duration': 60.0},
-                       collect_metadata=False)
-        bench.add_run(run)
+        metadata = {'date': '2016-07-20T14:10:00', 'duration': 60.0}
+        bench.add_run(create_run(metadata=metadata))
         self.assertEqual(bench.get_dates(),
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 11, 0)))
@@ -358,23 +350,15 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(self.get_metadata(bench),
                          {'os': 'linux', 'name': 'bench'})
 
-    def test_update_metadata_no_run(self):
-        bench = perf.Benchmark()
-        # error: need at least 1 run
-        with self.assertRaises(ValueError):
-            bench.update_metadata({'os': 'linux'})
-
     def test_update_metadata_inner_loops(self):
-        run = perf.Run((1.0,),
-                       metadata={'inner_loops': 5},
-                       collect_metadata=False)
+        run = create_run(metadata={'inner_loops': 5})
         bench = perf.Benchmark([run])
         with self.assertRaises(ValueError):
             bench.update_metadata({'inner_loops': 8})
 
     def test_calibration(self):
         run = perf.Run([], warmups=[(100, 1.0)],
-                       metadata={'loops': 100},
+                       metadata={'name': 'bench', 'loops': 100},
                        collect_metadata=False)
         bench = perf.Benchmark([run])
         self.assertEqual(str(bench), 'Calibration: 100 loops')
@@ -460,13 +444,13 @@ class TestBenchmarkSuite(unittest.TestCase):
     def test_get_total_duration(self):
         suite = perf.BenchmarkSuite()
 
-        run = perf.Run([1.0])
+        run = create_run([1.0])
         bench = perf.Benchmark([run])
         suite.add_benchmark(bench)
 
-        run = perf.Run([2.0])
+        run = create_run([2.0])
         bench = perf.Benchmark([run])
-        suite.add_benchmark(bench)
+        suite.add_runs(bench)
 
         self.assertEqual(suite.get_total_duration(), 3.0)
 
@@ -474,16 +458,14 @@ class TestBenchmarkSuite(unittest.TestCase):
         suite = perf.BenchmarkSuite()
         self.assertEqual(suite.get_dates(), ())
 
-        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0},
-                       collect_metadata=False)
+        run = create_run(metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0, 'name': 'bench1'})
         bench = perf.Benchmark([run])
         suite.add_benchmark(bench)
         self.assertEqual(suite.get_dates(),
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 7, 0)))
 
-        run = perf.Run([1.0], metadata={'date': '2016-07-20T14:10:00', 'duration': 60.0},
-                       collect_metadata=False)
+        run = create_run(metadata={'date': '2016-07-20T14:10:00', 'duration': 60.0, 'name': 'bench2'})
         bench = perf.Benchmark([run])
         suite.add_benchmark(bench)
         self.assertEqual(suite.get_dates(),

@@ -270,10 +270,6 @@ def display_histogram(benchmarks, bins=20, extend=False, file=None):
 
 
 def warn_if_bench_unstable(bench):
-    # FIXME: modify Benchmark constructor to avoid this annoying case?
-    if not bench.get_nrun():
-        raise ValueError("benchmark has no run")
-
     warnings = []
     warn = warnings.append
     samples = bench.get_samples()

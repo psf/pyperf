@@ -273,16 +273,21 @@ class Run(object):
 
 
 class Benchmark(object):
-    def __init__(self, runs=()):
-        self._clear_runs_cache()
+    def __init__(self, runs):
+        if not runs:
+            raise ValueError("runs must be a non-empty sequence of Run objects")
+        run = runs[0]
+        if not isinstance(run, Run):
+            raise TypeError("Run expected, got %s" % type(run).__name__)
+
         # list of Run objects
-        self._runs = []
-        for run in runs:
+        self._runs = [run]
+        self._clear_runs_cache()
+
+        for run in runs[1:]:
             self.add_run(run)
 
     def get_name(self):
-        if not self._runs:
-            return None
         run = self._runs[0]
         return run._get_name()
 
@@ -297,9 +302,6 @@ class Benchmark(object):
         return math.fsum(durations)
 
     def _get_run_property(self, get_property):
-        if not self._runs:
-            raise ValueError("the benchmark has no run")
-
         # ignore calibration runs
         values = [get_property(run) for run in self._runs
                   if not run._is_calibration()]
@@ -341,27 +343,22 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
-        # don't check the first run
-        if self._runs:
-            metadata = self.get_metadata()
-            run_metata = run.get_metadata()
-            for key in _CHECKED_METADATA:
-                value = metadata.get(key, None)
-                run_value = run_metata.get(key, None)
-                if run_value != value:
-                    raise ValueError("incompatible benchmark, metadata %s is "
-                                     "different: current=%s, run=%s"
-                                     % (key, value, run_value))
+        metadata = self.get_metadata()
+        run_metata = run.get_metadata()
+        for key in _CHECKED_METADATA:
+            value = metadata.get(key, None)
+            run_value = run_metata.get(key, None)
+            if run_value != value:
+                raise ValueError("incompatible benchmark, metadata %s is "
+                                 "different: current=%s, run=%s"
+                                 % (key, value, run_value))
 
         self._clear_runs_cache()
         self._runs.append(run)
 
     def get_unit(self):
-        if self._runs:
-            run = self._runs[0]
-            return run._get_metadata('unit', DEFAULT_UNIT)
-        else:
-            return DEFAULT_UNIT
+        run = self._runs[0]
+        return run._get_metadata('unit', DEFAULT_UNIT)
 
     def format_samples(self, samples):
         unit = self.get_unit()
@@ -413,10 +410,6 @@ class Benchmark(object):
         loops = self._only_calibration()
         if loops is not None:
             return '<calibration: %s>' % format_number(loops, 'loop')
-
-        nrun = self.get_nrun()
-        if not nrun:
-            return '<no run>'
 
         if self.get_nsample() >= 2:
             samples = self.get_samples()
@@ -489,6 +482,12 @@ class Benchmark(object):
         suite.add_benchmark(self)
         suite.dump(file, compact=compact, replace=replace)
 
+    def _replace_runs(self, new_runs):
+        if not new_runs:
+            raise ValueError("no more runs")
+        self._runs[:] = new_runs
+        self._clear_runs_cache()
+
     def _filter_runs(self, include, only_runs):
         if include:
             old_runs = self._runs
@@ -503,12 +502,11 @@ class Benchmark(object):
             for index in reversed(only_runs):
                 if index <= max_index:
                     del runs[index]
-        if not runs:
-            raise ValueError("no more runs")
-        self._runs = runs
+        self._replace_runs(runs)
 
     def _remove_warmups(self):
-        self._runs = [run._remove_warmups() for run in self._runs]
+        new_runs = [run._remove_warmups() for run in self._runs]
+        self._replace_runs(new_runs)
 
     def _remove_outliers(self):
         median = self.median()
@@ -521,9 +519,7 @@ class Benchmark(object):
             if all(min_sample <= sample <= max_sample
                    for sample in run.samples):
                 new_runs.append(run)
-        if not new_runs:
-            raise ValueError("no more runs")
-        self._runs[:] = new_runs
+        self._replace_runs(new_runs)
 
     def add_runs(self, benchmark):
         if not isinstance(benchmark, Benchmark):
@@ -532,10 +528,6 @@ class Benchmark(object):
 
         if benchmark is self:
             raise ValueError("cannot add a benchmark to itself")
-
-        nrun = benchmark.get_nrun()
-        if not nrun:
-            raise ValueError("the benchmark has no run")
 
         for run in benchmark._runs:
             self.add_run(run)
@@ -567,24 +559,19 @@ class Benchmark(object):
 
     def _extract_metadata(self, name):
         new_runs = [run._extract_metadata(name) for run in self._runs]
-        self._clear_runs_cache()
-        self._runs = new_runs
+        self._replace_runs(new_runs)
 
     def _remove_all_metadata(self):
         new_runs = [run._remove_all_metadata() for run in self._runs]
-        self._clear_runs_cache()
-        self._runs = new_runs
+        self._replace_runs(new_runs)
 
     def update_metadata(self, metadata):
         metadata = parse_metadata(metadata)
         if not metadata:
             return self
 
-        if not self._runs:
-            raise ValueError("benchmark has no run")
-
-        self._clear_runs_cache()
-        self._runs = [run._update_metadata(metadata) for run in self._runs]
+        new_runs = [run._update_metadata(metadata) for run in self._runs]
+        self._replace_runs(new_runs)
 
 
 class BenchmarkSuite(object):

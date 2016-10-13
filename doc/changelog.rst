@@ -1,8 +1,14 @@
 Changelog
 =========
 
-Version 0.7.13
---------------
+Version 0.8.0
+-------------
+
+Incompatible API changes:
+
+* Benchmark constructor now requires a non-empty sequence of Run objects.
+
+Changes:
 
 * ``--loops`` command line argument now accepts ``x^y`` syntax. For example,
   ``--loops=2^8`` uses ``256`` iterations
