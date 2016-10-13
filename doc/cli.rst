@@ -359,7 +359,7 @@ Options:
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
   run benchmark on Python executable ``PYTHON``, and then compare
   ``REF_PYTHON`` result to ``PYTHON`` result.
-* ``[options]``: see :ref:`TextRunner CLI <textrunner_cli>` for more options.
+* ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and

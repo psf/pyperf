@@ -44,7 +44,7 @@ def _run_cmd(args, env):
     return stdout
 
 
-class TextRunner:
+class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
     def __init__(self, samples=None, warmups=None, processes=None,

@@ -22,6 +22,6 @@ def func(loops):
 
     return perf.perf_counter() - t0
 
-runner = perf.TextRunner()
+runner = perf.Runner()
 # inner-loops: mydict[int] is duplicated 10 times
 runner.bench_sample_func('dict[int]', func, inner_loops=10)

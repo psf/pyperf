@@ -32,7 +32,7 @@ Table Of Content:
 
    perf
    cli
-   text_runner
+   runner
    api
    changelog
 

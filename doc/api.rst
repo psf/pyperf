@@ -4,7 +4,7 @@ Examples
 bench_sample_func()
 -------------------
 
-Microbenchmark using the :meth:`~TextRunner.bench_sample_func`
+Microbenchmark using the :meth:`~Runner.bench_sample_func`
 method to measure the performance of ``dict[key]``:
 
 .. literalinclude:: examples/bench_sample_func.py
@@ -25,16 +25,16 @@ negligible.
 bench_func()
 ------------
 
-Benchmark using the :meth:`~TextRunner.bench_func` method to
+Benchmark using the :meth:`~Runner.bench_func` method to
 measure the time elasped when sleeping 1 ms:
 
 .. literalinclude:: examples/bench_func.py
 
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
-The :meth:`~TextRunner.bench_sample_func` method is
+The :meth:`~Runner.bench_sample_func` method is
 recommended if ``func()`` takes less than 1 ms. The
-:meth:`~TextRunner.bench_func` method has a non negligible
+:meth:`~Runner.bench_func` method has a non negligible
 overhead on microbenchmarks.
 
 
@@ -455,10 +455,10 @@ BenchmarkSuite
       It can be ``None``.
 
 
-TextRunner
-----------
+Runner
+------
 
-.. class:: TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
+.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
 
    Tool to run a benchmark in text mode.
 
@@ -468,7 +468,7 @@ TextRunner
 
    *samples*, *warmups* and *processes* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
-   options. See :ref:`TextRunner CLI <textrunner_cli>` for command line
+   options. See :ref:`Runner CLI <runner_cli>` for command line
    options.
 
    If isolated CPUs are detected, the CPU affinity is automatically
@@ -503,7 +503,7 @@ TextRunner
       *name* is the name of the benchmark.
 
       The function must return raw samples: the total elapsed time of all
-      loops. TextRunner will divide raw samples by ``loops x inner_loops``
+      loops. Runner will divide raw samples by ``loops x inner_loops``
       (*loops* and *inner_loops* parameters).
 
       :func:`perf_counter` should be used to measure the elapsed time.
@@ -552,7 +552,7 @@ TextRunner
       in-place.
 
       For example, the callback can be used to add arguments not handled
-      directly by :class:`TextRunner`.
+      directly by :class:`Runner`.
 
    .. attribute:: program_args
 

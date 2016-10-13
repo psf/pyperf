@@ -8,12 +8,12 @@ Incompatible API changes:
 
 * Benchmark constructor now requires a non-empty sequence of Run objects.
 * A benchmark must now have a name: all runs must have a name metadata.
-* Remove *name* argument from TextRunner constructor and add *name* parameter
+* Remove *name* argument from Runner constructor and add *name* parameter
   to :func:`Benchmark.bench_func` and :func:`Benchmark.bench_sample_func`
-* Remove the ``perf.text_runner`` module: :class:`TextRunner`` is now available
-  as ``perf.TextRunner``.
+* ``perf.text_runner.TextRunner`` becomes simply ``perf.Runner``.
+  Remove the ``perf.text_runner`` module.
 * Drop the first item (``sys.executable``) from
-  :attr:`TextRunner.program_args`, since the executable can now be overriden
+  :attr:`Runner.program_args`, since the executable can now be overriden
   by the ``--python`` command line option.
 
 Changes:
@@ -28,7 +28,7 @@ Changes:
   ``float``.
 * Add a new private ``--worker-task`` command line option to only execute
   a specific benchmark function by its identifier.
-* TextRunner now supports calling more than one benchmark function using
+* Runner now supports calling more than one benchmark function using
   ``--worker-task`` internally.
 * Benchmark.dump() and BenchmarkSuite.dump() now fails by default if the
   file already exists. Set the new *replace* parameter to true to allow to

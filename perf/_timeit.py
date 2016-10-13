@@ -10,15 +10,15 @@ import timeit
 import perf
 from perf._cli import display_title, warn_if_bench_unstable
 from perf._utils import get_python_names, abs_executable
-from perf._text_runner import TextRunner
+from perf._runner import Runner
 
 
 _DEFAULT_NAME = 'timeit'
 
 
-class TimeitRunner(TextRunner):
+class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
-        TextRunner.__init__(self, *args, **kw)
+        Runner.__init__(self, *args, **kw)
 
         cmd = self.argparser
         cmd.add_argument('--name', default=_DEFAULT_NAME,
@@ -38,7 +38,7 @@ class TimeitRunner(TextRunner):
         cmd.add_argument('stmt', nargs='+', help='executed statements')
 
     def _process_args(self):
-        TextRunner._process_args(self)
+        Runner._process_args(self)
         args = self.args
         if args.compare_to:
             args.compare_to = abs_executable(args.compare_to)

@@ -1,9 +1,9 @@
-.. _textrunner_cli:
+.. _runner_cli:
 
-TextRunner CLI
-==============
+Runner CLI
+==========
 
-Command line options of the :class:`TextRunner` class.
+Command line options of the :class:`Runner` class.
 
 Loop iterations
 ---------------

@@ -48,7 +48,7 @@ The ``perf`` module uses 5 options to configure benchmarks:
 * "inner_loops": Number of inner-loop iterations per sample, hardcoded in
   benchmark.
 
-See also :ref:`TextRunner CLI <textrunner_cli>` for default values.
+See also :ref:`Runner CLI <runner_cli>` for default values.
 
 The number of runs should be large enough to reduce the effect of random
 factors like randomized address space layer (ASLR) and the Python randomized
@@ -67,8 +67,8 @@ configurable using ``--min-time`` and ``--max-time`` command line options).
 
 The number of inner-loops microbenchmarks when the tested instruction is
 manually duplicated to limit the cost of Python loops. See the
-:attr:`~TextRunner.inner_loops` attribute of the
-:class:`TextRunner` class.
+:attr:`~Runner.inner_loops` attribute of the
+:class:`Runner` class.
 
 Example of unstable benchmark because the number of loops is too low::
 
@@ -143,7 +143,7 @@ on the stability of benchmarks. The `My journey to stable benchmark, part 1
 article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
-The :class:`TextRunner` class automatically pin worker
+The :class:`Runner` class automatically pin worker
 processes to isolated CPUs (when isolated CPUs are detected). CPU pinning can
 be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
@@ -165,8 +165,7 @@ information on running benchmarks.
 Metadata
 ========
 
-The :class:`TextRunner` class collects metadata in each
-worker process.
+The :class:`Runner` class collects metadata in each worker process.
 
 Benchmark:
 
