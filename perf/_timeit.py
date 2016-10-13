@@ -10,7 +10,7 @@ import timeit
 import perf
 from perf._cli import display_title, warn_if_bench_unstable
 from perf._utils import get_python_names
-from perf.text_runner import TextRunner, _abs_executable
+from perf._text_runner import TextRunner, _abs_executable
 
 
 _DEFAULT_NAME = 'timeit'

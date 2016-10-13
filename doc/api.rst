@@ -4,7 +4,7 @@ Examples
 bench_sample_func()
 -------------------
 
-Microbenchmark using the :meth:`~perf.text_runner.TextRunner.bench_sample_func`
+Microbenchmark using the :meth:`~TextRunner.bench_sample_func`
 method to measure the performance of ``dict[key]``:
 
 .. literalinclude:: examples/bench_sample_func.py
@@ -25,16 +25,16 @@ negligible.
 bench_func()
 ------------
 
-Benchmark using the :meth:`~perf.text_runner.TextRunner.bench_func` method to
+Benchmark using the :meth:`~TextRunner.bench_func` method to
 measure the time elasped when sleeping 1 ms:
 
 .. literalinclude:: examples/bench_func.py
 
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
-The :meth:`~perf.text_runner.TextRunner.bench_sample_func` method is
+The :meth:`~TextRunner.bench_sample_func` method is
 recommended if ``func()`` takes less than 1 ms. The
-:meth:`~perf.text_runner.TextRunner.bench_func` method has a non negligible
+:meth:`~TextRunner.bench_func` method has a non negligible
 overhead on microbenchmarks.
 
 
@@ -70,7 +70,7 @@ API
 Statistics
 ----------
 
-.. function:: perf.is_significant(samples1, samples2)
+.. function:: is_significant(samples1, samples2)
 
     Determine whether two samples differ significantly.
 
@@ -85,7 +85,7 @@ Statistics
 Clocks
 ------
 
-.. function:: perf.perf_counter()
+.. function:: perf_counter()
 
    Return the value (in fractional seconds) of a performance counter, i.e. a
    clock with the highest available resolution to measure a short duration.  It
@@ -97,7 +97,7 @@ Clocks
    it's :func:`time.clock` on Windows and :func:`time.time` on other
    platforms. See the PEP 418 for more information on Python clocks.
 
-.. function:: perf.monotonic_clock()
+.. function:: monotonic_clock()
 
    Return the value (in fractional seconds) of a monotonic clock, i.e. a clock
    that cannot go backwards.  The clock is not affected by system clock updates.
@@ -116,7 +116,7 @@ Clocks
 Metadata
 --------
 
-.. class:: perf.Metadata(name, value)
+.. class:: Metadata(name, value)
 
    A metadata object.
 
@@ -132,7 +132,7 @@ Metadata
 Run
 ---
 
-.. class:: perf.Run(samples: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
+.. class:: Run(samples: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
 
    A benchmark run result is made of multiple samples.
 
@@ -159,7 +159,7 @@ Run
 
       Get run metadata.
 
-      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+      Return a dictionary: name (``str``) => :class:`Metadata` object.
 
       See :ref:`Metadata <metadata>`.
 
@@ -183,7 +183,7 @@ Run
 Benchmark
 ---------
 
-.. class:: perf.Benchmark(runs)
+.. class:: Benchmark(runs)
 
    A benchmark is made of multiple :class:`Run` objects.
 
@@ -204,7 +204,7 @@ Benchmark
 
       The benchmark must have at least one run.
 
-      See :meth:`perf.BenchmarkSuite.add_runs` method and :func:`add_runs`
+      See :meth:`BenchmarkSuite.add_runs` method and :func:`add_runs`
       function.
 
    .. method:: dump(file, compact=True, replace=False)
@@ -249,7 +249,7 @@ Benchmark
 
       Get metadata common to all runs.
 
-      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+      Return a dictionary: name (``str``) => :class:`Metadata` object.
 
       See :ref:`Metadata <metadata>`.
 
@@ -277,7 +277,7 @@ Benchmark
 
    .. method:: get_runs() -> List[Run]
 
-      Get the list of :class:`perf.Run` objects.
+      Get the list of :class:`Run` objects.
 
    .. method:: get_samples()
 
@@ -348,15 +348,15 @@ Benchmark
 BenchmarkSuite
 --------------
 
-.. class:: perf.BenchmarkSuite
+.. class:: BenchmarkSuite
 
-   A benchmark suite is made of :class:`~perf.Benchmark` objects.
+   A benchmark suite is made of :class:`~Benchmark` objects.
 
    Methods:
 
    .. method:: add_benchmark(benchmark: Benchmark)
 
-      Add a :class:`perf.Benchmark` object.
+      Add a :class:`Benchmark` object.
 
    .. method:: add_runs(bench: Benchmark or BenchmarkSuite)
 
@@ -367,7 +367,7 @@ BenchmarkSuite
       Each benchmark must have at least one run. If *bench* is a benchmark
       suite, it must have at least one benchmark.
 
-      See :meth:`perf.Benchmark.add_runs` method and :func:`add_runs` function.
+      See :meth:`Benchmark.add_runs` method and :func:`add_runs` function.
 
    .. function:: dump(file, compact=True, replace=False)
 
@@ -414,9 +414,9 @@ BenchmarkSuite
       Get metadata common to all benchmarks (common to all runs of all
       benchmarks).
 
-      Return a dictionary: name (``str``) => :class:`perf.Metadata` object.
+      Return a dictionary: name (``str``) => :class:`Metadata` object.
 
-      See the :meth:`perf.Benchmark.get_metadata` method
+      See the :meth:`Benchmark.get_metadata` method
       and :ref:`Metadata <metadata>`.
 
       .. versionadded:: 0.7.9
@@ -425,7 +425,7 @@ BenchmarkSuite
 
       Get the total duration of all benchmarks in seconds.
 
-      See the :meth:`perf.Benchmark.get_total_duration` method.
+      See the :meth:`Benchmark.get_total_duration` method.
 
    .. method:: __iter__()
 
@@ -458,13 +458,13 @@ BenchmarkSuite
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
+.. class:: TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
 
    Tool to run a benchmark in text mode.
 
    Spawn *processes* worker processes to run the benchmark.
 
-   *metadata* is passed to the :class:`~perf.Run` constructor.
+   *metadata* is passed to the :class:`~Run` constructor.
 
    *samples*, *warmups* and *processes* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
@@ -494,7 +494,7 @@ TextRunner
 
       To call ``func()`` with keyword arguments, use ``functools.partial``.
 
-      Return a :class:`~perf.Benchmark` instance.
+      Return a :class:`Benchmark` instance.
 
    .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None)
 
@@ -506,12 +506,12 @@ TextRunner
       loops. TextRunner will divide raw samples by ``loops x inner_loops``
       (*loops* and *inner_loops* parameters).
 
-      :func:`perf.perf_counter` should be used to measure the elapsed time.
+      :func:`perf_counter` should be used to measure the elapsed time.
 
       To call ``sample_func()`` with keyword arguments, use
       ``functools.partial``.
 
-      Return a :class:`~perf.Benchmark` instance.
+      Return a :class:`Benchmark` instance.
 
    .. method:: parse_args(args=None)
 
@@ -552,7 +552,7 @@ TextRunner
       in-place.
 
       For example, the callback can be used to add arguments not handled
-      directly by :class:`~perf.text_runner.TextRunner`.
+      directly by :class:`TextRunner`.
 
    .. attribute:: program_args
 
@@ -563,17 +563,17 @@ TextRunner
 Functions
 ---------
 
-.. function:: perf.add_runs(filename: str, result)
+.. function:: add_runs(filename: str, result)
 
    Append a :class:`Benchmark` or :class:`BenchmarkSuite` to an existing
    benchmark suite file, or create a new file.
 
    If the file already exists, adds runs to existing benchmarks.
 
-   See :meth:`perf.BenchmarkSuite.add_runs` method.
+   See :meth:`BenchmarkSuite.add_runs` method.
 
 
-.. function:: perf.python_implementation()
+.. function:: python_implementation()
 
    Name of the Python implementation in lower case.
 
@@ -590,7 +590,7 @@ Functions
 
    .. versionadded:: 0.7.4
 
-.. function:: perf.python_has_jit()
+.. function:: python_has_jit()
 
    Return ``True`` if Python has a Just In Time compiler (JIT).
 

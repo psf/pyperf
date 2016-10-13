@@ -67,8 +67,8 @@ configurable using ``--min-time`` and ``--max-time`` command line options).
 
 The number of inner-loops microbenchmarks when the tested instruction is
 manually duplicated to limit the cost of Python loops. See the
-:attr:`~perf.text_runner.TextRunner.inner_loops` attribute of the
-:class:`~perf.text_runner.TextRunner` class.
+:attr:`~TextRunner.inner_loops` attribute of the
+:class:`TextRunner` class.
 
 Example of unstable benchmark because the number of loops is too low::
 
@@ -143,7 +143,7 @@ on the stability of benchmarks. The `My journey to stable benchmark, part 1
 article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
-The :class:`~perf.text_runner.TextRunner` class automatically pin worker
+The :class:`TextRunner` class automatically pin worker
 processes to isolated CPUs (when isolated CPUs are detected). CPU pinning can
 be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
@@ -165,7 +165,7 @@ information on running benchmarks.
 Metadata
 ========
 
-The :class:`~perf.text_runner.TextRunner` class collects metadata in each
+The :class:`TextRunner` class collects metadata in each
 worker process.
 
 Benchmark:

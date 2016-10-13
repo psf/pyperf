@@ -3,7 +3,7 @@
 TextRunner CLI
 ==============
 
-Command line options of the :class:`~perf.text_runner.TextRunner` class.
+Command line options of the :class:`TextRunner` class.
 
 Loop iterations
 ---------------

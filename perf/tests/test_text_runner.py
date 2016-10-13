@@ -3,7 +3,7 @@ import os.path
 import tempfile
 import textwrap
 
-import perf.text_runner
+import perf
 from perf import tests
 from perf.tests import mock
 from perf.tests import unittest
@@ -31,7 +31,7 @@ class TestTextRunner(unittest.TestCase):
 
         sample_func = kwargs.pop('sample_func', None)
 
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -73,7 +73,7 @@ class TestTextRunner(unittest.TestCase):
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
 
-            runner = perf.text_runner.TextRunner()
+            runner = perf.TextRunner()
             with tests.capture_stdout() as stdout:
                 try:
                     runner.parse_args(['--worker', '--output', tmp.name])
@@ -161,7 +161,7 @@ class TestTextRunner(unittest.TestCase):
             # tested by test_calibration_zero()
             self.skipTest("Python has a JIT")
 
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker', '-l1'])
@@ -174,7 +174,7 @@ class TestTextRunner(unittest.TestCase):
         self.assertEqual(str(cm.exception), 'sample function returned zero')
 
     def test_calibration_zero(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker'])
@@ -188,7 +188,7 @@ class TestTextRunner(unittest.TestCase):
                       str(cm.exception))
 
     def test_calibration(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker', '-w2', '-n1', '--min-time=1.0'])
@@ -234,12 +234,12 @@ class TestTextRunner(unittest.TestCase):
                           (32, 1.0)))
 
     def test_loops_power(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         runner.parse_args(['--loops', '2^8'])
         self.assertEqual(runner.args.loops, 256)
 
     def check_two_benchmarks(self, task=None):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         args = ['--worker', '--loops=1', '-w0', '-n3']
         if task is not None:
             args.append('--worker-task=%s' % task)
@@ -283,10 +283,10 @@ class TestTextRunner(unittest.TestCase):
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         runner.parse_args(['-v', '--affinity=3,7'])
 
-        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
+        with mock.patch('perf._text_runner.set_cpu_affinity') as mock_setaffinity:
             with tests.capture_stdout() as stdout:
                 runner._cpu_affinity()
 
@@ -296,11 +296,11 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([3, 7])
 
     def test_cpu_affinity_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         runner.parse_args(['-v'])
 
-        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf.text_runner.get_isolated_cpus', return_value=[1, 2]):
+        with mock.patch('perf._text_runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('perf._text_runner.get_isolated_cpus', return_value=[1, 2]):
                 with tests.capture_stdout() as stdout:
                     runner._cpu_affinity()
 
@@ -310,11 +310,11 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([1, 2])
 
     def test_cpu_affinity_no_isolcpus(self):
-        runner = perf.text_runner.TextRunner()
+        runner = perf.TextRunner()
         runner.parse_args(['-v'])
 
-        with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf.text_runner.get_isolated_cpus', return_value=None):
+        with mock.patch('perf._text_runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('perf._text_runner.get_isolated_cpus', return_value=None):
                 runner._cpu_affinity()
 
         self.assertFalse(runner.args.affinity)

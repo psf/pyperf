@@ -25,3 +25,6 @@ __all__.extend(('is_significant', 'python_implementation', 'python_has_jit'))
 
 from perf._bench import Run, Benchmark, BenchmarkSuite, add_runs  # noqa
 __all__.extend(('Run', 'Benchmark', 'BenchmarkSuite', 'add_runs'))
+
+from perf._text_runner import TextRunner   # noqa
+__all__.append('TextRunner')
