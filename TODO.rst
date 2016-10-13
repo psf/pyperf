@@ -6,7 +6,6 @@ TODO
 * doc: timeit, mention -o option
 * timeit compare: write result as JSON into one or two files?
 * Add Benchmark.get_metadata_values() to avoid Benchmark objects
-* Incompatible change: TextRunner.program_args, drop first parameter
 * emit a warning when nohz_full is enabled on at least one CPU
 * metadata: voluntary_ctxt_switches and nonvoluntary_ctxt_switches of
   /proc/self/status? or/and read /proc/interrupts to count interruptions?

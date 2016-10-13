@@ -89,14 +89,12 @@ class TextRunner:
         # args must be modified in-place.
         self.prepare_subprocess_args = None
 
-        # Command list arguments to call the program:
-        # (sys.executable, sys.argv[0]) by default. For example,
-        # "python3 -m perf timeit" sets program_args to
-        # (sys.executable, '-m', 'perf', 'timeit').
+        # Command list arguments to call the program: (sys.argv[0],) by
+        # default.
         #
-        # The first item is overriden by the value of the --python command line
-        # option.
-        self.program_args = (sys.executable, sys.argv[0])
+        # For example, "python3 -m perf timeit" sets program_args to
+        # ('-m', 'perf', 'timeit').
+        self.program_args = (sys.argv[0],)
 
         def strictly_positive(value):
             value = int(value)
@@ -591,9 +589,8 @@ class TextRunner:
     def _spawn_worker_suite(self, calibrate=False):
         args = self.args
 
-        cmd = []
+        cmd = [args.python]
         cmd.extend(self.program_args)
-        cmd[0] = args.python
         cmd.extend(('--worker', '--stdout',
                     '--worker-task=%s' % self._worker_task,
                     '--samples', str(args.samples),

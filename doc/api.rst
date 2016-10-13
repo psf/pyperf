@@ -556,8 +556,8 @@ TextRunner
 
    .. attribute:: program_args
 
-      Command list arguments to call the program:
-      ``(sys.executable, sys.argv[0])`` by default.
+      Command list arguments to call the program: ``(sys.argv[0],)`` by
+      default.
 
 
 Functions

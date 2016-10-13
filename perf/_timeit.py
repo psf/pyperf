@@ -157,7 +157,7 @@ def main(runner):
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
-    runner.program_args = (sys.executable, '-m', 'perf', 'timeit')
+    runner.program_args = ('-m', 'perf', 'timeit')
     runner.prepare_subprocess_args = prepare_args
 
     timer = create_timer(runner)
