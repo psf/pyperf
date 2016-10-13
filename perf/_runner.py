@@ -396,7 +396,7 @@ class Runner:
         return (loops, samples)
 
     def _calibrate(self, sample_func, metadata=None, inner_loops=None):
-        if metadata:
+        if metadata is None:
             metadata = {}
         return self._run_bench(metadata, sample_func, inner_loops,
                                loops=1, nsample=1,
