@@ -22,6 +22,22 @@ from perf._utils import format_number, parse_iso8601, UNIT_FORMATTERS
 # 1 - first version
 _JSON_VERSION = 4
 
+# Metadata checked by add_run(): all runs have must have the same
+# value for these metadata (or no run must have this metadata)
+_CHECKED_METADATA = (
+    'aslr',
+    'cpu_count',
+    'cpu_model_name',
+    'hostname',
+    'inner_loops',
+    'name',
+    'platform',
+    'python_executable',
+    'python_implementation',
+    'python_unicode',
+    'python_version',
+    'unit')
+
 
 def _check_warmups(warmups):
     for item in warmups:
@@ -322,34 +338,11 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
-        keys = ('aslr',
-                'cpu_count',
-                'cpu_model_name',
-                'hostname',
-                'inner_loops',
-                'name',
-                'platform',
-                'python_executable',
-                'python_implementation',
-                'python_unicode',
-                'python_version',
-                'unit')
-        # ignored:
-        # - cpu_affinity
-        # - cpu_config
-        # - cpu_freq
-        # - cpu_temp
-        # - date
-        # - duration
-        # - timer
-
-        # FIXME: check loops? or maybe emit a warning in show?
-
         # don't check the first run
         if self._runs:
             metadata = self.get_metadata()
             run_metata = run.get_metadata()
-            for key in keys:
+            for key in _CHECKED_METADATA:
                 value = metadata.get(key, None)
                 run_value = run_metata.get(key, None)
                 if run_value != value:

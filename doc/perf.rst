@@ -172,6 +172,7 @@ Benchmark:
 
 * ``date``: date when the benchmark run started, formatted as ISO 8601
 * ``duration``: total duration of the benchmark run in seconds (``float``)
+* ``name``: name of the benchmark
 * ``loops``: number of outer-loops per sample (``int``)
 * ``inner_loops``: number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
