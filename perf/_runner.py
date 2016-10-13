@@ -49,7 +49,8 @@ class Runner:
     # and so a total duration of 5 seconds by default
     def __init__(self, samples=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 program_args=None, _argparser=None):
+                 program_args=None, add_cmdline_args=None,
+                 _argparser=None):
         has_jit = perf.python_has_jit()
         if not samples:
             if has_jit:
@@ -85,9 +86,9 @@ class Runner:
         self.args = None
 
         # callback used to prepare command line arguments to spawn a worker
-        # child process. The callback is called with prepare(runner, args).
+        # child process. The callback is called with prepare(runner.args, cmd).
         # args must be modified in-place.
-        self.prepare_subprocess_args = None
+        self._add_cmdline_args = add_cmdline_args
 
         # Command list arguments to call the program: (sys.argv[0],) by
         # default.
@@ -611,8 +612,8 @@ class Runner:
         if args.track_memory:
             cmd.append('--track-memory')
 
-        if self.prepare_subprocess_args:
-            self.prepare_subprocess_args(self, cmd)
+        if self._add_cmdline_args:
+            self._add_cmdline_args(cmd, self.args)
 
         env = self._create_environ()
         stdout = _run_cmd(cmd, env=env)

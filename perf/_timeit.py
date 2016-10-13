@@ -16,10 +16,20 @@ from perf._runner import Runner
 _DEFAULT_NAME = 'timeit'
 
 
+def add_cmdline_args(cmd, args):
+    cmd.extend(('--name', args.name))
+    if args.inner_loops:
+        cmd.extend(('--inner-loops', str(args.inner_loops)))
+    for setup in args.setup:
+        cmd.extend(("--setup", setup))
+    cmd.extend(args.stmt)
+
+
 class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
         if 'program_args' not in kw:
             kw['program_args'] = ('-m', 'perf', 'timeit')
+        kw['add_cmdline_args'] = add_cmdline_args
         Runner.__init__(self, *args, **kw)
 
         cmd = self.argparser
@@ -90,16 +100,6 @@ def sample_func(loops, timer):
         return timer.inner(it, timer.timer)
 
 
-def prepare_args(runner, cmd):
-    args = runner.args
-    cmd.extend(('--name', args.name))
-    if args.inner_loops:
-        cmd.extend(('--inner-loops', str(args.inner_loops)))
-    for setup in args.setup:
-        cmd.extend(("--setup", setup))
-    cmd.extend(args.stmt)
-
-
 def cmd_compare(runner, timer):
     from perf._compare import timeit_compare_benchs
 
@@ -158,8 +158,6 @@ def main(runner):
         kwargs['inner_loops'] = args.inner_loops
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
-
-    runner.prepare_subprocess_args = prepare_args
 
     timer = create_timer(runner)
 

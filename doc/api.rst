@@ -458,7 +458,7 @@ BenchmarkSuite
 Runner
 ------
 
-.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, program_args=None)
+.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, program_args=None, add_cmdline_args=None)
 
    Tool to run a benchmark in text mode.
 
@@ -475,6 +475,12 @@ Runner
    run the program. By default, ``(sys.argv[0],)`` is used. For example,
    ``python3 -m perf timeit`` sets *program_args* to
    ``('-m', 'perf', 'timeit')``.
+
+   *add_cmdline_args* is an optional callback used to add command line
+   arguments to the command line of worker processes. The callback is called
+   with ``add_cmdline_args(cmd, args)`` where *cmd* is the command line
+   (``list``) which must be modified in place and *args* is the :atrr:`args`
+   attribute of the runner.
 
    If isolated CPUs are detected, the CPU affinity is automatically
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
@@ -548,16 +554,6 @@ Runner
    .. attribute:: inner_loops
 
       Number of benchmark inner-loops (``int`` or ``None``).
-
-   .. attribute:: prepare_subprocess_args
-
-      Callback used to prepare command line arguments to spawn a worker
-      process. The callback is called with ``prepare(runner, cmd)`` where *cmd*
-      is a list of strings (command line arguments). *cmd* must be modified
-      in-place.
-
-      For example, the callback can be used to add arguments not handled
-      directly by :class:`Runner`.
 
 
 Functions

@@ -16,6 +16,9 @@ Incompatible API changes:
   constructor. *program_args* must no more start with ``sys.executable`` which
   is automatically added, since the executable can now be overriden by the
   ``--python`` command line option.
+* The ``TextRunner.prepare_subprocess_args`` attribute becomes a new
+  *add_cmdline_args* parameter of :class:`Runner` constructor which is called
+  with different arguments than the old *prepare_subprocess_args* callback.
 
 Changes:
 
