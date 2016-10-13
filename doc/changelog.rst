@@ -12,9 +12,10 @@ Incompatible API changes:
   to :func:`Benchmark.bench_func` and :func:`Benchmark.bench_sample_func`
 * ``perf.text_runner.TextRunner`` becomes simply ``perf.Runner``.
   Remove the ``perf.text_runner`` module.
-* Drop the first item (``sys.executable``) from
-  :attr:`Runner.program_args`, since the executable can now be overriden
-  by the ``--python`` command line option.
+* ``TextRunner.program_args`` attribute becomes a parameter of :class:`Runner`
+  constructor. *program_args* must no more start with ``sys.executable`` which
+  is automatically added, since the executable can now be overriden by the
+  ``--python`` command line option.
 
 Changes:
 

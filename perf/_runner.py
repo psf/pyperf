@@ -49,7 +49,7 @@ class Runner:
     # and so a total duration of 5 seconds by default
     def __init__(self, samples=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 _argparser=None):
+                 program_args=None, _argparser=None):
         has_jit = perf.python_has_jit()
         if not samples:
             if has_jit:
@@ -94,7 +94,10 @@ class Runner:
         #
         # For example, "python3 -m perf timeit" sets program_args to
         # ('-m', 'perf', 'timeit').
-        self.program_args = (sys.argv[0],)
+        if program_args:
+            self._program_args = program_args
+        else:
+            self._program_args = (sys.argv[0],)
 
         def strictly_positive(value):
             value = int(value)
@@ -590,7 +593,7 @@ class Runner:
         args = self.args
 
         cmd = [args.python]
-        cmd.extend(self.program_args)
+        cmd.extend(self._program_args)
         cmd.extend(('--worker', '--stdout',
                     '--worker-task=%s' % self._worker_task,
                     '--samples', str(args.samples),

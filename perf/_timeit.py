@@ -18,6 +18,8 @@ _DEFAULT_NAME = 'timeit'
 
 class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
+        if 'program_args' not in kw:
+            kw['program_args'] = ('-m', 'perf', 'timeit')
         Runner.__init__(self, *args, **kw)
 
         cmd = self.argparser
@@ -157,7 +159,6 @@ def main(runner):
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
-    runner.program_args = ('-m', 'perf', 'timeit')
     runner.prepare_subprocess_args = prepare_args
 
     timer = create_timer(runner)

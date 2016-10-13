@@ -458,7 +458,7 @@ BenchmarkSuite
 Runner
 ------
 
-.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
+.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, program_args=None)
 
    Tool to run a benchmark in text mode.
 
@@ -470,6 +470,11 @@ Runner
    warmup samples and processes. These values can be changed with command line
    options. See :ref:`Runner CLI <runner_cli>` for command line
    options.
+
+   *program_args* is a list of strings passed to Python on the command line to
+   run the program. By default, ``(sys.argv[0],)`` is used. For example,
+   ``python3 -m perf timeit`` sets *program_args* to
+   ``('-m', 'perf', 'timeit')``.
 
    If isolated CPUs are detected, the CPU affinity is automatically
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
@@ -553,11 +558,6 @@ Runner
 
       For example, the callback can be used to add arguments not handled
       directly by :class:`Runner`.
-
-   .. attribute:: program_args
-
-      Command list arguments to call the program: ``(sys.argv[0],)`` by
-      default.
 
 
 Functions
