@@ -128,7 +128,7 @@ class TextRunner:
     # and so a total duration of 5 seconds by default
     def __init__(self, samples=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
-                 inner_loops=None, _argparser=None):
+                 _argparser=None):
         has_jit = perf.python_has_jit()
         if not samples:
             if has_jit:
@@ -176,9 +176,6 @@ class TextRunner:
         # The first item is overriden by the value of the --python command line
         # option.
         self.program_args = (sys.executable, sys.argv[0])
-
-        # Number of inner-loops of the sample_func for bench_sample_func()
-        self.inner_loops = inner_loops
 
         def strictly_positive(value):
             value = int(value)
@@ -406,7 +403,7 @@ class TextRunner:
                 print("Use Python 3.3 or newer, or install psutil dependency",
                       file=stream)
 
-    def _run_bench(self, metadata, sample_func, loops, nsample,
+    def _run_bench(self, metadata, sample_func, inner_loops, loops, nsample,
                    is_warmup=False, is_calibrate=False, calibrate=False):
         unit = metadata.get('unit')
         args = self.args
@@ -423,7 +420,8 @@ class TextRunner:
 
         samples = []
         index = 1
-        inner_loops = self.inner_loops or 1
+        if not inner_loops:
+            inner_loops = 1
         while True:
             if index > nsample:
                 break
@@ -474,13 +472,13 @@ class TextRunner:
         # Run collects metadata
         return (loops, samples)
 
-    def _calibrate(self, metadata, sample_func):
-        return self._run_bench(metadata, sample_func,
+    def _calibrate(self, metadata, sample_func, inner_loops):
+        return self._run_bench(metadata, sample_func, inner_loops,
                                loops=1, nsample=1,
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
-    def _worker(self, name, sample_func):
+    def _worker(self, name, sample_func, inner_loops):
         args = self.args
         loops = args.loops
         metadata = dict(self.metadata, name=name)
@@ -490,7 +488,8 @@ class TextRunner:
 
         calibrate = (not loops)
         if calibrate:
-            loops, calibrate_warmups = self._calibrate(metadata, sample_func)
+            loops, calibrate_warmups = self._calibrate(metadata, sample_func,
+                                                       inner_loops)
         else:
             if perf.python_has_jit():
                 # With a JIT, continue to calibrate during warmup
@@ -510,15 +509,15 @@ class TextRunner:
             tracemalloc.start()
 
         if args.warmups:
-            loops, warmups = self._run_bench(metadata, sample_func, loops,
-                                             args.warmups,
+            loops, warmups = self._run_bench(metadata, sample_func, inner_loops,
+                                             loops, args.warmups,
                                              is_warmup=True, calibrate=calibrate)
         else:
             warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
-        loops, samples = self._run_bench(metadata, sample_func, loops,
-                                         args.samples)
+        loops, samples = self._run_bench(metadata, sample_func, inner_loops,
+                                         loops, args.samples)
 
         if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
@@ -551,8 +550,8 @@ class TextRunner:
         duration = perf.monotonic_clock() - start_time
         metadata['duration'] = duration
         metadata['loops'] = loops
-        if self.inner_loops is not None and self.inner_loops != 1:
-            metadata['inner_loops'] = self.inner_loops
+        if inner_loops is not None:
+            metadata['inner_loops'] = inner_loops
 
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
         bench = perf.Benchmark((run,))
@@ -560,7 +559,7 @@ class TextRunner:
         args.loops = loops
         return bench
 
-    def _main(self, name, sample_func):
+    def _main(self, name, sample_func, inner_loops):
         if not name.strip():
             raise ValueError("name must be a non-empty string")
 
@@ -574,7 +573,7 @@ class TextRunner:
 
         try:
             if args.worker:
-                bench = self._worker(name, sample_func)
+                bench = self._worker(name, sample_func, inner_loops)
             else:
                 bench = self._master()
         except KeyboardInterrupt:
@@ -584,7 +583,14 @@ class TextRunner:
         self._worker_task += 1
         return bench
 
-    def bench_sample_func(self, name, sample_func, *args):
+    def _no_keyword_argument(self, kwargs):
+        if not kwargs:
+            return
+
+        args = ', '.join(map(repr, sorted(kwargs)))
+        raise TypeError('unexpected keyword argument %s' % args)
+
+    def bench_sample_func(self, name, sample_func, *args, **kwargs):
         """"Benchmark sample_func(loops, *args)
 
         The function must return the total elapsed time, not the average time
@@ -593,17 +599,22 @@ class TextRunner:
 
         perf.perf_counter() should be used to measure the elapsed time.
         """
+        inner_loops = kwargs.pop('inner_loops', None)
+        self._no_keyword_argument(kwargs)
 
         if not args:
-            return self._main(name, sample_func)
+            return self._main(name, sample_func, inner_loops)
 
         def wrap_sample_func(loops):
             return sample_func(loops, *args)
 
-        return self._main(name, wrap_sample_func)
+        return self._main(name, wrap_sample_func, inner_loops)
 
-    def bench_func(self, name, func, *args):
+    def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
+
+        inner_loops = kwargs.pop('inner_loops', None)
+        self._no_keyword_argument(kwargs)
 
         def sample_func(loops):
             # use fast local variables
@@ -641,7 +652,7 @@ class TextRunner:
 
             return dt
 
-        return self._main(name, sample_func)
+        return self._main(name, sample_func, inner_loops)
 
     def _create_environ(self):
         env = {}

@@ -1,7 +1,6 @@
 TODO
 ====
 
-* TextRunner: move inner_loops to bench_sample_func()
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
 * doc: timeit, mention -o option

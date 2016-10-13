@@ -458,7 +458,7 @@ BenchmarkSuite
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
+.. class:: perf.text_runner.TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None)
 
    Tool to run a benchmark in text mode.
 
@@ -477,13 +477,13 @@ TextRunner
 
    Methods:
 
-   .. method:: bench_func(name, func, \*args)
+   .. method:: bench_func(name, func, \*args, inner_loops=None)
 
       Benchmark the function ``func(*args)``.
 
       *name* is the name of the benchmark.
 
-      The :attr:`inner_loops` attribute is used to normalize timing per loop
+      The *inner_loops* parameter is used to normalize timing per loop
       iteration.
 
       The design of :meth:`bench_func` has a non negligible overhead on
@@ -492,9 +492,11 @@ TextRunner
       recommended if ``func(*args)`` takes less than ``1`` millisecond
       (``0.001`` second).
 
+      To call ``func()`` with keyword arguments, use ``functools.partial``.
+
       Return a :class:`~perf.Benchmark` instance.
 
-   .. method:: bench_sample_func(name, sample_func, \*args)
+   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None)
 
       Benchmark ``sample_func(loops, *args)``.
 
@@ -502,9 +504,12 @@ TextRunner
 
       The function must return raw samples: the total elapsed time of all
       loops. TextRunner will divide raw samples by ``loops x inner_loops``
-      (*loops* parameter and the :attr:`inner_loops` attribute).
+      (*loops* and *inner_loops* parameters).
 
       :func:`perf.perf_counter` should be used to measure the elapsed time.
+
+      To call ``sample_func()`` with keyword arguments, use
+      ``functools.partial``.
 
       Return a :class:`~perf.Benchmark` instance.
 

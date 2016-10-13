@@ -151,8 +151,9 @@ def main(runner):
     args.setup = _format_stmt(args.setup)
     args.stmt = _format_stmt(args.stmt)
 
+    kwargs = {}
     if args.inner_loops:
-        runner.inner_loops = args.inner_loops
+        kwargs['inner_loops'] = args.inner_loops
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
@@ -167,7 +168,7 @@ def main(runner):
         cmd_compare(runner, timer)
     else:
         try:
-            runner.bench_sample_func(args.name, sample_func, timer)
+            runner.bench_sample_func(args.name, sample_func, timer, **kwargs)
         except SystemExit:
             raise
         except:
