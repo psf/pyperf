@@ -159,6 +159,10 @@ class TextRunner:
         else:
             self.metadata = {}
 
+        # Worker task identifier: count how many times _worker() was called,
+        # see the --worker-task command line option
+        self._worker_task = 0
+
         # result of argparser.parse_args()
         self.args = None
 
@@ -248,6 +252,9 @@ class TextRunner:
                             % format_timedelta(min_time))
         parser.add_argument('--worker', action="store_true",
                             help='worker process, run the benchmark')
+        parser.add_argument('--worker-task', type=positive_or_nul, metavar='TASK_ID',
+                            help='Identifier of the worker task: '
+                                 'only execute the benchmark function TASK_ID')
         parser.add_argument('--calibrate', action="store_true",
                             help="only calibrate the benchmark, "
                                  "don't compute samples")
@@ -322,6 +329,10 @@ class TextRunner:
         filename = args.output
         if filename and os.path.exists(filename):
             print("ERROR: The JSON file %r already exists" % filename)
+            sys.exit(1)
+
+        if args.worker_task and not args.worker:
+            print("ERROR: --worker-task can only be used with --worker")
             sys.exit(1)
 
         if args.tracemalloc:
@@ -555,6 +566,13 @@ class TextRunner:
 
     def _main(self, sample_func):
         args = self.parse_args()
+
+        worker_task = self._worker_task
+        self._worker_task += 1
+        if (self.args.worker_task is not None
+           and self.args.worker_task != worker_task):
+            # Do nothing if it's not the expected worker task
+            return None
 
         bench = perf.Benchmark()
 

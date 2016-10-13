@@ -135,9 +135,12 @@ The following options are used internally by perf and should not be used
 explicitly::
 
     --worker
+    --worker-task=TASK_ID
     --calibrate
     --debug-single-sample
 
 * ``--worker``: a worker process, run the benchmark in the running processs
+* ``--worker-task``: Identifier of the worker task, only execute the benchmark
+  function number ``TASK_ID``.
 * ``--calibrate``: only calibrate the benchmark, don't compute samples
 * ``--debug-single-sample``: Debug mode, only produce a single sample

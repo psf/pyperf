@@ -12,6 +12,7 @@ Version 0.7.13
 * Run constructor now accepts an empty list of samples. Moreover, it also
   accepts ``int`` and ``long`` number types for warmup sample values, not only
   ``float``.
+* Add a new private ``--work-task`` command line option.
 
 Version 0.7.12 (2016-09-30)
 ---------------------------

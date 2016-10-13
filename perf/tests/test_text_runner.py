@@ -238,9 +238,12 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args(['--loops', '2^8'])
         self.assertEqual(runner.args.loops, 256)
 
-    def test_two_benchmarks(self):
-        runner = perf.text_runner.TextRunner('bench1')
-        runner.parse_args(['--worker', '--loops=1', '-w0', '-n3'])
+    def check_two_benchmarks(self, task=None):
+        runner = perf.text_runner.TextRunner('bench')
+        args = ['--worker', '--loops=1', '-w0', '-n3']
+        if task is not None:
+            args.append('--worker-task=%s' % task)
+        runner.parse_args(args)
 
         def sample_func(loops):
             return 1.0
@@ -249,14 +252,36 @@ class TestTextRunner(unittest.TestCase):
             return 2.0
 
         with tests.capture_stdout():
+            runner.name = "bench1"
             bench1 = runner.bench_sample_func(sample_func)
+
             runner.name = "bench2"
             bench2 = runner.bench_sample_func(sample_func2)
+
+        return (bench1, bench2)
+
+    def test_two_benchmarks(self):
+        bench1, bench2 = self.check_two_benchmarks()
 
         self.assertEqual(bench1.get_name(), 'bench1')
         self.assertEqual(bench1.get_samples(), (1.0, 1.0, 1.0))
         self.assertEqual(bench2.get_name(), 'bench2')
         self.assertEqual(bench2.get_samples(), (2.0, 2.0, 2.0))
+
+    def test_worker_task(self):
+        bench1, bench2 = self.check_two_benchmarks(task=0)
+        self.assertEqual(bench1.get_name(), 'bench1')
+        self.assertEqual(bench1.get_samples(), (1.0, 1.0, 1.0))
+        self.assertIs(bench2, None)
+
+        bench1, bench2 = self.check_two_benchmarks(task=1)
+        self.assertIs(bench1, None)
+        self.assertEqual(bench2.get_name(), 'bench2')
+        self.assertEqual(bench2.get_samples(), (2.0, 2.0, 2.0))
+
+        bench1, bench2 = self.check_two_benchmarks(task=2)
+        self.assertIs(bench1, None)
+        self.assertIs(bench2, None)
 
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
