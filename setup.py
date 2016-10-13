@@ -6,10 +6,10 @@
 #  - update version in setup.py, perf/__init__.py and doc/conf.py
 #  - set release date in doc/changelog.rst
 #  - run tests: tox
-#  - check Travis status:
-#    https://travis-ci.org/haypo/perf
 #  - git commit -a -m "prepare release x.y"
 #  - git push
+#  - check Travis status:
+#    https://travis-ci.org/haypo/perf
 #
 # Release a new version:
 #

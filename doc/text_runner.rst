@@ -36,7 +36,8 @@ samples), and 10 warmups.
   (default: ``3``, or ``10`` with a JIT)
 * ``WARMUPS``: the number of ignored samples used to warmup to benchmark
   (default: ``1``, or ``10`` with a JIT)
-* ``LOOPS``: number of loops per sample. By default, the timer is calibrated
+* ``LOOPS``: number of loops per sample. ``x^y`` syntax is accepted, example:
+  ``--loops=2^8`` uses ``256`` iterations. By default, the timer is calibrated
   to get raw samples taking at least ``MIN_TIME`` seconds.
 * ``MIN_TIME``: Minimum duration of a single raw sample in seconds
   (default: ``100 ms``)

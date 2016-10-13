@@ -186,7 +186,13 @@ class TextRunner:
             return value
 
         def positive_or_nul(value):
-            value = int(value)
+            if '^' in value:
+                x, _, y = value.partition('^')
+                x = int(x)
+                y = int(y)
+                value = x ** y
+            else:
+                value = int(value)
             if value < 0:
                 raise ValueError("value must be >= 0")
             return value

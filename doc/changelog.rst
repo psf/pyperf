@@ -4,6 +4,8 @@ Changelog
 Version 0.7.13
 --------------
 
+* ``--loops`` command line argument now accepts ``x^y`` syntax. For example,
+  ``--loops=2^8`` uses ``256`` iterations
 * Calibratation is now done in a dedicated process to avoid side effect on the
   first process. This change is important if Python has a JIT compiler, to
   get more reliable timings on the first worker computing samples.

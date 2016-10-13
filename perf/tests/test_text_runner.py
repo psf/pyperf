@@ -233,6 +233,11 @@ class TestTextRunner(unittest.TestCase):
                           # warmup 2
                           (32, 1.0)))
 
+    def test_loops_power(self):
+        runner = perf.text_runner.TextRunner('bench')
+        runner.parse_args(['--loops', '2^8'])
+        self.assertEqual(runner.args.loops, 256)
+
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):
