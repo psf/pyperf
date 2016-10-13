@@ -481,7 +481,6 @@ class Runner:
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
         bench = perf.Benchmark((run,))
         self._display_result(bench, check_unstable=False)
-        args.loops = loops
         return bench
 
     def _main(self, name, sample_func, inner_loops):
@@ -678,6 +677,7 @@ class Runner:
         quiet = args.quiet
         stream = self._stream()
         nprocess = args.processes
+        old_loops = self.args.loops
         need_calibration = (not args.loops)
         if need_calibration:
             nprocess += 1
@@ -714,16 +714,13 @@ class Runner:
         if not quiet and newline:
             print(file=stream)
 
+        # restore the old value of loops, to recalibrate for the next
+        # benchmark function if loops=0
+        args.loops = old_loops
+
         return bench
 
     def _master(self):
-        loops = self.args.loops
-        try:
-            bench = self._spawn_workers()
-            self._display_result(bench)
-        finally:
-            # restore old value of loops, to recalibrate for the next
-            # benchmark function if loops=0
-            self.args.loops = loops
-
+        bench = self._spawn_workers()
+        self._display_result(bench)
         return bench

@@ -107,7 +107,6 @@ class TestRunner(unittest.TestCase):
 
         result = self.exec_runner('--worker', '-v', sample_func=sample_func)
 
-        self.assertEqual(result.runner.args.loops, 2 ** 17)
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 17)
 
@@ -141,7 +140,6 @@ class TestRunner(unittest.TestCase):
 
         result = self.exec_runner('--worker', '--min-time', '0.001',
                                   sample_func=sample_func)
-        self.assertEqual(result.runner.args.loops, 2 ** 10)
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 10)
 
