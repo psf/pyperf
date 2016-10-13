@@ -1,10 +1,6 @@
 TODO
 ====
 
-* Enhance TextRunner or write a new class to support multiple benchmarks.
-  Use case: pybench
-  Use case: timeit "key in dict" vs dict.get() vs "try: dict[key]/except KeyError"
-
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
 * doc: timeit, mention -o option
@@ -42,8 +38,6 @@ Blocker for perf 1.0 (stable API)
 * Clarify run vs process in TextRunner CLI
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29
-* Enhance TextRunner or write a new one to support multiple benchmarks,
-  like pybench or pyperformance
 * Use case: compare performance of multiple python expressions to find the
   fastest, common timeit use case
 

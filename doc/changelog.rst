@@ -12,7 +12,10 @@ Version 0.7.13
 * Run constructor now accepts an empty list of samples. Moreover, it also
   accepts ``int`` and ``long`` number types for warmup sample values, not only
   ``float``.
-* Add a new private ``--work-task`` command line option.
+* Add a new private ``--worker-task`` command line option to only execute
+  a specific benchmark function by its identifier.
+* TextRunner now supports calling more than one benchmark function using
+  ``--worker-task`` internally.
 
 Version 0.7.12 (2016-09-30)
 ---------------------------

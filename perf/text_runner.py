@@ -567,25 +567,30 @@ class TextRunner:
     def _main(self, sample_func):
         args = self.parse_args()
 
-        worker_task = self._worker_task
-        self._worker_task += 1
         if (self.args.worker_task is not None
-           and self.args.worker_task != worker_task):
-            # Do nothing if it's not the expected worker task
+           and self.args.worker_task != self._worker_task):
+            # Skip the benchmark if it's not the expected worker task
+            self._worker_task += 1
             return None
 
         bench = perf.Benchmark()
-
         try:
             if args.worker:
                 self._worker(bench, sample_func)
             else:
-                self._spawn_workers(bench)
-                self._display_result(bench)
+                loops = args.loops
+                try:
+                    self._spawn_workers(bench)
+                    self._display_result(bench)
+                finally:
+                    # restore old value of loops, to recalibrate for the next
+                    # benchmark function if loops=0
+                    args.loops = loops
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
 
+        self._worker_task += 1
         return bench
 
     def bench_sample_func(self, sample_func, *args):
@@ -667,6 +672,7 @@ class TextRunner:
         cmd.extend(self.program_args)
         cmd[0] = args.python
         cmd.extend(('--worker', '--stdout',
+                    '--worker-task=%s' % self._worker_task,
                     '--samples', str(args.samples),
                     '--warmups', str(args.warmups),
                     '--loops', str(args.loops),
