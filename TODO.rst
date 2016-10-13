@@ -1,6 +1,11 @@
 TODO
 ====
 
+* Error on --calibrate --loops=N
+* dump -q: hide calibration runs
+* BenchmarkSuite: accept list of benchmarks in constructor
+* BenchmarkSuite: error in constructor if it doesn't get at least one
+  benchmark?
 * Add TextRunner.timeit()
 * Rename TextRunner.prepare_subprocess_args?
 * doc: clarify difference between compare & compare_to

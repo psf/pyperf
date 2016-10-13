@@ -4,6 +4,17 @@ Changelog
 Version 0.8.0
 -------------
 
+The API was redesigned to support running multiple benchmarks with a single
+Runner object.
+
+Enhancements:
+
+* ``--loops`` command line argument now accepts ``x^y`` syntax. For example,
+  ``--loops=2^8`` uses ``256`` iterations
+* Calibratation is now done in a dedicated process to avoid side effect on the
+  first process. This change is important if Python has a JIT compiler, to
+  get more reliable timings on the first worker computing samples.
+
 Incompatible API changes:
 
 * Benchmark constructor now requires a non-empty sequence of Run objects.
@@ -22,11 +33,6 @@ Incompatible API changes:
 
 Changes:
 
-* ``--loops`` command line argument now accepts ``x^y`` syntax. For example,
-  ``--loops=2^8`` uses ``256`` iterations
-* Calibratation is now done in a dedicated process to avoid side effect on the
-  first process. This change is important if Python has a JIT compiler, to
-  get more reliable timings on the first worker computing samples.
 * Run constructor now accepts an empty list of samples. Moreover, it also
   accepts ``int`` and ``long`` number types for warmup sample values, not only
   ``float``.
