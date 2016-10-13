@@ -14,13 +14,13 @@ class BaseTestCase(object):
     maxDiff = 100 * 80
 
     def create_bench(self, samples, metadata=None):
-        bench = perf.Benchmark()
+        runs = []
         for sample in samples:
             run = perf.Run([sample],
                            metadata=metadata,
                            collect_metadata=False)
-            bench.add_run(run)
-        return bench
+            runs.append(run)
+        return perf.Benchmark(runs)
 
     def run_command(self, *args, **kwargs):
         cmd = [sys.executable, '-m', 'perf']
@@ -417,9 +417,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_remove_warmups(self):
         samples = [1.0, 2.0, 3.0]
         raw_samples = [5.0] + samples
-        bench = perf.Benchmark()
-        bench.add_run(perf.Run(samples, warmups=[(1, 5.0)],
-                               metadata={'name': 'bench'}))
+        run = perf.Run(samples, warmups=[(1, 5.0)],
+                       metadata={'name': 'bench'})
+        bench = perf.Benchmark([run])
 
         self.assertEqual(bench._get_nwarmup(), 1)
         self.assertEqual(bench._get_raw_samples(warmups=True),

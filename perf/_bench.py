@@ -272,10 +272,12 @@ class Run(object):
 
 
 class Benchmark(object):
-    def __init__(self):
+    def __init__(self, runs=()):
         self._clear_runs_cache()
         # list of Run objects
         self._runs = []
+        for run in runs:
+            self.add_run(run)
 
     def get_name(self):
         if not self._runs:
@@ -439,16 +441,17 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, data, version):
-        bench = cls()
         common_metadata = data.get('common_metadata', None)
 
+        runs = []
         for run_data in data['runs']:
             run = Run._json_load(run_data, common_metadata, version)
             # Don't call add_run() to avoid O(n) complexity:
             # expect that runs were already validated before being written
             # into a JSON file
-            bench._runs.append(run)
+            runs.append(run)
 
+        bench = cls(runs)
         if common_metadata:
             bench._common_metadata = {name: Metadata(name, value)
                                       for name, value in common_metadata.items()}
