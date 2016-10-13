@@ -14,7 +14,8 @@ from perf._cli import display_run, display_benchmark, multiline_output
 from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
                          get_isolated_cpus, set_cpu_affinity,
-                         MS_WINDOWS, popen_communicate)
+                         MS_WINDOWS, popen_communicate,
+                         format_sample)
 
 try:
     # Optional dependency
@@ -409,8 +410,9 @@ class TextRunner:
                 print("Use Python 3.3 or newer, or install psutil dependency",
                       file=stream)
 
-    def _run_bench(self, bench, sample_func, loops, nsample,
+    def _run_bench(self, metadata, sample_func, loops, nsample,
                    is_warmup=False, is_calibrate=False, calibrate=False):
+        unit = metadata.get('unit')
         args = self.args
         stream = self._stream()
         if loops <= 0:
@@ -447,12 +449,12 @@ class TextRunner:
                 samples.append(value)
 
             if args.verbose:
-                text = bench.format_sample(sample)
+                text = format_sample(unit, sample)
                 if is_warmup or is_calibrate:
                     text = ('%s (%s: %s)'
                             % (text,
                                format_number(loops, 'loop'),
-                               bench.format_sample(raw_sample)))
+                               format_sample(unit, raw_sample)))
                 text = ("%s %s: %s"
                         % (sample_name, index, text))
                 print(text, file=stream)
@@ -476,13 +478,13 @@ class TextRunner:
         # Run collects metadata
         return (loops, samples)
 
-    def _calibrate(self, bench, sample_func):
-        return self._run_bench(bench, sample_func,
+    def _calibrate(self, metadata, sample_func):
+        return self._run_bench(metadata, sample_func,
                                loops=1, nsample=1,
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
-    def _worker(self, bench, sample_func):
+    def _worker(self, sample_func):
         args = self.args
         loops = args.loops
         metadata = dict(self.metadata)
@@ -492,7 +494,7 @@ class TextRunner:
 
         calibrate = (not loops)
         if calibrate:
-            loops, calibrate_warmups = self._calibrate(bench, sample_func)
+            loops, calibrate_warmups = self._calibrate(metadata, sample_func)
         else:
             if perf.python_has_jit():
                 # With a JIT, continue to calibrate during warmup
@@ -512,14 +514,14 @@ class TextRunner:
             tracemalloc.start()
 
         if args.warmups:
-            loops, warmups = self._run_bench(bench, sample_func, loops,
+            loops, warmups = self._run_bench(metadata, sample_func, loops,
                                              args.warmups,
                                              is_warmup=True, calibrate=calibrate)
         else:
             warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
-        loops, samples = self._run_bench(bench, sample_func, loops,
+        loops, samples = self._run_bench(metadata, sample_func, loops,
                                          args.samples)
 
         if args.tracemalloc:
@@ -558,11 +560,10 @@ class TextRunner:
             metadata['inner_loops'] = self.inner_loops
 
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
-        bench.add_run(run)
+        bench = perf.Benchmark((run,))
         self._display_result(bench, check_unstable=False)
-
-        # Save loops into args
         args.loops = loops
+        return bench
 
     def _main(self, sample_func):
         args = self.parse_args()
@@ -573,19 +574,11 @@ class TextRunner:
             self._worker_task += 1
             return None
 
-        bench = perf.Benchmark()
         try:
             if args.worker:
-                self._worker(bench, sample_func)
+                bench = self._worker(sample_func)
             else:
-                loops = args.loops
-                try:
-                    self._spawn_workers(bench)
-                    self._display_result(bench)
-                finally:
-                    # restore old value of loops, to recalibrate for the next
-                    # benchmark function if loops=0
-                    args.loops = loops
+                bench = self._master()
         except KeyboardInterrupt:
             print("Interrupted: exit", file=sys.stderr)
             sys.exit(1)
@@ -745,7 +738,8 @@ class TextRunner:
             else:
                 bench.dump(args.output)
 
-    def _spawn_workers(self, bench, newline=True):
+    def _spawn_workers(self, newline=True):
+        bench = None
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
@@ -758,12 +752,11 @@ class TextRunner:
 
         for process in range(1, nprocess + 1):
             worker_bench = self._spawn_worker_bench(calibrate)
-            bench.add_runs(worker_bench)
 
             if verbose:
-                run = bench.get_runs()[-1]
+                run = worker_bench.get_runs()[-1]
                 run_index = '%s/%s' % (process, nprocess)
-                display_run(bench, run_index, run, file=stream)
+                display_run(worker_bench, run_index, run, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
 
@@ -778,7 +771,26 @@ class TextRunner:
                           file=stream)
             calibrate = False
 
+            if bench is not None:
+                bench.add_runs(worker_bench)
+            else:
+                bench = worker_bench
+
             stream.flush()
 
         if not quiet and newline:
             print(file=stream)
+
+        return bench
+
+    def _master(self):
+        loops = self.args.loops
+        try:
+            bench = self._spawn_workers()
+            self._display_result(bench)
+        finally:
+            # restore old value of loops, to recalibrate for the next
+            # benchmark function if loops=0
+            self.args.loops = loops
+
+        return bench

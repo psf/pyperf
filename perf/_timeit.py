@@ -47,10 +47,7 @@ class TimeitRunner(TextRunner):
         args.loops = loops
         args.python = python
         args.compare = None
-
-        bench = perf.Benchmark()
-        self._spawn_workers(bench, newline=False)
-        return bench
+        return self._spawn_workers(newline=False)
 
 
 def _format_stmt(statements):

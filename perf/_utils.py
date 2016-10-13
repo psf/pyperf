@@ -117,11 +117,23 @@ def format_integers(numbers):
     return tuple(format_number(number) for number in numbers)
 
 
+DEFAULT_UNIT = 'second'
 UNIT_FORMATTERS = {
     'second': format_timedeltas,
     'byte': format_filesizes,
     'integer': format_integers,
 }
+
+
+def format_samples(unit, samples):
+    if not unit:
+        unit = DEFAULT_UNIT
+    formatter = UNIT_FORMATTERS[unit]
+    return formatter(samples)
+
+
+def format_sample(unit, sample):
+    return format_samples(unit, (sample,))[0]
 
 
 def parse_iso8601(date):

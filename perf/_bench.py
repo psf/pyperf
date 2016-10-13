@@ -11,7 +11,8 @@ import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
                             _common_metadata, get_metadata_info)
-from perf._utils import format_number, parse_iso8601, UNIT_FORMATTERS
+from perf._utils import (format_number, parse_iso8601,
+                         DEFAULT_UNIT, format_samples)
 
 
 # Format format history:
@@ -356,16 +357,15 @@ class Benchmark(object):
         self._runs.append(run)
 
     def get_unit(self):
-        unit = 'second'
         if self._runs:
             run = self._runs[0]
-            unit = run._get_metadata('unit', unit)
-        return unit
+            return run._get_metadata('unit', DEFAULT_UNIT)
+        else:
+            return DEFAULT_UNIT
 
     def format_samples(self, samples):
         unit = self.get_unit()
-        formatter = UNIT_FORMATTERS[unit]
-        return formatter(samples)
+        return format_samples(unit, samples)
 
     def format_sample(self, sample):
         return self.format_samples((sample,))[0]
