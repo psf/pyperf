@@ -740,7 +740,10 @@ class TextRunner:
                     pass
 
         if args.output:
-            bench.dump(args.output)
+            if self._worker_task >= 1:
+                perf.add_runs(args.output, bench)
+            else:
+                bench.dump(args.output)
 
     def _spawn_workers(self, bench, newline=True):
         args = self.args
