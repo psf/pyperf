@@ -238,6 +238,26 @@ class TestTextRunner(unittest.TestCase):
         runner.parse_args(['--loops', '2^8'])
         self.assertEqual(runner.args.loops, 256)
 
+    def test_two_benchmarks(self):
+        runner = perf.text_runner.TextRunner('bench1')
+        runner.parse_args(['--worker', '--loops=1', '-w0', '-n3'])
+
+        def sample_func(loops):
+            return 1.0
+
+        def sample_func2(loops):
+            return 2.0
+
+        with tests.capture_stdout():
+            bench1 = runner.bench_sample_func(sample_func)
+            runner.name = "bench2"
+            bench2 = runner.bench_sample_func(sample_func2)
+
+        self.assertEqual(bench1.get_name(), 'bench1')
+        self.assertEqual(bench1.get_samples(), (1.0, 1.0, 1.0))
+        self.assertEqual(bench2.get_name(), 'bench2')
+        self.assertEqual(bench2.get_samples(), (2.0, 2.0, 2.0))
+
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):
