@@ -126,12 +126,9 @@ def _abs_executable(python):
 class TextRunner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, name, samples=None, warmups=None, processes=None,
+    def __init__(self, samples=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  inner_loops=None, _argparser=None):
-        if not name:
-            raise ValueError("name must be a non-empty string")
-
         has_jit = perf.python_has_jit()
         if not samples:
             if has_jit:
@@ -154,7 +151,6 @@ class TextRunner:
             else:
                 processes = 20
 
-        self.name = name
         if metadata is not None:
             self.metadata = metadata
         else:
@@ -484,10 +480,10 @@ class TextRunner:
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
-    def _worker(self, sample_func):
+    def _worker(self, name, sample_func):
         args = self.args
         loops = args.loops
-        metadata = dict(self.metadata)
+        metadata = dict(self.metadata, name=name)
         start_time = perf.monotonic_clock()
 
         self._cpu_affinity()
@@ -554,7 +550,6 @@ class TextRunner:
 
         duration = perf.monotonic_clock() - start_time
         metadata['duration'] = duration
-        metadata['name'] = self.name
         metadata['loops'] = loops
         if self.inner_loops is not None and self.inner_loops != 1:
             metadata['inner_loops'] = self.inner_loops
@@ -565,7 +560,10 @@ class TextRunner:
         args.loops = loops
         return bench
 
-    def _main(self, sample_func):
+    def _main(self, name, sample_func):
+        if not name.strip():
+            raise ValueError("name must be a non-empty string")
+
         args = self.parse_args()
 
         if (self.args.worker_task is not None
@@ -576,7 +574,7 @@ class TextRunner:
 
         try:
             if args.worker:
-                bench = self._worker(sample_func)
+                bench = self._worker(name, sample_func)
             else:
                 bench = self._master()
         except KeyboardInterrupt:
@@ -586,7 +584,7 @@ class TextRunner:
         self._worker_task += 1
         return bench
 
-    def bench_sample_func(self, sample_func, *args):
+    def bench_sample_func(self, name, sample_func, *args):
         """"Benchmark sample_func(loops, *args)
 
         The function must return the total elapsed time, not the average time
@@ -597,14 +595,14 @@ class TextRunner:
         """
 
         if not args:
-            return self._main(sample_func)
+            return self._main(name, sample_func)
 
         def wrap_sample_func(loops):
             return sample_func(loops, *args)
 
-        return self._main(wrap_sample_func)
+        return self._main(name, wrap_sample_func)
 
-    def bench_func(self, func, *args):
+    def bench_func(self, name, func, *args):
         """"Benchmark func(*args)."""
 
         def sample_func(loops):
@@ -643,7 +641,7 @@ class TextRunner:
 
             return dt
 
-        return self._main(sample_func)
+        return self._main(name, sample_func)
 
     def _create_environ(self):
         env = {}

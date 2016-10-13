@@ -13,15 +13,16 @@ from perf._utils import get_python_names
 from perf.text_runner import TextRunner, _abs_executable
 
 
+_DEFAULT_NAME = 'timeit'
+
+
 class TimeitRunner(TextRunner):
     def __init__(self, *args, **kw):
-        if 'name' not in kw:
-            kw['name'] = 'timeit'
         TextRunner.__init__(self, *args, **kw)
 
         cmd = self.argparser
-        cmd.add_argument('--name',
-                         help='Benchmark name (default: %r)' % self.name)
+        cmd.add_argument('--name', default=_DEFAULT_NAME,
+                         help='Benchmark name (default: %r)' % _DEFAULT_NAME)
         cmd.add_argument('-s', '--setup', action='append', default=[],
                          help='setup statements')
         cmd.add_argument('--inner-loops',
@@ -89,7 +90,7 @@ def sample_func(loops, timer):
 
 def prepare_args(runner, cmd):
     args = runner.args
-    cmd.extend(('--name', runner.name))
+    cmd.extend(('--name', args.name))
     if args.inner_loops:
         cmd.extend(('--inner-loops', str(args.inner_loops)))
     for setup in args.setup:
@@ -150,8 +151,6 @@ def main(runner):
     args.setup = _format_stmt(args.setup)
     args.stmt = _format_stmt(args.stmt)
 
-    if args.name:
-        runner.name = args.name
     if args.inner_loops:
         runner.inner_loops = args.inner_loops
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
@@ -168,7 +167,7 @@ def main(runner):
         cmd_compare(runner, timer)
     else:
         try:
-            runner.bench_sample_func(sample_func, timer)
+            runner.bench_sample_func(args.name, sample_func, timer)
         except SystemExit:
             raise
         except:

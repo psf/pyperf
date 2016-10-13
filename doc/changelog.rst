@@ -8,6 +8,8 @@ Incompatible API changes:
 
 * Benchmark constructor now requires a non-empty sequence of Run objects.
 * A benchmark must now have a name: all runs must have a name metadata.
+* Remove *name* argument from TextRunner constructor and add *name* parameter
+  to :func:`Benchmark.bench_func` and :func:`Benchmark.bench_sample_func`
 
 Changes:
 

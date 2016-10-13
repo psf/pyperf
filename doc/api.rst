@@ -458,15 +458,13 @@ BenchmarkSuite
 TextRunner
 ----------
 
-.. class:: perf.text_runner.TextRunner(name, samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
+.. class:: perf.text_runner.TextRunner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, inner_loops=None)
 
    Tool to run a benchmark in text mode.
 
    Spawn *processes* worker processes to run the benchmark.
 
-   *name* is the name of the benchmark: it is stored in run metadata as
-   ``name`` metadata. *metadata* is passed to the :class:`~perf.Run`
-   constructor.
+   *metadata* is passed to the :class:`~perf.Run` constructor.
 
    *samples*, *warmups* and *processes* are the default number of samples,
    warmup samples and processes. These values can be changed with command line
@@ -479,9 +477,11 @@ TextRunner
 
    Methods:
 
-   .. method:: bench_func(func, \*args)
+   .. method:: bench_func(name, func, \*args)
 
       Benchmark the function ``func(*args)``.
+
+      *name* is the name of the benchmark.
 
       The :attr:`inner_loops` attribute is used to normalize timing per loop
       iteration.
@@ -494,9 +494,11 @@ TextRunner
 
       Return a :class:`~perf.Benchmark` instance.
 
-   .. method:: bench_sample_func(sample_func, \*args)
+   .. method:: bench_sample_func(name, sample_func, \*args)
 
       Benchmark ``sample_func(loops, *args)``.
+
+      *name* is the name of the benchmark.
 
       The function must return raw samples: the total elapsed time of all
       loops. TextRunner will divide raw samples by ``loops x inner_loops``

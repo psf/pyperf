@@ -31,7 +31,7 @@ class TestTextRunner(unittest.TestCase):
 
         sample_func = kwargs.pop('sample_func', None)
 
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -40,9 +40,9 @@ class TestTextRunner(unittest.TestCase):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
                     if sample_func:
-                        bench = runner.bench_sample_func(sample_func)
+                        bench = runner.bench_sample_func('bench', sample_func)
                     else:
-                        bench = runner.bench_func(check_args, None, 1, 2)
+                        bench = runner.bench_func('bench', check_args, None, 1, 2)
 
         stdout = stdout.getvalue()
         stderr = stderr.getvalue()
@@ -73,7 +73,7 @@ class TestTextRunner(unittest.TestCase):
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
 
-            runner = perf.text_runner.TextRunner('bench')
+            runner = perf.text_runner.TextRunner()
             with tests.capture_stdout() as stdout:
                 try:
                     runner.parse_args(['--worker', '--output', tmp.name])
@@ -161,7 +161,7 @@ class TestTextRunner(unittest.TestCase):
             # tested by test_calibration_zero()
             self.skipTest("Python has a JIT")
 
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker', '-l1'])
@@ -170,11 +170,11 @@ class TestTextRunner(unittest.TestCase):
             return 0
 
         with self.assertRaises(ValueError) as cm:
-            runner.bench_sample_func(sample_func)
+            runner.bench_sample_func('bench', sample_func)
         self.assertEqual(str(cm.exception), 'sample function returned zero')
 
     def test_calibration_zero(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker'])
@@ -183,12 +183,12 @@ class TestTextRunner(unittest.TestCase):
             return 0
 
         with self.assertRaises(ValueError) as cm:
-            runner.bench_sample_func(sample_func)
+            runner.bench_sample_func('bench', sample_func)
         self.assertIn('error in calibration, loops is too big:',
                       str(cm.exception))
 
     def test_calibration(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker', '-w2', '-n1', '--min-time=1.0'])
@@ -209,7 +209,7 @@ class TestTextRunner(unittest.TestCase):
         sample_func.step = 0
 
         with tests.capture_stdout():
-            bench = runner.bench_sample_func(sample_func)
+            bench = runner.bench_sample_func('bench', sample_func)
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 1)
@@ -234,12 +234,12 @@ class TestTextRunner(unittest.TestCase):
                           (32, 1.0)))
 
     def test_loops_power(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         runner.parse_args(['--loops', '2^8'])
         self.assertEqual(runner.args.loops, 256)
 
     def check_two_benchmarks(self, task=None):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         args = ['--worker', '--loops=1', '-w0', '-n3']
         if task is not None:
             args.append('--worker-task=%s' % task)
@@ -252,11 +252,8 @@ class TestTextRunner(unittest.TestCase):
             return 2.0
 
         with tests.capture_stdout():
-            runner.name = "bench1"
-            bench1 = runner.bench_sample_func(sample_func)
-
-            runner.name = "bench2"
-            bench2 = runner.bench_sample_func(sample_func2)
+            bench1 = runner.bench_sample_func('bench1', sample_func)
+            bench2 = runner.bench_sample_func('bench2', sample_func2)
 
         return (bench1, bench2)
 
@@ -286,7 +283,7 @@ class TestTextRunner(unittest.TestCase):
 
 class TestTextRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         runner.parse_args(['-v', '--affinity=3,7'])
 
         with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
@@ -299,7 +296,7 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([3, 7])
 
     def test_cpu_affinity_isolcpus(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         runner.parse_args(['-v'])
 
         with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
@@ -313,7 +310,7 @@ class TestTextRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([1, 2])
 
     def test_cpu_affinity_no_isolcpus(self):
-        runner = perf.text_runner.TextRunner('bench')
+        runner = perf.text_runner.TextRunner()
         runner.parse_args(['-v'])
 
         with mock.patch('perf.text_runner.set_cpu_affinity') as mock_setaffinity:
