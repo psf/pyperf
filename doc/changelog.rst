@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.8.0
--------------
+Version 0.8.0 (2016-10-14)
+--------------------------
 
 The API was redesigned to support running multiple benchmarks with a single
 Runner object.
