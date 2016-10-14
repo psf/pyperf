@@ -29,9 +29,10 @@ class TestRunner(unittest.TestCase):
             return t
         fake_timer.value = 0.0
 
+        name = kwargs.pop('name', 'bench')
         sample_func = kwargs.pop('sample_func', None)
 
-        runner = perf.Runner()
+        runner = perf.Runner(**kwargs)
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -40,9 +41,9 @@ class TestRunner(unittest.TestCase):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
                     if sample_func:
-                        bench = runner.bench_sample_func('bench', sample_func)
+                        bench = runner.bench_sample_func(name, sample_func)
                     else:
-                        bench = runner.bench_func('bench', check_args, None, 1, 2)
+                        bench = runner.bench_func(name, check_args, None, 1, 2)
 
         stdout = stdout.getvalue()
         stderr = stderr.getvalue()
@@ -51,7 +52,7 @@ class TestRunner(unittest.TestCase):
 
         # check bench_sample_func() bench
         self.assertIsInstance(bench, perf.Benchmark)
-        self.assertEqual(bench.get_name(), 'bench')
+        self.assertEqual(bench.get_name(), name)
         self.assertEqual(bench.get_nrun(), 1)
 
         return Result(runner, bench, stdout)
@@ -59,7 +60,7 @@ class TestRunner(unittest.TestCase):
     def test_worker(self):
         result = self.exec_runner('--worker')
         self.assertRegex(result.stdout,
-                         r'^Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'^bench: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_debug_single_sample(self):
         result = self.exec_runner('--debug-single-sample', '--worker')
@@ -98,7 +99,7 @@ class TestRunner(unittest.TestCase):
                          r'Metadata:\n'
                          r'(?:- .*\n)+'
                          r'\n'
-                         r'Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'bench: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_loops_calibration(self):
         def sample_func(loops):
@@ -276,6 +277,15 @@ class TestRunner(unittest.TestCase):
         bench1, bench2 = self.check_two_benchmarks(task=2)
         self.assertIs(bench1, None)
         self.assertIs(bench2, None)
+
+    def test_show_name(self):
+        result = self.exec_runner('--worker', name='NAME')
+        self.assertRegex(result.stdout,
+                         r'^NAME: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+
+        result = self.exec_runner('--worker', name='NAME', show_name=False)
+        self.assertRegex(result.stdout,
+                         r'^Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):

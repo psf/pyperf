@@ -29,6 +29,8 @@ class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
         if 'program_args' not in kw:
             kw['program_args'] = ('-m', 'perf', 'timeit')
+        if 'show_name' not in kw:
+            kw['show_name'] = False
         kw['add_cmdline_args'] = add_cmdline_args
         Runner.__init__(self, *args, **kw)
 

@@ -49,6 +49,7 @@ class Runner:
     # and so a total duration of 5 seconds by default
     def __init__(self, samples=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
+                 show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
         has_jit = perf.python_has_jit()
@@ -99,6 +100,7 @@ class Runner:
             self._program_args = program_args
         else:
             self._program_args = (sys.argv[0],)
+        self._show_name = show_name
 
         def strictly_positive(value):
             value = int(value)
@@ -647,7 +649,8 @@ class Runner:
                           metadata=args.metadata,
                           dump=args.dump,
                           stats=args.stats,
-                          hist=args.hist)
+                          hist=args.hist,
+                          show_name=self._show_name)
 
         stream.flush()
         if args.append:

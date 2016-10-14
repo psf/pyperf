@@ -33,6 +33,8 @@ Incompatible API changes:
 
 Changes:
 
+* Add *show_name* optional parameter to :class:`Runner`. The runner now
+  displays the benchmark name by default.
 * The calibration is now done after starting tracing memory
 * Run constructor now accepts an empty list of samples. Moreover, it also
   accepts ``int`` and ``long`` number types for warmup sample values, not only
