@@ -11,6 +11,7 @@ import six
 
 import perf
 from perf._cli import display_run, display_benchmark, multiline_output
+from perf._bench import _load_suite_from_stdout
 from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
                          get_isolated_cpus, set_cpu_affinity,
@@ -625,7 +626,8 @@ class Runner:
 
         env = create_environ(args.inherit_environ)
         stdout = _run_cmd(cmd, env=env)
-        return perf.BenchmarkSuite.loads(stdout)
+
+        return _load_suite_from_stdout(stdout)
 
     def _spawn_worker_bench(self, calibrate=False):
         suite = self._spawn_worker_suite(calibrate)

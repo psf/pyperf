@@ -776,3 +776,18 @@ def add_runs(filename, result):
         suite = BenchmarkSuite()
     suite.add_runs(result)
     suite.dump(filename, replace=True)
+
+
+def _load_suite_from_stdout(stdout):
+    lines = stdout.split("\n")
+    result = None
+    for line in lines:
+        if not line:
+            continue
+        suite = BenchmarkSuite.loads(line)
+        if result is not None:
+            for bench in suite:
+                result.add_benchmark(bench)
+        else:
+            result = suite
+    return result

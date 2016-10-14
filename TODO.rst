@@ -1,6 +1,7 @@
 TODO
 ====
 
+* Remove --stdout or redesign _load_suite_from_stdout()?
 * any print("test") in a worker creates a cryptic error message in the master.
   Don't use stdout? Better error message?
 * Runner: add a compare methods to compare N benchmarks
