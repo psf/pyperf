@@ -585,12 +585,15 @@ class Benchmark(object):
 
 
 class BenchmarkSuite(object):
-    def __init__(self, benchmarks=None, filename=None):
+    def __init__(self, benchmarks, filename=None):
+        if not benchmarks:
+            raise ValueError("benchmarks must be a non-empty "
+                             "sequence of Benchmark objects")
+
         self.filename = filename
         self._benchmarks = []
-        if benchmarks:
-            for benchmark in benchmarks:
-                self.add_benchmark(benchmark)
+        for benchmark in benchmarks:
+            self.add_benchmark(benchmark)
 
     def get_benchmark_names(self):
         return [bench.get_name() for bench in self]

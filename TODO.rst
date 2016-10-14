@@ -5,10 +5,7 @@ TODO
 * any print("test") in a worker creates a cryptic error message in the master.
   Don't use stdout? Better error message?
 * Runner: add a compare methods to compare N benchmarks
-* BenchmarkSuite: error in constructor if it doesn't get at least one
-  benchmark?
 * Add TextRunner.timeit()
-* Rename TextRunner.prepare_subprocess_args?
 * doc: clarify difference between compare & compare_to
 * doc: more CLI examples
 * doc: timeit, mention -o option
