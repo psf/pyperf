@@ -28,7 +28,6 @@ TODO
 * Enhance TextRunner to be able to run multiple benchmarks
 * BenchmarkSuite.get_benchmarks(): don't sort by name?
 * Remove BenchmarkSuite.__iter__()?
-* support BenchmarkSuite directly in TextRunner for pybench
 * find a memory efficient storage for common metadata in Run.
   Use collections.ChainMap?
 
@@ -50,9 +49,8 @@ Low priority
 * add metadata: sys.getcheckinterval, py3: GIL milliseconds? GC enabled?
 * convert: save the operations made on data in metadata?
 * configurable clock? see pybench
-* reimplement metdata for compare?
+* reimplement metadata for compare?
 * fix hist if benchmark only contains one sample
-* support 2^15 and/or 2**15 syntax for --loops
 * support --fast + -p1
 * perf CLI: handle FileNotFoundError for input file (need unit test)
 * convert --remove-outliers: more serious algorithm? or configurable percent?
