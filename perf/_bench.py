@@ -610,9 +610,6 @@ class BenchmarkSuite(object):
 
     def _add_benchmark_runs(self, benchmark):
         name = benchmark.get_name()
-        if not name:
-            raise ValueError("the benchmark has no name")
-
         try:
             existing = self.get_benchmark(name)
         except KeyError:
@@ -623,22 +620,14 @@ class BenchmarkSuite(object):
     def add_runs(self, result):
         if isinstance(result, Benchmark):
             self._add_benchmark_runs(result)
-
         elif isinstance(result, BenchmarkSuite):
-            if len(result) == 0:
-                raise ValueError("the new benchmark suite does not contain "
-                                 "any benchmark")
-
             for benchmark in result:
                 self._add_benchmark_runs(benchmark)
-
         else:
             raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
                             % type(result).__name__)
 
     def get_benchmark(self, name):
-        if not name:
-            raise ValueError("name is empty")
         for bench in self._benchmarks:
             if bench.get_name() == name:
                 return bench
@@ -646,7 +635,7 @@ class BenchmarkSuite(object):
 
     def get_benchmarks(self):
         return sorted(self._benchmarks,
-                      key=lambda bench: bench.get_name() or '')
+                      key=lambda bench: bench.get_name())
 
     def add_benchmark(self, benchmark):
         if benchmark in self._benchmarks:
@@ -736,6 +725,11 @@ class BenchmarkSuite(object):
             # file is a file object
             dump(data, file, compact)
 
+    def _replace_benchmarks(self, benchmarks):
+        if not benchmarks:
+            raise ValueError("empty benchmark suite")
+        self._benchmarks[:] = benchmarks
+
     def _convert_include_benchmark(self, name):
         benchmarks = []
         for bench in self:
@@ -743,16 +737,14 @@ class BenchmarkSuite(object):
                 benchmarks.append(bench)
         if not benchmarks:
             raise KeyError("benchmark %r not found" % name)
-        self._benchmarks = benchmarks
+        self._replace_benchmarks(benchmarks)
 
     def _convert_exclude_benchmark(self, name):
         benchmarks = []
         for bench in self:
             if bench.get_name() != name:
                 benchmarks.append(bench)
-        if not benchmarks:
-            raise ValueError("empty suite")
-        self._benchmarks = benchmarks
+        self._replace_benchmarks(benchmarks)
 
     def get_total_duration(self):
         durations = [benchmark.get_total_duration() for benchmark in self]
