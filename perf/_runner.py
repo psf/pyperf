@@ -413,16 +413,6 @@ class Runner:
 
         self._cpu_affinity()
 
-        calibrate = (not loops)
-        if calibrate:
-            loops, calibrate_warmups = self._calibrate(sample_func, metadata,
-                                                       inner_loops)
-        else:
-            if perf.python_has_jit():
-                # With a JIT, continue to calibrate during warmup
-                calibrate = True
-            calibrate_warmups = None
-
         if args.track_memory:
             if MS_WINDOWS:
                 from perf._win_memory import get_peak_pagefile_usage
@@ -434,6 +424,16 @@ class Runner:
         if args.tracemalloc:
             import tracemalloc
             tracemalloc.start()
+
+        calibrate = (not loops)
+        if calibrate:
+            loops, calibrate_warmups = self._calibrate(sample_func, metadata,
+                                                       inner_loops)
+        else:
+            if perf.python_has_jit():
+                # With a JIT, continue to calibrate during warmup
+                calibrate = True
+            calibrate_warmups = None
 
         if args.warmups:
             loops, warmups = self._run_bench(metadata, sample_func, inner_loops,
