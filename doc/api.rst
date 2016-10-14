@@ -202,8 +202,6 @@ Benchmark
 
       Add runs of the benchmark *bench*.
 
-      The benchmark must have at least one run.
-
       See :meth:`BenchmarkSuite.add_runs` method and :func:`add_runs`
       function.
 
@@ -479,7 +477,7 @@ Runner
    *add_cmdline_args* is an optional callback used to add command line
    arguments to the command line of worker processes. The callback is called
    with ``add_cmdline_args(cmd, args)`` where *cmd* is the command line
-   (``list``) which must be modified in place and *args* is the :atrr:`args`
+   (``list``) which must be modified in place and *args* is the :attr:`args`
    attribute of the runner.
 
    If *show_name* is true, displays the benchmark name.
@@ -548,14 +546,6 @@ Runner
    .. attribute:: metadata
 
       Benchmark metadata (``dict``).
-
-   .. attribute:: name
-
-      Name of the benchmark.
-
-   .. attribute:: inner_loops
-
-      Number of benchmark inner-loops (``int`` or ``None``).
 
 
 Functions
