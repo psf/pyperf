@@ -102,13 +102,15 @@ class TestTimeit(unittest.TestCase):
     def run_timeit(self, args):
         cmd = tests.get_output(args)
         self.assertEqual(cmd.returncode, 0, cmd.stdout + cmd.stderr)
+        return cmd.stdout
 
     def run_timeit_bench(self, args):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
             args += ('--output', filename)
-            self.run_timeit(args)
-            return perf.Benchmark.load(filename)
+            stdout = self.run_timeit(args)
+            bench = perf.Benchmark.load(filename)
+        return (bench, stdout)
 
     def test_output(self):
         loops = 4
@@ -120,7 +122,7 @@ class TestTimeit(unittest.TestCase):
                 '-s', 'import time',
                 SLEEP)
         args = PERF_TIMEIT + args
-        bench = self.run_timeit_bench(args)
+        bench, stdout = self.run_timeit_bench(args)
 
         # FIXME: skipped test, since calibration continues during warmup
         if not perf.python_has_jit():
@@ -189,14 +191,15 @@ class TestTimeit(unittest.TestCase):
     def test_name(self):
         name = 'myname'
         args = PERF_TIMEIT + ('--name', name) + FAST_BENCH_ARGS
-        bench = self.run_timeit_bench(args)
+        bench, stdout = self.run_timeit_bench(args)
 
         self.assertEqual(bench.get_name(), name)
+        self.assertRegex(stdout, re.compile('^%s' % name, flags=re.MULTILINE))
 
     def test_inner_loops(self):
         inner_loops = 17
         args = PERF_TIMEIT + ('--inner-loops', str(inner_loops)) + FAST_BENCH_ARGS
-        bench = self.run_timeit_bench(args)
+        bench, stdout = self.run_timeit_bench(args)
 
         metadata = bench.get_metadata()
         self.assertEqual(metadata['inner_loops'].value, inner_loops)

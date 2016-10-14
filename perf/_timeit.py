@@ -13,7 +13,7 @@ from perf._utils import get_python_names, abs_executable
 from perf._runner import Runner
 
 
-_DEFAULT_NAME = 'timeit'
+DEFAULT_NAME = 'timeit'
 
 
 def add_cmdline_args(cmd, args):
@@ -29,14 +29,15 @@ class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
         if 'program_args' not in kw:
             kw['program_args'] = ('-m', 'perf', 'timeit')
-        if 'show_name' not in kw:
-            kw['show_name'] = False
         kw['add_cmdline_args'] = add_cmdline_args
         Runner.__init__(self, *args, **kw)
 
+        def parse_name(name):
+            return name.strip()
+
         cmd = self.argparser
-        cmd.add_argument('--name', default=_DEFAULT_NAME,
-                         help='Benchmark name (default: %r)' % _DEFAULT_NAME)
+        cmd.add_argument('--name', type=parse_name,
+                         help='Benchmark name (default: %r)' % DEFAULT_NAME)
         cmd.add_argument('-s', '--setup', action='append', default=[],
                          help='setup statements')
         cmd.add_argument('--inner-loops',
@@ -56,6 +57,10 @@ class TimeitRunner(Runner):
         args = self.args
         if args.compare_to:
             args.compare_to = abs_executable(args.compare_to)
+
+        self._show_name = bool(args.name)
+        if not args.name:
+            args.name = DEFAULT_NAME
 
     def bench_compare(self, python, loops):
         args = self.args
