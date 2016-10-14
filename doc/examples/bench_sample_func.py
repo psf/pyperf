@@ -1,27 +1,24 @@
 import perf
 
-mydict = {str(k): k for k in range(1000)}
-
-def func(loops):
-    # use a fast local variable to access the dictionary
-    local_dict = mydict
+def bench_dict(loops, mydict):
     range_it = range(loops)
     t0 = perf.perf_counter()
 
     for loops in range_it:
-        local_dict['0']
-        local_dict['100']
-        local_dict['200']
-        local_dict['300']
-        local_dict['400']
-        local_dict['500']
-        local_dict['600']
-        local_dict['700']
-        local_dict['800']
-        local_dict['900']
+        mydict['0']
+        mydict['100']
+        mydict['200']
+        mydict['300']
+        mydict['400']
+        mydict['500']
+        mydict['600']
+        mydict['700']
+        mydict['800']
+        mydict['900']
 
     return perf.perf_counter() - t0
 
 runner = perf.Runner()
-# inner-loops: mydict[int] is duplicated 10 times
-runner.bench_sample_func('dict[int]', func, inner_loops=10)
+mydict = {str(k): k for k in range(1000)}
+# inner-loops: dict[str] is duplicated 10 times
+runner.bench_sample_func('dict[str]', bench_dict, mydict, inner_loops=10)
