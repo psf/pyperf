@@ -33,6 +33,7 @@ Table Of Content:
    perf
    cli
    runner
+   examples
    api
    changelog
 
