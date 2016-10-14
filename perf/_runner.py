@@ -15,7 +15,7 @@ from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
                          get_isolated_cpus, set_cpu_affinity,
                          MS_WINDOWS, popen_communicate,
-                         format_sample, abs_executable)
+                         format_sample, abs_executable, create_environ)
 
 try:
     # Optional dependency
@@ -405,25 +405,9 @@ class Runner:
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
-    def _worker(self, name, sample_func, inner_loops):
+    def _worker_run_bench(self, metadata, sample_func, inner_loops):
         args = self.args
         loops = args.loops
-        metadata = dict(self.metadata, name=name)
-        start_time = perf.monotonic_clock()
-
-        self._cpu_affinity()
-
-        if args.track_memory:
-            if MS_WINDOWS:
-                from perf._win_memory import get_peak_pagefile_usage
-            else:
-                from perf._memory import PeakMemoryUsageThread
-                mem_thread = PeakMemoryUsageThread()
-                mem_thread.start()
-
-        if args.tracemalloc:
-            import tracemalloc
-            tracemalloc.start()
 
         calibrate = (not loops)
         if calibrate:
@@ -445,6 +429,26 @@ class Runner:
             warmups = calibrate_warmups + warmups
         loops, samples = self._run_bench(metadata, sample_func, inner_loops,
                                          loops, args.samples)
+
+        return (loops, warmups, samples)
+
+    def _worker_run_bench_mem(self, metadata, sample_func, inner_loops):
+        args = self.args
+
+        if args.track_memory:
+            if MS_WINDOWS:
+                from perf._win_memory import get_peak_pagefile_usage
+            else:
+                from perf._memory import PeakMemoryUsageThread
+                mem_thread = PeakMemoryUsageThread()
+                mem_thread.start()
+
+        if args.tracemalloc:
+            import tracemalloc
+            tracemalloc.start()
+
+        loops, warmups, samples = self._worker_run_bench(metadata, sample_func,
+                                                         inner_loops)
 
         if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
@@ -473,6 +477,18 @@ class Runner:
             metadata['unit'] = 'byte'
             warmups = None
             samples = (float(mem_peak),)
+
+        return (loops, warmups, samples)
+
+    def _worker(self, name, sample_func, inner_loops):
+        metadata = dict(self.metadata, name=name)
+        start_time = perf.monotonic_clock()
+
+        self._cpu_affinity()
+
+        loops, warmups, samples = self._worker_run_bench_mem(metadata,
+                                                             sample_func,
+                                                             inner_loops)
 
         duration = perf.monotonic_clock() - start_time
         metadata['duration'] = duration
@@ -580,19 +596,6 @@ class Runner:
 
         return self._main(name, sample_func, inner_loops)
 
-    def _create_environ(self):
-        env = {}
-
-        # FIXME: copy the locale? LC_ALL, LANG, LC_*
-        copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
-        if self.args.inherit_environ:
-            copy_env.extend(self.args.inherit_environ)
-
-        for name in copy_env:
-            if name in os.environ:
-                env[name] = os.environ[name]
-        return env
-
     def _spawn_worker_suite(self, calibrate=False):
         args = self.args
 
@@ -618,7 +621,7 @@ class Runner:
         if self._add_cmdline_args:
             self._add_cmdline_args(cmd, self.args)
 
-        env = self._create_environ()
+        env = create_environ(args.inherit_environ)
         stdout = _run_cmd(cmd, env=env)
         return perf.BenchmarkSuite.loads(stdout)
 

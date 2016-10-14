@@ -479,3 +479,17 @@ def abs_executable(python):
         print("ERROR: Unable to locate the Python executable: %r" % python)
         sys.exit(1)
     return os.path.realpath(abs_python)
+
+
+def create_environ(inherit_environ):
+    env = {}
+
+    # FIXME: copy the locale? LC_ALL, LANG, LC_*
+    copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
+    if inherit_environ:
+        copy_env.extend(inherit_environ)
+
+    for name in copy_env:
+        if name in os.environ:
+            env[name] = os.environ[name]
+    return env
