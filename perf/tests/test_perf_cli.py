@@ -46,9 +46,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                                    metadata={'hostname': 'toto',
                                              'python_version': '3.4',
                                              'name': 'py3'})
-        suite = perf.BenchmarkSuite()
-        suite.add_benchmark(bench1)
-        suite.add_benchmark(bench2)
+        suite = perf.BenchmarkSuite([bench1, bench2])
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
@@ -379,10 +377,11 @@ class TestConvert(BaseTestCase, unittest.TestCase):
 
     def test_filter_benchmarks(self):
         samples = (1.0, 1.5, 2.0)
-        suite = perf.BenchmarkSuite()
+        benchmarks = []
         for name in ("call_simple", "go", "telco"):
             bench = self.create_bench(samples, metadata={'name': name})
-            suite.add_benchmark(bench)
+            benchmarks.append(bench)
+        suite = perf.BenchmarkSuite(benchmarks)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')

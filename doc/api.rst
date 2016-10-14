@@ -280,9 +280,12 @@ Benchmark
 BenchmarkSuite
 --------------
 
-.. class:: BenchmarkSuite
+.. class:: BenchmarkSuite(benchmarks=None, filename=None)
 
-   A benchmark suite is made of :class:`~Benchmark` objects.
+   A benchmark suite is made of :class:`Benchmark` objects.
+
+   *benchmarks* is a sequence of :class:`Benchmark` objects. *filename* is the
+   name of the file from which the suite was loaded.
 
    Methods:
 

@@ -5,7 +5,6 @@ TODO
 * any print("test") in a worker creates a cryptic error message in the master.
   Don't use stdout? Better error message?
 * Runner: add a compare methods to compare N benchmarks
-* BenchmarkSuite: accept list of benchmarks in constructor
 * BenchmarkSuite: error in constructor if it doesn't get at least one
   benchmark?
 * Add TextRunner.timeit()

@@ -489,8 +489,7 @@ class Benchmark(object):
         return benchmarks[0]
 
     def dump(self, file, compact=True, replace=False):
-        suite = BenchmarkSuite()
-        suite.add_benchmark(self)
+        suite = BenchmarkSuite([self])
         suite.dump(file, compact=compact, replace=replace)
 
     def _replace_runs(self, new_runs):
@@ -586,9 +585,12 @@ class Benchmark(object):
 
 
 class BenchmarkSuite(object):
-    def __init__(self, filename=None):
+    def __init__(self, benchmarks=None, filename=None):
         self.filename = filename
         self._benchmarks = []
+        if benchmarks:
+            for benchmark in benchmarks:
+                self.add_benchmark(benchmark)
 
     def get_benchmark_names(self):
         return [bench.get_name() for bench in self]
@@ -667,10 +669,11 @@ class BenchmarkSuite(object):
         else:
             raise ValueError("file format version %r not supported" % version)
 
-        suite = cls(filename)
+        benchmarks = []
         for bench_data in benchmarks_json:
             benchmark = Benchmark._json_load(bench_data, version)
-            suite.add_benchmark(benchmark)
+            benchmarks.append(benchmark)
+        suite = cls(benchmarks, filename=filename)
 
         if not suite:
             raise ValueError("the file doesn't contain any benchmark")
@@ -772,10 +775,10 @@ class BenchmarkSuite(object):
 def add_runs(filename, result):
     if os.path.exists(filename):
         suite = BenchmarkSuite.load(filename)
+        suite.add_runs(result)
+        suite.dump(filename, replace=True)
     else:
-        suite = BenchmarkSuite()
-    suite.add_runs(result)
-    suite.dump(filename, replace=True)
+        result.dump(filename)
 
 
 def _load_suite_from_stdout(stdout):

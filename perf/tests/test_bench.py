@@ -385,11 +385,9 @@ class TestBenchmarkSuite(unittest.TestCase):
         return perf.Benchmark([run])
 
     def test_suite(self):
-        suite = perf.BenchmarkSuite()
         telco = self.benchmark('telco')
-        suite.add_benchmark(telco)
         go = self.benchmark('go')
-        suite.add_benchmark(go)
+        suite = perf.BenchmarkSuite([telco, go])
 
         self.assertIsNone(suite.filename)
         self.assertEqual(len(suite), 2)
@@ -399,10 +397,9 @@ class TestBenchmarkSuite(unittest.TestCase):
             suite.get_benchmark('non_existent')
 
     def create_dummy_suite(self):
-        suite = perf.BenchmarkSuite()
-        suite.add_benchmark(self.benchmark('telco'))
-        suite.add_benchmark(self.benchmark('go'))
-        return suite
+        telco = self.benchmark('telco')
+        go = self.benchmark('go')
+        return perf.BenchmarkSuite([telco, go])
 
     def check_dummy_suite(self, suite):
         benchmarks = suite.get_benchmarks()
@@ -440,8 +437,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         samples = (1.0, 2.0, 3.0)
         run = perf.Run(samples, metadata={'name': "bench"})
         bench = perf.Benchmark([run])
-        suite = perf.BenchmarkSuite()
-        suite.add_benchmark(bench)
+        suite = perf.BenchmarkSuite([bench])
 
         # bench 2
         samples2 = (4.0, 5.0, 6.0)
@@ -453,11 +449,9 @@ class TestBenchmarkSuite(unittest.TestCase):
         self.assertEqual(bench.get_samples(), samples + samples2)
 
     def test_get_total_duration(self):
-        suite = perf.BenchmarkSuite()
-
         run = create_run([1.0])
         bench = perf.Benchmark([run])
-        suite.add_benchmark(bench)
+        suite = perf.BenchmarkSuite([bench])
 
         run = create_run([2.0])
         bench = perf.Benchmark([run])
@@ -471,7 +465,7 @@ class TestBenchmarkSuite(unittest.TestCase):
 
         run = create_run(metadata={'date': '2016-07-20T14:06:00', 'duration': 60.0, 'name': 'bench1'})
         bench = perf.Benchmark([run])
-        suite.add_benchmark(bench)
+        suite = perf.BenchmarkSuite([bench])
         self.assertEqual(suite.get_dates(),
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 7, 0)))
@@ -492,15 +486,15 @@ class TestBenchmarkSuite(unittest.TestCase):
         return result
 
     def test_get_metadata(self):
-        suite = perf.BenchmarkSuite()
-
+        benchmarks = []
         for name in ('a', 'b'):
             run = perf.Run([1.0],
                            metadata={'name': name, 'os': 'linux'},
                            collect_metadata=False)
             bench = perf.Benchmark([run])
-            suite.add_benchmark(bench)
+            benchmarks.append(bench)
 
+        suite = perf.BenchmarkSuite(benchmarks)
         self.assertEqual(self.get_metadata(suite),
                          {'os': 'linux'})
 
