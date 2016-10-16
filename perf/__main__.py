@@ -77,6 +77,8 @@ def create_parser():
     cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
                      help='Specify CPU affinity. '
                           'By default, use isolated CPUs.')
+    cmd.add_argument('-o', '--output', metavar='FILENAME',
+                     help='Save metadata as JSON into FILENAME')
 
     # timeit
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
@@ -337,6 +339,11 @@ def cmd_metadata(args):
     run = perf.Run([1.0])
     metadata = run.get_metadata()
     display_metadata(metadata)
+
+    if args.output:
+        run = run._update_metadata({'name': 'metadata'})
+        bench = perf.Benchmark([run])
+        bench.dump(args.output)
 
 
 def cmd_show(args):

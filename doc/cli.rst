@@ -297,11 +297,13 @@ Collect metadata::
 
     python3 -m perf metadata
         [--affinity=CPU_LIST]
+        [-o FILENAME/--output FILENAME]
 
 Options:
 
 * ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
   See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+* ``--output=FILENAME``: Save metadata as JSON into FILENAME.
 
 Example::
 
