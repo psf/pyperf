@@ -32,7 +32,6 @@ TODO
 Blocker for perf 1.0 (stable API)
 =================================
 
-* Update doc: check public attributes and methods of classes
 * Clarify run vs process in TextRunner CLI
 * "samples" is not the best term, "a data sample is a set of data":
   https://en.wikipedia.org/wiki/Sample_%28statistics%29
@@ -43,8 +42,6 @@ Blocker for perf 1.0 (stable API)
 Low priority
 ============
 
-* add metadata: sys.getcheckinterval, py3: GIL milliseconds? GC enabled?
-* convert: save the operations made on data in metadata?
 * configurable clock? see pybench
 * reimplement metadata for compare?
 * fix hist if benchmark only contains one sample

@@ -117,6 +117,15 @@ def collect_python_metadata(metadata):
             cflags = normalize_text(cflags)
             metadata['python_cflags'] = cflags
 
+    # GC disabled?
+    try:
+        import gc
+    except ImportError:
+        pass
+    else:
+        if not gc.isenabled():
+            metadata['python_gc'] = 'disabled'
+
 
 def open_text(path):
     if six.PY3:
