@@ -235,7 +235,7 @@ def collect_system_metadata(metadata):
             continue
         seconds = int(line[6:])
         btime = datetime.datetime.fromtimestamp(seconds)
-        metadata['boot_time'] = format_datetime(btime)
+        metadata['boot_time'] = btime
 
         now = datetime.datetime.now()
         metadata['uptime'] = (now - btime).total_seconds()
@@ -502,16 +502,10 @@ def collect_cpu_metadata(metadata):
     collect_cpu_temperatures(metadata)
 
 
-def format_datetime(dt):
-    dt = dt.replace(microsecond=0)
-    return dt.isoformat()
-
-
 def collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
-    now = datetime.datetime.now()
-    metadata['date'] = format_datetime(now)
+    metadata['date'] = datetime.datetime.now()
 
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)

@@ -136,6 +136,12 @@ def format_sample(unit, sample):
     return format_samples(unit, (sample,))[0]
 
 
+def format_datetime(dt, microsecond=True):
+    if not microsecond:
+        dt = dt.replace(microsecond=0)
+    return dt.isoformat(' ')
+
+
 def parse_iso8601(date):
     if '.' in date:
         date, floatpart = date.split('.', 1)

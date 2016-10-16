@@ -1,17 +1,17 @@
 from __future__ import division, print_function, absolute_import
 
 import collections
+import datetime
 import six
 
 from perf._utils import (format_number, format_seconds, format_filesize,
-                         UNIT_FORMATTERS)
+                         format_datetime,
+                         UNIT_FORMATTERS, parse_iso8601)
 
 
-METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
+METADATA_VALUE_TYPES = (six.integer_types + six.string_types
+                        + (float, datetime.datetime))
 NUMBER_TYPES = six.integer_types + (float,)
-
-# Registry of metadata keys
-_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
 
 def _common_metadata(metadatas):
@@ -49,33 +49,57 @@ def is_strictly_positive(value):
 
 
 def is_positive(value):
-    # special case for load_avg_1min on perf < 0.7.2
-    if isinstance(value, six.string_types):
-        return True
-
     return (value >= 0)
+
+
+def parse_load_avg(value):
+    if isinstance(value, NUMBER_TYPES):
+        return value
+    else:
+        # special case for load_avg_1min on perf < 0.7.2
+        return float(value)
 
 
 def format_noop(value):
     return value
 
-BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte')
 
+def parse_datetime(value):
+    if isinstance(value, datetime.datetime):
+        return value
+    else:
+        return parse_iso8601(value)
+
+
+def check_datetime(value):
+    # timebomb! software will break in 2100
+    return (1970 <= value.year <= 2100)
+
+
+# types: accepted types
+_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit converter')
+
+BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte', None)
+DATETIME = _MetadataInfo(format_datetime, six.string_types + (datetime.datetime,), check_datetime, None, parse_datetime)
+
+# Registry of metadata keys
 METADATA = {
-    'loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
-    'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
+    'loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer', None),
+    'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer', None),
 
-    'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
-    'uptime': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
-    'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None),
+    'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second', None),
+    'uptime': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second', None),
+    'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None, parse_load_avg),
 
     'mem_max_rss': BYTES,
     'mem_peak_pagefile_usage': BYTES,
 
-    'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
+    'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None, None),
+    'date': DATETIME,
+    'boot_time': DATETIME,
 }
 
-DEFAULT_METADATA_INFO = _MetadataInfo(format_metadata, METADATA_VALUE_TYPES, None, None)
+DEFAULT_METADATA_INFO = _MetadataInfo(format_metadata, METADATA_VALUE_TYPES, None, None, None)
 
 
 def get_metadata_info(name):
@@ -101,14 +125,18 @@ def check_metadata(name, value):
 def parse_metadata(metadata):
     result = {}
     for name, value in metadata.items():
+        info = get_metadata_info(name)
+        if info.converter is not None:
+            value = info.converter(value)
+        else:
+            if isinstance(value, six.string_types):
+                if '\n' in value or '\r' in value:
+                    raise ValueError("newline characters are not allowed "
+                                     "in metadata values: %r" % value)
+                value = value.strip()
+                if not value:
+                    raise ValueError("metadata %r value is empty" % name)
         check_metadata(name, value)
-        if isinstance(value, six.string_types):
-            if '\n' in value or '\r' in value:
-                raise ValueError("newline characters are not allowed "
-                                 "in metadata values: %r" % value)
-            value = value.strip()
-            if not value:
-                raise ValueError("metadata %r value is empty" % name)
         result[name] = value
     return result
 

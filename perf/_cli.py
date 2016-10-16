@@ -2,7 +2,8 @@ from __future__ import division, print_function, absolute_import
 
 import statistics
 
-from perf._utils import format_seconds, format_number, format_timedelta
+from perf._utils import (format_seconds, format_number,
+                         format_timedelta, format_datetime)
 
 
 def display_title(title, level=1):
@@ -130,8 +131,8 @@ def display_stats(bench, file=None):
     dates = bench.get_dates()
     if dates:
         start, end = dates
-        print("Start date: %s" % start.isoformat())
-        print("End date: %s" % end.isoformat())
+        print("Start date: %s" % format_datetime(start, microsecond=False))
+        print("End date: %s" % format_datetime(end, microsecond=False))
 
     # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()

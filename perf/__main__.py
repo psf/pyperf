@@ -322,9 +322,6 @@ def cmd_compare(args):
 
 
 def cmd_metadata(args):
-    from perf._metadata import Metadata
-    from perf._collect_metadata import collect_metadata
-
     cpus = args.affinity
     if cpus:
         cpus = parse_cpu_list(cpus)
@@ -337,10 +334,8 @@ def cmd_metadata(args):
             set_cpu_affinity(cpus)
             # ignore if set_cpu_affinity() failed
 
-    metadata = {}
-    collect_metadata(metadata)
-    metadata = {name: Metadata(name, value)
-                for name, value in metadata.items()}
+    run = perf.Run([1.0])
+    metadata = run.get_metadata()
     display_metadata(metadata)
 
 

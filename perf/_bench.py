@@ -11,8 +11,7 @@ import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
                             _common_metadata, get_metadata_info)
-from perf._utils import (format_number, parse_iso8601,
-                         DEFAULT_UNIT, format_samples)
+from perf._utils import format_number, DEFAULT_UNIT, format_samples
 
 
 # Format format history:
@@ -59,6 +58,12 @@ def _check_warmups(warmups):
             return False
 
     return True
+
+
+def _convert_json(value):
+    if isinstance(value, datetime.datetime):
+        return value.isoformat()
+    raise TypeError
 
 
 class Run(object):
@@ -187,10 +192,7 @@ class Run(object):
         return math.fsum(raw_samples)
 
     def _get_date(self):
-        date = self._get_metadata('date', None)
-        if not date:
-            return None
-        return parse_iso8601(date)
+        return self._get_metadata('date', None)
 
     def _as_json(self, common_metadata):
         data = {'samples': self._samples}
@@ -446,6 +448,8 @@ class Benchmark(object):
     @classmethod
     def _json_load(cls, data, version):
         common_metadata = data.get('common_metadata', None)
+        if common_metadata is not None:
+            common_metadata = parse_metadata(common_metadata)
 
         runs = []
         for run_data in data['runs']:
@@ -703,10 +707,12 @@ class BenchmarkSuite(object):
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
 
         def dump(data, fp, compact):
+            kw = {'sort_keys': True, 'default': _convert_json}
             if compact:
-                json.dump(data, fp, separators=(',', ':'), sort_keys=True)
+                kw['separators'] = (',', ':')
             else:
-                json.dump(data, fp, indent=4, sort_keys=True)
+                kw['indent'] = 4
+            json.dump(data, fp, **kw)
             fp.write("\n")
             fp.flush()
 

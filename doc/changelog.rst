@@ -6,6 +6,7 @@ Version 0.8.1
 
 * BenchmarkSuite constructor now requires a non-empty sequence of Benchmark
   objects.
+* metadata: store date with microsecond resolution.
 
 Version 0.8.0 (2016-10-14)
 --------------------------
