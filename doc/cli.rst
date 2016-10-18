@@ -342,6 +342,7 @@ Usage
         [--python PYTHON]
         [--compare-to REF_PYTHON]
         [--inner-loops INNER_LOOPS]
+        [--duplicate DUPLICATE]
         [-s SETUP]
         stmt [stmt ...]
 
@@ -361,6 +362,9 @@ Options:
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
   run benchmark on Python executable ``PYTHON``, and then compare
   ``REF_PYTHON`` result to ``PYTHON`` result.
+* ``--duplicate=DUPLICATE``: Duplicate statements (``stmt`` statements, not
+  ``SETUP``) to reduce the overhead of the outer loop and multiply
+  inner loops by DUPLICATE (see ``--inner-loops`` option).
 * ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
 
 .. note::

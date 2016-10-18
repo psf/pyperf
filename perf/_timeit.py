@@ -22,6 +22,8 @@ def add_cmdline_args(cmd, args):
         cmd.extend(('--inner-loops', str(args.inner_loops)))
     for setup in args.setup:
         cmd.extend(("--setup", setup))
+    if args.duplicate:
+        cmd.extend(('--duplicate', str(args.duplicate)))
     cmd.extend(args.stmt)
 
 
@@ -50,6 +52,10 @@ class TimeitRunner(Runner):
                          help='Run benchmark on the Python executable REF_PYTHON, '
                               'run benchmark on Python executable PYTHON, '
                               'and then compare REF_PYTHON result to PYTHON result')
+        cmd.add_argument('--duplicate', type=int,
+                         help='duplicate statements to reduce the overhead of '
+                              'the outer loop and multiply inner_loops '
+                              'by DUPLICATE')
         cmd.add_argument('stmt', nargs='+', help='executed statements')
 
     def _process_args(self):
@@ -85,14 +91,14 @@ def _stmt_metadata(statements):
     return ' '.join(repr(stmt) for stmt in statements)
 
 
-def create_timer(runner):
+def create_timer(runner, stmt):
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
     # directory)
     import os
     sys.path.insert(0, os.curdir)
 
-    stmt = "\n".join(runner.args.stmt)
+    stmt = "\n".join(stmt)
     setup = "\n".join(runner.args.setup)
 
     return timeit.Timer(stmt, setup, timer=perf.perf_counter)
@@ -160,13 +166,23 @@ def main(runner):
     args.setup = _format_stmt(args.setup)
     args.stmt = _format_stmt(args.stmt)
 
+    stmt = args.stmt
+    inner_loops = args.inner_loops
+    if args.duplicate and args.duplicate > 1:
+        # args.stmt must not be modified, it's passed to the worker process
+        stmt = stmt * args.duplicate
+        if inner_loops:
+            inner_loops *= args.duplicate
+        else:
+            inner_loops = args.duplicate
+
     kwargs = {}
-    if args.inner_loops:
-        kwargs['inner_loops'] = args.inner_loops
+    if inner_loops:
+        kwargs['inner_loops'] = inner_loops
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
-    timer = create_timer(runner)
+    timer = create_timer(runner, stmt)
 
     # FIXME: abs path for compare
 

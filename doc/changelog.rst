@@ -4,6 +4,7 @@ Changelog
 Version 0.8.1
 -------------
 
+* timeit: add ``--duplicate`` option to reduce the overhead of the outer loop.
 * BenchmarkSuite constructor now requires a non-empty sequence of Benchmark
   objects.
 * metadata: store date with microsecond resolution.
