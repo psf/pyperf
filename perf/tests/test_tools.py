@@ -7,6 +7,7 @@ import six
 import perf
 from perf._utils import format_filesize
 from perf import _utils as utils
+from perf import tests
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -215,6 +216,19 @@ class MiscTests(unittest.TestCase):
     def test_python_has_jit(self):
         jit = perf.python_has_jit()
         self.assertIsInstance(jit, bool)
+
+    @unittest.skipUnless(hasattr(os, 'symlink'), 'need os.symlink')
+    def test_abs_executable(self):
+        with tests.temporary_file() as tmpname:
+            tmpname = os.path.realpath(tmpname)
+
+            try:
+                os.symlink(sys.executable, tmpname)
+            except (OSError, NotImplementedError):
+                self.skipTest("os.symlink() failed")
+
+            self.assertEqual(utils.abs_executable(tmpname),
+                             tmpname)
 
     def test_parse_run_list(self):
         parse_run_list = utils.parse_run_list

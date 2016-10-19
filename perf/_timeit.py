@@ -184,7 +184,6 @@ def main(runner):
     timer = create_timer(runner, stmt)
 
     if args.compare_to:
-        # FIXME: abs path for compare
         cmd_compare(runner, timer)
     else:
         kwargs = {}

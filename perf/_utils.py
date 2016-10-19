@@ -485,7 +485,11 @@ def abs_executable(python):
     if not abs_python:
         print("ERROR: Unable to locate the Python executable: %r" % python)
         sys.exit(1)
-    return os.path.realpath(abs_python)
+
+    # Don't follow symlinks. The venv module of Python can use a symlink for
+    # the "python" executable of the virtual environment. Running the symlink
+    # gets the modules from the venv, running the linked executable doesn't.
+    return os.path.normpath(abs_python)
 
 
 def create_environ(inherit_environ):

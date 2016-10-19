@@ -12,6 +12,9 @@ Version 0.8.1
   objects.
 * Store date in metadata with microsecond resolution.
 * ``collect_metadata``: add ``--output`` command line option.
+* Bugfix: don't follow symbolic links when getting the absolute path to a
+  Python executable. The venv module requires to use the symlink to get the
+  modules installed in a virtual environment.
 
 Version 0.8.0 (2016-10-14)
 --------------------------
