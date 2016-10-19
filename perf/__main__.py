@@ -346,14 +346,14 @@ def cmd_collect_metadata(args):
         bench.dump(args.output)
 
 
-def cmd_show(args):
+def display_benchmarks(args, show_metadata=False, hist=False, stats=False, dump=False, result=False, check_unstable=False):
     data = load_benchmarks(args)
 
-    if args.metadata:
+    if show_metadata:
         metadatas = [item.benchmark.get_metadata() for item in data]
         _display_common_metadata(metadatas)
 
-    if multiline_output(args):
+    if hist or stats or dump or show_metadata or (not result):
         use_title = True
     else:
         use_title = False
@@ -378,26 +378,26 @@ def cmd_show(args):
             if show_name:
                 display_title(item.name, 2)
 
-            if args.metadata:
+            if show_metadata:
                 metadata = metadatas[index]
                 if metadata:
                     display_metadata(metadata)
                     print()
 
             display_benchmark(item.benchmark,
-                              hist=args.hist,
-                              stats=args.stats,
-                              dump=args.dump,
-                              check_unstable=not args.quiet)
+                              hist=hist,
+                              stats=stats,
+                              dump=dump,
+                              check_unstable=check_unstable)
 
             if not item.is_last:
                 print()
     else:
-        use_titles = (data.get_nsuite() > 1)
+        show_filename = (data.get_nsuite() > 1)
 
         suite = None
         for item in data:
-            if use_titles and item.suite is not suite:
+            if show_filename and item.suite is not suite:
                 if suite is not None:
                     print()
 
@@ -408,6 +408,16 @@ def cmd_show(args):
             if item.title:
                 line = '%s: %s' % (item.name, line)
             print(line)
+
+
+def cmd_show(args):
+    display_benchmarks(args,
+                       show_metadata=args.metadata,
+                       hist=args.hist,
+                       stats=args.stats,
+                       dump=args.dump,
+                       check_unstable=not args.quiet,
+                       result=True)
 
 
 def cmd_dump(args):

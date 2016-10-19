@@ -356,5 +356,6 @@ def get_benchmark_name(benchmark):
     return benchmark.get_name() or '<no name>'
 
 
+# FIXME: remove this function?
 def multiline_output(args):
     return (args.hist or args.stats or args.dump or args.metadata)
