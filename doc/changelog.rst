@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.8.1
--------------
+Version 0.8.1 (2016-10-19)
+--------------------------
 
 * Rename ``metadata`` command to ``collect_metadata``
 * Add new commands: ``metadata`` (display metadata of benchmarks files)
