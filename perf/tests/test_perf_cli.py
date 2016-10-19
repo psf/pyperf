@@ -372,6 +372,33 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          '#1: telco (16.0 sec)')
 
+    def test_check_stable(self):
+        stdout = self.run_command('check', TELCO)
+        self.assertEqual(stdout.rstrip(),
+                         'The benchmark seem to be stable')
+
+    def test_check_unstable(self):
+        suite = self.create_suite()
+
+        with tests.temporary_file() as tmp_name:
+            suite.dump(tmp_name)
+            stdout = self.run_command('check', tmp_name)
+
+        expected = textwrap.dedent("""
+            py2
+            ---
+
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
+            Try to rerun the benchmark with more runs, samples and/or loops
+
+            py3
+            ---
+
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
+            Try to rerun the benchmark with more runs, samples and/or loops
+        """).strip()
+        self.assertEqual(stdout.rstrip(), expected)
+
 
 class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):

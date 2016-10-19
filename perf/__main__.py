@@ -75,6 +75,11 @@ def create_parser():
     cmd = subparsers.add_parser('metadata', help='Display metadata')
     input_filenames(cmd)
 
+    # check
+    cmd = subparsers.add_parser('check',
+                                help='Check if a benchmark seems stable')
+    input_filenames(cmd)
+
     # collect_metadata
     cmd = subparsers.add_parser('collect_metadata')
     cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
@@ -359,8 +364,8 @@ def cmd_collect_metadata(args):
 
 
 def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
-                       dump=False, result=False, check_unstable=False,
-                       display_runs_args=None):
+                       dump=False, result=False, checks=False,
+                       display_runs_args=None, only_checks=False):
     data = load_benchmarks(args)
 
     output = []
@@ -400,7 +405,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                                            hist=hist,
                                            stats=stats,
                                            dump=dump,
-                                           checks=check_unstable,
+                                           checks=checks,
                                            result=result,
                                            display_runs_args=display_runs_args)
 
@@ -428,6 +433,12 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
         for line in output:
             print(line)
+
+        if not output and only_checks:
+            if len(data) == 1:
+                print("The benchmark seem to be stable")
+            else:
+                print("All benchmarks seem to be stable")
     else:
         for line in output:
             print(line)
@@ -455,12 +466,16 @@ def cmd_show(args):
                        hist=args.hist,
                        stats=args.stats,
                        dump=args.dump,
-                       check_unstable=not args.quiet,
+                       checks=not args.quiet,
                        result=True)
 
 
 def cmd_metadata(args):
     display_benchmarks(args, show_metadata=True)
+
+
+def cmd_check(args):
+    display_benchmarks(args, checks=True, only_checks=True)
 
 
 def cmd_dump(args):
@@ -664,6 +679,7 @@ def main():
             'hist': functools.partial(cmd_hist, args),
             'stats': functools.partial(cmd_stats, args),
             'metadata': functools.partial(cmd_metadata, args),
+            'check': functools.partial(cmd_check, args),
             'collect_metadata': functools.partial(cmd_collect_metadata, args),
             'timeit': functools.partial(cmd_timeit, args, timeit_runner),
             'convert': functools.partial(cmd_convert, args),

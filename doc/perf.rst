@@ -82,6 +82,8 @@ Example of unstable benchmark because the number of loops is too low::
 
     Average: 36.9 ns +- 4.2 ns
 
+See also the :ref:`check command <check_cmd>`.
+
 
 .. _min:
 

@@ -501,7 +501,7 @@ class Runner:
 
         run = perf.Run(samples, warmups=warmups, metadata=metadata)
         bench = perf.Benchmark((run,))
-        self._display_result(bench, check_unstable=False)
+        self._display_result(bench, checks=False)
         return bench
 
     def _main(self, name, sample_func, inner_loops):
@@ -638,16 +638,16 @@ class Runner:
                              % len(benchmarks))
         return benchmarks[0]
 
-    def _display_result(self, bench, check_unstable=True):
+    def _display_result(self, bench, checks=True):
         stream = self._stream()
         args = self.args
 
         # Display the average +- stdev
         if self.args.quiet:
-            check_unstable = False
+            checks = False
 
         lines = format_benchmark(bench,
-                                 checks=check_unstable,
+                                 checks=checks,
                                  metadata=args.metadata,
                                  dump=args.dump,
                                  stats=args.stats,

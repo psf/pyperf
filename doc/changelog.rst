@@ -5,7 +5,8 @@ Version 0.8.1
 -------------
 
 * Rename ``metadata`` command to ``collect_metadata``
-* Add a new ``metadata`` command
+* Add new commands: ``metadata`` (display metadata of benchmarks files)
+  and ``check`` (check if benchmarks seem stable)
 * timeit: add ``--duplicate`` option to reduce the overhead of the outer loop.
 * BenchmarkSuite constructor now requires a non-empty sequence of Benchmark
   objects.

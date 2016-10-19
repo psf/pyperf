@@ -10,6 +10,7 @@ Commands:
 * :ref:`hist <hist_cmd>`
 * :ref:`convert <convert_cmd>`
 * :ref:`metadata <metadata_cmd>`
+* :ref:`check <check_cmd>`
 * :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`timeit <timeit_cmd>`
 * :ref:`slowest <slowest_cmd>`
@@ -306,7 +307,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf metadata perf/tests/telco.json
+    $ python3 -m perf metadata telco.json
     Metadata:
     - aslr: Full randomization
     - cpu_affinity: 1 (isolated)
@@ -324,6 +325,39 @@ Example::
     - python_implementation: cpython
     - python_version: 3.5.1 (64bit)
     - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
+
+
+.. _check_cmd:
+
+check
+-----
+
+Check if benchmarks are stable::
+
+    python3 -m perf check
+        [-b NAME/--name NAME]
+        [filename [filename2 ...]]
+
+Options:
+
+* ``--name NAME`` only check the benchmark called ``NAME``
+
+Example of stable benchmark::
+
+    $ python3 -m perf check telco.json
+    The benchmark seem to be stable
+
+Example of unstable benchmark::
+
+    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json
+    (...)
+
+    $ python3 -m perf check json
+    ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 42%)!
+    Try to rerun the benchmark with more runs, samples and/or loops
+
+    ERROR: the benchmark may be very unstable, the shortest raw sample only took 303 ns
+    Try to rerun the benchmark with more loops or increase --min-time
 
 
 .. _collect_metadata_cmd:
