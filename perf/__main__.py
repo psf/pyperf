@@ -72,8 +72,8 @@ def create_parser():
     cmd = subparsers.add_parser('stats', help='Compute statistics')
     input_filenames(cmd)
 
-    # metadata
-    cmd = subparsers.add_parser('metadata')
+    # collect_metadata
+    cmd = subparsers.add_parser('collect_metadata')
     cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
                      help='Specify CPU affinity. '
                           'By default, use isolated CPUs.')
@@ -323,7 +323,7 @@ def cmd_compare(args):
     compare_suites(data, args.action == 'compare', by_speed, args)
 
 
-def cmd_metadata(args):
+def cmd_collect_metadata(args):
     cpus = args.affinity
     if cpus:
         cpus = parse_cpu_list(cpus)
@@ -646,7 +646,7 @@ def main():
             'compare_to': functools.partial(cmd_compare, args),
             'hist': functools.partial(cmd_hist, args),
             'stats': functools.partial(cmd_stats, args),
-            'metadata': functools.partial(cmd_metadata, args),
+            'collect_metadata': functools.partial(cmd_collect_metadata, args),
             'timeit': functools.partial(cmd_timeit, args, timeit_runner),
             'convert': functools.partial(cmd_convert, args),
             'dump': functools.partial(cmd_dump, args),

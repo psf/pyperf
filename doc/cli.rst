@@ -9,7 +9,7 @@ Commands:
 * :ref:`dump <dump_cmd>`
 * :ref:`hist <hist_cmd>`
 * :ref:`convert <convert_cmd>`
-* :ref:`metadata <metadata_cmd>`
+* :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`timeit <timeit_cmd>`
 * :ref:`slowest <slowest_cmd>`
 
@@ -41,7 +41,7 @@ Show benchmarks of one or multiple benchmark suites::
 * ``--dump`` displays the benchmark run results,
   see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays benchmark metadata: see :ref:`perf metadata
-  <metadata_cmd>` command
+  <collect_metadata_cmd>` command
 * ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
@@ -288,14 +288,14 @@ Options:
 * ``--stdout`` writes the result encoded as JSON into stdout
 
 
-.. _metadata_cmd:
+.. _collect_metadata_cmd:
 
-metadata
---------
+collect_metadata
+----------------
 
 Collect metadata::
 
-    python3 -m perf metadata
+    python3 -m perf collect_metadata
         [--affinity=CPU_LIST]
         [-o FILENAME/--output FILENAME]
 

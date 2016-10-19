@@ -331,8 +331,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.run_command('dump', '--verbose', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
-    def test_metadata(self):
-        stdout = self.run_command('metadata')
+    def test_collect_metadata(self):
+        stdout = self.run_command('collect_metadata')
         self.assertRegex(stdout,
                          r'^Metadata:\n(- [^:]+: .*\n)+$')
 
