@@ -43,7 +43,7 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             lines.append("- %s: %s"
                          % (format_number(loops, 'loop'),
                             format_timedelta(sample)))
-        return
+        return lines
 
     show_warmup = (verbose >= 0)
 

@@ -113,7 +113,22 @@ class TestTimeit(unittest.TestCase):
             bench = perf.Benchmark.load(filename)
         return (bench, stdout)
 
-    def test_output(self):
+    def test_verbose_output(self):
+        args = ('-p', '2',
+                '-w', '1',
+                '-n', '3',
+                # don't pass --loops to test calibration
+                '--min-time', '0.001',
+                '-s', 'import time',
+                '--verbose',
+                SLEEP)
+        args = PERF_TIMEIT + args
+        print(' '.join(args))
+        # Don't check the exact output, only check that the verbose
+        # mode doesn't fail with an error (non-zero exist code)
+        self.run_timeit_bench(args)
+
+    def test_bench(self):
         loops = 4
         args = ('-p', '2',
                 '-w', '1',

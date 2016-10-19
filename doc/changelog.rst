@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.2 (2016-10-19)
+--------------------------
+
+* Fix formatting of benchmark which only contains calibration runs.
+
 Version 0.8.1 (2016-10-19)
 --------------------------
 
