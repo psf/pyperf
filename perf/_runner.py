@@ -695,6 +695,9 @@ class Runner:
             nprocess += 1
         calibrate = need_calibration
 
+        if verbose and self._worker_task > 0:
+            print(file=stream)
+
         for process in range(1, nprocess + 1):
             worker_bench = self._spawn_worker_bench(calibrate)
 
