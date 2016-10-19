@@ -10,8 +10,7 @@ import perf
 from perf._metadata import _common_metadata
 from perf._cli import (display_runs, display_stats, display_metadata,
                        warn_if_bench_unstable, display_histogram,
-                       display_benchmark, display_title, get_benchmark_name,
-                       multiline_output)
+                       display_benchmark, display_title, get_benchmark_name)
 from perf._timeit import TimeitRunner
 from perf._utils import (format_timedelta, format_seconds, parse_run_list,
                          get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
@@ -70,6 +69,10 @@ def create_parser():
 
     # stats
     cmd = subparsers.add_parser('stats', help='Compute statistics')
+    input_filenames(cmd)
+
+    # metadata
+    cmd = subparsers.add_parser('metadata', help='Display metadata')
     input_filenames(cmd)
 
     # collect_metadata
@@ -143,6 +146,10 @@ GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
 IterSuite = collections.namedtuple('IterSuite', 'filename suite')
 
 
+def format_filename_noop(filename):
+    return filename
+
+
 def format_filename_func(suites):
     filenames = [suite.filename for suite in suites]
 
@@ -150,7 +157,7 @@ def format_filename_func(suites):
     if len(base_filenames) != len(filenames):
         # FIXME: try harder: try to get differente names by keeping only
         # the parent directory?
-        return lambda filename: filename
+        return format_filename_noop
 
     noext_filenames = {os.path.splitext(filename)[0]
                        for filename in base_filenames}
@@ -295,7 +302,8 @@ def _display_common_metadata(metadatas):
 
     common_metadata = _common_metadata(metadatas)
     if common_metadata:
-        display_metadata(common_metadata, header='Common metadata:')
+        display_title('Common metadata')
+        display_metadata(common_metadata)
         print()
 
     for key in common_metadata:
@@ -338,7 +346,9 @@ def cmd_collect_metadata(args):
 
     run = perf.Run([1.0])
     metadata = run.get_metadata()
-    display_metadata(metadata)
+    if metadata:
+        print("Metadata:")
+        display_metadata(metadata)
 
     if args.output:
         run = run._update_metadata({'name': 'metadata'})
@@ -346,13 +356,16 @@ def cmd_collect_metadata(args):
         bench.dump(args.output)
 
 
-def display_benchmarks(args, show_metadata=False, hist=False, stats=False, dump=False, result=False, check_unstable=False):
+def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
+                       dump=False, result=False, check_unstable=False):
     data = load_benchmarks(args)
 
     if show_metadata:
         metadatas = [item.benchmark.get_metadata() for item in data]
         _display_common_metadata(metadatas)
 
+    only_metadata = (not(hist or stats or dump or result or check_unstable)
+                     and show_metadata)
     if hist or stats or dump or show_metadata or (not result):
         use_title = True
     else:
@@ -381,17 +394,22 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False, dump=
             if show_metadata:
                 metadata = metadatas[index]
                 if metadata:
+                    print("Metadata:")
                     display_metadata(metadata)
+
+                    if not only_metadata or not item.is_last:
+                        print()
+
+            if not only_metadata:
+                display_benchmark(item.benchmark,
+                                  hist=hist,
+                                  stats=stats,
+                                  dump=dump,
+                                  check_unstable=check_unstable,
+                                  result=result)
+
+                if not item.is_last:
                     print()
-
-            display_benchmark(item.benchmark,
-                              hist=hist,
-                              stats=stats,
-                              dump=dump,
-                              check_unstable=check_unstable)
-
-            if not item.is_last:
-                print()
     else:
         show_filename = (data.get_nsuite() > 1)
 
@@ -418,6 +436,10 @@ def cmd_show(args):
                        dump=args.dump,
                        check_unstable=not args.quiet,
                        result=True)
+
+
+def cmd_metadata(args):
+    display_benchmarks(args, show_metadata=True)
 
 
 def cmd_dump(args):
@@ -656,6 +678,7 @@ def main():
             'compare_to': functools.partial(cmd_compare, args),
             'hist': functools.partial(cmd_hist, args),
             'stats': functools.partial(cmd_stats, args),
+            'metadata': functools.partial(cmd_metadata, args),
             'collect_metadata': functools.partial(cmd_collect_metadata, args),
             'timeit': functools.partial(cmd_timeit, args, timeit_runner),
             'convert': functools.partial(cmd_convert, args),

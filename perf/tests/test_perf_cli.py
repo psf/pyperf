@@ -37,7 +37,7 @@ class BaseTestCase(object):
 
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
-    def test_show_common_metadata(self):
+    def create_suite(self):
         bench1 = self.create_bench((1.0, 1.5, 2.0),
                                    metadata={'hostname': 'toto',
                                              'python_version': '2.7',
@@ -46,14 +46,19 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                                    metadata={'hostname': 'toto',
                                              'python_version': '3.4',
                                              'name': 'py3'})
-        suite = perf.BenchmarkSuite([bench1, bench2])
+        return perf.BenchmarkSuite([bench1, bench2])
+
+    def test_show_common_metadata(self):
+        suite = self.create_suite()
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
             stdout = self.run_command('show', '--metadata', tmp_name)
 
         expected = textwrap.dedent("""
-            Common metadata:
+            Common metadata
+            ===============
+
             - hostname: toto
 
             py2
@@ -78,8 +83,34 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Median +- std dev: 2.00 sec +- 0.50 sec
         """).strip()
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        self.assertEqual(stdout.rstrip(), expected)
+
+    def test_metadata(self):
+        suite = self.create_suite()
+
+        with tests.temporary_file() as tmp_name:
+            suite.dump(tmp_name)
+            stdout = self.run_command('metadata', tmp_name)
+
+        expected = textwrap.dedent("""
+            Common metadata
+            ===============
+
+            - hostname: toto
+
+            py2
+            ---
+
+            Metadata:
+            - python_version: 2.7
+
+            py3
+            ---
+
+            Metadata:
+            - python_version: 3.4
+        """).strip()
+        self.assertEqual(stdout.rstrip(), expected)
 
     def compare(self, action, ref_result, changed_result, *args):
         with tests.temporary_directory() as tmpdir:

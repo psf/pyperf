@@ -312,17 +312,16 @@ def warn_if_bench_unstable(bench):
     return warnings
 
 
-def display_metadata(metadata, header="Metadata:", file=None):
-    if not metadata:
-        return
-    print(header, file=file)
+def display_metadata(metadata, file=None):
     for key, value in sorted(metadata.items()):
         print("- %s: %s" % (key, value), file=file)
 
 
 def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
-                      dump=False, stats=False, hist=False, show_name=False):
+                      dump=False, stats=False, hist=False, show_name=False,
+                      result=True):
     if metadata:
+        print("Metadata:", file=file)
         display_metadata(bench.get_metadata(), file=file)
         print(file=file)
 
@@ -343,12 +342,13 @@ def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
         for line in warnings:
             print(line, file=file)
 
-    if show_name:
-        name = bench.get_name()
-        text = "%s: %s" % (name, bench)
-    else:
-        text = str(bench)
-    print(text, file=file)
+    if result:
+        if show_name:
+            name = bench.get_name()
+            text = "%s: %s" % (name, bench)
+        else:
+            text = str(bench)
+        print(text, file=file)
 
 
 def get_benchmark_name(benchmark):

@@ -9,6 +9,7 @@ Commands:
 * :ref:`dump <dump_cmd>`
 * :ref:`hist <hist_cmd>`
 * :ref:`convert <convert_cmd>`
+* :ref:`metadata <metadata_cmd>`
 * :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`timeit <timeit_cmd>`
 * :ref:`slowest <slowest_cmd>`
@@ -41,7 +42,7 @@ Show benchmarks of one or multiple benchmark suites::
 * ``--dump`` displays the benchmark run results,
   see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays benchmark metadata: see :ref:`perf metadata
-  <collect_metadata_cmd>` command
+  <metadata_cmd>` command
 * ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
@@ -288,6 +289,43 @@ Options:
 * ``--stdout`` writes the result encoded as JSON into stdout
 
 
+.. _metadata_cmd:
+
+metadata
+--------
+
+Display metadata of benchmark files::
+
+    python3 -m perf collect_metadata
+        [-b NAME/--name NAME]
+        [filename [filename2 ...]]
+
+Options:
+
+* ``--name NAME`` only displays the benchmark called ``NAME``
+
+Example::
+
+    $ python3 -m perf metadata perf/tests/telco.json
+    Metadata:
+    - aslr: Full randomization
+    - cpu_affinity: 1 (isolated)
+    - cpu_config: 1=driver:intel_pstate, intel_pstate:turbo, governor:performance
+    - cpu_count: 2
+    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - duration: 400 ms
+    - hostname: selma
+    - inner_loops: 1
+    - loops: 4
+    - name: telco
+    - perf_version: 0.7
+    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
+    - python_executable: /usr/bin/python3
+    - python_implementation: cpython
+    - python_version: 3.5.1 (64bit)
+    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
+
+
 .. _collect_metadata_cmd:
 
 collect_metadata
@@ -307,7 +345,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf metadata
+    $ python3 -m perf collect_metadata
     Metadata:
     - aslr: Full randomization
     - cpu_config: 0-3=driver:intel_pstate, intel_pstate:turbo, governor:powersave
