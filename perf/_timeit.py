@@ -8,7 +8,7 @@ import sys
 import timeit
 
 import perf
-from perf._cli import display_title, warn_if_bench_unstable
+from perf._cli import display_title, format_checks
 from perf._utils import get_python_names, abs_executable
 from perf._runner import Runner
 
@@ -148,7 +148,7 @@ def cmd_compare(runner, timer):
         if multiline:
             print()
         elif not args.quiet:
-            warnings = warn_if_bench_unstable(bench)
+            warnings = format_checks(bench)
             for line in warnings:
                 print(line)
 

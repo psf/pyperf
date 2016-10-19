@@ -6,23 +6,43 @@ from perf._utils import (format_seconds, format_number,
                          format_timedelta, format_datetime)
 
 
-def display_title(title, level=1):
-    print(title)
+def empty_line(lines):
+    if lines:
+        lines.append('')
+
+
+def format_title(title, level=1, lines=None):
+    if lines is None:
+        lines = []
+
+    empty_line(lines)
+
+    lines.append(title)
     if level == 1:
         char = '='
     else:
         char = '-'
-    print(char * len(title))
+    lines.append(char * len(title))
+    return lines
+
+
+def display_title(title, level=1):
+    for line in format_title(title, level):
+        print(line)
     print()
 
 
-def display_run(bench, run_index, run,
-                common_metadata=None, raw=False, verbose=0, file=None):
+def format_run(bench, run_index, run, common_metadata=None, raw=False,
+               verbose=0, lines=None):
+    if lines is None:
+        lines = []
+
     if run._is_calibration():
-        print("Run %s: calibrate" % (run_index,), file=file)
+        lines.append("Run %s: calibrate" % (run_index,))
         for loops, sample in run.warmups:
-            print("- %s: %s" % (format_number(loops, 'loop'),
-                                format_timedelta(sample)), file=file)
+            lines.append("- %s: %s"
+                         % (format_number(loops, 'loop'),
+                            format_timedelta(sample)))
         return
 
     show_warmup = (verbose >= 0)
@@ -74,7 +94,7 @@ def display_run(bench, run_index, run,
                 % (name, len(warmups), ', '.join(warmups), text))
 
     text = "Run %s: %s" % (run_index, text)
-    print(text, file=file)
+    lines.append(text)
 
     if verbose > 0:
         prefix = '  '
@@ -83,10 +103,12 @@ def display_run(bench, run_index, run,
             if common_metadata and key in common_metadata:
                 continue
             value = metadata[key]
-            print('%s%s: %s' % (prefix, key, value))
+            lines.append('%s%s: %s' % (prefix, key, value))
+
+    return lines
 
 
-def display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
+def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
     runs = bench.get_runs()
     if quiet:
         verbose = -1
@@ -95,25 +117,34 @@ def display_runs(bench, quiet=False, verbose=False, raw=False, file=None):
     else:
         verbose = 0
 
+    if lines is None:
+        lines = []
     if verbose > 0:
+        empty_line(lines)
+
+        # FIXME: display metadata in format_benchmark()
         common_metadata = bench.get_metadata()
-        print("Metadata:", file=file)
+        lines.append("Metadata:")
         for key in sorted(common_metadata):
             value = common_metadata[key]
-            print('  %s: %s' % (key, value), file=file)
-        print(file=file)
+            lines.append('  %s: %s' % (key, value))
     else:
         common_metadata = None
 
+    if runs:
+        # FIXME: only if we display at least one run (count non-calibration runs)
+        empty_line(lines)
     for run_index, run in enumerate(runs, 1):
         if quiet and run._is_calibration():
             continue
-        display_run(bench, run_index, run,
-                    common_metadata=common_metadata,
-                    verbose=verbose, raw=raw, file=file)
+        format_run(bench, run_index, run,
+                   common_metadata=common_metadata,
+                   verbose=verbose, raw=raw, lines=lines)
+
+    return lines
 
 
-def display_stats(bench, file=None):
+def _format_stats(bench, lines):
     fmt = bench.format_sample
     samples = bench.get_samples()
 
@@ -121,43 +152,41 @@ def display_stats(bench, file=None):
     nsample = len(samples)
     median = bench.median()
 
+    empty_line(lines)
+
     # Total duration
     duration = bench.get_total_duration()
     if duration:
-        print("Total duration: %s" % format_seconds(duration),
-              file=file)
+        lines.append("Total duration: %s" % format_seconds(duration))
 
     # Start/End dates
     dates = bench.get_dates()
     if dates:
         start, end = dates
-        print("Start date: %s" % format_datetime(start, microsecond=False))
-        print("End date: %s" % format_datetime(end, microsecond=False))
+        lines.append("Start date: %s" % format_datetime(start, microsecond=False))
+        lines.append("End date: %s" % format_datetime(end, microsecond=False))
 
     # Raw sample minimize/maximum
     raw_samples = bench._get_raw_samples()
-    print("Raw sample minimum: %s" % bench.format_sample(min(raw_samples)),
-          file=file)
-    print("Raw sample maximum: %s" % bench.format_sample(max(raw_samples)),
-          file=file)
-    print(file=file)
+    lines.append("Raw sample minimum: %s" % bench.format_sample(min(raw_samples)))
+    lines.append("Raw sample maximum: %s" % bench.format_sample(max(raw_samples)))
+    lines.append('')
 
     # Number of samples
-    print("Number of runs: %s" % format_number(nrun), file=file)
-    print("Total number of samples: %s" % format_number(nsample),
-          file=file)
+    lines.append("Number of runs: %s" % format_number(nrun))
+    lines.append("Total number of samples: %s" % format_number(nsample))
 
     nsample_per_run = bench._get_nsample_per_run()
     text = format_number(nsample_per_run)
     if isinstance(nsample_per_run, float):
         text += ' (average)'
-    print('Number of samples per run: %s' % text, file=file)
+    lines.append('Number of samples per run: %s' % text)
 
     nwarmup = bench._get_nwarmup()
     text = format_number(nwarmup)
     if isinstance(nwarmup, float):
         text += ' (average)'
-    print('Number of warmups per run: %s' % text, file=file)
+    lines.append('Number of warmups per run: %s' % text)
 
     # Loop iterations per sample
     loops = bench._get_loops()
@@ -181,44 +210,43 @@ def display_stats(bench, file=None):
 
         text = '%s (%s x %s)' % (text, loops, inner_loops)
 
-    print("Loop iterations per sample: %s" % text, file=file)
-    print(file=file)
+    lines.append("Loop iterations per sample: %s" % text)
+    lines.append('')
 
     # Minimum
     def format_limit(median, value):
         return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100.0 / median)
 
-    print("Minimum: %s" % format_limit(median, min(samples)), file=file)
+    lines.append("Minimum: %s" % format_limit(median, min(samples)))
 
     # Median +- std dev
-    print(str(bench), file=file)
+    lines.append(str(bench))
 
     # Mean +- std dev
     mean = statistics.mean(samples)
     if len(samples) > 2:
         stdev = statistics.stdev(samples, mean)
-        print("Mean +- std dev: %s +- %s"
-              % bench.format_samples((mean, stdev)),
-              file=file)
+        lines.append("Mean +- std dev: %s +- %s"
+                     % bench.format_samples((mean, stdev)))
     else:
-        print("Mean: %s" % bench.format_sample(mean), file=file)
+        lines.append("Mean: %s" % bench.format_sample(mean))
 
     # Maximum
-    print("Maximum: %s" % format_limit(median, max(samples)), file=file)
+    lines.append("Maximum: %s" % format_limit(median, max(samples)))
+    return lines
 
 
-def display_histogram(benchmarks, bins=20, extend=False, file=None):
+def format_histogram(benchmarks, bins=20, extend=False, lines=None):
     import collections
     import shutil
 
     if hasattr(shutil, 'get_terminal_size'):
-        columns, lines = shutil.get_terminal_size()
+        columns, nline = shutil.get_terminal_size()
     else:
-        columns = 80
-        lines = 25
+        columns, nline = (80, 25)
 
     if not bins:
-        bins = max(lines - 3, 3)
+        bins = max(nline - 3, 3)
         if not extend:
             bins = min(bins, 25)
 
@@ -234,13 +262,18 @@ def display_histogram(benchmarks, bins=20, extend=False, file=None):
     def sample_bucket(value):
         # round towards zero (ROUND_DOWN)
         return int(value / sample_k)
+
     bucket_min = sample_bucket(all_min)
     bucket_max = sample_bucket(all_max)
+    if lines is None:
+        lines = []
 
-    for index, item in enumerate(benchmarks):
+    for item in benchmarks:
+        empty_line(lines)
+
         bench, title = item
         if title:
-            print("[ %s ]" % title, file=file)
+            lines.append("[ %s ]" % title)
 
         samples = bench.get_samples()
 
@@ -264,17 +297,16 @@ def display_histogram(benchmarks, bins=20, extend=False, file=None):
             linelen = int(round(count * line_k))
             text = bench.format_sample(bucket * sample_k)
             line = ('#' * linelen) or '|'
-            print("{:>{}}: {:>{}} {}".format(text, sample_width,
-                                             count, count_width, line),
-                  file=file)
+            lines.append("{:>{}}: {:>{}} {}".format(text, sample_width,
+                                                    count, count_width, line))
 
-        if index != len(benchmarks) - 1:
-            print(file=file)
+    return lines
 
 
-def warn_if_bench_unstable(bench):
-    warnings = []
-    warn = warnings.append
+def format_checks(bench, lines=None):
+    if lines is None:
+        lines = []
+    warn = lines.append
     samples = bench.get_samples()
 
     # Display a warning if the standard deviation is larger than 10%
@@ -283,6 +315,8 @@ def warn_if_bench_unstable(bench):
     if median and len(samples) > 1:
         k = statistics.stdev(samples) / median
         if k > 0.10:
+            empty_line(lines)
+
             if k > 0.20:
                 warn("ERROR: the benchmark is very unstable, the standard "
                      "deviation is very high (stdev/median: %.0f%%)!"
@@ -293,12 +327,13 @@ def warn_if_bench_unstable(bench):
                      % (k * 100))
             warn("Try to rerun the benchmark with more runs, samples "
                  "and/or loops")
-            warn("")
 
     # Check that the shortest sample took at least 1 ms
     shortest = min(bench._get_raw_samples())
     text = bench.format_sample(shortest)
     if shortest < 1e-3:
+        empty_line(lines)
+
         if shortest < 1e-6:
             warn("ERROR: the benchmark may be very unstable, "
                  "the shortest raw sample only took %s" % text)
@@ -307,48 +342,52 @@ def warn_if_bench_unstable(bench):
                  "the shortest raw sample only took %s" % text)
         warn("Try to rerun the benchmark with more loops "
              "or increase --min-time")
-        warn("")
 
-    return warnings
+    return lines
 
 
-def display_metadata(metadata, file=None):
+def format_metadata(metadata, lines=None):
+    if lines is None:
+        lines = []
     for key, value in sorted(metadata.items()):
-        print("- %s: %s" % (key, value), file=file)
+        lines.append("- %s: %s" % (key, value))
+    return lines
 
 
-def display_benchmark(bench, file=None, check_unstable=True, metadata=False,
-                      dump=False, stats=False, hist=False, show_name=False,
-                      result=True):
+def format_benchmark(bench, checks=True, metadata=False,
+                     dump=False, stats=False, hist=False, show_name=False,
+                     result=True, display_runs_args=None):
+    lines = []
+
     if metadata:
-        print("Metadata:", file=file)
-        display_metadata(bench.get_metadata(), file=file)
-        print(file=file)
+        lines.append("Metadata:")
+        format_metadata(bench.get_metadata(), lines=lines)
 
     if dump:
-        display_runs(bench, file=file)
-        print(file=file)
+        if display_runs_args is None:
+            display_runs_args = {}
+        _format_runs(bench, lines=lines, **display_runs_args)
 
     if hist:
-        display_histogram([(bench, None)], file=file)
-        print(file=file)
+        format_histogram([(bench, None)], lines=lines)
 
     if stats:
-        display_stats(bench, file=file)
-        print(file=file)
+        _format_stats(bench, lines=lines)
 
-    if check_unstable:
-        warnings = warn_if_bench_unstable(bench)
-        for line in warnings:
-            print(line, file=file)
+    if checks:
+        format_checks(bench, lines=lines)
 
     if result:
+        empty_line(lines)
+
         if show_name:
             name = bench.get_name()
             text = "%s: %s" % (name, bench)
         else:
             text = str(bench)
-        print(text, file=file)
+        lines.append(text)
+
+    return lines
 
 
 def get_benchmark_name(benchmark):

@@ -8,11 +8,11 @@ import sys
 
 import perf
 from perf._metadata import _common_metadata
-from perf._cli import (display_runs, display_stats, display_metadata,
-                       warn_if_bench_unstable, display_histogram,
-                       display_benchmark, display_title, get_benchmark_name)
+from perf._cli import (format_metadata, empty_line,
+                       format_checks, format_histogram, format_title,
+                       format_benchmark, display_title, get_benchmark_name)
 from perf._timeit import TimeitRunner
-from perf._utils import (format_timedelta, format_seconds, parse_run_list,
+from perf._utils import (format_timedelta, parse_run_list,
                          get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
 
 
@@ -292,7 +292,7 @@ def load_benchmarks(args):
     return data
 
 
-def _display_common_metadata(metadatas):
+def _display_common_metadata(metadatas, lines):
     if len(metadatas) < 2:
         return
 
@@ -302,9 +302,10 @@ def _display_common_metadata(metadatas):
 
     common_metadata = _common_metadata(metadatas)
     if common_metadata:
-        display_title('Common metadata')
-        display_metadata(common_metadata)
-        print()
+        format_title('Common metadata', lines=lines)
+        empty_line(lines)
+
+        format_metadata(common_metadata, lines=lines)
 
     for key in common_metadata:
         for metadata in metadatas:
@@ -348,7 +349,8 @@ def cmd_collect_metadata(args):
     metadata = run.get_metadata()
     if metadata:
         print("Metadata:")
-        display_metadata(metadata)
+        for line in format_metadata(metadata):
+            print(line)
 
     if args.output:
         run = run._update_metadata({'name': 'metadata'})
@@ -357,22 +359,23 @@ def cmd_collect_metadata(args):
 
 
 def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
-                       dump=False, result=False, check_unstable=False):
+                       dump=False, result=False, check_unstable=False,
+                       display_runs_args=None):
     data = load_benchmarks(args)
+
+    output = []
 
     if show_metadata:
         metadatas = [item.benchmark.get_metadata() for item in data]
-        _display_common_metadata(metadatas)
+        _display_common_metadata(metadatas, lines=output)
 
-    only_metadata = (not(hist or stats or dump or result or check_unstable)
-                     and show_metadata)
     if hist or stats or dump or show_metadata or (not result):
         use_title = True
     else:
         use_title = False
         if not args.quiet:
             for index, item in enumerate(data):
-                warnings = warn_if_bench_unstable(item.benchmark)
+                warnings = format_checks(item.benchmark)
 
                 if warnings:
                     use_title = True
@@ -384,33 +387,51 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
         suite = None
         for index, item in enumerate(data):
-            if show_filename and item.suite is not suite:
-                suite = item.suite
-                display_title(item.filename, 1)
-
-            if show_name:
-                display_title(item.name, 2)
+            lines = []
 
             if show_metadata:
                 metadata = metadatas[index]
                 if metadata:
-                    print("Metadata:")
-                    display_metadata(metadata)
+                    empty_line(lines)
+                    lines.append("Metadata:")
+                    format_metadata(metadata, lines=lines)
 
-                    if not only_metadata or not item.is_last:
-                        print()
+            bench_lines = format_benchmark(item.benchmark,
+                                           hist=hist,
+                                           stats=stats,
+                                           dump=dump,
+                                           checks=check_unstable,
+                                           result=result,
+                                           display_runs_args=display_runs_args)
 
-            if not only_metadata:
-                display_benchmark(item.benchmark,
-                                  hist=hist,
-                                  stats=stats,
-                                  dump=dump,
-                                  check_unstable=check_unstable,
-                                  result=result)
+            if bench_lines:
+                empty_line(lines)
+                lines.extend(bench_lines)
 
-                if not item.is_last:
-                    print()
+            if lines:
+                bench_lines = lines
+                lines = []
+
+                if show_filename and item.suite is not suite:
+                    suite = item.suite
+                    format_title(item.filename, 1, lines=lines)
+
+                if show_name:
+                    format_title(item.name, 2, lines=lines)
+
+                empty_line(lines)
+                lines.extend(bench_lines)
+
+            if lines:
+                empty_line(output)
+                output.extend(lines)
+
+        for line in output:
+            print(line)
     else:
+        for line in output:
+            print(line)
+
         show_filename = (data.get_nsuite() > 1)
 
         suite = None
@@ -443,25 +464,12 @@ def cmd_metadata(args):
 
 
 def cmd_dump(args):
-    data = load_benchmarks(args)
-
-    use_titles = (data.get_nsuite() > 1) or (len(data.suites[0]) > 1)
-    suite = None
-    for item in data:
-        if item.suite is not suite:
-            suite = item.suite
-            if use_titles:
-                display_title(item.filename, 1)
-
-        if use_titles:
-            display_title(item.name, 2)
-
-        display_runs(item.benchmark,
-                     quiet=args.quiet,
-                     verbose=args.verbose,
-                     raw=args.raw)
-        if not item.is_last:
-            print()
+    display_runs_args = {'quiet': args.quiet,
+                         'verbose': args.verbose,
+                         'raw': args.raw}
+    display_benchmarks(args,
+                       dump=True,
+                       display_runs_args=display_runs_args)
 
 
 def cmd_timeit(args, timeit_runner):
@@ -472,32 +480,7 @@ def cmd_timeit(args, timeit_runner):
 
 
 def cmd_stats(args):
-    data = load_benchmarks(args)
-
-    use_titles = (data.get_nsuite() > 1) or (len(data.suites[0]) > 1)
-    suite = None
-    for item in data:
-        if item.suite is not suite:
-            suite = item.suite
-
-            if use_titles:
-                display_title(item.filename, 1)
-
-                duration = suite.get_total_duration()
-                print("Number of benchmarks: %s" % len(suite))
-                print("Total duration: %s" % format_seconds(duration))
-                dates = suite.get_dates()
-                if dates:
-                    start, end = dates
-                    print("Start date: %s" % start.isoformat())
-                    print("End date: %s" % end.isoformat())
-                print()
-
-        if use_titles:
-            display_title(item.name, 2)
-        display_stats(item.benchmark)
-        if not item.is_last:
-            print()
+    display_benchmarks(args, stats=True)
 
 
 def cmd_hist(args):
@@ -516,8 +499,9 @@ def cmd_hist(args):
         benchmarks = [(benchmark, filename if show_filename else None)
                       for benchmark, title, filename in benchmarks]
 
-        display_histogram(benchmarks, bins=args.bins,
-                          extend=args.extend)
+        for line in format_histogram(benchmarks, bins=args.bins,
+                                     extend=args.extend):
+            print(line)
 
         if not(is_last or ignored):
             print()
@@ -526,8 +510,9 @@ def cmd_hist(args):
         for bench in ignored:
             name = get_benchmark_name(bench)
             print("[ %s ]" % name)
-            display_histogram([name], bins=args.bins,
-                              extend=args.extend)
+            for line in format_histogram([name], bins=args.bins,
+                                         extend=args.extend):
+                print(line)
 
 
 def fatal_missing_benchmark(suite, name):

@@ -10,7 +10,7 @@ import sys
 import six
 
 import perf
-from perf._cli import display_run, display_benchmark, multiline_output
+from perf._cli import format_run, format_benchmark, multiline_output
 from perf._bench import _load_suite_from_stdout
 from perf._utils import (format_timedelta, format_number,
                          format_cpu_list, parse_cpu_list,
@@ -645,14 +645,16 @@ class Runner:
         # Display the average +- stdev
         if self.args.quiet:
             check_unstable = False
-        display_benchmark(bench,
-                          file=stream,
-                          check_unstable=check_unstable,
-                          metadata=args.metadata,
-                          dump=args.dump,
-                          stats=args.stats,
-                          hist=args.hist,
-                          show_name=self._show_name)
+
+        lines = format_benchmark(bench,
+                                 checks=check_unstable,
+                                 metadata=args.metadata,
+                                 dump=args.dump,
+                                 stats=args.stats,
+                                 hist=args.hist,
+                                 show_name=self._show_name)
+        for line in lines:
+            print(line, file=stream)
 
         stream.flush()
         if args.append:
@@ -699,7 +701,8 @@ class Runner:
             if verbose:
                 run = worker_bench.get_runs()[-1]
                 run_index = '%s/%s' % (process, nprocess)
-                display_run(worker_bench, run_index, run, file=stream)
+                for line in format_run(worker_bench, run_index, run):
+                    print(line, file=stream)
             elif not quiet:
                 print(".", end='', file=stream)
 
