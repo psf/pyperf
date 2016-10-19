@@ -16,6 +16,7 @@ PERF_TIMEIT = (sys.executable, '-m', 'perf', 'timeit')
 FAST_BENCH_ARGS = ('--debug-single-sample',
                    '-s', 'import time',
                    'time.sleep(1e-6)')
+FAST_MIN_TIME = 1e-6
 # test with a least with two samples
 COMPARE_BENCH = ('-l1', '-p1', '-w0', '-n3',
                  '-s', 'import time',
@@ -253,6 +254,18 @@ class TestTimeit(unittest.TestCase):
 
         expected = '(?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
         self.assertRegex(cmd.stdout, expected)
+
+    def test_duplicate(self):
+        duplicate = 1000
+        args = (PERF_TIMEIT
+                + ('--duplicate', str(duplicate), '--loops', '1')
+                + FAST_BENCH_ARGS)
+        bench, stdout = self.run_timeit_bench(args)
+
+        metadata = bench.get_metadata()
+        self.assertEqual(metadata['timeit_duplicate'].value, duplicate)
+        for raw_sample in bench._get_raw_samples():
+            self.assertGreaterEqual(raw_sample, FAST_MIN_TIME * duplicate)
 
 
 if __name__ == "__main__":

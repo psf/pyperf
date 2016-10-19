@@ -166,29 +166,31 @@ def main(runner):
     args.setup = _format_stmt(args.setup)
     args.stmt = _format_stmt(args.stmt)
 
+    # args must not be modified, it's passed to the worker process,
+    # so use local variables.
     stmt = args.stmt
     inner_loops = args.inner_loops
     if args.duplicate and args.duplicate > 1:
-        # args.stmt must not be modified, it's passed to the worker process
         stmt = stmt * args.duplicate
         if inner_loops:
             inner_loops *= args.duplicate
         else:
             inner_loops = args.duplicate
+        runner.metadata['timeit_duplicate'] = args.duplicate
 
-    kwargs = {}
-    if inner_loops:
-        kwargs['inner_loops'] = inner_loops
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
     timer = create_timer(runner, stmt)
 
-    # FIXME: abs path for compare
-
     if args.compare_to:
+        # FIXME: abs path for compare
         cmd_compare(runner, timer)
     else:
+        kwargs = {}
+        if inner_loops:
+            kwargs['inner_loops'] = inner_loops
+
         try:
             runner.bench_sample_func(args.name, sample_func, timer, **kwargs)
         except SystemExit:

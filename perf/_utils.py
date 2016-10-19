@@ -400,6 +400,7 @@ def popen_communicate(proc):
 
 
 def get_python_names(python1, python2):
+    # FIXME: merge with format_filename_func() of __main__.py
     name1 = os.path.basename(python1)
     name2 = os.path.basename(python2)
     if name1 != name2:
