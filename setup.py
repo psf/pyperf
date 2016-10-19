@@ -8,7 +8,7 @@
 #  - run tests: tox
 #  - git commit -a -m "prepare release x.y"
 #  - git push
-#  - check Travis status:
+#  - check Travis CI status:
 #    https://travis-ci.org/haypo/perf
 #
 # Release a new version:

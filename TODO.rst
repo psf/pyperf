@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Add "system", "tune_system", (another name) command to tune the system for
+  benchmarks: CPU pinning for IRQ, performance governor for CPU speed, etc.
 * Remove --stdout or redesign _load_suite_from_stdout()?
 * any print("test") in a worker creates a cryptic error message in the master.
   Don't use stdout? Better error message?
