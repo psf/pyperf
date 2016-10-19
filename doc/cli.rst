@@ -6,14 +6,14 @@ Commands:
 * :ref:`show <show_cmd>`
 * :ref:`compare and compare_to <compare_cmd>`
 * :ref:`stats <stats_cmd>`
+* :ref:`check <check_cmd>`
 * :ref:`dump <dump_cmd>`
 * :ref:`hist <hist_cmd>`
-* :ref:`convert <convert_cmd>`
 * :ref:`metadata <metadata_cmd>`
-* :ref:`check <check_cmd>`
-* :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`timeit <timeit_cmd>`
+* :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`slowest <slowest_cmd>`
+* :ref:`convert <convert_cmd>`
 
 
 The Python perf module comes with a ``pyperf`` program which includes different
@@ -78,31 +78,30 @@ compare and compare_to
 Compare benchmark suites, compute the minimum of each benchmark to use it as
 the reference::
 
-    python3 -m perf
+    python3 -m perf compare
         [-v/--verbose] [-m/--metadata]
-        compare reference.json filename.json filename2.json [filename3.json ...]
+        filename.json filename2.json [filename3.json ...]
 
 Compare benchmark suites, use the first file as the reference::
 
-    python3 -m perf
+    python3 -m perf compare_to
         [-v/--verbose] [-q/--quiet]
         [-G/--group-by-speed]
         [--min-speed=MIN_SPEED]
-        compare_to reference.json changed.json [changed2.json ...]
-
-Example::
-
-    $ python3 -m perf compare py2.json py3.json
-    Reference (best): py2
-
-    Average: [py2] 46.3 ns +- 2.2 ns -> [py3] 56.3 ns +- 2.5 ns: 1.2x slower
-    Significant (t=-25.90)
+        reference.json changed.json [changed2.json ...]
 
 Options:
 
 * ``--group-by-speed``: group results by "Slower", "Faster" and "Same speed"
 * ``--min-speed``: Absolute minimum of speed in percent to consider that a
   benchmark is significant (default: 0%)
+
+Example::
+
+    $ python3 -m perf compare py2.json py3.json
+    Median +- std dev: [py2] 11.4 ms +- 2.1 ms -> [py3] 13.6 ms +- 1.3 ms: 1.19x slower
+
+On this example, py2 is faster and so used as the reference.
 
 
 .. _stats_cmd:
@@ -118,6 +117,9 @@ Compute statistics on a benchmark result::
 Example::
 
     $ python3 -m perf stats telco.json
+    Total duration: 16.0 sec
+    Start date: 2016-07-17 22:50:27
+    End date: 2016-07-17 22:50:46
     Raw sample minimum: 96.9 ms
     Raw sample maximum: 100 ms
 
@@ -137,6 +139,39 @@ Values:
 * `Median <https://en.wikipedia.org/wiki/Median>`_
 * "std dev": `Standard deviation (standard error)
   <https://en.wikipedia.org/wiki/Standard_error>`_
+
+
+.. _check_cmd:
+
+check
+-----
+
+Check if benchmarks are stable::
+
+    python3 -m perf check
+        [-b NAME/--name NAME]
+        filename [filename2 ...]
+
+Options:
+
+* ``--name NAME`` only check the benchmark called ``NAME``
+
+Example of stable benchmark::
+
+    $ python3 -m perf check telco.json
+    The benchmark seem to be stable
+
+Example of unstable benchmark::
+
+    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json
+    (...)
+
+    $ python3 -m perf check json
+    ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 42%)!
+    Try to rerun the benchmark with more runs, samples and/or loops
+
+    ERROR: the benchmark may be very unstable, the shortest raw sample only took 303 ns
+    Try to rerun the benchmark with more loops or increase --min-time
 
 
 .. _dump_cmd:
@@ -243,53 +278,6 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 <https://en.wikipedia.org/wiki/Probability_density_function>`_.
 
 
-.. _convert_cmd:
-
-convert
--------
-
-Convert or modify a benchmark suite::
-
-    python3 -m perf convert
-        [--include-benchmark=NAME]
-        [--exclude-benchmark=NAME]
-        [--include-runs=RUNS]
-        [--remove-outliers]
-        [--indent]
-        [--remove-warmups]
-        [--add=FILE]
-        [--extract-metadata=NAME]
-        [--remove-all-metadata]
-        [--update-metadata=METADATA]
-        input_filename.json
-        (-o output_filename.json/--output=output_filename.json
-        | --stdout)
-
-Operations:
-
-* ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``
-* ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``
-* ``--include-runs=RUNS`` only keeps benchmark runs ``RUNS``. ``RUNS`` is a
-  list of runs separated by commas, it can include a range using format
-  ``first-last`` which includes ``first`` and ``last`` values. Example:
-  ``1-3,7`` (1, 2, 3, 7).
-* ``--remove-outliers`` removes "outlier runs", runs which contains at least
-  one sample which is not in the range ``[median - 5%; median + 5%]``.
-  See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
-* ``--remove-warmups``: remove warmup samples
-* ``--add=FILE``: Add benchmark runs of benchmark *FILE*
-* ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values
-* ``--remove-all-metadata``: Remove all benchmarks metadata except ``name`` and
-  ``unit``.
-* ``--update-metadata=METADATA``: Update metadata: ``METADATA`` is a
-  comma-separated list of ``KEY=VALUE``
-
-Options:
-
-* ``--indent``: Indent JSON (rather using compact JSON)
-* ``--stdout`` writes the result encoded as JSON into stdout
-
-
 .. _metadata_cmd:
 
 metadata
@@ -297,9 +285,9 @@ metadata
 
 Display metadata of benchmark files::
 
-    python3 -m perf collect_metadata
+    python3 -m perf metadata
         [-b NAME/--name NAME]
-        [filename [filename2 ...]]
+        filename [filename2 ...]
 
 Options:
 
@@ -320,77 +308,6 @@ Example::
     - loops: 4
     - name: telco
     - perf_version: 0.7
-    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
-    - python_executable: /usr/bin/python3
-    - python_implementation: cpython
-    - python_version: 3.5.1 (64bit)
-    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
-
-
-.. _check_cmd:
-
-check
------
-
-Check if benchmarks are stable::
-
-    python3 -m perf check
-        [-b NAME/--name NAME]
-        [filename [filename2 ...]]
-
-Options:
-
-* ``--name NAME`` only check the benchmark called ``NAME``
-
-Example of stable benchmark::
-
-    $ python3 -m perf check telco.json
-    The benchmark seem to be stable
-
-Example of unstable benchmark::
-
-    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json
-    (...)
-
-    $ python3 -m perf check json
-    ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 42%)!
-    Try to rerun the benchmark with more runs, samples and/or loops
-
-    ERROR: the benchmark may be very unstable, the shortest raw sample only took 303 ns
-    Try to rerun the benchmark with more loops or increase --min-time
-
-
-.. _collect_metadata_cmd:
-
-collect_metadata
-----------------
-
-Collect metadata::
-
-    python3 -m perf collect_metadata
-        [--affinity=CPU_LIST]
-        [-o FILENAME/--output FILENAME]
-
-Options:
-
-* ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
-  See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
-* ``--output=FILENAME``: Save metadata as JSON into FILENAME.
-
-Example::
-
-    $ python3 -m perf collect_metadata
-    Metadata:
-    - aslr: Full randomization
-    - cpu_config: 0-3=driver:intel_pstate, intel_pstate:turbo, governor:powersave
-    - cpu_count: 4
-    - cpu_freq: 0=2181 MHz, 1=2270 MHz, 2=2191 MHz, 3=2198 MHz
-    - cpu_model_name:  Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - cpu_temp: coretemp:Physical id 0=51 C, coretemp:Core 0=50 C, coretemp:Core 1=51 C
-    - date: 2016-07-18T22:57:06
-    - hostname: selma
-    - load_avg_1min: 0.02
-    - perf_version: 0.8
     - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
     - python_executable: /usr/bin/python3
     - python_implementation: cpython
@@ -528,6 +445,44 @@ specific case, whereas many parameters are random:
 See the :ref:`Minimum versus average and standard deviation <min>` section.
 
 
+.. _collect_metadata_cmd:
+
+collect_metadata
+----------------
+
+Collect metadata::
+
+    python3 -m perf collect_metadata
+        [--affinity=CPU_LIST]
+        [-o FILENAME/--output FILENAME]
+
+Options:
+
+* ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
+  See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+* ``--output=FILENAME``: Save metadata as JSON into FILENAME.
+
+Example::
+
+    $ python3 -m perf collect_metadata
+    Metadata:
+    - aslr: Full randomization
+    - cpu_config: 0-3=driver:intel_pstate, intel_pstate:turbo, governor:powersave
+    - cpu_count: 4
+    - cpu_freq: 0=2181 MHz, 1=2270 MHz, 2=2191 MHz, 3=2198 MHz
+    - cpu_model_name:  Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
+    - cpu_temp: coretemp:Physical id 0=51 C, coretemp:Core 0=50 C, coretemp:Core 1=51 C
+    - date: 2016-07-18T22:57:06
+    - hostname: selma
+    - load_avg_1min: 0.02
+    - perf_version: 0.8
+    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
+    - python_executable: /usr/bin/python3
+    - python_implementation: cpython
+    - python_version: 3.5.1 (64bit)
+    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
+
+
 .. _slowest_cmd:
 
 slowest
@@ -540,4 +495,51 @@ which makes running benchmarks taking too long.
 Options:
 
 * ``-n``: Number of slow benchmarks to display (default: ``5``)
+
+.. _convert_cmd:
+
+convert
+-------
+
+Convert or modify a benchmark suite::
+
+    python3 -m perf convert
+        [--include-benchmark=NAME]
+        [--exclude-benchmark=NAME]
+        [--include-runs=RUNS]
+        [--remove-outliers]
+        [--indent]
+        [--remove-warmups]
+        [--add=FILE]
+        [--extract-metadata=NAME]
+        [--remove-all-metadata]
+        [--update-metadata=METADATA]
+        input_filename.json
+        (-o output_filename.json/--output=output_filename.json
+        | --stdout)
+
+Operations:
+
+* ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``
+* ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``
+* ``--include-runs=RUNS`` only keeps benchmark runs ``RUNS``. ``RUNS`` is a
+  list of runs separated by commas, it can include a range using format
+  ``first-last`` which includes ``first`` and ``last`` values. Example:
+  ``1-3,7`` (1, 2, 3, 7).
+* ``--remove-outliers`` removes "outlier runs", runs which contains at least
+  one sample which is not in the range ``[median - 5%; median + 5%]``.
+  See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
+* ``--remove-warmups``: remove warmup samples
+* ``--add=FILE``: Add benchmark runs of benchmark *FILE*
+* ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values
+* ``--remove-all-metadata``: Remove all benchmarks metadata except ``name`` and
+  ``unit``.
+* ``--update-metadata=METADATA``: Update metadata: ``METADATA`` is a
+  comma-separated list of ``KEY=VALUE``
+
+Options:
+
+* ``--indent``: Indent JSON (rather using compact JSON)
+* ``--stdout`` writes the result encoded as JSON into stdout
+
 
