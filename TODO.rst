@@ -1,6 +1,23 @@
 TODO
 ====
 
+* External tool (?) to produce nice HTML reports:
+
+  * https://magic.io/blog/uvloop-blazing-fast-python-networking/
+
+    - HTML, JS: d3 graphic library
+    - min, max, std dev
+    - https://github.com/MagicStack/pgbench
+    - https://github.com/MagicStack/vmbench
+
+  * http://hdrhistogram.github.io/HdrHistogram/
+  * probability density graphs
+
+    - https://hydra.snabb.co/build/589970/download/2/report.html
+    - https://en.wikipedia.org/wiki/Probability_density_function
+    - enhance hist_scipy.py to support more than one benchmark
+    - https://docs.scipy.org/doc/scipy/reference/tutorial/stats.html
+
 * Add "system", "tune_system", (another name) command to tune the system for
   benchmarks: CPU pinning for IRQ, performance governor for CPU speed, etc.
 * Remove --stdout or redesign _load_suite_from_stdout()?
