@@ -1,5 +1,6 @@
 import datetime
 import errno
+import gzip
 
 import six
 
@@ -191,38 +192,23 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark([run])
         self.assertEqual(bench.get_unit(), 'byte')
 
-    def test_json(self):
-        samples = (1.0, 1.5, 2.0)
-        runs = []
-        for sample in samples:
-            run = perf.Run([sample],
-                           warmups=[(1, 3.0)],
-                           metadata={'key': 'value',
-                                     'loops': 100,
-                                     'inner_loops': 20,
-                                     'name': 'mybench'},
-                           collect_metadata=False)
-            runs.append(run)
-        bench = perf.Benchmark(runs)
-
-        with tests.temporary_file() as tmp_name:
-            bench.dump(tmp_name)
-            bench = perf.Benchmark.load(tmp_name)
-
-        for run in bench.get_runs():
-            self.assertEqual(run._get_loops(), 100)
-            self.assertEqual(run._get_inner_loops(), 20)
-
-        self.assertEqual(bench.get_name(), "mybench")
-        self.assertEqual(self.get_metadata(bench),
-                         {'key': 'value', 'name': 'mybench',
-                          'loops': 100, 'inner_loops': 20})
-
-        self.check_runs(bench, [(1, 3.0)], samples)
-
     def create_dummy_benchmark(self):
         runs = [create_run()]
         return perf.Benchmark(runs)
+
+    def check_benchmarks_equal(self, bench, bench2):
+        self.assertEqual(bench.get_name(), bench2.get_name())
+        self.assertEqual(bench.get_samples(), bench2.get_samples())
+        self.assertEqual(bench.get_metadata(), bench2.get_metadata())
+
+    def test_dump_load(self):
+        bench = self.create_dummy_benchmark()
+
+        with tests.temporary_file() as tmp_name:
+            bench.dump(tmp_name)
+            bench2 = perf.Benchmark.load(tmp_name)
+
+        self.check_benchmarks_equal(bench, bench2)
 
     def test_dump_replace(self):
         bench = self.create_dummy_benchmark()
@@ -237,6 +223,31 @@ class BenchmarkTests(unittest.TestCase):
 
             # ok if replace is true
             bench.dump(tmp_name, replace=True)
+
+    def test_dump_gzip(self):
+        bench = self.create_dummy_benchmark()
+
+        with tests.temporary_file(suffix='.gz') as tmp_name:
+            bench.dump(tmp_name)
+
+            if six.PY3:
+                fp = gzip.open(tmp_name, 'rt', encoding='utf-8')
+            else:
+                fp = gzip.open(tmp_name, 'rb')
+            with fp:
+                json = fp.read()
+
+        expected = tests.benchmark_as_json(bench)
+        self.assertEqual(json, expected)
+
+    def test_load_gzip(self):
+        bench = self.create_dummy_benchmark()
+
+        with tests.temporary_file(suffix='.gz') as tmp_name:
+            bench.dump(tmp_name)
+            bench2 = perf.Benchmark.load(tmp_name)
+
+        self.check_benchmarks_equal(bench, bench2)
 
     def test_add_runs(self):
         samples1 = (1.0, 2.0, 3.0)

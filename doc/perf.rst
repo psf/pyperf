@@ -126,6 +126,76 @@ See also `Multimodal distribution
 <https://en.wikipedia.org/wiki/Multimodal_distribution>`_.
 
 
+.. _json:
+
+perf JSON
+=========
+
+perf stores benchmark results as JSON in files. By default, the JSON is
+formatted to produce small files. Use the ``python3 -m perf convert --indent
+(...)`` command (see :ref:`perf convert <convert_cmd>`) to get readable
+(indented) JSON.
+
+perf supports JSON files compressed by gzip: use gzip if filename ends with
+``.gz``.
+
+Example of JSON, ``...`` is used in the example for readability::
+
+    {
+        "benchmarks": [
+            {
+                "common_metadata": {
+                    "name": "telco",
+                    "perf_version": "0.7",
+                    "platform": "Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four",
+                    ...
+                },
+                "runs": [
+                    {
+                        "metadata": {
+                            "date": "2016-07-17T22:50:27",
+                            ...
+                        },
+                        "samples": [
+                            0.0244653635,
+                            0.02445928275,
+                            0.02450589075
+                        ],
+                        "warmups": [
+                            [
+                                4,
+                                0.098872539
+                            ]
+                        ]
+                    },
+                    ...
+                    {
+                        "metadata": {
+                            "date": "2016-07-17T22:50:45",
+                            ...
+                        },
+                        "samples": [
+                            0.024512332,
+                            0.02449233075,
+                            0.02454807875
+                        ],
+                        "warmups": [
+                            [
+                                4,
+                                0.098347475
+                            ]
+                        ]
+                    }
+                ]
+            }
+        ],
+        "version": 4
+    }
+
+See also the `jq tool <https://stedolan.github.io/jq/>`_: "lightweight and
+flexible command-line JSON processor".
+
+
 .. _stable_bench:
 
 Stable and reliable benchmarks

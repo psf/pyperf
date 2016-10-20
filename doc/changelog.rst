@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.8.3
+-------------
+
+* Support reading and writing JSON files compressed by gzip: use gzip
+  if the filename ends with ``.gz``
+
 Version 0.8.2 (2016-10-19)
 --------------------------
 

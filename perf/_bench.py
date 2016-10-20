@@ -11,7 +11,8 @@ import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
                             _common_metadata, get_metadata_info)
-from perf._utils import format_number, DEFAULT_UNIT, format_samples
+from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
+                         python_implementation)
 
 
 # Format format history:
@@ -676,15 +677,31 @@ class BenchmarkSuite(object):
 
         return suite
 
+    @staticmethod
+    def _load_open(filename):
+        if isinstance(filename, bytes):
+            suffix = b'.gz'
+        else:
+            suffix = u'.gz'
+
+        if filename.endswith(suffix):
+            import gzip
+            if six.PY3:
+                return gzip.open(filename, "rt", encoding="utf-8")
+            else:
+                return gzip.open(filename, "rb")
+        else:
+            if six.PY3:
+                return open(filename, "r", encoding="utf-8")
+            else:
+                return open(filename, "rb")
+
     @classmethod
     def load(cls, file):
         if isinstance(file, (bytes, six.text_type)):
             if file != '-':
                 filename = file
-                if six.PY3:
-                    fp = open(file, "r", encoding="utf-8")
-                else:
-                    fp = open(file, "rb")
+                fp = cls._load_open(filename)
                 with fp:
                     bench_file = json.load(fp)
             else:
@@ -702,6 +719,41 @@ class BenchmarkSuite(object):
         bench_file = json.loads(string)
         return cls._json_load(None, bench_file)
 
+    @staticmethod
+    def _dump_open(filename, replace):
+        if isinstance(filename, bytes):
+            suffix = b'.gz'
+        else:
+            suffix = u'.gz'
+
+        flags = os.O_WRONLY | os.O_CREAT
+        if not replace:
+            flags |= os.O_EXCL
+        fd = os.open(filename, flags)
+
+        if filename.endswith(suffix):
+            import gzip
+
+            filename = filename[:-3]
+            if six.PY3:
+                import io
+
+                fp = open(fd, "wb")
+                fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
+                return io.TextIOWrapper(fp, "utf-8")
+            else:
+                # FIXME: why PyPy doesn't support buffered writer?
+                if python_implementation() == 'pypy':
+                    fp = os.fdopen(fd, "wb", 0)
+                else:
+                    fp = os.fdopen(fd, "wb")
+                return gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
+        else:
+            if six.PY3:
+                return open(fd, "w", encoding="utf-8")
+            else:
+                return os.fdopen(fd, "wb")
+
     def dump(self, file, compact=True, replace=False):
         benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
@@ -717,14 +769,7 @@ class BenchmarkSuite(object):
             fp.flush()
 
         if isinstance(file, (bytes, six.text_type)):
-            flags = os.O_WRONLY | os.O_CREAT
-            if not replace:
-                flags |= os.O_EXCL
-            fd = os.open(file, flags)
-            if six.PY3:
-                fp = open(fd, "w", encoding="utf-8")
-            else:
-                fp = os.fdopen(fd, "wb")
+            fp = self._dump_open(file, replace)
             with fp:
                 dump(data, fp, compact)
         else:

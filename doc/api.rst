@@ -145,10 +145,15 @@ Benchmark
 
       *file* can be a filename, or a file object open for write.
 
+      If *file* is a filename ending with ``.gz``, the file is compressed by
+      gzip.
+
       If *file* is a filename and *replace* is false, the function fails if the
       file already exists.
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
+
+      See :ref:`perf JSON <json>`.
 
    .. method:: format() -> str
 
@@ -246,9 +251,13 @@ Benchmark
       *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or a file object open to read.
 
+      See :ref:`perf JSON <json>`.
+
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark from a JSON string.
+
+      See :ref:`perf JSON <json>`.
 
    .. method:: median()
 
@@ -310,10 +319,15 @@ BenchmarkSuite
 
       *file* can be: a filename, or a file object open for write.
 
+      If *file* is a filename ending with ``.gz``, the file is compressed by
+      gzip.
+
       If *file* is a filename and *replace* is false, the function fails if the
       file already exists.
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
+
+      See :ref:`perf JSON <json>`.
 
    .. method:: get_benchmark(name: str) -> Benchmark
 
@@ -378,9 +392,13 @@ BenchmarkSuite
       *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or a file object open to read.
 
+      See :ref:`perf JSON <json>`.
+
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark suite from a JSON string.
+
+      See :ref:`perf JSON <json>`.
 
    Attributes:
 

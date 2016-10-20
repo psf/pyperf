@@ -44,22 +44,9 @@ def capture_stderr():
     return _capture_stream('stderr')
 
 
-def benchmark_as_json(benchmark, compact=True):
-    with temporary_file() as tmp_name:
-        benchmark.dump(tmp_name, compact=compact)
-        with io.open(tmp_name, 'r', encoding='utf-8') as tmp:
-            return tmp.read()
-
-
-def compare_benchmarks(testcase, bench1, bench2):
-    json1 = benchmark_as_json(bench1, compact=False)
-    json2 = benchmark_as_json(bench2, compact=False)
-    testcase.assertEqual(json1, json2)
-
-
 @contextlib.contextmanager
-def temporary_file():
-    tmp_filename = tempfile.mktemp()
+def temporary_file(**kwargs):
+    tmp_filename = tempfile.mktemp(**kwargs)
     try:
         yield tmp_filename
     finally:
@@ -77,6 +64,19 @@ def temporary_directory():
         yield tmpdir
     finally:
         shutil.rmtree(tmpdir)
+
+
+def benchmark_as_json(benchmark, compact=True):
+    with temporary_file() as tmp_name:
+        benchmark.dump(tmp_name, compact=compact)
+        with io.open(tmp_name, 'r', encoding='utf-8') as tmp:
+            return tmp.read()
+
+
+def compare_benchmarks(testcase, bench1, bench2):
+    json1 = benchmark_as_json(bench1, compact=False)
+    json2 = benchmark_as_json(bench2, compact=False)
+    testcase.assertEqual(json1, json2)
 
 
 ProcResult = collections.namedtuple('ProcResult', 'returncode stdout stderr')
