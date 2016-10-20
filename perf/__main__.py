@@ -338,6 +338,11 @@ def cmd_compare(args):
 
 
 def cmd_collect_metadata(args):
+    filename = args.output
+    if filename and os.path.exists(filename):
+        print("ERROR: The JSON file %r already exists" % filename)
+        sys.exit(1)
+
     cpus = args.affinity
     if cpus:
         cpus = parse_cpu_list(cpus)
@@ -357,10 +362,10 @@ def cmd_collect_metadata(args):
         for line in format_metadata(metadata):
             print(line)
 
-    if args.output:
+    if filename:
         run = run._update_metadata({'name': 'metadata'})
         bench = perf.Benchmark([run])
-        bench.dump(args.output)
+        bench.dump(filename)
 
 
 def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
