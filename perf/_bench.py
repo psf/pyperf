@@ -283,22 +283,18 @@ class Run(object):
 
 class Benchmark(object):
     def __init__(self, runs):
-        if not runs:
-            raise ValueError("runs must be a non-empty sequence of Run objects")
-        run = runs[0]
-        if not isinstance(run, Run):
-            raise TypeError("Run expected, got %s" % type(run).__name__)
-
-        # A benchmark must have a name
-        if not run._has_metadata('name'):
-            raise ValueError("A benchmark must have a name: "
-                             "the run has no name metadata")
-
-        # list of Run objects
-        self._runs = [run]
+        self._runs = []   # list of Run objects
         self._clear_runs_cache()
 
-        for run in runs[1:]:
+        if not runs:
+            raise ValueError("runs must be a non-empty sequence of Run objects")
+
+        # A benchmark must have a name
+        if not runs[0]._has_metadata('name'):
+            raise ValueError("A benchmark must have a name: "
+                             "the first run has no name metadata")
+
+        for run in runs:
             self.add_run(run)
 
     def get_name(self):
@@ -340,10 +336,11 @@ class Benchmark(object):
     def _get_inner_loops(self):
         return self._get_run_property(lambda run: run._get_inner_loops())
 
-    def _clear_runs_cache(self):
+    def _clear_runs_cache(self, keep_common_metadata=False):
         self._samples = None
         self._median = None
-        self._common_metadata = None
+        if not keep_common_metadata:
+            self._common_metadata = None
         self._dates = None
 
     def median(self):
@@ -357,17 +354,24 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
-        metadata = self.get_metadata()
-        run_metata = run.get_metadata()
-        for key in _CHECKED_METADATA:
-            value = metadata.get(key, None)
-            run_value = run_metata.get(key, None)
-            if run_value != value:
-                raise ValueError("incompatible benchmark, metadata %s is "
-                                 "different: current=%s, run=%s"
-                                 % (key, value, run_value))
+        if self._runs:
+            metadata = self.get_metadata()
+            run_metata = run.get_metadata()
+            for key in _CHECKED_METADATA:
+                value = metadata.get(key, None)
+                run_value = run_metata.get(key, None)
+                if run_value != value:
+                    raise ValueError("incompatible benchmark, metadata %s is "
+                                     "different: current=%s, run=%s"
+                                     % (key, value, run_value))
 
-        self._clear_runs_cache()
+        if self._common_metadata is not None:
+            # Update common metadata
+            for name, item in list(self._common_metadata.items()):
+                if run._get_metadata(name, None) != item.value:
+                    del self._common_metadata[name]
+        self._clear_runs_cache(keep_common_metadata=True)
+
         self._runs.append(run)
 
     def get_unit(self):
@@ -460,13 +464,7 @@ class Benchmark(object):
             # into a JSON file
             runs.append(run)
 
-        bench = cls(runs)
-        if common_metadata:
-            bench._common_metadata = {name: Metadata(name, value)
-                                      for name, value in common_metadata.items()}
-        else:
-            bench._common_metadata = {}
-        return bench
+        return cls(runs)
 
     def _as_json(self):
         data = {}
