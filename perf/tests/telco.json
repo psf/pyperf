@@ -25,7 +25,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=65 C, coretemp:Core 0=49 C, coretemp:Core 1=65 C",
                         "date": "2016-07-17T22:50:27",
-                        "load_avg_1min": "0.12"
+                        "load_avg_1min": 0.12
                     },
                     "samples": [
                         0.0244653635,
@@ -41,7 +41,7 @@
                         "cpu_freq": "1=3586 MHz",
                         "cpu_temp": "coretemp:Physical id 0=65 C, coretemp:Core 0=49 C, coretemp:Core 1=65 C",
                         "date": "2016-07-17T22:50:27",
-                        "load_avg_1min": "0.12"
+                        "load_avg_1min": 0.12
                     },
                     "samples": [
                         0.02475585475,
@@ -57,7 +57,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=65 C, coretemp:Core 0=49 C, coretemp:Core 1=65 C",
                         "date": "2016-07-17T22:50:28",
-                        "load_avg_1min": "0.12"
+                        "load_avg_1min": 0.12
                     },
                     "samples": [
                         0.02476639475,
@@ -73,7 +73,7 @@
                         "cpu_freq": "1=3589 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=52 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:28",
-                        "load_avg_1min": "0.12"
+                        "load_avg_1min": 0.12
                     },
                     "samples": [
                         0.02438346925,
@@ -89,7 +89,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=52 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:29",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02493231,
@@ -105,7 +105,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=52 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:29",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.0244957645,
@@ -121,7 +121,7 @@
                         "cpu_freq": "1=3585 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=51 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:30",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.024653497,
@@ -137,7 +137,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=51 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:30",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02496635575,
@@ -153,7 +153,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=66 C, coretemp:Core 0=51 C, coretemp:Core 1=66 C",
                         "date": "2016-07-17T22:50:31",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02465414225,
@@ -169,7 +169,7 @@
                         "cpu_freq": "1=3591 MHz",
                         "cpu_temp": "coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:31",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02475642675,
@@ -185,7 +185,7 @@
                         "cpu_freq": "1=3586 MHz",
                         "cpu_temp": "coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:32",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02428060975,
@@ -201,7 +201,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:32",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.0245490475,
@@ -217,7 +217,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=52 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:33",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02464698325,
@@ -233,7 +233,7 @@
                         "cpu_freq": "1=3575 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=52 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:33",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.02429046175,
@@ -249,7 +249,7 @@
                         "cpu_freq": "1=3586 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=52 C, coretemp:Core 1=67 C",
                         "date": "2016-07-17T22:50:34",
-                        "load_avg_1min": "0.19"
+                        "load_avg_1min": 0.19
                     },
                     "samples": [
                         0.024521446,
@@ -265,7 +265,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:34",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02455805125,
@@ -281,7 +281,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:35",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.024480912,
@@ -297,7 +297,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:35",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.024581889,
@@ -313,7 +313,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:35",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02456608225,
@@ -329,7 +329,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:36",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02441400575,
@@ -345,7 +345,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:36",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.0244474715,
@@ -361,7 +361,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:37",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.024377884,
@@ -377,7 +377,7 @@
                         "cpu_freq": "1=3589 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:37",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02469687725,
@@ -393,7 +393,7 @@
                         "cpu_freq": "1=3586 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:38",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02453591075,
@@ -409,7 +409,7 @@
                         "cpu_freq": "1=3590 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:38",
-                        "load_avg_1min": "0.26"
+                        "load_avg_1min": 0.26
                     },
                     "samples": [
                         0.02474965075,
@@ -425,7 +425,7 @@
                         "cpu_freq": "1=3582 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:39",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.0244717655,
@@ -441,7 +441,7 @@
                         "cpu_freq": "1=3583 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:39",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02447204575,
@@ -457,7 +457,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:40",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.024724817,
@@ -473,7 +473,7 @@
                         "cpu_freq": "1=3585 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:40",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02456661875,
@@ -489,7 +489,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=68 C, coretemp:Core 0=53 C, coretemp:Core 1=68 C",
                         "date": "2016-07-17T22:50:41",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.025020524,
@@ -505,7 +505,7 @@
                         "cpu_freq": "1=3592 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:41",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02424378725,
@@ -521,7 +521,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:42",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02438339875,
@@ -537,7 +537,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:42",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.0246399555,
@@ -553,7 +553,7 @@
                         "cpu_freq": "1=3585 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:43",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02467759925,
@@ -569,7 +569,7 @@
                         "cpu_freq": "1=3585 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:43",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.0248397,
@@ -585,7 +585,7 @@
                         "cpu_freq": "1=3589 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=53 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:43",
-                        "load_avg_1min": "0.32"
+                        "load_avg_1min": 0.32
                     },
                     "samples": [
                         0.02447958125,
@@ -601,7 +601,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:44",
-                        "load_avg_1min": "0.37"
+                        "load_avg_1min": 0.37
                     },
                     "samples": [
                         0.02487173575,
@@ -617,7 +617,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:44",
-                        "load_avg_1min": "0.37"
+                        "load_avg_1min": 0.37
                     },
                     "samples": [
                         0.0242293425,
@@ -633,7 +633,7 @@
                         "cpu_freq": "1=3588 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:45",
-                        "load_avg_1min": "0.37"
+                        "load_avg_1min": 0.37
                     },
                     "samples": [
                         0.02492490425,
@@ -649,7 +649,7 @@
                         "cpu_freq": "1=3587 MHz",
                         "cpu_temp": "coretemp:Physical id 0=69 C, coretemp:Core 0=54 C, coretemp:Core 1=69 C",
                         "date": "2016-07-17T22:50:45",
-                        "load_avg_1min": "0.37"
+                        "load_avg_1min": 0.37
                     },
                     "samples": [
                         0.024512332,

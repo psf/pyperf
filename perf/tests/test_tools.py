@@ -209,9 +209,8 @@ class CPUToolsTests(unittest.TestCase):
 
 class MiscTests(unittest.TestCase):
     def test_format_metadata(self):
-        date = datetime.datetime(2016, 10, 21, 2, 10, 4, 88163)
-        self.assertEqual(perf.format_metadata('date', date),
-                         '2016-10-21 02:10:04.088163')
+        self.assertEqual(perf.format_metadata('loops', 2 ** 24),
+                         '2^24')
 
     def test_python_implementation(self):
         name = perf.python_implementation()

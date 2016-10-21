@@ -12,7 +12,7 @@ import statistics
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info)
 from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
-                         python_implementation)
+                         python_implementation, parse_iso8601)
 
 
 # Format format history:
@@ -59,12 +59,6 @@ def _check_warmups(warmups):
             return False
 
     return True
-
-
-def _convert_json(value):
-    if isinstance(value, datetime.datetime):
-        return value.isoformat()
-    raise TypeError
 
 
 class Run(object):
@@ -546,6 +540,7 @@ class Benchmark(object):
             run_start = run._get_date()
             if run_start is None:
                 continue
+            run_start = parse_iso8601(run_start)
 
             duration = run._get_duration()
             duration = int(math.ceil(duration))
@@ -749,12 +744,12 @@ class BenchmarkSuite(object):
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
 
         def dump(data, fp, compact):
-            kw = {'sort_keys': True, 'default': _convert_json}
+            kw = {}
             if compact:
                 kw['separators'] = (',', ':')
             else:
                 kw['indent'] = 4
-            json.dump(data, fp, **kw)
+            json.dump(data, fp, sort_keys=True, **kw)
             fp.write("\n")
             fp.flush()
 

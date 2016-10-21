@@ -88,8 +88,8 @@ class RunTests(unittest.TestCase):
             self.assertIsInstance(run.warmups[0][1], number_type)
 
     def test_get_date(self):
-        date = datetime.datetime.now()
-        run = perf.Run([1.0], metadata={'date': date.isoformat()},
+        date = datetime.datetime.now().isoformat(' ')
+        run = perf.Run([1.0], metadata={'date': date},
                        collect_metadata=False)
         self.assertEqual(run._get_date(), date)
 

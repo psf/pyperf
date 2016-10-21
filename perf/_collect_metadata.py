@@ -23,7 +23,7 @@ except ImportError:
 
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
-                         parse_cpu_list,
+                         parse_cpu_list, format_datetime,
                          get_isolated_cpus, MS_WINDOWS)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
@@ -244,10 +244,8 @@ def collect_system_metadata(metadata):
             continue
         seconds = int(line[6:])
         btime = datetime.datetime.fromtimestamp(seconds)
-        metadata['boot_time'] = btime
-
-        now = datetime.datetime.now()
-        metadata['uptime'] = (now - btime).total_seconds()
+        metadata['boot_time'] = format_datetime(btime)
+        metadata['uptime'] = time.time() - seconds
         break
 
 
@@ -514,7 +512,7 @@ def collect_cpu_metadata(metadata):
 def collect_metadata(metadata):
     metadata['perf_version'] = perf.__version__
 
-    metadata['date'] = datetime.datetime.now()
+    metadata['date'] = format_datetime(datetime.datetime.now())
 
     collect_python_metadata(metadata)
     collect_system_metadata(metadata)

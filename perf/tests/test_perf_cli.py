@@ -356,7 +356,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Run 1: warmup (1): 24.7 ms; samples (3): 24.5 ms, 24.5 ms, 24.5 ms
               cpu_freq: 1=3588 MHz
               cpu_temp: coretemp:Physical id 0=65 C, coretemp:Core 0=49 C, coretemp:Core 1=65 C
-              date: 2016-07-17 22:50:27
+              date: 2016-07-17T22:50:27
               load_avg_1min: 0.12
         """
         stdout = self.run_command('dump', '--verbose', TELCO)
