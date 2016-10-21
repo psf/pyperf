@@ -125,11 +125,8 @@ class Run(object):
     def _has_metadata(self, name):
         return (name in self._metadata)
 
-    def _get_metadata(self, name, default):
-        return self._metadata.get(name, default)
-
     def _get_name(self):
-        return self._get_metadata('name', None)
+        return self._metadata.get('name', None)
 
     def get_metadata(self):
         return dict(self._metadata)
@@ -146,10 +143,10 @@ class Run(object):
         return self._samples
 
     def _get_loops(self):
-        return self._get_metadata('loops', 1)
+        return self._metadata.get('loops', 1)
 
     def _get_inner_loops(self):
-        return self._get_metadata('inner_loops', 1)
+        return self._metadata.get('inner_loops', 1)
 
     def get_total_loops(self):
         return self._get_loops() * self._get_inner_loops()
@@ -172,14 +169,14 @@ class Run(object):
         return self._replace(warmups=False)
 
     def _get_duration(self):
-        duration = self._get_metadata('duration', None)
+        duration = self._metadata.get('duration', None)
         if duration is not None:
             return duration
         raw_samples = self._get_raw_samples(warmups=True)
         return math.fsum(raw_samples)
 
     def _get_date(self):
-        return self._get_metadata('date', None)
+        return self._metadata.get('date', None)
 
     def _as_json(self, common_metadata):
         data = {'samples': self._samples}
@@ -217,7 +214,7 @@ class Run(object):
                    collect_metadata=False)
 
     def _extract_metadata(self, name):
-        value = self._get_metadata(name, None)
+        value = self._metadata.get(name, None)
         if value is None:
             raise KeyError("run has no metadata %r" % name)
 
@@ -234,8 +231,8 @@ class Run(object):
         return self._replace(samples=(value,), warmups=False, metadata=metadata)
 
     def _remove_all_metadata(self):
-        name = self._get_metadata('name', None)
-        unit = self._get_metadata('unit', None)
+        name = self._metadata.get('name', None)
+        unit = self._metadata.get('unit', None)
         metadata = {}
         if name:
             metadata['name'] = name
@@ -245,7 +242,7 @@ class Run(object):
 
     def _update_metadata(self, metadata):
         if 'inner_loops' in metadata:
-            inner_loops = self._get_metadata('inner_loops', None)
+            inner_loops = self._metadata.get('inner_loops', None)
             if (inner_loops is not None
                and metadata['inner_loops'] != inner_loops):
                 raise ValueError("inner_loops metadata cannot be modified")
@@ -346,7 +343,7 @@ class Benchmark(object):
         if self._common_metadata is not None:
             # Update common metadata
             for name, value in list(self._common_metadata.items()):
-                if run._get_metadata(name, None) != value:
+                if run._metadata.get(name, None) != value:
                     del self._common_metadata[name]
         self._clear_runs_cache(keep_common_metadata=True)
 
@@ -354,7 +351,7 @@ class Benchmark(object):
 
     def get_unit(self):
         run = self._runs[0]
-        return run._get_metadata('unit', DEFAULT_UNIT)
+        return run._metadata.get('unit', DEFAULT_UNIT)
 
     def format_samples(self, samples):
         unit = self.get_unit()
