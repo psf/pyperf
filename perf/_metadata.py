@@ -16,7 +16,7 @@ NUMBER_TYPES = six.integer_types + (float,)
 
 def _common_metadata(metadatas):
     if not metadatas:
-        return dict()
+        return {}
 
     metadata = dict(metadatas[0])
     for run_metadata in metadatas[1:]:

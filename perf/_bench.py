@@ -289,11 +289,14 @@ class Benchmark(object):
         run = self._runs[0]
         return run._get_name()
 
-    def get_metadata(self):
+    def _get_common_metadata(self):
         if self._common_metadata is None:
             runs_metadata = [run._metadata for run in self._runs]
             self._common_metadata = _common_metadata(runs_metadata)
-        return dict(self._common_metadata)
+        return self._common_metadata
+
+    def get_metadata(self):
+        return dict(self._get_common_metadata())
 
     def get_total_duration(self):
         durations = [run._get_duration() for run in self._runs]
@@ -342,8 +345,9 @@ class Benchmark(object):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)
 
+        # Don't check metadata for the first run
         if self._runs:
-            metadata = self.get_metadata()
+            metadata = self._get_common_metadata()
             run_metata = run._metadata
             for key in _CHECKED_METADATA:
                 value = metadata.get(key, None)
@@ -456,7 +460,7 @@ class Benchmark(object):
 
     def _as_json(self):
         data = {}
-        common_metadata = self.get_metadata()
+        common_metadata = self._get_common_metadata()
         if common_metadata:
             data['common_metadata'] = common_metadata
         data['runs'] = [run._as_json(common_metadata) for run in self._runs]
@@ -589,7 +593,8 @@ class BenchmarkSuite(object):
         return [bench.get_name() for bench in self]
 
     def get_metadata(self):
-        benchs_metadata = [bench.get_metadata() for bench in self._benchmarks]
+        benchs_metadata = [bench._get_common_metadata()
+                           for bench in self._benchmarks]
         return _common_metadata(benchs_metadata)
 
     def __len__(self):
