@@ -148,7 +148,10 @@ def parse_iso8601(date):
         floatpart = float('.' + floatpart)
     else:
         floatpart = 0
-    dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+    try:
+        dt = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
     dt += datetime.timedelta(seconds=floatpart)
     return dt
 
