@@ -4,16 +4,27 @@ Changelog
 Version 0.8.3
 -------------
 
+Loading a large JSON file is now 10x faster (5 sec => 500 ms).
+
+Enhancement:
+
 * Support reading and writing JSON files compressed by gzip: use gzip
   if the filename ends with ``.gz``
-* Optimize Benchmark constructor: don't recompute common metadata at each
-  call to ``Benchmark.add_run()``.
+
+Backward incompatible changes:
+
+* JSON file produced by perf 0.8.3 cannot be read by perf 0.8.2 anymore.
 * Remove the Metadata class: values of get_metadata() are directly metadata
   values.
-* Don't store dates of metadata as datetime.datetime but strings to optimize
-  Benchmark.load()
 * Drop support for JSON produced with perf 0.7.3 and older. Use perf 0.8.2
   to convert old JSON to new JSON.
+
+Optimizations:
+
+* Optimize ``Benchmark.add_run()``: don't recompute common metadata at each
+  call, but update existing common metadata.
+* Don't store dates of metadata as datetime.datetime but strings to optimize
+  ``Benchmark.load()``
 
 Version 0.8.2 (2016-10-19)
 --------------------------
