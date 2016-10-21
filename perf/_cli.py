@@ -33,6 +33,15 @@ def display_title(title, level=1):
     print()
 
 
+def format_metadata(metadata, prefix='- ', lines=None):
+    if lines is None:
+        lines = []
+    for name, value in sorted(metadata.items()):
+        value = _format_metadata(name, value)
+        lines.append("%s%s: %s" % (prefix, name, value))
+    return lines
+
+
 def format_run(bench, run_index, run, common_metadata=None, raw=False,
                verbose=0, lines=None):
     if lines is None:
@@ -100,11 +109,11 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if verbose > 0:
         prefix = '  '
         metadata = run.get_metadata()
-        for key, value in sorted(metadata.items()):
-            if common_metadata and key in common_metadata:
+        for name, value in sorted(metadata.items()):
+            if common_metadata and name in common_metadata:
                 continue
             value = _format_metadata(name, value)
-            lines.append('%s%s: %s' % (prefix, key, value))
+            lines.append('%s%s: %s' % (prefix, name, value))
 
     return lines
 
@@ -342,15 +351,6 @@ def format_checks(bench, lines=None):
         warn("Try to rerun the benchmark with more loops "
              "or increase --min-time")
 
-    return lines
-
-
-def format_metadata(metadata, prefix="- ", lines=None):
-    if lines is None:
-        lines = []
-    for name, value in sorted(metadata.items()):
-        value = _format_metadata(name, value)
-        lines.append("%s%s: %s" % (prefix, name, value))
     return lines
 
 
