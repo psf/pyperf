@@ -28,7 +28,7 @@ def _common_metadata(metadatas):
     return metadata
 
 
-def format_metadata(value):
+def format_generic(value):
     if not isinstance(value, six.string_types):
         return str(value)
 
@@ -99,7 +99,7 @@ METADATA = {
     'boot_time': DATETIME,
 }
 
-DEFAULT_METADATA_INFO = _MetadataInfo(format_metadata, METADATA_VALUE_TYPES, None, None, None)
+DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None, None)
 
 
 def get_metadata_info(name):
@@ -139,6 +139,11 @@ def parse_metadata(metadata):
         check_metadata(name, value)
         result[name] = value
     return result
+
+
+def format_metadata(name, value):
+    info = get_metadata_info(name)
+    return info.formatter(value)
 
 
 class Metadata(object):

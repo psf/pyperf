@@ -218,7 +218,7 @@ class TestTimeit(unittest.TestCase):
         bench, stdout = self.run_timeit_bench(args)
 
         metadata = bench.get_metadata()
-        self.assertEqual(metadata['inner_loops'].value, inner_loops)
+        self.assertEqual(metadata['inner_loops'], inner_loops)
 
     def test_compare(self):
         args = PERF_TIMEIT + ('--compare', sys.executable) + COMPARE_BENCH
@@ -278,7 +278,7 @@ class TestTimeit(unittest.TestCase):
         bench, stdout = self.run_timeit_bench(args)
 
         metadata = bench.get_metadata()
-        self.assertEqual(metadata['timeit_duplicate'].value, duplicate)
+        self.assertEqual(metadata['timeit_duplicate'], duplicate)
         for raw_sample in bench._get_raw_samples():
             self.assertGreaterEqual(raw_sample, FAST_MIN_TIME * duplicate)
 

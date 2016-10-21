@@ -8,6 +8,8 @@ Version 0.8.3
   if the filename ends with ``.gz``
 * Optimize Benchmark constructor: don't recompute common metadata at each
   call to ``Benchmark.add_run()``.
+* Remove the Metadata class: values of get_metadata() are directly metadata
+  values.
 
 Version 0.8.2 (2016-10-19)
 --------------------------

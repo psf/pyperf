@@ -47,22 +47,6 @@ Clocks
    functions <https://www.python.org/dev/peps/pep-0418/>`_.
 
 
-Metadata
---------
-
-.. class:: Metadata(name, value)
-
-   A metadata object.
-
-   .. attribute:: name
-
-      Metadata name.
-
-   .. attribute:: value
-
-      Metadata value.
-
-
 Run
 ---
 
@@ -93,7 +77,7 @@ Run
 
       Get run metadata.
 
-      Return a dictionary: name (``str``) => :class:`Metadata` object.
+      The :func:`format_metadata` function can be used to format values.
 
       See :ref:`Metadata <metadata>`.
 
@@ -186,7 +170,7 @@ Benchmark
 
       Get metadata common to all runs.
 
-      Return a dictionary: name (``str``) => :class:`Metadata` object.
+      The :func:`format_metadata` function can be used to format values.
 
       See :ref:`Metadata <metadata>`.
 
@@ -363,7 +347,7 @@ BenchmarkSuite
       Get metadata common to all benchmarks (common to all runs of all
       benchmarks).
 
-      Return a dictionary: name (``str``) => :class:`Metadata` object.
+      The :func:`format_metadata` function can be used to format values.
 
       See the :meth:`Benchmark.get_metadata` method
       and :ref:`Metadata <metadata>`.
@@ -514,6 +498,13 @@ Functions
    If the file already exists, adds runs to existing benchmarks.
 
    See :meth:`BenchmarkSuite.add_runs` method.
+
+
+.. function:: format_metadata(name: str, value)
+
+   Format a metadata value. The formatter depends on *name*.
+
+   See :ref:`Metadata <metadata>`.
 
 
 .. function:: python_implementation()

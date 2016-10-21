@@ -23,6 +23,9 @@ __all__ = ['monotonic_clock', 'perf_counter']
 from perf._utils import is_significant, python_implementation, python_has_jit  # noqa
 __all__.extend(('is_significant', 'python_implementation', 'python_has_jit'))
 
+from perf._metadata import format_metadata  # noqa
+__all__.append('format_metadata')
+
 from perf._bench import Run, Benchmark, BenchmarkSuite, add_runs  # noqa
 __all__.extend(('Run', 'Benchmark', 'BenchmarkSuite', 'add_runs'))
 

@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import statistics
 
+from perf._metadata import format_metadata as _format_metadata
 from perf._utils import (format_seconds, format_number,
                          format_timedelta, format_datetime)
 
@@ -99,10 +100,10 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if verbose > 0:
         prefix = '  '
         metadata = run.get_metadata()
-        for key in sorted(metadata):
+        for key, value in sorted(metadata.items()):
             if common_metadata and key in common_metadata:
                 continue
-            value = metadata[key]
+            value = _format_metadata(name, value)
             lines.append('%s%s: %s' % (prefix, key, value))
 
     return lines
@@ -125,9 +126,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
         # FIXME: display metadata in format_benchmark()
         common_metadata = bench.get_metadata()
         lines.append("Metadata:")
-        for key in sorted(common_metadata):
-            value = common_metadata[key]
-            lines.append('  %s: %s' % (key, value))
+        format_metadata(common_metadata, prefix='  ', lines=lines)
     else:
         common_metadata = None
 
@@ -346,11 +345,12 @@ def format_checks(bench, lines=None):
     return lines
 
 
-def format_metadata(metadata, lines=None):
+def format_metadata(metadata, prefix="- ", lines=None):
     if lines is None:
         lines = []
-    for key, value in sorted(metadata.items()):
-        lines.append("- %s: %s" % (key, value))
+    for name, value in sorted(metadata.items()):
+        value = _format_metadata(name, value)
+        lines.append("%s%s: %s" % (prefix, name, value))
     return lines
 
 

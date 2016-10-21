@@ -69,7 +69,7 @@ class RunTests(unittest.TestCase):
             perf.Run([1.0], metadata={'name': ''}, collect_metadata=False)
         run = perf.Run([1.0], metadata={'load_avg_1min': 0.0},
                        collect_metadata=False)
-        self.assertEqual(run.get_metadata()['load_avg_1min'].value, 0.0)
+        self.assertEqual(run.get_metadata()['load_avg_1min'], 0.0)
 
     def test_name(self):
         # name must be non-empty
@@ -135,14 +135,6 @@ class BenchmarkTests(unittest.TestCase):
         metadata = {'name': 'bench', 'hostname': 'toto'}
         bench.add_run(create_run(metadata=metadata))
 
-    def get_metadata(self, bench):
-        metadata = bench.get_metadata()
-        result = {}
-        for name, obj in metadata.items():
-            self.assertEqual(obj.name, name)
-            result[obj.name] = obj.value
-        return result
-
     def test_benchmark(self):
         samples = (1.0, 1.5, 2.0)
         raw_samples = tuple(sample * 3 * 20 for sample in samples)
@@ -175,7 +167,7 @@ class BenchmarkTests(unittest.TestCase):
         self.check_runs(bench, [(1, 3.0)], samples)
 
         self.assertEqual(bench.get_name(), "mybench")
-        self.assertEqual(self.get_metadata(bench),
+        self.assertEqual(bench.get_metadata(),
                          {'key': 'value',
                           'name': 'mybench',
                           'loops': 20,
@@ -351,11 +343,11 @@ class BenchmarkTests(unittest.TestCase):
                        metadata={'name': 'bench', 'os': 'win', 'unit': 'byte'},
                        collect_metadata=False)
         bench = perf.Benchmark([run])
-        self.assertEqual(self.get_metadata(bench),
+        self.assertEqual(bench.get_metadata(),
                          {'name': 'bench', 'os': 'win', 'unit': 'byte'})
 
         bench._remove_all_metadata()
-        self.assertEqual(self.get_metadata(bench),
+        self.assertEqual(bench.get_metadata(),
                          {'name': 'bench', 'unit': 'byte'})
 
     def test_update_metadata(self):
@@ -365,11 +357,11 @@ class BenchmarkTests(unittest.TestCase):
                                  metadata={'name': 'bench'},
                                  collect_metadata=False))
         bench = perf.Benchmark(runs)
-        self.assertEqual(self.get_metadata(bench),
+        self.assertEqual(bench.get_metadata(),
                          {'name': 'bench'})
 
         bench.update_metadata({'os': 'linux'})
-        self.assertEqual(self.get_metadata(bench),
+        self.assertEqual(bench.get_metadata(),
                          {'os': 'linux', 'name': 'bench'})
 
     def test_update_metadata_inner_loops(self):
@@ -489,14 +481,6 @@ class TestBenchmarkSuite(unittest.TestCase):
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 11, 0)))
 
-    def get_metadata(self, suite):
-        metadata = suite.get_metadata()
-        result = {}
-        for name, obj in metadata.items():
-            self.assertEqual(obj.name, name)
-            result[obj.name] = obj.value
-        return result
-
     def test_get_metadata(self):
         benchmarks = []
         for name in ('a', 'b'):
@@ -507,7 +491,7 @@ class TestBenchmarkSuite(unittest.TestCase):
             benchmarks.append(bench)
 
         suite = perf.BenchmarkSuite(benchmarks)
-        self.assertEqual(self.get_metadata(suite),
+        self.assertEqual(suite.get_metadata(),
                          {'os': 'linux'})
 
 

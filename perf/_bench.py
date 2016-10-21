@@ -9,7 +9,7 @@ import sys
 import six
 import statistics
 
-from perf._metadata import (NUMBER_TYPES, parse_metadata, Metadata,
+from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info)
 from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
                          python_implementation)
@@ -102,8 +102,7 @@ class Run(object):
             else:
                 metadata = metadata2
 
-        # Metadata dictionary: key=>value, keys and values should be non-empty
-        # strings
+        # Metadata dictionary
         if metadata:
             self._metadata = parse_metadata(metadata)
         else:
@@ -143,8 +142,7 @@ class Run(object):
 
     def get_metadata(self):
         if self._metadata:
-            return {name: Metadata(name, value)
-                    for name, value in self._metadata.items()}
+            return dict(self._metadata)
         else:
             return {}
 
@@ -367,8 +365,8 @@ class Benchmark(object):
 
         if self._common_metadata is not None:
             # Update common metadata
-            for name, item in list(self._common_metadata.items()):
-                if run._get_metadata(name, None) != item.value:
+            for name, value in list(self._common_metadata.items()):
+                if run._get_metadata(name, None) != value:
                     del self._common_metadata[name]
         self._clear_runs_cache(keep_common_metadata=True)
 
@@ -470,8 +468,7 @@ class Benchmark(object):
         data = {}
         common_metadata = self.get_metadata()
         if common_metadata:
-            data['common_metadata'] = {name: obj.value
-                                       for name, obj in common_metadata.items()}
+            data['common_metadata'] = common_metadata
         data['runs'] = [run._as_json(common_metadata) for run in self._runs]
         return data
 
