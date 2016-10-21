@@ -15,11 +15,12 @@ from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
                          python_implementation, parse_iso8601)
 
 
-# Format format history:
-# 4 - warmups are now a lists of (loops, raw_sample) rather than lists of
-#     samples
-# 3 - add Run class
-# 2 - support multiple benchmarks per file
+# JSON format history:
+#
+# 4 - (perf 0.7.4) warmups are now a lists of (loops, raw_sample)
+#     rather than lists of samples
+# 3 - (perf 0.7) add Run class
+# 2 - (perf 0.6) support multiple benchmarks per file
 # 1 - first version
 _JSON_VERSION = 4
 
@@ -195,7 +196,7 @@ class Run(object):
         return data
 
     @classmethod
-    def _json_load(cls, run_data, common_metadata, version):
+    def _json_load(cls, run_data, common_metadata):
         metadata = run_data.get('metadata', None)
         if common_metadata:
             metadata2 = dict(common_metadata)
@@ -205,18 +206,7 @@ class Run(object):
 
         warmups = run_data.get('warmups', None)
         if warmups:
-            if version == _JSON_VERSION:
-                warmups = [tuple(item) for item in warmups]
-            else:
-                if metadata:
-                    loops = metadata.get('loops', 1)
-                    inner_loops = metadata.get('inner_loops', 1)
-                else:
-                    loops = 1
-                    inner_loops = 1
-                total_loops = loops * inner_loops
-                warmups = [(loops, sample * total_loops)
-                           for sample in warmups]
+            warmups = [tuple(item) for item in warmups]
         samples = run_data['samples']
 
         return cls(samples,
@@ -437,14 +427,14 @@ class Benchmark(object):
             return 'Median: %s' % text
 
     @classmethod
-    def _json_load(cls, data, version):
+    def _json_load(cls, data):
         common_metadata = data.get('common_metadata', None)
         if common_metadata is not None:
             common_metadata = parse_metadata(common_metadata)
 
         runs = []
         for run_data in data['runs']:
-            run = Run._json_load(run_data, common_metadata, version)
+            run = Run._json_load(run_data, common_metadata)
             # Don't call add_run() to avoid O(n) complexity:
             # expect that runs were already validated before being written
             # into a JSON file
@@ -646,14 +636,13 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, bench_file):
         version = bench_file.get('version')
-        if version in (3, _JSON_VERSION):
-            benchmarks_json = bench_file['benchmarks']
-        else:
+        if version != _JSON_VERSION:
             raise ValueError("file format version %r not supported" % version)
+        benchmarks_json = bench_file['benchmarks']
 
         benchmarks = []
         for bench_data in benchmarks_json:
-            benchmark = Benchmark._json_load(bench_data, version)
+            benchmark = Benchmark._json_load(bench_data)
             benchmarks.append(benchmark)
         suite = cls(benchmarks, filename=filename)
 

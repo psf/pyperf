@@ -12,7 +12,7 @@ Version 0.8.3
   values.
 * Don't store dates of metadata as datetime.datetime but strings to optimize
   Benchmark.load()
-* Drop support for JSON produced with perf 0.7.1 and older. Use perf 0.8.2
+* Drop support for JSON produced with perf 0.7.3 and older. Use perf 0.8.2
   to convert old JSON to new JSON.
 
 Version 0.8.2 (2016-10-19)
