@@ -280,7 +280,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         expected = """
             Metadata:
               aslr: Full randomization
-              boot_time: 2016-10-19T01:10:08
+              boot_time: 2016-10-19 01:10:08
               cpu_affinity: 2-3
               cpu_config: 2-3=driver:intel_pstate, intel_pstate:turbo, governor:performance, isolated; idle:intel_idle
               cpu_count: 4
@@ -306,7 +306,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Run 2: warmup (1): 22.5 ms; samples (3): 22.8 ms, 22.5 ms, 22.6 ms
               cpu_freq: 2=3596 MHz, 3=2998 MHz
               cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
-              date: 2016-10-21T03:14:20.496710
+              date: 2016-10-21 03:14:20.496710
               duration: 723 ms
               load_avg_1min: 0.29
               mem_max_rss: 13.5 MB

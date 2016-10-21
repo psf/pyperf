@@ -17,12 +17,14 @@ from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
 
 # JSON format history:
 #
+# 5 - (perf 0.8.3) timestamps in metadata are now formatted using a space
+#      separator
 # 4 - (perf 0.7.4) warmups are now a lists of (loops, raw_sample)
 #     rather than lists of samples
 # 3 - (perf 0.7) add Run class
 # 2 - (perf 0.6) support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 4
+_JSON_VERSION = 5
 
 # Metadata checked by add_run(): all runs have must have the same
 # value for these metadata (or no run must have this metadata)
@@ -636,7 +638,7 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, bench_file):
         version = bench_file.get('version')
-        if version != _JSON_VERSION:
+        if version not in (4, _JSON_VERSION):
             raise ValueError("file format version %r not supported" % version)
         benchmarks_json = bench_file['benchmarks']
 
