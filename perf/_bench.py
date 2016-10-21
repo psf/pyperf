@@ -106,7 +106,7 @@ class Run(object):
         if metadata:
             self._metadata = parse_metadata(metadata)
         else:
-            self._metadata = None
+            self._metadata = {}
 
     def _replace(self, samples=None, warmups=True, metadata=None):
         if samples is None:
@@ -126,25 +126,16 @@ class Run(object):
         return (not self.samples)
 
     def _has_metadata(self, name):
-        if self._metadata:
-            return (name in self._metadata)
-        else:
-            return False
+        return (name in self._metadata)
 
     def _get_metadata(self, name, default):
-        if self._metadata:
-            return self._metadata.get(name, default)
-        else:
-            return default
+        return self._metadata.get(name, default)
 
     def _get_name(self):
         return self._get_metadata('name', None)
 
     def get_metadata(self):
-        if self._metadata:
-            return dict(self._metadata)
-        else:
-            return {}
+        return dict(self._metadata)
 
     @property
     def warmups(self):
@@ -198,16 +189,15 @@ class Run(object):
         if self._warmups:
             data['warmups'] = self._warmups
 
-        if self._metadata:
-            if common_metadata:
-                metadata = {key: value
-                            for key, value in self._metadata.items()
-                            if key not in common_metadata}
-            else:
-                metadata = self._metadata
+        if common_metadata:
+            metadata = {key: value
+                        for key, value in self._metadata.items()
+                        if key not in common_metadata}
+        else:
+            metadata = self._metadata
 
-            if metadata:
-                data['metadata'] = metadata
+        if metadata:
+            data['metadata'] = metadata
         return data
 
     @classmethod
@@ -301,8 +291,8 @@ class Benchmark(object):
 
     def get_metadata(self):
         if self._common_metadata is None:
-            run_metadatas = [run.get_metadata() for run in self._runs]
-            self._common_metadata = _common_metadata(run_metadatas)
+            runs_metadata = [run._metadata for run in self._runs]
+            self._common_metadata = _common_metadata(runs_metadata)
         return dict(self._common_metadata)
 
     def get_total_duration(self):
@@ -354,7 +344,7 @@ class Benchmark(object):
 
         if self._runs:
             metadata = self.get_metadata()
-            run_metata = run.get_metadata()
+            run_metata = run._metadata
             for key in _CHECKED_METADATA:
                 value = metadata.get(key, None)
                 run_value = run_metata.get(key, None)
@@ -599,8 +589,8 @@ class BenchmarkSuite(object):
         return [bench.get_name() for bench in self]
 
     def get_metadata(self):
-        metadatas = [bench.get_metadata() for bench in self._benchmarks]
-        return _common_metadata(metadatas)
+        benchs_metadata = [bench.get_metadata() for bench in self._benchmarks]
+        return _common_metadata(benchs_metadata)
 
     def __len__(self):
         return len(self._benchmarks)
