@@ -24,7 +24,8 @@ except ImportError:
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
                          parse_cpu_list, format_datetime,
-                         get_isolated_cpus, MS_WINDOWS, open_text)
+                         get_isolated_cpus, MS_WINDOWS,
+                         open_text, read_first_line, sysfs_path)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
@@ -127,22 +128,6 @@ def collect_python_metadata(metadata):
             metadata['python_gc'] = 'disabled'
 
 
-def first_line(path, default=None):
-    try:
-        fp = open_text(path)
-        try:
-            line = fp.readline()
-        finally:
-            # don't use context manager to support StringIO on Python 2
-            # for unit tests
-            fp.close()
-        return line.rstrip()
-    except IOError:
-        if default is not None:
-            return default
-        raise
-
-
 def read_proc(path):
     path = os.path.join('/proc', path)
     try:
@@ -156,10 +141,6 @@ def read_proc(path):
             fp.close()
     except (OSError, IOError):
         return
-
-
-def sys_path(path):
-    return os.path.join("/sys", path)
 
 
 def collect_linux_metadata(metadata):
@@ -349,17 +330,17 @@ def collect_cpu_freq(metadata, cpus):
 
 
 def get_cpu_config(cpu):
-    sys_cpu_path = sys_path("devices/system/cpu")
+    sys_cpu_path = sysfs_path("devices/system/cpu")
     info = []
 
     path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_driver" % cpu)
-    scaling_driver = first_line(path, default='')
+    scaling_driver = read_first_line(path)
     if scaling_driver:
         info.append('driver:%s' % scaling_driver)
 
     if scaling_driver == 'intel_pstate':
         path = os.path.join(sys_cpu_path, "intel_pstate/no_turbo")
-        no_turbo = first_line(path, default='')
+        no_turbo = read_first_line(path)
         if no_turbo == '1':
             info.append('intel_pstate:no turbo')
         elif no_turbo == '0':
@@ -373,7 +354,7 @@ def get_cpu_config(cpu):
                 info.append('boost:not suppported')
 
     path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_governor" % cpu)
-    scaling_governor = first_line(path, default='')
+    scaling_governor = read_first_line(path)
     if scaling_governor:
         info.append('governor:%s' % scaling_governor)
 
@@ -381,7 +362,7 @@ def get_cpu_config(cpu):
 
 
 def collect_cpu_config(metadata, cpus):
-    nohz_full = first_line('/sys/devices/system/cpu/nohz_full', default='')
+    nohz_full = read_first_line('/sys/devices/system/cpu/nohz_full')
     if nohz_full:
         nohz_full = parse_cpu_list(nohz_full)
 
@@ -400,7 +381,7 @@ def collect_cpu_config(metadata, cpus):
             configs[cpu] = ', '.join(config)
     config = format_cpu_infos(configs)
 
-    cpuidle = first_line('/sys/devices/system/cpu/cpuidle/current_driver', default='')
+    cpuidle = read_first_line('/sys/devices/system/cpu/cpuidle/current_driver')
     if cpuidle:
         config.append('idle:%s' % cpuidle)
 
@@ -410,7 +391,7 @@ def collect_cpu_config(metadata, cpus):
 
 
 def get_cpu_temperature(path, cpu_temp):
-    hwmon_name = first_line(os.path.join(path, 'name'), default='')
+    hwmon_name = read_first_line(os.path.join(path, 'name'))
     if not hwmon_name.startswith('coretemp'):
         return
 
@@ -419,11 +400,11 @@ def get_cpu_temperature(path, cpu_temp):
         template = os.path.join(path, "temp%s_%%s" % index)
 
         try:
-            temp_label = first_line(template % 'label')
+            temp_label = read_first_line(template % 'label', error=True)
         except IOError:
             break
 
-        temp_input = first_line(template % 'input')
+        temp_input = read_first_line(template % 'input', error=True)
         temp_input = float(temp_input) / 1000
         # FIXME: On Python 2, u"%.0f\xb0C" introduces unicode errors if the
         # locale encoding is ASCII
@@ -436,7 +417,7 @@ def get_cpu_temperature(path, cpu_temp):
 
 
 def collect_cpu_temperatures(metadata):
-    path = sys_path("class/hwmon")
+    path = sysfs_path("class/hwmon")
     try:
         names = os.listdir(path)
     except OSError:

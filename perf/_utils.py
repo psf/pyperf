@@ -338,15 +338,33 @@ def open_text(path):
         return open(path)
 
 
-def get_isolated_cpus():
-    # sysfs added by the commit 59f30abe94bff50636c8cad45207a01fdcb2ee49
-    # in Linux 4.2
-    path = '/sys/devices/system/cpu/isolated'
+def read_first_line(path, error=False):
     try:
-        with open_text(path) as fp:
-            isolated = fp.readline().rstrip()
-    except (OSError, IOError):
-        # missing file
+        fp = open_text(path)
+        try:
+            line = fp.readline()
+        finally:
+            # don't use context manager to support StringIO on Python 2
+            # for unit tests
+            fp.close()
+        return line.rstrip()
+    except IOError:
+        if error:
+            raise
+        else:
+            return ''
+
+
+def sysfs_path(path):
+    return os.path.join("/sys", path)
+
+
+def get_isolated_cpus():
+    # The cpu/isolated sysfs was added in Linux 4.2
+    # (commit 59f30abe94bff50636c8cad45207a01fdcb2ee49)
+    path = sysfs_path('devices/system/cpu/isolated')
+    isolated = read_first_line(path)
+    if not isolated:
         return
 
     return parse_cpu_list(isolated)
