@@ -24,7 +24,8 @@ import perf
 from perf._utils import (format_timedelta, format_cpu_list,
                          parse_cpu_list, format_datetime,
                          get_isolated_cpus, MS_WINDOWS,
-                         open_text, read_first_line, sysfs_path)
+                         open_text, read_first_line, sysfs_path,
+                         get_logical_cpu_count)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
@@ -165,29 +166,6 @@ def get_cpu_affinity():
             return proc.cpu_affinity()
 
     return None
-
-
-def get_logical_cpu_count():
-    if psutil is not None:
-        # Number of logical CPUs
-        cpu_count = psutil.cpu_count()
-    elif hasattr(os, 'cpu_count'):
-        # Python 3.4
-        cpu_count = os.cpu_count()
-    else:
-        cpu_count = None
-        try:
-            import multiprocessing
-        except ImportError:
-            pass
-        else:
-            try:
-                cpu_count = multiprocessing.cpu_count()
-            except NotImplementedError:
-                pass
-    if cpu_count is not None and cpu_count < 1:
-        return None
-    return cpu_count
 
 
 def collect_system_metadata(metadata):

@@ -10,6 +10,12 @@ import sys
 import six
 import statistics
 
+try:
+    # Optional dependency
+    import psutil
+except ImportError:
+    psutil = None
+
 
 MS_WINDOWS = (sys.platform == 'win32')
 
@@ -258,6 +264,31 @@ def is_significant(sample1, sample2):
     critical_value = tdist95conf_level(deg_freedom)
     t_score = tscore(sample1, sample2)
     return (abs(t_score) >= critical_value, t_score)
+
+
+def get_logical_cpu_count():
+    if psutil is not None:
+        # Number of logical CPUs
+        cpu_count = psutil.cpu_count()
+    elif hasattr(os, 'cpu_count'):
+        # Python 3.4
+        cpu_count = os.cpu_count()
+    else:
+        cpu_count = None
+        try:
+            import multiprocessing
+        except ImportError:
+            pass
+        else:
+            try:
+                cpu_count = multiprocessing.cpu_count()
+            except NotImplementedError:
+                pass
+
+    if cpu_count is not None and cpu_count < 1:
+        return None
+
+    return cpu_count
 
 
 def format_cpu_list(cpus):
