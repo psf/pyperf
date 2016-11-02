@@ -296,6 +296,9 @@ class LinuxScheduler(Operation):
 
 
 class ASLR(Operation):
+    # randomize_va_space procfs existed prior to 2.6.12-rc2 (2005)
+    # which is first commit of the Linux git repository
+
     STATE = {'0': 'No randomization',
              '1': 'Conservative randomization',
              '2': 'Full randomization'}
