@@ -244,6 +244,7 @@ class LinuxScheduler(Operation):
     def __init__(self, system):
         Operation.__init__(self, 'Linux scheduler', system)
         self.ncpu = None
+        self.linux_version = None
         self.msgs = []
 
     def read(self):
@@ -252,8 +253,21 @@ class LinuxScheduler(Operation):
             self.error("Unable to get the number of CPUs")
             return
 
+        release = os.uname()[2]
+        try:
+            version_txt = release.split('-', 1)[0]
+            self.linux_version = tuple(map(int, version_txt.split('.')))
+        except ValueError:
+            self.error("Failed to get the Linux version: release=%r" % release)
+            return
+
+        # isolcpus= parameter existed prior to 2.6.12-rc2 (2005)
+        # which is first commit of the Linux git repository
         self.check_isolcpus()
-        self.check_rcu_nocbs()
+
+        # Commit 3fbfbf7a3b66ec424042d909f14ba2ddf4372ea8 added rcu_nocbs
+        if self.linux_version >= (3, 8):
+            self.check_rcu_nocbs()
 
     def check_isolcpus(self):
         isolated = get_isolated_cpus()
@@ -286,7 +300,7 @@ class LinuxScheduler(Operation):
         elif self.ncpu > 1:
             self.msgs.append('Use rcu_nocbs=<cpu list> kernel parameter '
                              '(with isolcpus) to not not schedule RCU '
-                             'on isolated CPUs')
+                             'on isolated CPUs (Linux 3.8 and newer)')
 
     def show(self):
         for msg in self.msgs:
