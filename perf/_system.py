@@ -2,11 +2,13 @@ from __future__ import division, print_function, absolute_import
 
 import errno
 import os
+import re
 import subprocess
 import sys
 
-from perf._utils import (read_first_line, sysfs_path,
+from perf._utils import (read_first_line, sysfs_path, proc_path,
                          format_cpu_list, get_logical_cpu_count,
+                         parse_cpu_list,
                          get_isolated_cpus)
 
 MSR_IA32_MISC_ENABLE = 0x1a0
@@ -235,28 +237,56 @@ class TurboBoostIntelPstate(Operation):
 
 class LinuxScheduler(Operation):
     """
-    Check that CPUs are isolated using the isolcpus=<cpu list> parameter
-    of the Linux kernel.
+    Check isolcpus=cpus and rcu_nocbs=cpus paramaters of the Linux kernel
+    command line.
     """
 
     def __init__(self, system):
         Operation.__init__(self, 'Linux scheduler', system)
+        self.ncpu = None
         self.msgs = []
 
     def read(self):
-        ncpu = get_logical_cpu_count()
-        if ncpu is None:
+        self.ncpu = get_logical_cpu_count()
+        if self.ncpu is None:
             self.error("Unable to get the number of CPUs")
             return
 
+        self.check_isolcpus()
+        self.check_rcu_nocbs()
+
+    def check_isolcpus(self):
         isolated = get_isolated_cpus()
         if isolated:
             self.msgs.append('Isolated CPUs (%s/%s): %s'
-                             % (len(isolated), ncpu,
+                             % (len(isolated), self.ncpu,
                                 format_cpu_list(isolated)))
-        elif ncpu > 1:
+        elif self.ncpu > 1:
             self.msgs.append('Use isolcpus=<cpu list> kernel parameter '
                              'to isolate CPUs')
+
+    def read_rcu_nocbs(self):
+        cmdline = read_first_line(proc_path('cmdline'))
+        if not cmdline:
+            return
+
+        match = re.search(r'\brcu_nocbs=([^ ]+)', cmdline)
+        if not match:
+            return
+
+        cpus = match.group(1)
+        return parse_cpu_list(cpus)
+
+    def check_rcu_nocbs(self):
+        rcu_nocbs = self.read_rcu_nocbs()
+        if rcu_nocbs:
+            self.msgs.append('RCU disabled on CPUs (%s/%s): %s'
+                             % (len(rcu_nocbs), self.ncpu,
+                                format_cpu_list(rcu_nocbs)))
+        elif self.ncpu > 1:
+            self.msgs.append('Use rcu_nocbs=<cpu list> kernel parameter '
+                             '(with isolcpus) to not not schedule RCU '
+                             'on isolated CPUs')
 
     def show(self):
         for msg in self.msgs:
