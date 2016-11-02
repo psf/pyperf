@@ -1,6 +1,10 @@
 TODO
 ====
 
+* BUG: "python perf timeit --compare-to=pypy" doesn't tune correctly the runner
+  for pypy. pypy requires more warmup samples (10) than cpython (1).
+* BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
+  on the speed mailing list.
 * External tool (?) to produce nice HTML reports:
 
   * https://magic.io/blog/uvloop-blazing-fast-python-networking/
