@@ -331,14 +331,19 @@ def parse_cpu_list(cpu_list):
     return cpus
 
 
+def open_text(path):
+    if six.PY3:
+        return open(path, encoding="utf-8")
+    else:
+        return open(path)
+
+
 def get_isolated_cpus():
+    # sysfs added by the commit 59f30abe94bff50636c8cad45207a01fdcb2ee49
+    # in Linux 4.2
     path = '/sys/devices/system/cpu/isolated'
     try:
-        if six.PY3:
-            fp = open(path, encoding='ascii')
-        else:
-            fp = open(path)
-        with fp:
+        with open_text(path) as fp:
             isolated = fp.readline().rstrip()
     except (OSError, IOError):
         # missing file

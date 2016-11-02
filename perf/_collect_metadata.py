@@ -24,7 +24,7 @@ except ImportError:
 import perf
 from perf._utils import (format_timedelta, format_cpu_list,
                          parse_cpu_list, format_datetime,
-                         get_isolated_cpus, MS_WINDOWS)
+                         get_isolated_cpus, MS_WINDOWS, open_text)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
@@ -125,13 +125,6 @@ def collect_python_metadata(metadata):
     else:
         if not gc.isenabled():
             metadata['python_gc'] = 'disabled'
-
-
-def open_text(path):
-    if six.PY3:
-        return open(path, encoding="utf-8")
-    else:
-        return open(path)
 
 
 def first_line(path, default=None):
