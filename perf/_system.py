@@ -12,6 +12,10 @@ MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
 
 
+def is_root():
+    return (os.getuid() == 0)
+
+
 def run_cmd(cmd):
     try:
         proc = subprocess.Popen(cmd)
@@ -98,10 +102,13 @@ class TurboBoostMSR(Operation):
         stdout = stdout.rstrip()
 
         if exitcode or not stdout:
-            self.error('failed to read MSR %#x of CPU %s '
-                       '(exit code %s). '
-                       'Is rdmsr tool installed? Retry as root?'
+            msg = ('Failed to read MSR %#x of CPU %s '
+                  '(exit code %s). '
+                  'Is rdmsr tool installed?'
                        % (reg_num, cpu, exitcode))
+            if not is_root():
+                msg += ' Retry as root?'
+            self.error(msg)
             return None
 
         return int(stdout, 16)
@@ -206,7 +213,7 @@ class TurboBoostIntelPstate(Operation):
                 self.info("Turbo Boost disabled: %s" % msg)
         except IOError as exc:
             msg = "Failed to write into %s" % path
-            if exc.errno in (errno.EPERM, errno.EACCES) and os.getuid() != 0:
+            if exc.errno in (errno.EPERM, errno.EACCES) and not is_root():
                 msg += " (retry as root?)"
             self.error("%s: %s" % (msg, exc))
 
