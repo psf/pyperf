@@ -244,17 +244,19 @@ class LinuxScheduler(Operation):
         self.msgs = []
 
     def read(self):
+        ncpu = get_logical_cpu_count()
+        if ncpu is None:
+            self.error("Unable to get the number of CPUs")
+            return
+
         isolated = get_isolated_cpus()
         if isolated:
-            self.msgs.append('Isolated CPUs: %s' % format_cpu_list(isolated))
-        else:
-            ncpu = get_logical_cpu_count()
-            if ncpu is not None:
-                if ncpu > 1:
-                    self.msgs.append('Use isolcpus=<cpu list> kernel parameter '
-                                     'to isolate CPUs')
-            else:
-                self.error("Unable to get the number of CPUs")
+            self.msgs.append('Isolated CPUs (%s/%s): %s'
+                             % (len(isolated), ncpu,
+                                format_cpu_list(isolated)))
+        elif ncpu > 1:
+            self.msgs.append('Use isolcpus=<cpu list> kernel parameter '
+                             'to isolate CPUs')
 
     def show(self):
         for msg in self.msgs:
