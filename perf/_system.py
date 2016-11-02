@@ -102,10 +102,9 @@ class TurboBoostMSR(Operation):
         stdout = stdout.rstrip()
 
         if exitcode or not stdout:
-            msg = ('Failed to read MSR %#x of CPU %s '
-                  '(exit code %s). '
-                  'Is rdmsr tool installed?'
-                       % (reg_num, cpu, exitcode))
+            msg = ('Failed to read MSR %#x of CPU %s (exit code %s). '
+                   'Is rdmsr tool installed?'
+                   % (reg_num, cpu, exitcode))
             if not is_root():
                 msg += ' Retry as root?'
             self.error(msg)
