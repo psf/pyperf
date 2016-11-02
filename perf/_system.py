@@ -6,7 +6,8 @@ import subprocess
 import sys
 
 from perf._utils import (read_first_line, sysfs_path,
-                         format_cpu_list, get_logical_cpu_count)
+                         format_cpu_list, get_logical_cpu_count,
+                         get_isolated_cpus)
 
 MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
@@ -70,6 +71,10 @@ class Operation(object):
 
 
 class TurboBoostMSR(Operation):
+    """
+    Get/Set Turbo Boost mode of Intel CPUs using rdmsr/wrmsr.
+    """
+
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
         self.cpu_states = {}
@@ -169,6 +174,11 @@ class TurboBoostMSR(Operation):
 
 
 class TurboBoostIntelPstate(Operation):
+    """
+    Get/Set Turbo Boost mode of Intel CPUs by reading from/writing into
+    /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
+    """
+
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (intel_pstate driver)', system)
         self.enabled = None
@@ -223,6 +233,34 @@ class TurboBoostIntelPstate(Operation):
         self.write(True)
 
 
+class LinuxScheduler(Operation):
+    """
+    Check that CPUs are isolated using the isolcpus=<cpu list> parameter
+    of the Linux kernel.
+    """
+
+    def __init__(self, system):
+        Operation.__init__(self, 'Linux scheduler', system)
+        self.msgs = []
+
+    def read(self):
+        isolated = get_isolated_cpus()
+        if isolated:
+            self.msgs.append('Isolated CPUs: %s' % format_cpu_list(isolated))
+        else:
+            ncpu = get_logical_cpu_count()
+            if ncpu is not None:
+                if ncpu > 1:
+                    self.msgs.append('Use isolcpus=<cpu list> kernel parameter '
+                                     'to isolate CPUs')
+            else:
+                self.error("Unable to get the number of CPUs")
+
+    def show(self):
+        for msg in self.msgs:
+            self.info(msg)
+
+
 def use_intel_pstate(cpu):
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
@@ -234,6 +272,9 @@ class System:
         self.operations = []
         self.errors = []
         self.has_messages = False
+
+        if sys.platform.startswith('linux'):
+            self.operations.append(LinuxScheduler(self))
 
         if use_intel_pstate(0):
             self.operations.append(TurboBoostIntelPstate(self))
@@ -264,6 +305,8 @@ class System:
                 operation.tune()
             elif reset:
                 operation.reset()
+
+        for operation in self.operations:
             operation.read()
 
         if self.has_messages:

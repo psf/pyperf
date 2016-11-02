@@ -463,6 +463,8 @@ Get or set the system state for benchmarks::
 
 Implemented operations:
 
+* "Linux scheduler": Check that CPUs are isolated using the
+  ``isolcpus=<cpu list>`` parameter of the Linux kernel.
 * "Turbo Boost (MSR)": use ``rdmsr`` and ``wrmsr`` commands to read and set
   the Turbo Boost mode of Intel CPUs
 * "Turbo Boost (intel_pstate driver)": read from/write into
