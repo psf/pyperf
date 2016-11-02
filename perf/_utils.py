@@ -387,6 +387,10 @@ def read_first_line(path, error=False):
             return ''
 
 
+def proc_path(path):
+    return os.path.join("/proc", path)
+
+
 def sysfs_path(path):
     return os.path.join("/sys", path)
 
@@ -399,7 +403,7 @@ def get_isolated_cpus():
     if isolated:
         return parse_cpu_list(isolated)
 
-    cmdline = read_first_line('/proc/cmdline')
+    cmdline = read_first_line(proc_path('cmdline'))
     if cmdline:
         match = re.search(r'\bisolcpus=([^ ]+)', cmdline)
         if match:

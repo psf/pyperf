@@ -3,6 +3,8 @@ from __future__ import division, print_function, absolute_import
 import threading
 import time
 
+from perf._utils import proc_path
+
 
 # Code to parse Linux /proc/%d/smaps files.
 #
@@ -12,7 +14,7 @@ import time
 # Need Linux 2.6.16 or newer.
 def read_smap_file():
     total = 0
-    fp = open("/proc/self/smaps", "rb")
+    fp = open(proc_path("self/smaps"), "rb")
     with fp:
         for line in fp:
             # Include both Private_Clean and Private_Dirty sections.
@@ -54,7 +56,8 @@ def check_tracking_memory():
     try:
         mem_thread.get()
     except IOError as exc:
-        return "unable to read /proc/self/smaps: %s" % exc
+        path = proc_path("self/smaps")
+        return "unable to read %s: %s" % (path, exc)
 
     if not mem_thread.peak_usage:
         return "memory usage is zero"
