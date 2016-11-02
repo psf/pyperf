@@ -463,6 +463,8 @@ Get or set the system state for benchmarks::
 
 Implemented operations:
 
+* "ASLR": Check that Full randomization (``2``) is enabled
+  in ``/proc/sys/kernel/randomize_va_space``
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated

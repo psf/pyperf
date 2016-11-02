@@ -59,16 +59,13 @@ class Operation(object):
     def error(self, msg):
         self.system.error('%s: %s' % (self.name, msg))
 
-    def show(self):
-        pass
-
     def read(self):
         pass
 
-    def tune(self):
+    def show(self):
         pass
 
-    def reset(self):
+    def write(self, tune):
         pass
 
 
@@ -163,16 +160,11 @@ class TurboBoostMSR(Operation):
                 self.info("Turbo Boost %s on CPU %s: MSR %#x set to %#x"
                           % (state, cpu, MSR_IA32_MISC_ENABLE, new_value))
 
-    def write(self, enabled):
+    def write(self, tune):
+        enabled = (not tune)
         cpus = self.system.get_cpus()
         for cpu in cpus:
             self.write_cpu(cpu, enabled)
-
-    def tune(self):
-        self.write(False)
-
-    def reset(self):
-        self.write(True)
 
 
 class TurboBoostIntelPstate(Operation):
@@ -203,7 +195,9 @@ class TurboBoostIntelPstate(Operation):
         else:
             self.error("Invalid no_turbo value: %r" % no_turbo)
 
-    def write(self, enabled):
+    def write(self, tune):
+        enabled = (not tune)
+
         if self.enabled is None:
             self.read()
             if self.enabled == enabled:
@@ -227,12 +221,6 @@ class TurboBoostIntelPstate(Operation):
             if exc.errno in (errno.EPERM, errno.EACCES) and not is_root():
                 msg += " (retry as root?)"
             self.error("%s: %s" % (msg, exc))
-
-    def tune(self):
-        self.write(False)
-
-    def reset(self):
-        self.write(True)
 
 
 class LinuxScheduler(Operation):
@@ -307,6 +295,50 @@ class LinuxScheduler(Operation):
             self.info(msg)
 
 
+class ASLR(Operation):
+    STATE = {'0': 'No randomization',
+             '1': 'Conservative randomization',
+             '2': 'Full randomization'}
+
+    def __init__(self, system):
+        Operation.__init__(self, 'ASLR', system)
+        self.path = proc_path("sys/kernel/randomize_va_space")
+        self.aslr = None
+
+    def read(self):
+        line = read_first_line(self.path)
+        if line in self.STATE:
+            self.aslr = line
+        else:
+            self.error("Failed to read %s" % self.path)
+
+    def show(self):
+        if not self.aslr:
+            return
+
+        state = self.STATE[self.aslr]
+        self.info(state)
+
+    def write(self, tune):
+        self.read()
+        value = self.aslr
+        if not value:
+            return
+
+        new_value = '2'
+        if new_value == value:
+            return
+
+        try:
+            with open(self.path, 'w') as fp:
+                fp.write(new_value)
+
+            self.info("Full randomization enabled: %r written into %s"
+                      % (new_value, self.path))
+        except IOError as exc:
+            self.error("Failed to write into %s: %s" % (self.path, exc))
+
+
 def use_intel_pstate(cpu):
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
@@ -318,6 +350,8 @@ class System:
         self.operations = []
         self.errors = []
         self.has_messages = False
+
+        self.operations.append(ASLR(self))
 
         if sys.platform.startswith('linux'):
             self.operations.append(LinuxScheduler(self))
@@ -343,14 +377,10 @@ class System:
         self.errors.append(msg)
 
     def main(self, action):
-        tune = (action == 'tune')
-        reset = (action == 'reset')
-
-        for operation in self.operations:
-            if tune:
-                operation.tune()
-            elif reset:
-                operation.reset()
+        if action in ('tune', 'reset'):
+            tune = (action == 'tune')
+            for operation in self.operations:
+                operation.write(tune)
 
         for operation in self.operations:
             operation.read()
