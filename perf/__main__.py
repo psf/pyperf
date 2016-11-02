@@ -92,6 +92,12 @@ def create_parser():
     cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
     timeit_runner = TimeitRunner(_argparser=cmd)
 
+    # system
+    cmd = subparsers.add_parser('system', help='System setup for benchmarks')
+    cmd.add_argument("system_action", nargs="?",
+                     choices=('show', 'tune', 'reset'),
+                     default='show')
+
     # convert
     cmd = subparsers.add_parser('convert', help='Modify benchmarks')
     cmd.add_argument(
@@ -672,6 +678,11 @@ def cmd_slowest(args):
                   % (index, name, format_timedelta(duration)))
 
 
+def cmd_system(args):
+    from perf._system import System
+    System().main(args.system_action)
+
+
 def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
@@ -690,6 +701,7 @@ def main():
             'convert': functools.partial(cmd_convert, args),
             'dump': functools.partial(cmd_dump, args),
             'slowest': functools.partial(cmd_slowest, args),
+            'system': functools.partial(cmd_system, args),
         }
 
         try:

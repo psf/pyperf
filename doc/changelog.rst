@@ -8,6 +8,12 @@ Loading a large JSON file is now 10x faster (5 sec => 500 ms).
 
 Enhancement:
 
+* New system commands:
+
+  * ``system show`` displays the current state of the system for benchmarks
+  * ``system tune`` tunes the system to run benchmarks
+  * ``system reset`` resets the system to the default state
+
 * Support reading and writing JSON files compressed by gzip: use gzip
   if the filename ends with ``.gz``
 * The detection of isolated CPUs now works also on Linux older than 4.2:

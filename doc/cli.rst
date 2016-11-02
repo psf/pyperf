@@ -11,6 +11,7 @@ Commands:
 * :ref:`hist <hist_cmd>`
 * :ref:`metadata <metadata_cmd>`
 * :ref:`timeit <timeit_cmd>`
+* :ref:`system <system_cmd>`
 * :ref:`collect_metadata <collect_metadata_cmd>`
 * :ref:`slowest <slowest_cmd>`
 * :ref:`convert <convert_cmd>`
@@ -443,6 +444,33 @@ specific case, whereas many parameters are random:
   the performance of memory accesses is different in each process
 
 See the :ref:`Minimum versus average and standard deviation <min>` section.
+
+
+.. _sytem_cmd:
+
+system
+------
+
+Get or set the system state for benchmarks::
+
+    python3 -m perf system
+        [{show,tune,reset}]
+
+* ``system show`` (or ``system``) shows the current state of the system for
+  benchmarks
+* ``system tune`` tunes the system to run benchmarks
+* ``system reset`` resets the system to the default state
+
+Implemented operations:
+
+* "Turbo Boost (MSR)": use ``rdmsr`` and ``wrmsr`` commands to read and set
+  the Turbo Boost mode of Intel CPUs
+* "Turbo Boost (intel_pstate driver)": read from/write into
+  ``/sys/devices/system/cpu/intel_pstate/no_turbo`` to control the Turbo Boost
+  mode of the Intel CPU using the ``intel_pstate`` driver
+
+"Turbo Boost (intel_pstate driver)" is used automatically if the CPU 0 uses the
+``intel_pstate`` driver.
 
 
 .. _collect_metadata_cmd:
