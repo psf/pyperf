@@ -14,7 +14,6 @@ try:
 except ImportError:
     resource = None
 
-import six
 try:
     # Optional dependency
     import psutil

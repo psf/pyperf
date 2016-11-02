@@ -208,7 +208,7 @@ class CPUToolsTests(unittest.TestCase):
         self.assertEqual(check_get('1-2'), [1, 2])
 
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
-        with mock.patch(BUILTIN_OPEN, side_effect=OSError):
+        with mock.patch(BUILTIN_OPEN, side_effect=IOError):
             self.assertIsNone(utils.get_isolated_cpus())
 
 

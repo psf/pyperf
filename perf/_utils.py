@@ -4,6 +4,7 @@ import datetime
 import math
 import os
 import platform
+import re
 import sys
 
 import six
@@ -364,10 +365,17 @@ def get_isolated_cpus():
     # (commit 59f30abe94bff50636c8cad45207a01fdcb2ee49)
     path = sysfs_path('devices/system/cpu/isolated')
     isolated = read_first_line(path)
-    if not isolated:
-        return
+    if isolated:
+        return parse_cpu_list(isolated)
 
-    return parse_cpu_list(isolated)
+    cmdline = read_first_line('/proc/cmdline')
+    if cmdline:
+        match = re.search(r'\bisolcpus=([^ ]+)', cmdline)
+        if match:
+            isolated = match.group(1)
+            return parse_cpu_list(isolated)
+
+    return None
 
 
 def set_cpu_affinity(cpus):

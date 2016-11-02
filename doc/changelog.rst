@@ -10,6 +10,9 @@ Enhancement:
 
 * Support reading and writing JSON files compressed by gzip: use gzip
   if the filename ends with ``.gz``
+* The detection of isolated CPUs now works also on Linux older than 4.2:
+  ``/proc/cmdline`` is now parsed to read the ``isolcpus=`` option
+  if ``/sys/devices/system/cpu/isolated`` sysfs doesn't exist.
 
 Backward incompatible changes:
 
