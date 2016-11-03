@@ -204,6 +204,9 @@ Stable and reliable benchmarks
 Getting stable and reliable benchark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`.
 
+See the :ref:`system command <system_cmd>`.
+
+
 .. _pin-cpu:
 
 CPU pinning and CPU isolation
