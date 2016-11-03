@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 
+from perf._cli import display_title
 from perf._cpu_utils import (parse_cpu_list,
                              get_logical_cpu_count, get_isolated_cpus,
                              format_cpu_list, format_cpu_infos)
@@ -60,6 +61,9 @@ class Operation(object):
     def __init__(self, name, system):
         self.name = name
         self.system = system
+
+    def advice(self, msg):
+        self.system.advice('%s: %s' % (self.name, msg))
 
     def info(self, msg):
         self.system.info('%s: %s' % (self.name, msg))
@@ -202,29 +206,32 @@ class TurboBoostIntelPstate(Operation):
             self.info("Turbo Boost %s" % state)
 
     def write(self, tune):
-        enabled = (not tune)
+        enable = (not tune)
 
         self.read()
-        if self.enabled == enabled:
+        if self.enabled == enable:
             # no_turbo already set to the expected value
             return
 
-        content = '0' if enabled else '1'
-
+        content = '0' if enable else '1'
         try:
             write_text(self.path, content)
         except IOError as exc:
-            msg = "Failed to write into %s" % self.path
-            if exc.errno in (errno.EPERM, errno.EACCES) and not is_root():
-                msg += " (retry as root?)"
+            action = 'enable' if enable else 'disable'
+            msg = "Failed to %s Turbo Boost" % action
+            if exc.errno in (errno.EPERM, errno.EACCES):
+                if not is_root():
+                    msg += " (retry as root?)"
+                elif enable:
+                    msg += " (Turbo Boost disabled in the BIOS?)"
+
+            msg += ": failed to write into %s" % self.path
             self.error("%s: %s" % (msg, exc))
             return
 
         msg = "%r written into %s" % (content, self.path)
-        if enabled:
-            self.info("Turbo Boost enabled: %s" % msg)
-        else:
-            self.info("Turbo Boost disabled: %s" % msg)
+        action = 'enabled' if enable else 'disabled'
+        self.info("Turbo Boost %s: %s" % (action, msg))
 
 
 class CPUGovernorIntelPstate(Operation):
@@ -275,9 +282,8 @@ class LinuxScheduler(Operation):
         Operation.__init__(self, 'Linux scheduler', system)
         self.ncpu = None
         self.linux_version = None
-        self.msgs = []
 
-    def read(self):
+    def show(self):
         self.ncpu = get_logical_cpu_count()
         if self.ncpu is None:
             self.error("Unable to get the number of CPUs")
@@ -302,12 +308,13 @@ class LinuxScheduler(Operation):
     def check_isolcpus(self):
         isolated = get_isolated_cpus()
         if isolated:
-            self.msgs.append('Isolated CPUs (%s/%s): %s'
-                             % (len(isolated), self.ncpu,
-                                format_cpu_list(isolated)))
+            self.info('Isolated CPUs (%s/%s): %s'
+                      % (len(isolated), self.ncpu,
+                         format_cpu_list(isolated)))
         elif self.ncpu > 1:
-            self.msgs.append('Use isolcpus=<cpu list> kernel parameter '
-                             'to isolate CPUs')
+            self.info('No CPU is isolated')
+            self.advice('Use isolcpus=<cpu list> kernel parameter '
+                        'to isolate CPUs')
 
     def read_rcu_nocbs(self):
         cmdline = read_first_line(proc_path('cmdline'))
@@ -324,17 +331,13 @@ class LinuxScheduler(Operation):
     def check_rcu_nocbs(self):
         rcu_nocbs = self.read_rcu_nocbs()
         if rcu_nocbs:
-            self.msgs.append('RCU disabled on CPUs (%s/%s): %s'
-                             % (len(rcu_nocbs), self.ncpu,
-                                format_cpu_list(rcu_nocbs)))
+            self.info('RCU disabled on CPUs (%s/%s): %s'
+                      % (len(rcu_nocbs), self.ncpu,
+                         format_cpu_list(rcu_nocbs)))
         elif self.ncpu > 1:
-            self.msgs.append('Use rcu_nocbs=<cpu list> kernel parameter '
-                             '(with isolcpus) to not not schedule RCU '
-                             'on isolated CPUs (Linux 3.8 and newer)')
-
-    def show(self):
-        for msg in self.msgs:
-            self.info(msg)
+            self.advice('Use rcu_nocbs=<cpu list> kernel parameter '
+                        '(with isolcpus) to not not schedule RCU '
+                        'on isolated CPUs (Linux 3.8 and newer)')
 
 
 class ASLR(Operation):
@@ -500,9 +503,19 @@ class IRQAffinity(Operation):
             # or the current user is not root: ignore errors
             return
 
+        match = re.search("^ *Loaded: (.*)$", stdout, flags=re.MULTILINE)
+        if not match:
+            self.error("Failed to parse systemctl loaded state: %r" % stdout)
+            return
+
+        loaded = match.group(1)
+        if loaded.startswith('not-found'):
+            # irqbalance service is not installed: do nothing
+            return
+
         match = re.search("^ *Active: (.*)$", stdout, flags=re.MULTILINE)
         if not match:
-            self.error("Failed to parse systemctl output: %r" % stdout)
+            self.error("Failed to parse systemctl active state: %r" % stdout)
             return
 
         self.irqbalance_active = match.group(1)
@@ -568,8 +581,13 @@ class IRQAffinity(Operation):
 
     def write_irqbalance_service(self, enable):
         self.read_irqbalance_service()
+        if not self.irqbalance_active:
+            # systemd service missing or failed to get its state:
+            # don't try to start/stop the irqbalance service
+            return
+
         pattern = 'active' if enable else 'inactive'
-        if self.irqbalance_active and self.irqbalance_active.startswith(pattern):
+        if self.irqbalance_active.startswith(pattern):
             # service is already in the expected state: nothing to do
             return
 
@@ -646,8 +664,12 @@ def use_intel_pstate(cpu):
 class System:
     def __init__(self):
         self.operations = []
+
+        self.infos = []
+        self.advices = []
         self.errors = []
         self.has_messages = False
+
         self.logical_cpu_count = None
         # CPUs used for benchmarking: tuple of CPU identifiers
         self.cpus = None
@@ -669,12 +691,23 @@ class System:
 
         self.operations.append(IRQAffinity(self))
 
+    def advice(self, msg):
+        self.advices.append(msg)
+
     def info(self, msg):
-        print(msg)
-        self.has_messages = True
+        self.infos.append(msg)
 
     def error(self, msg):
         self.errors.append(msg)
+
+    def write_messages(self, title, messages):
+        if not messages:
+            return
+
+        display_title(title)
+        for msg in messages:
+            print(msg)
+        print()
 
     def main(self, action, args):
         self.logical_cpu_count = get_logical_cpu_count()
@@ -696,16 +729,19 @@ class System:
             for operation in self.operations:
                 operation.write(tune)
 
+        self.write_messages("Actions", self.infos)
+        self.infos.clear()
+
         for operation in self.operations:
+            # FIXME: merge read() and show()?
             operation.read()
 
-        if self.has_messages:
-            print()
+        self.write_messages("Info", self.infos)
+        self.infos.clear()
 
         for operation in self.operations:
             operation.show()
 
-        if self.errors:
-            print()
-            for msg in self.errors:
-                print("ERROR: %s" % msg)
+        self.write_messages("System state", self.infos)
+        self.write_messages("Advices", self.advices)
+        self.write_messages("Errors", self.errors)
