@@ -5,6 +5,7 @@ TODO
   for pypy. pypy requires more warmup samples (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
   on the speed mailing list.
+* Calibrartion run: display time/iteration and total
 * system: set the CPU scaling governor when intel_pstate is not used.
   Use "userland" governor with a fixed CPU speed (max speed)?
 * system IRQAffinity: support Ubuntu 14.04, use "service status irqbalance",
