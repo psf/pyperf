@@ -4,6 +4,7 @@ Changelog
 Version 0.8.4
 -------------
 
+* Add ``--affinity`` option to the system command
 * system: tune stops the irqbalance service and sets the CPU affinity of
   interruptions (IRQ).
 
