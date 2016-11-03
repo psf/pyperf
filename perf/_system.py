@@ -579,7 +579,7 @@ class IRQAffinity(Operation):
         if exitcode:
             self.error('Failed to %s irqbalance service: '
                        '%s failed with exit code %s'
-                       % (' '.join(cmd), exitcode))
+                       % (action, ' '.join(cmd), exitcode))
             return
 
         action = 'Start' if enable else 'Stop'
