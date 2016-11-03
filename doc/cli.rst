@@ -507,6 +507,56 @@ Linux documentation
   * `NO_HZ: Reducing Scheduling-Clock Ticks
     <https://www.kernel.org/doc/Documentation/timers/NO_HZ.txt>`_
 
+Articles
+^^^^^^^^
+
+* Intel: `How to Benchmark Code Execution Times on Intel ® IA-32 and IA -64
+  Instruction Set Architectures
+  <http://www.intel.com/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf>`_
+* `nohz_full=godmode ?
+  <http://www.breakage.org/2013/11/15/nohz_fullgodmode/>`_ (Nov 2013)
+* Linux-RT: `HOWTO: Build an RT-application
+  <https://rt.wiki.kernel.org/index.php/HOWTO:_Build_an_RT-application>`_
+* The `Linux realtime wiki <https://rt.wiki.kernel.org/>`_
+
+More options
+^^^^^^^^^^^^
+
+The following options were not tested by perf developers.
+
+* Disable HyperThreading in the BIOS
+* Disable Turbo Boost in the BIOS
+* CPU pinning on IRQ: /proc/irq/N/smp_affinity
+* writeback:
+
+  * /sys/bus/workqueue/devices/writeback/cpumask
+  * /sys/bus/workqueue/devices/writeback/numa
+
+* numactl command
+* ``for i in $(pgrep rcu); do taskset -pc 0 $i ; done`` (is it useful if
+  rcu_nocbs is already used?)
+* nohz_full=cpu_list: be careful of P-state/C-state bug (see below)
+* intel_pstate=disable: force the usage of the legacy CPU frequency driver
+* Non-maskable interrupts (NMI): ``nmi_watchdog=0 nowatchdog nosoftlockup``
+* `cset shield - easily configure cpusets
+  <http://skebanga.blogspot.it/2012/06/cset-shield-easily-configure-cpusets.html>`_
+* `cpuset <https://github.com/lpechacek/cpuset>`_
+
+Misc::
+
+    echo "Disable realtime bandwidth reservation"
+    echo -1 > /proc/sys/kernel/sched_rt_runtime_us
+
+    echo "Reduce hung_task_check_count"
+    echo 1 > /proc/sys/kernel/hung_task_check_count
+
+    echo "Disable software watchdog"
+    echo -1 > /proc/sys/kernel/softlockup_thresh
+
+    echo "Reduce vmstat polling"
+    echo 20 > /proc/sys/vm/stat_interval
+
+
 Notes
 ^^^^^
 
