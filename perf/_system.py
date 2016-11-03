@@ -730,14 +730,14 @@ class System:
                 operation.write(tune)
 
         self.write_messages("Actions", self.infos)
-        self.infos.clear()
+        del self.infos[:]
 
         for operation in self.operations:
             # FIXME: merge read() and show()?
             operation.read()
 
         self.write_messages("Info", self.infos)
-        self.infos.clear()
+        del self.infos[:]
 
         for operation in self.operations:
             operation.show()
