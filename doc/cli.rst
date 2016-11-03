@@ -465,6 +465,8 @@ Implemented operations:
 
 * "ASLR": Check that Full randomization (``2``) is enabled
   in ``/proc/sys/kernel/randomize_va_space``
+* "CPU Frequency": Read-write
+  ``/sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq`` sysfs.
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated

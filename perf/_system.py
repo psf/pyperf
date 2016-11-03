@@ -9,7 +9,7 @@ import sys
 from perf._utils import (read_first_line, sysfs_path, proc_path,
                          format_cpu_list, get_logical_cpu_count,
                          parse_cpu_list,
-                         get_isolated_cpus)
+                         get_isolated_cpus, format_cpu_infos)
 
 MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
@@ -342,6 +342,107 @@ class ASLR(Operation):
             self.error("Failed to write into %s: %s" % (self.path, exc))
 
 
+class CPUFrequency(Operation):
+    """
+    Read/Write /sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq.
+    """
+
+    def __init__(self, system):
+        Operation.__init__(self, 'CPU Frequency', system)
+        self.path = sysfs_path("devices/system/cpu")
+        self.cpus = {}
+
+    def read_cpu(self, cpu):
+        path = os.path.join(self.path, 'cpu%s/cpufreq' % cpu)
+
+        scaling_min_freq = read_first_line(os.path.join(path, "scaling_min_freq"))
+        scaling_max_freq = read_first_line(os.path.join(path, "scaling_max_freq"))
+        if not scaling_min_freq or not scaling_max_freq:
+            self.error("Unable to read scaling_min_freq "
+                       "or scaling_max_freq of CPU %s" % cpu)
+            return
+
+        scaling_min_freq = int(scaling_min_freq)
+        scaling_max_freq = int(scaling_max_freq)
+        freq = ('min=%s MHz, max=%s MHz'
+                % (scaling_min_freq // 1000, scaling_max_freq // 1000))
+        self.cpus[cpu] = freq
+
+    def read(self):
+        cpus = get_logical_cpu_count()
+        if not cpus:
+            self.error("Unable to get the number of CPUs")
+            return
+
+        for cpu in range(cpus):
+            self.read_cpu(cpu)
+
+    def show(self):
+        infos = format_cpu_infos(self.cpus)
+        if not infos:
+            return
+
+        self.info(', '.join(infos))
+
+    def read_freq(self, filename):
+        try:
+            with open(filename, "rb") as fp:
+                return fp.readline()
+        except IOError:
+            return None
+
+    def write_freq(self, filename, new_freq):
+        with open(filename, "rb") as fp:
+            freq = fp.readline()
+
+        if new_freq == freq:
+            return False
+
+        with open(filename, "wb") as fp:
+            fp.write(new_freq)
+        return True
+
+    def write_cpu(self, cpu, tune):
+        path = os.path.join(self.path, 'cpu%s/cpufreq' % cpu)
+
+        if not tune:
+            min_freq = self.read_freq(os.path.join(path, "cpuinfo_min_freq"))
+            if not min_freq:
+                self.error("Unable to read cpuinfo_min_freq of CPU %s" % cpu)
+                return
+
+        max_freq = self.read_freq(os.path.join(path, "cpuinfo_max_freq"))
+        if not max_freq:
+            self.error("Unable to read cpuinfo_max_freq of CPU %s" % cpu)
+            return
+
+        try:
+            filename = os.path.join(path, "scaling_min_freq")
+            if tune:
+                if self.write_freq(filename, max_freq):
+                    self.info("Minimum frequency of CPU %s "
+                              "set to the maximum frequency" % cpu)
+            else:
+                if self.write_freq(filename, min_freq):
+                    self.info("Minimum frequency of CPU %s "
+                              "reset to the minimum frequency" % cpu)
+        except IOError:
+            self.error("Unable to write scaling_max_freq of CPU %s" % cpu)
+            return
+
+    def write(self, tune):
+        cpus = get_isolated_cpus()
+        if not cpus:
+            ncpu = get_logical_cpu_count()
+            if not ncpu:
+                self.error("Unable to get the number of CPUs")
+                return
+            cpus = tuple(range(ncpu))
+
+        for cpu in cpus:
+            self.write_cpu(cpu, tune)
+
+
 def use_intel_pstate(cpu):
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
@@ -358,6 +459,8 @@ class System:
 
         if sys.platform.startswith('linux'):
             self.operations.append(LinuxScheduler(self))
+
+        self.operations.append(CPUFrequency(self))
 
         if use_intel_pstate(0):
             self.operations.append(TurboBoostIntelPstate(self))

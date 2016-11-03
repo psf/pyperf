@@ -1,5 +1,6 @@
 from __future__ import division, print_function, absolute_import
 
+import collections
 import datetime
 import math
 import os
@@ -573,3 +574,17 @@ def create_environ(inherit_environ):
         if name in os.environ:
             env[name] = os.environ[name]
     return env
+
+
+def format_cpu_infos(infos):
+    groups = collections.defaultdict(list)
+    for cpu, info in infos.items():
+        groups[info].append(cpu)
+
+    items = [(cpus, info) for info, cpus in groups.items()]
+    items.sort()
+    text = []
+    for cpus, info in items:
+        cpus = format_cpu_list(cpus)
+        text.append('%s=%s' % (cpus, info))
+    return text

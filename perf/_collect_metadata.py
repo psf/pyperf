@@ -1,6 +1,5 @@
 from __future__ import division, print_function, absolute_import
 
-import collections
 import datetime
 import os
 import platform
@@ -25,7 +24,7 @@ from perf._utils import (format_timedelta, format_cpu_list,
                          parse_cpu_list, format_datetime,
                          get_isolated_cpus, MS_WINDOWS,
                          open_text, read_first_line, sysfs_path, proc_path,
-                         get_logical_cpu_count)
+                         get_logical_cpu_count, format_cpu_infos)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
@@ -257,20 +256,6 @@ def get_cpu_boost(cpu):
 
     raise ValueError("unable to parse cpupower output: %r" % stdout)
 get_cpu_boost.working = True
-
-
-def format_cpu_infos(infos):
-    groups = collections.defaultdict(list)
-    for cpu, info in infos.items():
-        groups[info].append(cpu)
-
-    items = [(cpus, info) for info, cpus in groups.items()]
-    items.sort()
-    text = []
-    for cpus, info in items:
-        cpus = format_cpu_list(cpus)
-        text.append('%s=%s' % (cpus, info))
-    return text
 
 
 def collect_cpu_freq(metadata, cpus):
