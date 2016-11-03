@@ -288,7 +288,7 @@ def collect_cpu_freq(metadata, cpus):
     if not cpu_freq:
         return
 
-    metadata['cpu_freq'] = ', '.join(format_cpu_infos(cpu_freq))
+    metadata['cpu_freq'] = '; '.join(format_cpu_infos(cpu_freq))
 
 
 def get_cpu_config(cpu):

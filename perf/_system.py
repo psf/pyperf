@@ -382,7 +382,7 @@ class CPUFrequency(Operation):
         if not infos:
             return
 
-        self.info(', '.join(infos))
+        self.info('; '.join(infos))
 
     def read_freq(self, filename):
         try:
