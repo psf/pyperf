@@ -6,10 +6,12 @@ import re
 import subprocess
 import sys
 
-from perf._utils import (read_first_line, sysfs_path, proc_path,
-                         format_cpu_list, get_logical_cpu_count,
-                         parse_cpu_list, open_text,
-                         get_isolated_cpus, format_cpu_infos)
+from perf._cpu_utils import (parse_cpu_list,
+                             get_logical_cpu_count, get_isolated_cpus,
+                             format_cpu_list, format_cpu_infos)
+from perf._utils import (read_first_line, sysfs_path, proc_path, open_text,
+                         popen_communicate)
+
 
 MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
@@ -49,7 +51,7 @@ def get_output(cmd):
         else:
             raise
 
-    stdout = proc.communicate()[0]
+    stdout = popen_communicate(proc)[0]
     exitcode = proc.returncode
     return (exitcode, stdout)
 

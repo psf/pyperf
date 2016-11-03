@@ -11,8 +11,8 @@ import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info)
-from perf._utils import (format_number, DEFAULT_UNIT, format_samples,
-                         python_implementation, parse_iso8601)
+from perf._formatter import format_number, DEFAULT_UNIT, format_samples
+from perf._utils import python_implementation, parse_iso8601
 
 
 # JSON format history:

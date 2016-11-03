@@ -5,7 +5,9 @@ import sys
 import six
 
 import perf
-from perf._utils import format_filesize
+from perf._formatter import (format_filesize, format_seconds, format_timedelta,
+                             format_timedeltas, format_number)
+from perf import _cpu_utils as cpu_utils
 from perf import _utils as utils
 from perf import tests
 from perf.tests import mock
@@ -78,19 +80,19 @@ class TestUtils(unittest.TestCase):
                          datetime.datetime(2016, 7, 20, 14, 6, 7))
 
     def test_format_seconds(self):
-        self.assertEqual(utils.format_seconds(0),
+        self.assertEqual(format_seconds(0),
                          "0 sec")
-        self.assertEqual(utils.format_seconds(316e-4),
+        self.assertEqual(format_seconds(316e-4),
                          "31.6 ms")
-        self.assertEqual(utils.format_seconds(15.9),
+        self.assertEqual(format_seconds(15.9),
                          "15.9 sec")
-        self.assertEqual(utils.format_seconds(3 * 60 + 15.9),
+        self.assertEqual(format_seconds(3 * 60 + 15.9),
                          "3 min 15.9 sec")
-        self.assertEqual(utils.format_seconds(404683.5876653),
+        self.assertEqual(format_seconds(404683.5876653),
                          "4 day 16 hour 24 min")
 
     def test_format_timedelta(self):
-        fmt_delta = utils.format_timedelta
+        fmt_delta = format_timedelta
 
         self.assertEqual(fmt_delta(555222), "555222 sec")
 
@@ -109,15 +111,13 @@ class TestUtils(unittest.TestCase):
 
     def test_timedelta_stdev(self):
         def fmt_stdev(seconds, stdev):
-            return "%s +- %s" % utils.format_timedeltas((seconds, stdev))
+            return "%s +- %s" % format_timedeltas((seconds, stdev))
 
         self.assertEqual(fmt_stdev(58123, 192), "58123 sec +- 192 sec")
         self.assertEqual(fmt_stdev(100e-3, 0), "100 ms +- 0 ms")
         self.assertEqual(fmt_stdev(102e-3, 3e-3), "102 ms +- 3 ms")
 
     def test_format_number(self):
-        format_number = utils.format_number
-
         # plural
         self.assertEqual(format_number(0, 'unit'), '0 units')
         self.assertEqual(format_number(1, 'unit'), '1 unit')
@@ -166,7 +166,7 @@ class TestUtils(unittest.TestCase):
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
-        parse_cpu_list = utils.parse_cpu_list
+        parse_cpu_list = cpu_utils.parse_cpu_list
 
         self.assertIsNone(parse_cpu_list(''))
         self.assertEqual(parse_cpu_list('0'),
@@ -185,11 +185,11 @@ class CPUToolsTests(unittest.TestCase):
         self.assertRaises(ValueError, parse_cpu_list, '1,')
 
     def test_format_cpu_list(self):
-        self.assertEqual(utils.format_cpu_list([0]),
+        self.assertEqual(cpu_utils.format_cpu_list([0]),
                          '0')
-        self.assertEqual(utils.format_cpu_list([0, 1, 5, 6]),
+        self.assertEqual(cpu_utils.format_cpu_list([0, 1, 5, 6]),
                          '0-1,5-6')
-        self.assertEqual(utils.format_cpu_list([1, 3, 7]),
+        self.assertEqual(cpu_utils.format_cpu_list([1, 3, 7]),
                          '1,3,7')
 
     def test_get_isolated_cpus(self):
@@ -199,7 +199,7 @@ class CPUToolsTests(unittest.TestCase):
             with mock.patch(BUILTIN_OPEN) as mock_open:
                 mock_file = mock_open.return_value
                 mock_file.readline.return_value = line
-                return utils.get_isolated_cpus()
+                return cpu_utils.get_isolated_cpus()
 
         # no isolated CPU
         self.assertIsNone(check_get(''))
@@ -209,7 +209,7 @@ class CPUToolsTests(unittest.TestCase):
 
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
         with mock.patch(BUILTIN_OPEN, side_effect=IOError):
-            self.assertIsNone(utils.get_isolated_cpus())
+            self.assertIsNone(cpu_utils.get_isolated_cpus())
 
 
 class MiscTests(unittest.TestCase):

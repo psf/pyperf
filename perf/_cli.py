@@ -2,9 +2,9 @@ from __future__ import division, print_function, absolute_import
 
 import statistics
 
+from perf._formatter import (format_seconds, format_number,
+                             format_timedelta, format_datetime)
 from perf._metadata import format_metadata as _format_metadata
-from perf._utils import (format_seconds, format_number,
-                         format_timedelta, format_datetime)
 
 
 def empty_line(lines):

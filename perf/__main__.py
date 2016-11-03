@@ -11,9 +11,10 @@ from perf._metadata import _common_metadata
 from perf._cli import (format_metadata, empty_line,
                        format_checks, format_histogram, format_title,
                        format_benchmark, display_title, get_benchmark_name)
+from perf._formatter import format_timedelta
+from perf._cpu_utils import get_isolated_cpus, parse_cpu_list, set_cpu_affinity
 from perf._timeit import TimeitRunner
-from perf._utils import (format_timedelta, parse_run_list,
-                         get_isolated_cpus, parse_cpu_list, set_cpu_affinity)
+from perf._utils import parse_run_list
 
 
 def create_parser():

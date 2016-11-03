@@ -20,11 +20,12 @@ except ImportError:
     psutil = None
 
 import perf
-from perf._utils import (format_timedelta, format_cpu_list,
-                         parse_cpu_list, format_datetime,
-                         get_isolated_cpus, MS_WINDOWS,
-                         open_text, read_first_line, sysfs_path, proc_path,
-                         get_logical_cpu_count, format_cpu_infos)
+from perf._cpu_utils import (format_cpu_list,
+                             parse_cpu_list, get_isolated_cpus,
+                             get_logical_cpu_count, format_cpu_infos)
+from perf._formatter import format_timedelta, format_datetime
+from perf._utils import (MS_WINDOWS,
+                         open_text, read_first_line, sysfs_path, proc_path)
 if MS_WINDOWS:
     from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 

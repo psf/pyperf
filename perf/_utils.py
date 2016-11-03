@@ -1,153 +1,16 @@
 from __future__ import division, print_function, absolute_import
 
-import collections
 import datetime
 import math
 import os
 import platform
-import re
 import sys
 
 import six
 import statistics
 
-try:
-    # Optional dependency
-    import psutil
-except ImportError:
-    psutil = None
-
 
 MS_WINDOWS = (sys.platform == 'win32')
-
-_TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
-
-
-def format_timedeltas(values):
-    ref_value = abs(values[0])
-    for i in range(2, -9, -1):
-        if ref_value >= 10.0 ** i:
-            break
-    else:
-        i = -9
-
-    precision = 2 - i % 3
-    k = -(i // 3) if i < 0 else 0
-    factor = 10 ** (k * 3)
-    unit = _TIMEDELTA_UNITS[k]
-    fmt = "%%.%sf %s" % (precision, unit)
-
-    return tuple(fmt % (value * factor,) for value in values)
-
-
-def format_timedelta(value):
-    return format_timedeltas((value,))[0]
-
-
-def format_filesize(size):
-    if size < 10 * 1024:
-        if size != 1:
-            return '%.0f bytes' % size
-        else:
-            return '%.0f byte' % size
-
-    if size > 10 * 1024 * 1024:
-        return '%.1f MB' % (size / (1024.0 * 1024.0))
-
-    return '%.1f kB' % (size / 1024.0)
-
-
-def format_filesizes(sizes):
-    return tuple(format_filesize(size) for size in sizes)
-
-
-def format_seconds(seconds):
-    # Coarse but human readable duration
-    if not seconds:
-        return '0 sec'
-
-    if seconds < 1.0:
-        return format_timedelta(seconds)
-
-    mins, secs = divmod(seconds, 60.0)
-    mins = int(mins)
-    hours, mins = divmod(mins, 60)
-    days, hours = divmod(hours, 24)
-
-    parts = []
-    if days:
-        parts.append("%.0f day" % days)
-    if hours:
-        parts.append("%.0f hour" % hours)
-    if mins:
-        parts.append("%.0f min" % mins)
-    if secs and len(parts) <= 2:
-        parts.append('%.1f sec' % secs)
-    return ' '.join(parts)
-
-
-def format_number(number, unit=None, units=None):
-    plural = (not number or abs(number) > 1)
-    if number >= 10000:
-        pow10 = 0
-        x = number
-        while x >= 10:
-            x, r = divmod(x, 10)
-            pow10 += 1
-            if r:
-                break
-        if not r:
-            number = '10^%s' % pow10
-
-    if isinstance(number, int) and number > 8192:
-        pow2 = 0
-        x = number
-        while x >= 2:
-            x, r = divmod(x, 2)
-            pow2 += 1
-            if r:
-                break
-        if not r:
-            number = '2^%s' % pow2
-
-    if not unit:
-        return str(number)
-
-    if plural:
-        if not units:
-            units = unit + 's'
-        return '%s %s' % (number, units)
-    else:
-        return '%s %s' % (number, unit)
-
-
-def format_integers(numbers):
-    return tuple(format_number(number) for number in numbers)
-
-
-DEFAULT_UNIT = 'second'
-UNIT_FORMATTERS = {
-    'second': format_timedeltas,
-    'byte': format_filesizes,
-    'integer': format_integers,
-}
-
-
-def format_samples(unit, samples):
-    if not unit:
-        unit = DEFAULT_UNIT
-    formatter = UNIT_FORMATTERS[unit]
-    return formatter(samples)
-
-
-def format_sample(unit, sample):
-    return format_samples(unit, (sample,))[0]
-
-
-def format_datetime(dt, microsecond=True):
-    if not microsecond:
-        dt = dt.replace(microsecond=0)
-    return dt.isoformat(' ')
 
 
 def parse_iso8601(date):
@@ -267,53 +130,6 @@ def is_significant(sample1, sample2):
     return (abs(t_score) >= critical_value, t_score)
 
 
-def get_logical_cpu_count():
-    if psutil is not None:
-        # Number of logical CPUs
-        cpu_count = psutil.cpu_count()
-    elif hasattr(os, 'cpu_count'):
-        # Python 3.4
-        cpu_count = os.cpu_count()
-    else:
-        cpu_count = None
-        try:
-            import multiprocessing
-        except ImportError:
-            pass
-        else:
-            try:
-                cpu_count = multiprocessing.cpu_count()
-            except NotImplementedError:
-                pass
-
-    if cpu_count is not None and cpu_count < 1:
-        return None
-
-    return cpu_count
-
-
-def format_cpu_list(cpus):
-    cpus = sorted(cpus)
-    parts = []
-    first = None
-    last = None
-    for cpu in cpus:
-        if first is None:
-            first = cpu
-        elif cpu != last + 1:
-            if first != last:
-                parts.append('%s-%s' % (first, last))
-            else:
-                parts.append(str(last))
-            first = cpu
-        last = cpu
-    if first != last:
-        parts.append('%s-%s' % (first, last))
-    else:
-        parts.append(str(last))
-    return ','.join(parts)
-
-
 def parse_run_list(run_list):
     run_list = run_list.strip()
 
@@ -339,29 +155,6 @@ def parse_run_list(run_list):
         raise ValueError("number of runs starts at 1")
 
     return [run - 1 for run in runs]
-
-
-def parse_cpu_list(cpu_list):
-    cpu_list = cpu_list.strip()
-    # /sys/devices/system/cpu/nohz_full returns ' (null)\n' when NOHZ full
-    # is not used
-    if cpu_list == '(null)':
-        return
-    if not cpu_list:
-        return
-
-    cpus = []
-    for part in cpu_list.split(','):
-        part = part.strip()
-        if '-' in part:
-            parts = part.split('-', 1)
-            first = int(parts[0])
-            last = int(parts[1])
-            for cpu in range(first, last + 1):
-                cpus.append(cpu)
-        else:
-            cpus.append(int(part))
-    return cpus
 
 
 def open_text(path, write=False):
@@ -395,43 +188,6 @@ def proc_path(path):
 
 def sysfs_path(path):
     return os.path.join("/sys", path)
-
-
-def get_isolated_cpus():
-    # The cpu/isolated sysfs was added in Linux 4.2
-    # (commit 59f30abe94bff50636c8cad45207a01fdcb2ee49)
-    path = sysfs_path('devices/system/cpu/isolated')
-    isolated = read_first_line(path)
-    if isolated:
-        return parse_cpu_list(isolated)
-
-    cmdline = read_first_line(proc_path('cmdline'))
-    if cmdline:
-        match = re.search(r'\bisolcpus=([^ ]+)', cmdline)
-        if match:
-            isolated = match.group(1)
-            return parse_cpu_list(isolated)
-
-    return None
-
-
-def set_cpu_affinity(cpus):
-    # Python 3.3 or newer?
-    if hasattr(os, 'sched_setaffinity'):
-        os.sched_setaffinity(0, cpus)
-        return True
-
-    try:
-        import psutil
-    except ImportError:
-        return
-
-    proc = psutil.Process()
-    if not hasattr(proc, 'cpu_affinity'):
-        return
-
-    proc.cpu_affinity(cpus)
-    return True
 
 
 def python_implementation():
@@ -575,17 +331,3 @@ def create_environ(inherit_environ):
         if name in os.environ:
             env[name] = os.environ[name]
     return env
-
-
-def format_cpu_infos(infos):
-    groups = collections.defaultdict(list)
-    for cpu, info in infos.items():
-        groups[info].append(cpu)
-
-    items = [(cpus, info) for info, cpus in groups.items()]
-    items.sort()
-    text = []
-    for cpus, info in items:
-        cpus = format_cpu_list(cpus)
-        text.append('%s=%s' % (cpus, info))
-    return text

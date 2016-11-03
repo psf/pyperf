@@ -12,11 +12,11 @@ import six
 import perf
 from perf._cli import format_run, format_benchmark, multiline_output
 from perf._bench import _load_suite_from_stdout
-from perf._utils import (format_timedelta, format_number,
-                         format_cpu_list, parse_cpu_list,
-                         get_isolated_cpus, set_cpu_affinity,
-                         MS_WINDOWS, popen_communicate,
-                         format_sample, abs_executable, create_environ)
+from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
+                             get_isolated_cpus, set_cpu_affinity)
+from perf._formatter import format_timedelta, format_number, format_sample
+from perf._utils import (MS_WINDOWS, popen_communicate,
+                         abs_executable, create_environ)
 
 try:
     # Optional dependency
