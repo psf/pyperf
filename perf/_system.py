@@ -505,7 +505,7 @@ class IRQAffinity(Operation):
             # or the current user is not root: ignore errors
             return
 
-        match = re.search("^ *Loaded: (.*)$", stdout, flags=re.MULTILINE)
+        match = re.search(r"^ *Loaded: (.*)$", stdout, flags=re.MULTILINE)
         if not match:
             self.error("Failed to parse systemctl loaded state: %r" % stdout)
             return
@@ -515,12 +515,18 @@ class IRQAffinity(Operation):
             # irqbalance service is not installed: do nothing
             return
 
-        match = re.search("^ *Active: (.*)$", stdout, flags=re.MULTILINE)
+        match = re.search(r"^ *Active: ([^ ]+)", stdout, flags=re.MULTILINE)
         if not match:
             self.error("Failed to parse systemctl active state: %r" % stdout)
             return
 
-        self.irqbalance_active = match.group(1)
+        active = match.group(1)
+        if active in ('active', 'activating'):
+            self.irqbalance_active = True
+        elif active in ('inactive', 'deactivating', 'dead'):
+            self.irqbalance_active = False
+        else:
+            self.error("Unknown service state: %r" % active)
 
     def parse_affinity(self, mask):
         mask = int(mask, 16)
@@ -562,8 +568,9 @@ class IRQAffinity(Operation):
         self.read_irqs_affinity()
 
     def show(self):
-        if self.irqbalance_active:
-            self.info("irqbalance service: %s" % self.irqbalance_active)
+        if self.irqbalance_active is not None:
+            state = 'active' if self.irqbalance_active else 'inactive'
+            self.info("irqbalance service: %s" % state)
 
         if self.default_smp_affinity:
             self.info("Default IRQ affinity: CPU %s"
@@ -583,13 +590,12 @@ class IRQAffinity(Operation):
 
     def write_irqbalance_service(self, enable):
         self.read_irqbalance_service()
-        if not self.irqbalance_active:
+        if self.irqbalance_active is None:
             # systemd service missing or failed to get its state:
             # don't try to start/stop the irqbalance service
             return
 
-        pattern = 'active' if enable else 'inactive'
-        if self.irqbalance_active.startswith(pattern):
+        if self.irqbalance_active == enable:
             # service is already in the expected state: nothing to do
             return
 
@@ -649,7 +655,9 @@ class IRQAffinity(Operation):
         cpus = range(self.system.logical_cpu_count)
         if tune:
             excluded = set(self.system.cpus)
-            cpus = (cpu for cpu in cpus if cpu not in excluded)
+            # Only compute the subset if excluded is not the full list of cpus
+            if excluded != set(cpus):
+                cpus = (cpu for cpu in cpus if cpu not in excluded)
         cpus = list(cpus)
 
         # FIXME: skip on old Linux not supported it?
