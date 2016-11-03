@@ -364,11 +364,12 @@ def parse_cpu_list(cpu_list):
     return cpus
 
 
-def open_text(path):
+def open_text(path, write=False):
+    mode = "w" if write else "r"
     if six.PY3:
-        return open(path, encoding="utf-8")
+        return open(path, mode, encoding="utf-8")
     else:
-        return open(path)
+        return open(path, mode)
 
 
 def read_first_line(path, error=False):

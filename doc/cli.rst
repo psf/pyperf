@@ -465,8 +465,13 @@ Implemented operations:
 
 * "ASLR": Check that Full randomization (``2``) is enabled
   in ``/proc/sys/kernel/randomize_va_space``
-* "CPU Frequency": Read-write
+* "CPU scaling governor (intel_pstate driver)": Get/Set the CPU scaling
+  governor. ``tune`` sets the governor to ``performance``, ``reset`` sets the
+  governor to ``powersave``.
+* "CPU Frequency": Read/Write
   ``/sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq`` sysfs.
+  ``tune`` sets ``scaling_min_freq`` to the maximum frequency, ``reset`` resets
+  ``scaling_min_freq`` to the minimum frequency.
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated

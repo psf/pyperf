@@ -8,7 +8,7 @@ import sys
 
 from perf._utils import (read_first_line, sysfs_path, proc_path,
                          format_cpu_list, get_logical_cpu_count,
-                         parse_cpu_list,
+                         parse_cpu_list, open_text,
                          get_isolated_cpus, format_cpu_infos)
 
 MSR_IA32_MISC_ENABLE = 0x1a0
@@ -17,6 +17,12 @@ MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
 
 def is_root():
     return (os.getuid() == 0)
+
+
+def write_text(filename, content):
+    with open_text(filename, write=True) as fp:
+        fp.write(content)
+        fp.flush()
 
 
 def run_cmd(cmd):
@@ -93,7 +99,7 @@ class TurboBoostMSR(Operation):
         if disabled:
             text.append('CPU %s: disabled' % format_cpu_list(disabled))
         if text:
-            print("%s: %s" % (self.name, ', '.join(text)))
+            self.info(', '.join(text))
 
     def read_msr(self, cpu, reg_num, bitfield=None):
         # -x for hexadecimal output
@@ -175,52 +181,86 @@ class TurboBoostIntelPstate(Operation):
 
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (intel_pstate driver)', system)
+        self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
         self.enabled = None
 
-    def show(self):
-        if self.enabled is None:
-            return
-
-        enabled = 'enabled' if self.enabled else 'disabled'
-        print("%s: %s" % (self.name, enabled))
-
     def read(self):
-        path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
-        no_turbo = read_first_line(path)
-
+        no_turbo = read_first_line(self.path)
         if no_turbo == '1':
             self.enabled = False
         elif no_turbo == '0':
             self.enabled = True
         else:
             self.error("Invalid no_turbo value: %r" % no_turbo)
+            self.enabled = None
+
+    def show(self):
+        if self.enabled is not None:
+            state = 'enabled' if self.enabled else 'disabled'
+            self.info("Turbo Boost %s" % state)
 
     def write(self, tune):
         enabled = (not tune)
 
-        if self.enabled is None:
-            self.read()
-            if self.enabled == enabled:
-                # no_turbo already set to the expected value
-                return
+        self.read()
+        if self.enabled == enabled:
+            # no_turbo already set to the expected value
+            return
 
-        path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
         content = '0' if enabled else '1'
 
         try:
-            with open(path, 'w') as fp:
-                fp.write(content)
-
-            msg = "%r written into %s" % (content, path)
-            if enabled:
-                self.info("Turbo Boost enabled: %s" % msg)
-            else:
-                self.info("Turbo Boost disabled: %s" % msg)
+            write_text(self.path, content)
         except IOError as exc:
-            msg = "Failed to write into %s" % path
+            msg = "Failed to write into %s" % self.path
             if exc.errno in (errno.EPERM, errno.EACCES) and not is_root():
                 msg += " (retry as root?)"
             self.error("%s: %s" % (msg, exc))
+            return
+
+        msg = "%r written into %s" % (content, self.path)
+        if enabled:
+            self.info("Turbo Boost enabled: %s" % msg)
+        else:
+            self.info("Turbo Boost disabled: %s" % msg)
+
+
+class CPUGovernorIntelPstate(Operation):
+    """
+    Get/Set CPU scaling governor of the intel_pstate driver.
+    """
+
+    def __init__(self, system):
+        Operation.__init__(self, 'CPU scaling governor (intel_pstate driver)',
+                           system)
+        self.path = sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        self.governor = None
+
+    def read(self):
+        governor = read_first_line(self.path)
+        if governor:
+            self.governor = governor
+        else:
+            self.error("Unable to read CPU scaling governor from %s" % self.path)
+
+    def show(self):
+        if self.governor:
+            self.info(self.governor)
+
+    def write(self, tune):
+        new_governor = 'performance' if tune else 'powersave'
+        self.read()
+        if not self.governor:
+            return
+
+        if new_governor == self.governor:
+            return
+        try:
+            write_text(self.path, new_governor)
+        except IOError as exc:
+            self.error("Failed to to set the CPU scaling governor: %s" % exc)
+        else:
+            self.info("CPU scaling governor set to %s" % new_governor)
 
 
 class LinuxScheduler(Operation):
@@ -463,6 +503,9 @@ class System:
         self.operations.append(CPUFrequency(self))
 
         if use_intel_pstate(0):
+            # Setting the CPU scaling governor resets no_turbo and so must be
+            # set before Turbo Boost
+            self.operations.append(CPUGovernorIntelPstate(self))
             self.operations.append(TurboBoostIntelPstate(self))
         else:
             self.operations.append(TurboBoostMSR(self))
