@@ -404,10 +404,13 @@ class CPUFrequency(Operation):
                        "or scaling_max_freq of CPU %s" % cpu)
             return
 
-        scaling_min_freq = int(scaling_min_freq)
-        scaling_max_freq = int(scaling_max_freq)
-        freq = ('min=%s MHz, max=%s MHz'
-                % (scaling_min_freq // 1000, scaling_max_freq // 1000))
+        min_mhz = int(scaling_min_freq) // 1000
+        max_mhz = int(scaling_max_freq) // 1000
+        if min_mhz != max_mhz:
+            freq = ('min=%s MHz, max=%s MHz'
+                    % (min_mhz, max_mhz))
+        else:
+            freq = 'min=max=%s MHz' % max_mhz
         self.cpus[cpu] = freq
 
     def read(self):
@@ -527,7 +530,7 @@ class IRQAffinity(Operation):
 
     def show(self):
         if self.default_smp_affinity:
-            self.info("Default affinity: CPU %s"
+            self.info("Default IRQ affinity: CPU %s"
                       % format_cpu_list(self.default_smp_affinity))
         if self.irq_affinity:
             infos = {irq: format_cpu_list(cpus)
@@ -563,8 +566,11 @@ class IRQAffinity(Operation):
         try:
             write_text(path, mask)
         except IOError as exc:
-            self.error("Failed to write %r into %s: %s"
-                       % (mask, path, exc))
+            # EIO means that the IRQ doesn't support SMP affinity:
+            # ignore the error
+            if exc.errno != errno.EIO:
+                self.error("Failed to write %r into %s: %s"
+                           % (mask, path, exc))
         else:
             self.info("Set affinity to CPU %s: write %r into %s"
                       % (format_cpu_list(cpus), mask, path))
@@ -577,10 +583,11 @@ class IRQAffinity(Operation):
                 self.write_irq(irq, new_cpus)
 
     def write(self, tune):
+        cpus = range(self.system.logical_cpu_count)
         if tune:
-            cpus = list(self.system.cpus)
-        else:
-            cpus = list(range(self.system.logical_cpu_count))
+            excluded = set(self.system.cpus)
+            cpus = (cpu for cpu in cpus if cpu not in excluded)
+        cpus = list(cpus)
 
         # FIXME: skip on old Linux not supported it?
         self.write_default(cpus)
@@ -638,7 +645,6 @@ class System:
         elif args.affinity:
             self.cpus = tuple(args.affinity)
         else:
-            # FIXME: add --affinity cmdline option
             self.cpus = tuple(range(self.logical_cpu_count))
         # The list of cpus must be sorted to avoid useless write in operations
         assert sorted(self.cpus) == list(self.cpus)

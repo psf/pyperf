@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.4
+-------------
+
+* system: tune also CPU affinity of interruptions (IRQ)
+
 Version 0.8.3 (2016-11-03)
 --------------------------
 
