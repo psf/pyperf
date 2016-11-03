@@ -454,7 +454,15 @@ system
 Get or set the system state for benchmarks::
 
     python3 -m perf system
+        [--affinity=CPU_LIST]
         [{show,tune,reset}]
+
+Options:
+
+* ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
+  See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
+
+Commands:
 
 * ``system show`` (or ``system``) shows the current state of the system for
   benchmarks
@@ -473,6 +481,9 @@ Operations
   ``/sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq`` sysfs.
   ``tune`` sets ``scaling_min_freq`` to the maximum frequency, ``reset`` resets
   ``scaling_min_freq`` to the minimum frequency.
+* "IRQ affinity": Read/Write the CPU affinity of interruptions:
+  ``/proc/irq/default_smp_affinity`` and ``/proc/irq/N/smp_affinity`` of all
+  IRQs
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated

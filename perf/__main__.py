@@ -29,6 +29,21 @@ def create_parser():
                          type=str, nargs='+',
                          help='Benchmark file')
 
+    def parse_affinity(value):
+        try:
+            cpus = parse_cpu_list(value)
+        except ValueError:
+            cpus = None
+        if not cpus:
+            raise argparse.ArgumentTypeError('invalid CPU list: %r' % value)
+        return cpus
+
+    def cpu_affinity(cmd):
+        cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
+                         type=parse_affinity,
+                         help='Specify CPU affinity. '
+                              'By default, use isolated CPUs.')
+
     # show
     cmd = subparsers.add_parser('show', help='Display a benchmark')
     cmd.add_argument('-q', '--quiet',
@@ -83,9 +98,7 @@ def create_parser():
 
     # collect_metadata
     cmd = subparsers.add_parser('collect_metadata')
-    cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
-                     help='Specify CPU affinity. '
-                          'By default, use isolated CPUs.')
+    cpu_affinity(cmd)
     cmd.add_argument('-o', '--output', metavar='FILENAME',
                      help='Save metadata as JSON into FILENAME')
 
@@ -95,6 +108,7 @@ def create_parser():
 
     # system
     cmd = subparsers.add_parser('system', help='System setup for benchmarks')
+    cpu_affinity(cmd)
     cmd.add_argument("system_action", nargs="?",
                      choices=('show', 'tune', 'reset'),
                      default='show')
@@ -352,7 +366,6 @@ def cmd_collect_metadata(args):
 
     cpus = args.affinity
     if cpus:
-        cpus = parse_cpu_list(cpus)
         if not set_cpu_affinity(cpus):
             print("ERROR: failed to set the CPU affinity")
             sys.exit(1)
@@ -681,7 +694,7 @@ def cmd_slowest(args):
 
 def cmd_system(args):
     from perf._system import System
-    System().main(args.system_action)
+    System().main(args.system_action, args)
 
 
 def main():

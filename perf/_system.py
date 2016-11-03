@@ -260,7 +260,7 @@ class CPUGovernorIntelPstate(Operation):
         try:
             write_text(self.path, new_governor)
         except IOError as exc:
-            self.error("Failed to to set the CPU scaling governor: %s" % exc)
+            self.error("Failed to set the CPU scaling governor: %s" % exc)
         else:
             self.info("CPU scaling governor set to %s" % new_governor)
 
@@ -477,6 +477,116 @@ class CPUFrequency(Operation):
             self.write_cpu(cpu, tune)
 
 
+class IRQAffinity(Operation):
+    def __init__(self, system):
+        Operation.__init__(self, 'IRQ affinity', system)
+        self.irq_path = proc_path('irq')
+        self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
+        self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
+        self.irqs = None
+        self.irq_affinity = {}
+        self.default_smp_affinity = None
+
+    def parse_affinity(self, mask):
+        mask = int(mask, 16)
+        cpus = []
+        for cpu in range(self.system.logical_cpu_count):
+            cpu_mask = 1 << cpu
+            if cpu_mask & mask:
+                cpus.append(cpu)
+        return cpus
+
+    def read_default_affinity(self):
+        mask = read_first_line(self.default_affinity_path)
+        if not mask:
+            return
+
+        self.default_smp_affinity = self.parse_affinity(mask)
+
+    def get_irqs(self):
+        if self.irqs is None:
+            filenames = os.listdir(self.irq_path)
+            self.irqs = [int(name) for name in filenames if name.isdigit()]
+        return self.irqs
+
+    def read_irqs_affinity(self):
+        for irq in self.get_irqs():
+            path = self.irq_affinity_path % irq
+            try:
+                mask = read_first_line(path, error=True)
+            except IOError as exc:
+                self.error("Failed to read %s: %s" % (path, exc))
+                continue
+
+            cpus = self.parse_affinity(mask)
+            self.irq_affinity[irq] = cpus
+
+    def read(self):
+        self.read_default_affinity()
+        self.read_irqs_affinity()
+
+    def show(self):
+        if self.default_smp_affinity:
+            self.info("Default affinity: CPU %s"
+                      % format_cpu_list(self.default_smp_affinity))
+        if self.irq_affinity:
+            infos = {irq: format_cpu_list(cpus)
+                     for irq, cpus in self.irq_affinity.items()}
+            infos = format_cpu_infos(infos)
+            self.info('IRQ affinity: %s' % ', '.join(infos))
+
+    def create_affinity(self, cpus):
+        mask = 0
+        for cpu in cpus:
+            mask |= (1 << cpu)
+        return "%x" % mask
+
+    def write_default(self, new_affinity):
+        self.read_default_affinity()
+        if new_affinity == self.default_smp_affinity:
+            return
+
+        mask = self.create_affinity(new_affinity)
+        try:
+            write_text(self.default_affinity_path, mask)
+        except IOError as exc:
+            self.error("Failed to write %r into %s: %s"
+                       % (mask, self.default_affinity_path, exc))
+        else:
+            self.info("Set default affinity to CPU %s: write %r into %s"
+                      % (format_cpu_list(new_affinity), mask,
+                         self.default_affinity_path))
+
+    def write_irq(self, irq, cpus):
+        path = self.irq_affinity_path % irq
+        mask = self.create_affinity(cpus)
+        try:
+            write_text(path, mask)
+        except IOError as exc:
+            self.error("Failed to write %r into %s: %s"
+                       % (mask, path, exc))
+        else:
+            self.info("Set affinity to CPU %s: write %r into %s"
+                      % (format_cpu_list(cpus), mask, path))
+
+    def write_irqs(self, new_cpus):
+        self.read_irqs_affinity()
+        for irq in self.get_irqs():
+            cpus = self.irq_affinity.get(irq)
+            if new_cpus != cpus:
+                self.write_irq(irq, new_cpus)
+
+    def write(self, tune):
+        if tune:
+            cpus = list(self.system.cpus)
+        else:
+            cpus = list(range(self.system.logical_cpu_count))
+
+        # FIXME: skip on old Linux not supported it?
+        self.write_default(cpus)
+        self.write_irqs(cpus)
+
+
 def use_intel_pstate(cpu):
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
@@ -507,6 +617,8 @@ class System:
         else:
             self.operations.append(TurboBoostMSR(self))
 
+        self.operations.append(IRQAffinity(self))
+
     def info(self, msg):
         print(msg)
         self.has_messages = True
@@ -514,7 +626,7 @@ class System:
     def error(self, msg):
         self.errors.append(msg)
 
-    def main(self, action):
+    def main(self, action, args):
         self.logical_cpu_count = get_logical_cpu_count()
         if not self.logical_cpu_count:
             print("ERROR: unable to get the number of logical CPUs")
@@ -523,9 +635,13 @@ class System:
         isolated = get_isolated_cpus()
         if isolated:
             self.cpus = tuple(isolated)
+        elif args.affinity:
+            self.cpus = tuple(args.affinity)
         else:
             # FIXME: add --affinity cmdline option
             self.cpus = tuple(range(self.logical_cpu_count))
+        # The list of cpus must be sorted to avoid useless write in operations
+        assert sorted(self.cpus) == list(self.cpus)
 
         if action in ('tune', 'reset'):
             tune = (action == 'tune')

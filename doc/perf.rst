@@ -230,6 +230,8 @@ On Python 2.7, the Python module ``psutil`` is required for
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.
 
+See the :ref:`system command <system_cmd>`.
+
 See also the `Microbenchmarks article
 <http://haypo-notes.readthedocs.io/microbenchmark.html>`_ which contains misc
 information on running benchmarks.

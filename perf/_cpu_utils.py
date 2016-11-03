@@ -94,10 +94,16 @@ def parse_cpu_list(cpu_list):
                 cpus.append(cpu)
         else:
             cpus.append(int(part))
+    cpus.sort()
     return cpus
 
 
 def get_isolated_cpus():
+    """Get the list of isolated CPUs.
+
+    Return a sorted list of CPU identifiers, or return None if no CPU is
+    isolated.
+    """
     # The cpu/isolated sysfs was added in Linux 4.2
     # (commit 59f30abe94bff50636c8cad45207a01fdcb2ee49)
     path = sysfs_path('devices/system/cpu/isolated')
