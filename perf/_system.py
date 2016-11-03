@@ -138,7 +138,7 @@ class TurboBoostMSR(Operation):
             self.error('invalid MSR bit: %#x' % msr)
 
     def read(self):
-        cpus = self.system.get_cpus()
+        cpus = self.system.logical_cpu_count
         for cpu in cpus:
             self.read_cpu(cpu)
 
@@ -170,7 +170,7 @@ class TurboBoostMSR(Operation):
 
     def write(self, tune):
         enabled = (not tune)
-        cpus = self.system.get_cpus()
+        cpus = self.system.logical_cpu_count
         for cpu in cpus:
             self.write_cpu(cpu, enabled)
 
@@ -473,15 +473,7 @@ class CPUFrequency(Operation):
             return
 
     def write(self, tune):
-        cpus = get_isolated_cpus()
-        if not cpus:
-            ncpu = get_logical_cpu_count()
-            if not ncpu:
-                self.error("Unable to get the number of CPUs")
-                return
-            cpus = tuple(range(ncpu))
-
-        for cpu in cpus:
+        for cpu in self.system.cpus:
             self.write_cpu(cpu, tune)
 
 
@@ -496,6 +488,9 @@ class System:
         self.operations = []
         self.errors = []
         self.has_messages = False
+        self.logical_cpu_count = None
+        # CPUs used for benchmarking: tuple of CPU identifiers
+        self.cpus = None
 
         self.operations.append(ASLR(self))
 
@@ -512,14 +507,6 @@ class System:
         else:
             self.operations.append(TurboBoostMSR(self))
 
-    def get_cpus(self):
-        cpu_count = get_logical_cpu_count()
-        if not cpu_count:
-            print("ERROR: unable to get the number of logical CPUs")
-            sys.exit(1)
-
-        return tuple(range(cpu_count))
-
     def info(self, msg):
         print(msg)
         self.has_messages = True
@@ -528,6 +515,18 @@ class System:
         self.errors.append(msg)
 
     def main(self, action):
+        self.logical_cpu_count = get_logical_cpu_count()
+        if not self.logical_cpu_count:
+            print("ERROR: unable to get the number of logical CPUs")
+            sys.exit(1)
+
+        isolated = get_isolated_cpus()
+        if isolated:
+            self.cpus = tuple(isolated)
+        else:
+            # FIXME: add --affinity cmdline option
+            self.cpus = tuple(range(self.logical_cpu_count))
+
         if action in ('tune', 'reset'):
             tune = (action == 'tune')
             for operation in self.operations:
