@@ -446,7 +446,7 @@ specific case, whereas many parameters are random:
 See the :ref:`Minimum versus average and standard deviation <min>` section.
 
 
-.. _sytem_cmd:
+.. _system_cmd:
 
 system
 ------
