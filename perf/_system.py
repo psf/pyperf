@@ -486,9 +486,26 @@ class IRQAffinity(Operation):
         self.irq_path = proc_path('irq')
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
+
+        self.irqbalance_active = None
         self.irqs = None
         self.irq_affinity = {}
         self.default_smp_affinity = None
+
+    def read_irqbalance_service(self):
+        cmd = ('systemctl', 'status', 'irqbalance')
+        exitcode, stdout = get_output(cmd)
+        if not stdout:
+            # systemctl is not installed, irqbalance service is not installed,
+            # or the current user is not root: ignore errors
+            return
+
+        match = re.search("^ *Active: (.*)$", stdout, flags=re.MULTILINE)
+        if not match:
+            self.error("Failed to parse systemctl output: %r" % stdout)
+            return
+
+        self.irqbalance_active = match.group(1)
 
     def parse_affinity(self, mask):
         mask = int(mask, 16)
@@ -525,13 +542,18 @@ class IRQAffinity(Operation):
             self.irq_affinity[irq] = cpus
 
     def read(self):
+        self.read_irqbalance_service()
         self.read_default_affinity()
         self.read_irqs_affinity()
 
     def show(self):
+        if self.irqbalance_active:
+            self.info("irqbalance service: %s" % self.irqbalance_active)
+
         if self.default_smp_affinity:
             self.info("Default IRQ affinity: CPU %s"
                       % format_cpu_list(self.default_smp_affinity))
+
         if self.irq_affinity:
             infos = {irq: format_cpu_list(cpus)
                      for irq, cpus in self.irq_affinity.items()}
@@ -543,6 +565,25 @@ class IRQAffinity(Operation):
         for cpu in cpus:
             mask |= (1 << cpu)
         return "%x" % mask
+
+    def write_irqbalance_service(self, enable):
+        self.read_irqbalance_service()
+        pattern = 'active' if enable else 'inactive'
+        if self.irqbalance_active and self.irqbalance_active.startswith(pattern):
+            # service is already in the expected state: nothing to do
+            return
+
+        action = 'start' if enable else 'stop'
+        cmd = ('systemctl', action, 'irqbalance')
+        exitcode = run_cmd(cmd)
+        if exitcode:
+            self.error('Failed to %s irqbalance service: '
+                       '%s failed with exit code %s'
+                       % (' '.join(cmd), exitcode))
+            return
+
+        action = 'Start' if enable else 'Stop'
+        self.info("%s irqbalance service" % action)
 
     def write_default(self, new_affinity):
         self.read_default_affinity()
@@ -583,6 +624,8 @@ class IRQAffinity(Operation):
                 self.write_irq(irq, new_cpus)
 
     def write(self, tune):
+        self.write_irqbalance_service(not tune)
+
         cpus = range(self.system.logical_cpu_count)
         if tune:
             excluded = set(self.system.cpus)
@@ -636,7 +679,6 @@ class System:
     def main(self, action, args):
         self.logical_cpu_count = get_logical_cpu_count()
         if not self.logical_cpu_count:
-            print("ERROR: unable to get the number of logical CPUs")
             sys.exit(1)
 
         isolated = get_isolated_cpus()

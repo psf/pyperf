@@ -4,7 +4,8 @@ Changelog
 Version 0.8.4
 -------------
 
-* system: tune also CPU affinity of interruptions (IRQ)
+* system: tune stops the irqbalance service and sets the CPU affinity of
+  interruptions (IRQ).
 
 Version 0.8.3 (2016-11-03)
 --------------------------

@@ -481,9 +481,10 @@ Operations
   ``/sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq`` sysfs.
   ``tune`` sets ``scaling_min_freq`` to the maximum frequency, ``reset`` resets
   ``scaling_min_freq`` to the minimum frequency.
-* "IRQ affinity": Read/Write the CPU affinity of interruptions:
-  ``/proc/irq/default_smp_affinity`` and ``/proc/irq/N/smp_affinity`` of all
-  IRQs
+* "IRQ affinity": Handle the state of the ``irqbalance service``: ``tune``
+  stops the service, ``reset`` starts the service. Read/Write the CPU affinity
+  of interruptions: ``/proc/irq/default_smp_affinity`` and
+  ``/proc/irq/N/smp_affinity`` of all IRQs
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
