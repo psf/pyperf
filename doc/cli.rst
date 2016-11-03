@@ -461,7 +461,8 @@ Get or set the system state for benchmarks::
 * ``system tune`` tunes the system to run benchmarks
 * ``system reset`` resets the system to the default state
 
-Implemented operations:
+Operations
+^^^^^^^^^^
 
 * "ASLR": Check that Full randomization (``2``) is enabled
   in ``/proc/sys/kernel/randomize_va_space``
@@ -484,6 +485,36 @@ Implemented operations:
 
 "Turbo Boost (intel_pstate driver)" is used automatically if the CPU 0 uses the
 ``intel_pstate`` driver.
+
+Linux documentation
+^^^^^^^^^^^^^^^^^^^
+
+* CPUFreq: CPU frequency and voltage scaling code in the Linux kernel
+
+  * `Linux CPUFreq User Guide
+    <https://www.kernel.org/doc/Documentation/cpu-freq/user-guide.txt>`_
+  * `CPUFreq Governors
+    <https://www.kernel.org/doc/Documentation/cpu-freq/governors.txt>`_
+  * `Processor boosting control
+    <https://www.kernel.org/doc/Documentation/cpu-freq/boost.txt>`_
+  * `Intel P-State driver
+    <https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt>`_
+
+* CPU pinning, real-time:
+
+  * `SMP IRQ affinity
+    <https://www.kernel.org/doc/Documentation/IRQ-affinity.txt>`_
+  * `NO_HZ: Reducing Scheduling-Clock Ticks
+    <https://www.kernel.org/doc/Documentation/timers/NO_HZ.txt>`_
+
+Notes
+^^^^^
+
+* If ``nohz_full`` kernel option is used, the CPU frequency must be fixed,
+  otherwise the CPU frequency will be instable. See `Bug 1378529: intel_pstate
+  driver doesn't support NOHZ_FULL
+  <https://bugzilla.redhat.com/show_bug.cgi?id=1378529>`_.
+* ASLR must *not* be disabled manually! (it's enabled by default on Linux)
 
 
 .. _collect_metadata_cmd:

@@ -8,6 +8,10 @@ TODO
 * system: CPU pinning for interruptions (IRQ)?
 * system: set the CPU scaling governor when intel_pstate is not used.
   Use "userland" governor with a fixed CPU speed (max speed)?
+* system: warn if HyperThread is enabled?
+* system: check that isolated CPU "respect HyperThreading" (are part of the
+  same physical cores)
+* system: detect NUMA
 * External tool (?) to produce nice HTML reports:
 
   * https://magic.io/blog/uvloop-blazing-fast-python-networking/
