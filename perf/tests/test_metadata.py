@@ -208,7 +208,7 @@ class CpuFunctionsTests(unittest.TestCase):
             perf_metadata.collect_cpu_freq(metadata, [0, 2])
             perf_metadata.collect_cpu_model(metadata)
             self.assertEqual(metadata['cpu_freq'],
-                             '0=1288 MHz, 2=1200 MHz')
+                             '0=1288 MHz; 2=1200 MHz')
             self.assertEqual(metadata['cpu_model_name'],
                              'Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz')
 
