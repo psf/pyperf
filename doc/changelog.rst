@@ -1,19 +1,14 @@
 Changelog
 =========
 
-Version 0.8.3
--------------
-
-Loading a large JSON file is now 10x faster (5 sec => 500 ms).
+Version 0.8.3 (2016-11-03)
+--------------------------
 
 Enhancement:
 
-* New system commands:
-
-  * ``system show`` displays the current state of the system for benchmarks
-  * ``system tune`` tunes the system to run benchmarks
-  * ``system reset`` resets the system to the default state
-
+* New ``system tune`` command to tune the system for benchmarks: disable Turbo
+  Boost, check isolated CPUs, set CPU frequency, set CPU scaling governor to
+  "performance", etc.
 * Support reading and writing JSON files compressed by gzip: use gzip
   if the filename ends with ``.gz``
 * The detection of isolated CPUs now works also on Linux older than 4.2:
@@ -30,6 +25,7 @@ Backward incompatible changes:
 
 Optimizations:
 
+* Loading a large JSON file is now 10x faster (5 sec => 500 ms).
 * Optimize ``Benchmark.add_run()``: don't recompute common metadata at each
   call, but update existing common metadata.
 * Don't store dates of metadata as datetime.datetime but strings to optimize

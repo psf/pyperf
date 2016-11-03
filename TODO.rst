@@ -5,6 +5,7 @@ TODO
   for pypy. pypy requires more warmup samples (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
   on the speed mailing list.
+* system: CPU pinning for interruptions (IRQ)?
 * External tool (?) to produce nice HTML reports:
 
   * https://magic.io/blog/uvloop-blazing-fast-python-networking/
@@ -22,8 +23,6 @@ TODO
     - enhance hist_scipy.py to support more than one benchmark
     - https://docs.scipy.org/doc/scipy/reference/tutorial/stats.html
 
-* Add "system", "tune_system", (another name) command to tune the system for
-  benchmarks: CPU pinning for IRQ, performance governor for CPU speed, etc.
 * Remove --stdout or redesign _load_suite_from_stdout()?
 * any print("test") in a worker creates a cryptic error message in the master.
   Don't use stdout? Better error message?
