@@ -546,9 +546,9 @@ class IRQAffinity(Operation):
         else:
             self.error("Unknown service state: %r" % stdout)
 
-    def read_irqbalance_service(self):
+    def read_irqbalance_state(self):
         self.read_irqbalance_systemctl()
-        if self.systemctl == False:
+        if self.systemctl is False:
             self.read_irqbalance_service()
 
     def parse_affinity(self, mask):
@@ -586,7 +586,7 @@ class IRQAffinity(Operation):
             self.irq_affinity[irq] = cpus
 
     def read(self):
-        self.read_irqbalance_service()
+        self.read_irqbalance_state()
         self.read_default_affinity()
         self.read_irqs_affinity()
 
@@ -612,7 +612,7 @@ class IRQAffinity(Operation):
         return "%x" % mask
 
     def write_irqbalance_service(self, enable):
-        self.read_irqbalance_service()
+        self.read_irqbalance_state()
         if self.irqbalance_active is None:
             # systemd service missing or failed to get its state:
             # don't try to start/stop the irqbalance service
@@ -623,7 +623,7 @@ class IRQAffinity(Operation):
             return
 
         action = 'start' if enable else 'stop'
-        if self.systemctl == False:
+        if self.systemctl is False:
             cmd = ('service', 'irqbalance', action)
         else:
             cmd = ('systemctl', action, 'irqbalance')
