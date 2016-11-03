@@ -7,6 +7,8 @@ TODO
   on the speed mailing list.
 * system: set the CPU scaling governor when intel_pstate is not used.
   Use "userland" governor with a fixed CPU speed (max speed)?
+* system IRQAffinity: support Ubuntu 14.04, use "service status irqbalance",
+  "service stop irqbalance", etc.
 * system: warn if HyperThread is enabled?
 * system: check that isolated CPU "respect HyperThreading" (are part of the
   same physical cores)

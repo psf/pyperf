@@ -142,8 +142,7 @@ class TurboBoostMSR(Operation):
             self.error('invalid MSR bit: %#x' % msr)
 
     def read(self):
-        cpus = self.system.logical_cpu_count
-        for cpu in cpus:
+        for cpu in range(self.system.logical_cpu_count):
             self.read_cpu(cpu)
 
     def write_msr(self, cpu, reg_num, value):
@@ -174,7 +173,10 @@ class TurboBoostMSR(Operation):
 
     def write(self, tune):
         enabled = (not tune)
-        cpus = self.system.logical_cpu_count
+        if tune:
+            cpus = self.system.cpus
+        else:
+            cpus = range(self.system.logical_cpu_count)
         for cpu in cpus:
             self.write_cpu(cpu, enabled)
 
