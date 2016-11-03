@@ -493,22 +493,24 @@ class IRQAffinity(Operation):
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
         self.irqbalance_active = None
+        self.systemctl = True
         self.irqs = None
         self.irq_affinity = {}
         self.default_smp_affinity = None
 
-    def read_irqbalance_service(self):
+    def read_irqbalance_systemctl(self):
         cmd = ('systemctl', 'status', 'irqbalance')
         exitcode, stdout = get_output(cmd)
         if not stdout:
-            # systemctl is not installed, irqbalance service is not installed,
-            # or the current user is not root: ignore errors
+            # systemctl is not installed? ignore errors
+            self.systemctl = False
             return
 
         match = re.search(r"^ *Loaded: (.*)$", stdout, flags=re.MULTILINE)
         if not match:
             self.error("Failed to parse systemctl loaded state: %r" % stdout)
             return
+        self.systemctl = True
 
         loaded = match.group(1)
         if loaded.startswith('not-found'):
@@ -527,6 +529,27 @@ class IRQAffinity(Operation):
             self.irqbalance_active = False
         else:
             self.error("Unknown service state: %r" % active)
+
+    def read_irqbalance_service(self):
+        cmd = ('service', 'irqbalance', 'status')
+        exitcode, stdout = get_output(cmd)
+        if not stdout:
+            # failed to the the status: ignore
+            return
+
+        stdout = stdout.rstrip()
+        state = stdout.split(' ', 1)[-1]
+        if state.startswith('stop'):
+            self.irqbalance_active = False
+        elif state.startswith('start'):
+            self.irqbalance_active = True
+        else:
+            self.error("Unknown service state: %r" % stdout)
+
+    def read_irqbalance_service(self):
+        self.read_irqbalance_systemctl()
+        if self.systemctl == False:
+            self.read_irqbalance_service()
 
     def parse_affinity(self, mask):
         mask = int(mask, 16)
@@ -600,7 +623,10 @@ class IRQAffinity(Operation):
             return
 
         action = 'start' if enable else 'stop'
-        cmd = ('systemctl', action, 'irqbalance')
+        if self.systemctl == False:
+            cmd = ('service', 'irqbalance', action)
+        else:
+            cmd = ('systemctl', action, 'irqbalance')
         exitcode = run_cmd(cmd)
         if exitcode:
             self.error('Failed to %s irqbalance service: '
