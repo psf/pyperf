@@ -23,6 +23,7 @@ TODO
 * Calibration run: display time per iteration and total duration
 * system:
 
+  * advice: use --affinity when no CPU is isolated
   * set the CPU scaling governor when intel_pstate is not used.
     Use "userland" governor with a fixed CPU speed (max speed)?
   * warn if HyperThread is enabled?
