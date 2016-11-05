@@ -174,12 +174,9 @@ Benchmark
 
       See :ref:`Metadata <metadata>`.
 
-   .. method:: get_name() -> str or None
+   .. method:: get_name() -> str
 
       Get the benchmark name (``str``).
-
-      Return ``None`` if the benchmark has no run or runs have no name in
-      metadata.
 
    .. method:: get_nrun() -> int
 
@@ -260,8 +257,6 @@ Benchmark
 
       Update metadata of all runs of the benchmark.
 
-      The benchmark must contain at least one run.
-
       If the ``inner_loops`` metadata is already set and its value is modified,
       an exception is raised.
 
@@ -286,14 +281,14 @@ BenchmarkSuite
 
       Add a :class:`Benchmark` object.
 
+      A suite cannot contain two benchmarks with the same name, because the
+      name is used as an unique key: see the :meth:`get_benchmark` method.
+
    .. method:: add_runs(bench: Benchmark or BenchmarkSuite)
 
       Add runs of benchmarks.
 
       *bench* can be a :class:`Benchmark` or a :class:`BenchmarkSuite`.
-
-      Each benchmark must have at least one run. If *bench* is a benchmark
-      suite, it must have at least one benchmark.
 
       See :meth:`Benchmark.add_runs` method and :func:`add_runs` function.
 
@@ -324,8 +319,6 @@ BenchmarkSuite
    .. method:: get_benchmark_names() -> List[str]
 
       Get the list of benchmark names.
-
-      Raise an error if a benchmark has no name.
 
    .. method:: get_benchmarks() -> List[Benchmark]
 
