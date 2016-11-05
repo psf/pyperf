@@ -311,6 +311,9 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench.get_total_duration(), 8.0)
 
     def test_get_dates(self):
+        bench = perf.Benchmark([create_run()])
+        self.assertIsNone(bench.get_dates())
+
         metadata = {'date': '2016-07-20T14:06:00', 'duration': 60.0}
         bench = perf.Benchmark([create_run(metadata=metadata)])
         self.assertEqual(bench.get_dates(),

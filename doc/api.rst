@@ -156,15 +156,14 @@ Benchmark
 
       .. versionadded:: 0.7.8
 
-   .. method:: get_dates() -> tuple
+   .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
       Get the start date of the first run and the end date of the last run.
 
       Return a ``(start, end)`` tuple where start and end are
       ``datetime.datetime`` objects if a least one run has a date metadata.
 
-      Return ``(None, None)`` if no run has ``date`` metadata or if the
-      benchmark has no run.
+      Return ``None`` if no run has the ``date`` metadata.
 
    .. method:: get_metadata() -> dict
 
@@ -324,7 +323,7 @@ BenchmarkSuite
 
       Get the list of benchmarks sorted by their name.
 
-   .. method:: get_dates() -> tuple
+   .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
       Get the start date of the first benchmark and end date of the last
       benchmark.
@@ -332,8 +331,7 @@ BenchmarkSuite
       Return a ``(start, end)`` tuple where start and end are
       ``datetime.datetime`` objects if a least one benchmark has dates.
 
-      Return ``(None, None)`` if no benchmark has dates, or if the suite
-      doesn't contain any benchmark.
+      Return ``None`` if no benchmark has dates.
 
    .. method:: get_metadata() -> dict
 

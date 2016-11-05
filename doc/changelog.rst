@@ -7,6 +7,8 @@ Version 0.8.4
 * Add ``--affinity`` option to the system command
 * system: tune stops the irqbalance service and sets the CPU affinity of
   interruptions (IRQ).
+* ``get_dates()`` methods now return ``None`` rather than an empty tuple
+  if runs don't have the ``date`` metadata.
 
 Version 0.8.3 (2016-11-03)
 --------------------------

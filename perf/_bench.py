@@ -43,6 +43,9 @@ _CHECKED_METADATA = (
     'unit')
 
 
+_UNSET = object()
+
+
 def _check_warmups(warmups):
     for item in warmups:
         if not isinstance(item, tuple):
@@ -315,7 +318,7 @@ class Benchmark(object):
         self._median = None
         if not keep_common_metadata:
             self._common_metadata = None
-        self._dates = None
+        self._dates = _UNSET
 
     def median(self):
         if self._median is None:
@@ -520,7 +523,7 @@ class Benchmark(object):
             self.add_run(run)
 
     def get_dates(self):
-        if self._dates is not None:
+        if self._dates is not _UNSET:
             return self._dates
 
         start = None
@@ -539,10 +542,10 @@ class Benchmark(object):
             if end is None or run_end > end:
                 end = run_end
 
-        if start is not None and end is not None:
+        if start is not None:
             self._dates = (start, end)
         else:
-            self._dates = ()
+            self._dates = None
         return self._dates
 
     def _extract_metadata(self, name):
@@ -785,10 +788,10 @@ class BenchmarkSuite(object):
                 start = dates[0]
             if end is None or dates[1] > end:
                 end = dates[1]
-        if start is not None and end is not None:
+        if start is not None:
             return (start, end)
         else:
-            return ()
+            return None
 
 
 def add_runs(filename, result):
