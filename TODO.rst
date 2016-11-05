@@ -20,7 +20,6 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
-* add_runs() should sort runs by the start date
 * BenchmarkSuite.get_benchmarks(): don't sort by name
 * load(): remove '-' special case
 * add stdev() method, maybe median_stdev()

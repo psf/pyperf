@@ -114,7 +114,21 @@ Benchmark
 
       Add a benchmark run: *run* must a :class:`Run` object.
 
-      The new run must be compatible with existing runs: metadata are compared.
+      The new run must be compatible with existing runs, the following metadata
+      must be the same (same value or no value for all runs):
+
+      * ``aslr``
+      * ``cpu_count``
+      * ``cpu_model_name``
+      * ``hostname``
+      * ``inner_loops``
+      * ``name``
+      * ``platform``
+      * ``python_executable``
+      * ``python_implementation``
+      * ``python_unicode``
+      * ``python_version``
+      * ``unit``
 
    .. method:: add_runs(bench: Benchmark)
 
