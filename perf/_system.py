@@ -57,6 +57,12 @@ def get_output(cmd):
     return (exitcode, stdout)
 
 
+def use_intel_pstate(cpu):
+    path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
+    scaling_driver = read_first_line(path)
+    return (scaling_driver == 'intel_pstate')
+
+
 class Operation(object):
     def __init__(self, name, system):
         self.name = name
@@ -691,10 +697,28 @@ class IRQAffinity(Operation):
         self.write_irqs(cpus)
 
 
-def use_intel_pstate(cpu):
-    path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
-    scaling_driver = read_first_line(path)
-    return (scaling_driver == 'intel_pstate')
+class CheckNOHZFullIntelPstate(Operation):
+    def __init__(self, system):
+        Operation.__init__(self, 'Check nohz_full', system)
+
+    def show(self):
+        nohz_full = read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+        if not nohz_full:
+            return
+
+        nohz_full = parse_cpu_list(nohz_full)
+        if not nohz_full:
+            return
+
+        used = set(self.system.cpus) | set(nohz_full)
+        if not used:
+            return
+
+        self.advice("WARNING: nohz_full is enabled on CPUs %s which use the "
+                    "intel_pstate driver, whereas intel_pstate is incompatible "
+                    "with nohz_full"
+                    % format_cpu_list(used))
+        self.advice("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
 
 
 class System:
@@ -722,6 +746,7 @@ class System:
             # set before Turbo Boost
             self.operations.append(CPUGovernorIntelPstate(self))
             self.operations.append(TurboBoostIntelPstate(self))
+            self.operations.append(CheckNOHZFullIntelPstate(self))
         else:
             self.operations.append(TurboBoostMSR(self))
 

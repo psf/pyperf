@@ -34,7 +34,6 @@ TODO
     same physical cores)
   * check that rcu_nocbs respects isolated CPUs
   * detect NUMA
-  * emit a warning when nohz_full is enabled on at least one CPU
 
 * Add a check command checking if a benchmark results seems stable:
 
