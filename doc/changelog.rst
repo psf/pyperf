@@ -11,6 +11,7 @@ Version 0.8.4
   if runs don't have the ``date`` metadata.
 * The ``--stdout`` internal option has been removed, replaced by a new
   ``--pipe`` option. Workers can now use stdout for regular messages.
+* Runner doesn't eat worker stdout and stderr anymore.
 
 Version 0.8.3 (2016-11-03)
 --------------------------

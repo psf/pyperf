@@ -15,7 +15,7 @@ from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta, format_number, format_sample
-from perf._utils import (MS_WINDOWS, popen_communicate,
+from perf._utils import (MS_WINDOWS,
                          abs_executable, create_environ, pipe_cloexec)
 
 try:
@@ -198,7 +198,10 @@ class Runner:
     def _process_args(self):
         args = self.args
 
-        if args.quiet:
+        if args.pipe:
+            args.quiet = True
+            args.verbose = False
+        elif args.quiet:
             args.verbose = False
 
         nprocess = self.argparser.get_default('processes')
@@ -300,7 +303,7 @@ class Runner:
                 print("ERROR: CPU affinity not available.", file=sys.stderr)
                 print("Use Python 3.3 or newer, or install psutil dependency")
                 sys.exit(1)
-            else:
+            elif not self.args.quiet:
                 print("WARNING: unable to pin worker processes to "
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
@@ -611,19 +614,9 @@ class Runner:
                 kw = {}
                 if sys.version_info >= (3, 2):
                     kw['pass_fds'] = [wpipe]
-                proc = subprocess.Popen(cmd,
-                                        universal_newlines=True,
-                                        stdout=subprocess.PIPE,
-                                        stderr=subprocess.PIPE,
-                                        env=env, **kw)
-
-                stdout, stderr = popen_communicate(proc)
+                proc = subprocess.Popen(cmd, env=env, **kw)
 
                 if proc.returncode:
-                    sys.stdout.write(stdout)
-                    sys.stdout.flush()
-                    sys.stderr.write(stderr)
-                    sys.stderr.flush()
                     raise RuntimeError("%s failed with exit code %s"
                                        % (cmd[0], proc.returncode))
 
@@ -650,21 +643,7 @@ class Runner:
         if self.args.quiet:
             checks = False
 
-        lines = format_benchmark(bench,
-                                 checks=checks,
-                                 metadata=args.metadata,
-                                 dump=args.dump,
-                                 stats=args.stats,
-                                 hist=args.hist,
-                                 show_name=self._show_name)
-        for line in lines:
-            print(line)
-
-        sys.stdout.flush()
-        if args.append:
-            perf.add_runs(args.append, bench)
-
-        if args.pipe:
+        if args.pipe is not None:
             fd = args.pipe
             if six.PY3:
                 wpipe = open(fd, "w", encoding="utf8")
@@ -678,6 +657,21 @@ class Runner:
                     if exc.errno != errno.EPIPE:
                         raise
                     # ignore broken pipe error
+        else:
+            lines = format_benchmark(bench,
+                                     checks=checks,
+                                     metadata=args.metadata,
+                                     dump=args.dump,
+                                     stats=args.stats,
+                                     hist=args.hist,
+                                     show_name=self._show_name)
+            for line in lines:
+                print(line)
+
+            sys.stdout.flush()
+
+        if args.append:
+            perf.add_runs(args.append, bench)
 
         if args.output:
             if self._worker_task >= 1:
