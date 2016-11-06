@@ -77,15 +77,12 @@ Options::
 
     -o FILENAME/--output=FILENAME
     --append=FILENAME
-    --stdout
+    --pipe=FD
 
 * ``--output=FILENAME`` writes the benchmark result as JSON into *FILENAME*
 * ``--append=FILENAME`` appends the benchmark runs to benchmarks of the JSON
   file *FILENAME*. The file is created if it doesn't exist.
-* ``--stdout`` writes the benchmark as JSON into stdout
-
-If ``--stdout`` is used, other messages are written into stderr rather than
-stdout.
+* ``--pipe=FD`` writes benchmarks encoded as JSON into the pipe FD.
 
 
 Misc

@@ -803,8 +803,8 @@ def add_runs(filename, result):
         result.dump(filename)
 
 
-def _load_suite_from_stdout(stdout):
-    lines = stdout.split("\n")
+def _load_suite_from_pipe(bench_json):
+    lines = bench_json.split("\n")
     result = None
     for line in lines:
         if not line:

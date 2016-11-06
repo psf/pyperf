@@ -11,38 +11,18 @@ import six
 
 import perf
 from perf._cli import format_run, format_benchmark, multiline_output
-from perf._bench import _load_suite_from_stdout
+from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta, format_number, format_sample
 from perf._utils import (MS_WINDOWS, popen_communicate,
-                         abs_executable, create_environ)
+                         abs_executable, create_environ, pipe_cloexec)
 
 try:
     # Optional dependency
     import psutil
 except ImportError:
     psutil = None
-
-
-def _run_cmd(args, env):
-    proc = subprocess.Popen(args,
-                            universal_newlines=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            env=env)
-
-    stdout, stderr = popen_communicate(proc)
-
-    if proc.returncode:
-        sys.stdout.write(stdout)
-        sys.stdout.flush()
-        sys.stderr.write(stderr)
-        sys.stderr.flush()
-        raise RuntimeError("%s failed with exit code %s"
-                           % (args[0], proc.returncode))
-
-    return stdout
 
 
 class Runner:
@@ -159,8 +139,9 @@ class Runner:
                             help='enable verbose mode')
         parser.add_argument('-q', '--quiet', action="store_true",
                             help='enable quiet mode')
-        parser.add_argument('--stdout', action='store_true',
-                            help='write results encoded to JSON into stdout')
+        parser.add_argument('--pipe', type=int, metavar="FD",
+                            help='Write benchmarks encoded as JSON '
+                                 'into the pipe FD')
         parser.add_argument('-o', '--output', metavar='FILENAME',
                             help='write results encoded to JSON into FILENAME')
         parser.add_argument('--append', metavar='FILENAME',
@@ -170,8 +151,8 @@ class Runner:
                                  'sample, used to calibrate the number of '
                                  'loops (default: %s)'
                             % format_timedelta(min_time))
-        parser.add_argument('--worker', action="store_true",
-                            help='worker process, run the benchmark')
+        parser.add_argument('--worker', action='store_true',
+                            help='Worker process, run the benchmark.')
         parser.add_argument('--worker-task', type=positive_or_nul, metavar='TASK_ID',
                             help='Identifier of the worker task: '
                                  'only execute the benchmark function TASK_ID')
@@ -283,9 +264,6 @@ class Runner:
             self._process_args()
         return self.args
 
-    def _stream(self):
-        return sys.stderr if self.args.stdout else sys.stdout
-
     def _range(self):
         for warmup in six.moves.xrange(self.args.warmups):
             yield (True, 1 + warmup)
@@ -293,8 +271,6 @@ class Runner:
             yield (False, 1 + run)
 
     def _cpu_affinity(self):
-        stream = self._stream()
-
         cpus = self.args.affinity
         if not cpus:
             # --affinity option is not set: detect isolated CPUs
@@ -315,27 +291,24 @@ class Runner:
                 else:
                     text = ("Pin process to CPUs: %s"
                             % format_cpu_list(cpus))
-                print(text, file=stream)
+                print(text)
 
             if isolated:
                 self.args.affinity = format_cpu_list(cpus)
         else:
             if not isolated:
                 print("ERROR: CPU affinity not available.", file=sys.stderr)
-                print("Use Python 3.3 or newer, or install psutil dependency",
-                      file=stream)
+                print("Use Python 3.3 or newer, or install psutil dependency")
                 sys.exit(1)
             else:
                 print("WARNING: unable to pin worker processes to "
-                      "isolated CPUs, CPU affinity not available", file=stream)
-                print("Use Python 3.3 or newer, or install psutil dependency",
-                      file=stream)
+                      "isolated CPUs, CPU affinity not available")
+                print("Use Python 3.3 or newer, or install psutil dependency")
 
     def _run_bench(self, metadata, sample_func, inner_loops, loops, nsample,
                    is_warmup=False, is_calibrate=False, calibrate=False):
         unit = metadata.get('unit')
         args = self.args
-        stream = self._stream()
         if loops <= 0:
             raise ValueError("loops must be >= 1")
 
@@ -377,9 +350,7 @@ class Runner:
                             % (text,
                                format_number(loops, 'loop'),
                                format_sample(unit, raw_sample)))
-                text = ("%s %s: %s"
-                        % (sample_name, index, text))
-                print(text, file=stream)
+                print("%s %s: %s" % (sample_name, index, text))
 
             if calibrate and raw_sample < args.min_time:
                 loops *= 2
@@ -393,9 +364,8 @@ class Runner:
 
         if args.verbose:
             if is_calibrate:
-                print("Calibration: use %s loops" % format_number(loops),
-                      file=stream)
-            print(file=stream)
+                print("Calibration: use %s loops" % format_number(loops))
+            print()
 
         # Run collects metadata
         return (loops, samples)
@@ -599,12 +569,12 @@ class Runner:
 
         return self._main(name, sample_func, inner_loops)
 
-    def _spawn_worker_suite(self, calibrate=False):
+    def _worker_cmd(self, calibrate, wpipe):
         args = self.args
 
         cmd = [args.python]
         cmd.extend(self._program_args)
-        cmd.extend(('--worker', '--stdout',
+        cmd.extend(('--worker', '--pipe', str(wpipe),
                     '--worker-task=%s' % self._worker_task,
                     '--samples', str(args.samples),
                     '--warmups', str(args.warmups),
@@ -624,10 +594,45 @@ class Runner:
         if self._add_cmdline_args:
             self._add_cmdline_args(cmd, self.args)
 
-        env = create_environ(args.inherit_environ)
-        stdout = _run_cmd(cmd, env=env)
+        return cmd
 
-        return _load_suite_from_stdout(stdout)
+    def _spawn_worker_suite(self, calibrate=False):
+        rpipe, wpipe = pipe_cloexec()
+        if six.PY3:
+            rfile = open(rpipe, "r", encoding="utf8")
+        else:
+            rfile = os.fdopen(rpipe, "r")
+
+        with rfile:
+            try:
+                cmd = self._worker_cmd(calibrate, wpipe)
+                env = create_environ(self.args.inherit_environ)
+
+                kw = {}
+                if sys.version_info >= (3, 2):
+                    kw['pass_fds'] = [wpipe]
+                proc = subprocess.Popen(cmd,
+                                        universal_newlines=True,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        env=env, **kw)
+
+                stdout, stderr = popen_communicate(proc)
+
+                if proc.returncode:
+                    sys.stdout.write(stdout)
+                    sys.stdout.flush()
+                    sys.stderr.write(stderr)
+                    sys.stderr.flush()
+                    raise RuntimeError("%s failed with exit code %s"
+                                       % (cmd[0], proc.returncode))
+
+            finally:
+                os.close(wpipe)
+
+            bench_json = rfile.read()
+
+        return _load_suite_from_pipe(bench_json)
 
     def _spawn_worker_bench(self, calibrate=False):
         suite = self._spawn_worker_suite(calibrate)
@@ -639,7 +644,6 @@ class Runner:
         return benchmarks[0]
 
     def _display_result(self, bench, checks=True):
-        stream = self._stream()
         args = self.args
 
         # Display the average +- stdev
@@ -654,27 +658,26 @@ class Runner:
                                  hist=args.hist,
                                  show_name=self._show_name)
         for line in lines:
-            print(line, file=stream)
+            print(line)
 
-        stream.flush()
+        sys.stdout.flush()
         if args.append:
             perf.add_runs(args.append, bench)
 
-        if args.stdout:
-            try:
-                bench.dump(sys.stdout)
-            except IOError as exc:
-                if exc.errno != errno.EPIPE:
-                    raise
-                # ignore broken pipe error
+        if args.pipe:
+            fd = args.pipe
+            if six.PY3:
+                wpipe = open(fd, "w", encoding="utf8")
+            else:
+                wpipe = os.fdopen(fd, "w")
 
-                # Close stdout to avoid the warning "Exception ignored in: ..."
-                # at exit
+            with wpipe:
                 try:
-                    sys.stdout.close()
-                except IOError:
-                    # close() is likely to fail with EPIPE (BrokenPipeError)
-                    pass
+                    bench.dump(wpipe)
+                except IOError as exc:
+                    if exc.errno != errno.EPIPE:
+                        raise
+                    # ignore broken pipe error
 
         if args.output:
             if self._worker_task >= 1:
@@ -687,7 +690,6 @@ class Runner:
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
-        stream = self._stream()
         nprocess = args.processes
         old_loops = self.args.loops
         need_calibration = (not args.loops)
@@ -696,7 +698,7 @@ class Runner:
         calibrate = need_calibration
 
         if verbose and self._worker_task > 0:
-            print(file=stream)
+            print()
 
         for process in range(1, nprocess + 1):
             worker_bench = self._spawn_worker_bench(calibrate)
@@ -705,9 +707,9 @@ class Runner:
                 run = worker_bench.get_runs()[-1]
                 run_index = '%s/%s' % (process, nprocess)
                 for line in format_run(worker_bench, run_index, run):
-                    print(line, file=stream)
+                    print(line)
             elif not quiet:
-                print(".", end='', file=stream)
+                print(".", end='')
 
             if calibrate:
                 # Use the first worker to calibrate the benchmark. Use a worker
@@ -716,8 +718,7 @@ class Runner:
                 first_run = worker_bench.get_runs()[0]
                 args.loops = first_run._get_loops()
                 if verbose:
-                    print("Calibration: use %s loops" % format_number(args.loops),
-                          file=stream)
+                    print("Calibration: use %s loops" % format_number(args.loops))
             calibrate = False
 
             if bench is not None:
@@ -725,10 +726,10 @@ class Runner:
             else:
                 bench = worker_bench
 
-            stream.flush()
+            sys.stdout.flush()
 
         if not quiet and newline:
-            print(file=stream)
+            print()
 
         # restore the old value of loops, to recalibrate for the next
         # benchmark function if loops=0

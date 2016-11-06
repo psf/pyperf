@@ -331,3 +331,26 @@ def create_environ(inherit_environ):
         if name in os.environ:
             env[name] = os.environ[name]
     return env
+
+
+if sys.version_info < (3, 4):
+    try:
+        import fcntl
+    except ImportError:
+        fcntl = None
+
+    def _set_cloexec(fd):
+        if fcntl is None:
+            return
+
+        flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        flags |= os.O_CLOEXEC
+        fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+
+    def pipe_cloexec():
+        rfd, wfd = os.pipe()
+        return (rfd, wfd)
+else:
+    pipe_cloexec = os.pipe
+
+    # In Python 3.4, file descriptors are non-inheritable by default (PEP 446)

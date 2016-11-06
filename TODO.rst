@@ -5,10 +5,6 @@ BUGS
   for pypy. pypy requires more warmup samples (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
   on the speed mailing list.
-* Remove --stdout or redesign _load_suite_from_stdout()? Use a pipe and
-  pass_fds of subprocess.Popen.
-* any print("test") in a worker creates a cryptic error message in the master.
-  Don't use stdout? Better error message?
 
 
 Blocker issues for perf 1.0 stable API
@@ -20,7 +16,8 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
-* BenchmarkSuite.get_benchmarks(): don't sort by name
+* BenchmarkSuite.get_benchmarks(): don't sort by name?
+* Add CLI option to sort benchmarks by start date, not by name
 * load(): remove '-' special case
 * add stdev() method, maybe median_stdev()
 * Calibration run: display time per iteration and total duration
@@ -67,17 +64,13 @@ TODO
 * Write unit test for compare_to --group-by-speed
 * Write unit test for tracemalloc and track memory: allocate 30 MB,
   check usage >= 30 MB
-* Add CLI option to sort benchmarks by start date, not by name
-* Enhance TextRunner to be able to run multiple benchmarks
-* BenchmarkSuite.get_benchmarks(): don't sort by name?
 * Remove BenchmarkSuite.__iter__()?
 
 
 Low priority
 ============
 
-* configurable clock? see pybench
-* reimplement metadata for compare?
+* compare: display metadata
 * fix hist if benchmark only contains one sample
 * support --fast + -p1
 * perf CLI: handle FileNotFoundError for input file (need unit test)
