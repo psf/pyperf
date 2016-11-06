@@ -5,7 +5,6 @@ import os
 import platform
 import re
 import socket
-import subprocess
 import sys
 import time
 try:
@@ -214,51 +213,6 @@ def collect_memory_metadata(metadata):
             metadata['mem_peak_pagefile_usage'] = usage
 
 
-def get_cpu_boost(cpu):
-    if not get_cpu_boost.working:
-        return
-
-    env = dict(os.environ, LC_ALL='C')
-    args = ['cpupower', '-c', str(cpu), 'frequency-info']
-    try:
-        proc = subprocess.Popen(args,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True,
-                                env=env)
-        stdout = proc.communicate()[0]
-        if proc.returncode != 0:
-            # if the command failed once, never try it again
-            # (consider that the command is not installed or does not work)
-            get_cpu_boost.working = False
-            return None
-    except OSError:
-        get_cpu_boost.working = False
-        return None
-
-    # cpupower doesn't seem to work on PPC64LE:
-    # see https://github.com/haypo/perf/issues/11
-    if 'no or unknown cpufreq driver is active on this CPU' in stdout:
-        get_cpu_boost.working = False
-        return None
-
-    boost = False
-    for line in stdout.splitlines():
-        if boost:
-            if 'Supported:' in line:
-                value = line.split(':', 1)[-1].strip()
-                if value == 'no':
-                    return False
-                if value == 'yes':
-                    return True
-                raise ValueError("unable to parse: %r" % line)
-        elif 'boost state support' in line:
-            boost = True
-
-    raise ValueError("unable to parse cpupower output: %r" % stdout)
-get_cpu_boost.working = True
-
-
 def collect_cpu_freq(metadata, cpus):
     # Parse /proc/cpuinfo: search for 'cpu MHz' (Intel) or 'clock' (Power8)
     cpu_set = set(cpus)
@@ -308,13 +262,6 @@ def get_cpu_config(cpu):
             info.append('intel_pstate:no turbo')
         elif no_turbo == '0':
             info.append('intel_pstate:turbo')
-    else:
-        boost = get_cpu_boost(cpu)
-        if boost is not None:
-            if boost:
-                info.append('boost:supported')
-            else:
-                info.append('boost:not suppported')
 
     path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_governor" % cpu)
     scaling_governor = read_first_line(path)

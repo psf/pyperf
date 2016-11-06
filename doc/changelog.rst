@@ -14,6 +14,11 @@ Version 0.8.4
 * Runner doesn't eat worker stdout and stderr anymore.
 * check and system emit a warning if nohz_full is used with the intel_pstate
   driver.
+* collect_metadata: On CPUs not using the intel_pstate driver, don't run
+  cpupower command anymore to check if the Turbo Boost is enabled. It avoids to
+  spawn N processes in each worker process, where N is the number of CPUs (used
+  by the worker process). The system command can be used to tune correctly
+  Turbo Boost, or just to check the state of Turbo Boost.
 
 Version 0.8.3 (2016-11-03)
 --------------------------

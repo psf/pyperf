@@ -170,9 +170,8 @@ class CpuFunctionsTests(unittest.TestCase):
 
         with mock.patch('perf._collect_metadata.get_isolated_cpus', return_value=[2]):
             with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
-                with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
-                    metadata = {}
-                    perf_metadata.collect_cpu_config(metadata, [0, 2])
+                metadata = {}
+                perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
                          '0=driver:DRIVER, governor:GOVERNOR; '
                          '2=nohz_full, isolated; '
@@ -181,9 +180,8 @@ class CpuFunctionsTests(unittest.TestCase):
         nohz_full = '  (null)\n'
         with mock.patch('perf._collect_metadata.get_isolated_cpus'):
             with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
-                with mock.patch('perf._collect_metadata.get_cpu_boost', return_value=None):
-                    metadata = {}
-                    perf_metadata.collect_cpu_config(metadata, [0, 2])
+                metadata = {}
+                perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
                          '0=driver:DRIVER, governor:GOVERNOR; '
                          'idle:IDLE_DRV')

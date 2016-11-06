@@ -24,9 +24,6 @@ setuptools to support environment markers in ``install_requires`` of
 
 Optional dependencies:
 
-* ``cpupower`` command: used to check if the CPU boost is active or not on Intel and
-  AMD CPUs when the CPU driver is not ``intel_pstate``.
-  Install on Fedora: ``sudo dnf install kernel-tools``.
 * Python module ``psutil``: needed for :ref:`CPU affinity <pin-cpu>` on Python
   2.7. Install: ``python2 -m pip install -U psutil``.
 
