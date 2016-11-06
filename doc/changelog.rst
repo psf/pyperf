@@ -12,6 +12,8 @@ Version 0.8.4
 * The ``--stdout`` internal option has been removed, replaced by a new
   ``--pipe`` option. Workers can now use stdout for regular messages.
 * Runner doesn't eat worker stdout and stderr anymore.
+* check and system emit a warning if nohz_full is used with the intel_pstate
+  driver.
 
 Version 0.8.3 (2016-11-03)
 --------------------------
