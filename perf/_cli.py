@@ -351,6 +351,20 @@ def format_checks(bench, lines=None):
         warn("Try to rerun the benchmark with more loops "
              "or increase --min-time")
 
+    # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
+    for run in bench._runs:
+        cpu_config = run._metadata.get('cpu_config')
+        if not cpu_config:
+            continue
+        if 'nohz_full' in cpu_config and 'intel_pstate' in cpu_config:
+            empty_line(lines)
+            warn("WARNING: nohz_full is enabled on CPUs which use the "
+                 "intel_pstate driver, whereas intel_pstate is incompatible "
+                 "with nohz_full")
+            warn("CPU config: %s" % cpu_config)
+            warn("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
+            break
+
     return lines
 
 

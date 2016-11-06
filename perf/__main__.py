@@ -461,7 +461,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
         if not output and only_checks:
             if len(data) == 1:
-                print("The benchmark seem to be stable")
+                print("The benchmark seems to be stable")
             else:
                 print("All benchmarks seem to be stable")
     else:

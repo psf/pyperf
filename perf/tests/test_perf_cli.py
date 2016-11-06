@@ -329,7 +329,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_check_stable(self):
         stdout = self.run_command('check', TELCO)
         self.assertEqual(stdout.rstrip(),
-                         'The benchmark seem to be stable')
+                         'The benchmark seems to be stable')
 
     def test_check_unstable(self):
         suite = self.create_suite()

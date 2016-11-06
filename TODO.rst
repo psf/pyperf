@@ -35,14 +35,7 @@ TODO
   * check that rcu_nocbs respects isolated CPUs
   * detect NUMA
 
-* Add a check command checking if a benchmark results seems stable:
-
-  * reuse existing checks
-  * add --check option to show and Runner?
-  * reuse some checks on the system command: emit a warning if nohz_full is
-    enabled on at least one CPU
-  * Display also stability warnings in compare output
-
+* compare: check also if benchmarks are unstable
 * External tool (?) to produce nice HTML reports:
 
   * https://magic.io/blog/uvloop-blazing-fast-python-networking/
