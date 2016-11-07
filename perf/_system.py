@@ -77,8 +77,11 @@ class Operation(object):
     def advice(self, msg):
         self.system.advice('%s: %s' % (self.name, msg))
 
-    def info(self, msg):
-        self.system.info('%s: %s' % (self.name, msg))
+    def log_state(self, msg):
+        self.system.log_state('%s: %s' % (self.name, msg))
+
+    def log_action(self, msg):
+        self.system.log_action('%s: %s' % (self.name, msg))
 
     def error(self, msg):
         self.system.error('%s: %s' % (self.name, msg))
@@ -86,6 +89,8 @@ class Operation(object):
     def check_permission_error(self, exc):
         if is_permission_error(exc):
             self.permission_error = True
+
+    # FIXME: add read_first_line() method which calls check_permission_error()
 
     def read(self):
         pass
@@ -121,7 +126,7 @@ class TurboBoostMSR(Operation):
         if disabled:
             text.append('CPU %s: disabled' % format_cpu_list(disabled))
         if text:
-            self.info(', '.join(text))
+            self.log_state(', '.join(text))
 
     def read_msr(self, cpu, reg_num, bit=None):
         path = '/dev/cpu/%s/msr' % cpu
@@ -193,11 +198,15 @@ class TurboBoostMSR(Operation):
         else:
             new_value = value & ~mask
 
-        if new_value != value:
-            if self.write_msr(cpu, MSR_IA32_MISC_ENABLE, new_value):
-                state = "enabled" if enabled else "disabled"
-                self.info("Turbo Boost %s on CPU %s: MSR %#x set to %#x"
-                          % (state, cpu, MSR_IA32_MISC_ENABLE, new_value))
+        if new_value == value:
+            return
+
+        if not self.write_msr(cpu, MSR_IA32_MISC_ENABLE, new_value):
+            return
+
+        state = "enabled" if enabled else "disabled"
+        self.log_action("Turbo Boost %s on CPU %s: MSR %#x set to %#x"
+                        % (state, cpu, MSR_IA32_MISC_ENABLE, new_value))
 
     def write(self, tune):
         enabled = (not tune)
@@ -219,7 +228,7 @@ class TurboBoostIntelPstate(Operation):
     """
 
     def __init__(self, system):
-        Operation.__init__(self, 'Turbo Boost (intel_pstate driver)', system)
+        Operation.__init__(self, 'Turbo Boost (intel_pstate)', system)
         self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
         self.enabled = None
 
@@ -236,7 +245,7 @@ class TurboBoostIntelPstate(Operation):
     def show(self):
         if self.enabled is not None:
             state = 'enabled' if self.enabled else 'disabled'
-            self.info("Turbo Boost %s" % state)
+            self.log_state("Turbo Boost %s" % state)
 
     def write(self, tune):
         enable = (not tune)
@@ -261,7 +270,7 @@ class TurboBoostIntelPstate(Operation):
 
         msg = "%r written into %s" % (content, self.path)
         action = 'enabled' if enable else 'disabled'
-        self.info("Turbo Boost %s: %s" % (action, msg))
+        self.log_action("Turbo Boost %s: %s" % (action, msg))
 
 
 class CPUGovernorIntelPstate(Operation):
@@ -270,7 +279,7 @@ class CPUGovernorIntelPstate(Operation):
     """
 
     def __init__(self, system):
-        Operation.__init__(self, 'CPU scaling governor (intel_pstate driver)',
+        Operation.__init__(self, 'CPU scaling governor (intel_pstate)',
                            system)
         self.path = sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
         self.governor = None
@@ -284,7 +293,7 @@ class CPUGovernorIntelPstate(Operation):
 
     def show(self):
         if self.governor:
-            self.info(self.governor)
+            self.log_state(self.governor)
 
     def write(self, tune):
         new_governor = 'performance' if tune else 'powersave'
@@ -299,7 +308,7 @@ class CPUGovernorIntelPstate(Operation):
         except IOError as exc:
             self.error("Failed to set the CPU scaling governor: %s" % exc)
         else:
-            self.info("CPU scaling governor set to %s" % new_governor)
+            self.log_action("CPU scaling governor set to %s" % new_governor)
 
 
 class LinuxScheduler(Operation):
@@ -338,11 +347,11 @@ class LinuxScheduler(Operation):
     def check_isolcpus(self):
         isolated = get_isolated_cpus()
         if isolated:
-            self.info('Isolated CPUs (%s/%s): %s'
-                      % (len(isolated), self.ncpu,
-                         format_cpu_list(isolated)))
+            self.log_state('Isolated CPUs (%s/%s): %s'
+                           % (len(isolated), self.ncpu,
+                              format_cpu_list(isolated)))
         elif self.ncpu > 1:
-            self.info('No CPU is isolated')
+            self.log_state('No CPU is isolated')
             self.advice('Use isolcpus=<cpu list> kernel parameter '
                         'to isolate CPUs')
 
@@ -361,9 +370,9 @@ class LinuxScheduler(Operation):
     def check_rcu_nocbs(self):
         rcu_nocbs = self.read_rcu_nocbs()
         if rcu_nocbs:
-            self.info('RCU disabled on CPUs (%s/%s): %s'
-                      % (len(rcu_nocbs), self.ncpu,
-                         format_cpu_list(rcu_nocbs)))
+            self.log_state('RCU disabled on CPUs (%s/%s): %s'
+                           % (len(rcu_nocbs), self.ncpu,
+                              format_cpu_list(rcu_nocbs)))
         elif self.ncpu > 1:
             self.advice('Use rcu_nocbs=<cpu list> kernel parameter '
                         '(with isolcpus) to not not schedule RCU '
@@ -395,7 +404,7 @@ class ASLR(Operation):
             return
 
         state = self.STATE[self.aslr]
-        self.info(state)
+        self.log_state(state)
 
     def write(self, tune):
         self.read()
@@ -410,11 +419,11 @@ class ASLR(Operation):
         try:
             with open(self.path, 'w') as fp:
                 fp.write(new_value)
-
-            self.info("Full randomization enabled: %r written into %s"
-                      % (new_value, self.path))
         except IOError as exc:
             self.error("Failed to write into %s: %s" % (self.path, exc))
+        else:
+            self.log_action("Full randomization enabled: %r written into %s"
+                            % (new_value, self.path))
 
 
 class CPUFrequency(Operation):
@@ -424,11 +433,11 @@ class CPUFrequency(Operation):
 
     def __init__(self, system):
         Operation.__init__(self, 'CPU Frequency', system)
-        self.path = sysfs_path("devices/system/cpu")
+        self.device_syspath = sysfs_path("devices/system/cpu")
         self.cpus = {}
 
     def read_cpu(self, cpu):
-        path = os.path.join(self.path, 'cpu%s/cpufreq' % cpu)
+        path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
 
         scaling_min_freq = read_first_line(os.path.join(path, "scaling_min_freq"))
         scaling_max_freq = read_first_line(os.path.join(path, "scaling_max_freq"))
@@ -460,13 +469,14 @@ class CPUFrequency(Operation):
         if not infos:
             return
 
-        self.info('; '.join(infos))
+        self.log_state('; '.join(infos))
 
     def read_freq(self, filename):
         try:
             with open(filename, "rb") as fp:
                 return fp.readline()
-        except IOError:
+        except IOError as exc:
+            self.check_permission_error(exc)
             return None
 
     def write_freq(self, filename, new_freq):
@@ -481,40 +491,37 @@ class CPUFrequency(Operation):
         return True
 
     def write_cpu(self, cpu, tune):
-        path = os.path.join(self.path, 'cpu%s/cpufreq' % cpu)
+        cpu_path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
 
-        if not tune:
-            min_freq = self.read_freq(os.path.join(path, "cpuinfo_min_freq"))
-            if not min_freq:
-                self.error("Unable to read cpuinfo_min_freq of CPU %s" % cpu)
-                return
+        name = "cpuinfo_max_freq" if tune else "cpuinfo_min_freq"
+        freq = self.read_freq(os.path.join(cpu_path, name))
+        if not freq:
+            self.error("Unable to read %s of CPU %s" % (name, cpu))
+            return False
 
-        max_freq = self.read_freq(os.path.join(path, "cpuinfo_max_freq"))
-        if not max_freq:
-            self.error("Unable to read cpuinfo_max_freq of CPU %s" % cpu)
-            return
-
+        filename = os.path.join(cpu_path, "scaling_min_freq")
         try:
-            filename = os.path.join(path, "scaling_min_freq")
-            if tune:
-                if self.write_freq(filename, max_freq):
-                    self.info("Minimum frequency of CPU %s "
-                              "set to the maximum frequency" % cpu)
-            else:
-                if self.write_freq(filename, min_freq):
-                    self.info("Minimum frequency of CPU %s "
-                              "reset to the minimum frequency" % cpu)
+            return self.write_freq(filename, freq)
         except IOError as exc:
             self.check_permission_error(exc)
             self.error("Unable to write scaling_max_freq of CPU %s: %s"
                        % (cpu, exc))
-            return
 
     def write(self, tune):
+        modified = []
         for cpu in self.system.cpus:
-            self.write_cpu(cpu, tune)
+            if self.write_cpu(cpu, tune):
+                modified.append(cpu)
             if self.permission_error:
                 break
+
+        if modified:
+            cpus = format_cpu_list(modified)
+            if tune:
+                action = "set to the maximum frequency"
+            else:
+                action = "reset to the minimum frequency"
+            self.log_action("Minimum frequency of CPU %s %s" % (cpus, action))
 
 
 class IRQAffinity(Operation):
@@ -632,17 +639,17 @@ class IRQAffinity(Operation):
     def show(self):
         if self.irqbalance_active is not None:
             state = 'active' if self.irqbalance_active else 'inactive'
-            self.info("irqbalance service: %s" % state)
+            self.log_state("irqbalance service: %s" % state)
 
         if self.default_smp_affinity:
-            self.info("Default IRQ affinity: CPU %s"
-                      % format_cpu_list(self.default_smp_affinity))
+            self.log_state("Default IRQ affinity: CPU %s"
+                           % format_cpu_list(self.default_smp_affinity))
 
         if self.irq_affinity:
             infos = {irq: format_cpu_list(cpus)
                      for irq, cpus in self.irq_affinity.items()}
             infos = format_cpu_infos(infos)
-            self.info('IRQ affinity: %s' % ', '.join(infos))
+            self.log_state('IRQ affinity: %s' % ', '.join(infos))
 
     def create_affinity(self, cpus):
         mask = 0
@@ -674,7 +681,7 @@ class IRQAffinity(Operation):
             return
 
         action = 'Start' if enable else 'Stop'
-        self.info("%s irqbalance service" % action)
+        self.log_action("%s irqbalance service" % action)
 
     def write_default(self, new_affinity):
         self.read_default_affinity()
@@ -689,15 +696,15 @@ class IRQAffinity(Operation):
             self.error("Failed to write %r into %s: %s"
                        % (mask, self.default_affinity_path, exc))
         else:
-            self.info("Set default affinity to CPU %s: write %r into %s"
-                      % (format_cpu_list(new_affinity), mask,
-                         self.default_affinity_path))
+            self.log_action("Set default affinity to CPU %s"
+                            % format_cpu_list(new_affinity))
 
     def write_irq(self, irq, cpus):
         path = self.irq_affinity_path % irq
         mask = self.create_affinity(cpus)
         try:
             write_text(path, mask)
+            return True
         except IOError as exc:
             self.check_permission_error(exc)
             # EIO means that the IRQ doesn't support SMP affinity:
@@ -705,19 +712,25 @@ class IRQAffinity(Operation):
             if exc.errno != errno.EIO:
                 self.error("Failed to write %r into %s: %s"
                            % (mask, path, exc))
-        else:
-            self.info("Set affinity to CPU %s: write %r into %s"
-                      % (format_cpu_list(cpus), mask, path))
+            return False
 
     def write_irqs(self, new_cpus):
         self.read_irqs_affinity()
+        modified = []
         for irq in self.get_irqs():
             if self.permission_error:
                 break
 
             cpus = self.irq_affinity.get(irq)
-            if new_cpus != cpus:
-                self.write_irq(irq, new_cpus)
+            if new_cpus == cpus:
+                continue
+
+            if self.write_irq(irq, new_cpus):
+                modified.append(irq)
+
+        if modified:
+            self.log_action("Set affinity of IRQ %s to CPU %s"
+                            % (format_cpu_list(modified), format_cpu_list(new_cpus)))
 
     def write(self, tune):
         cpus = range(self.system.logical_cpu_count)
@@ -729,7 +742,7 @@ class IRQAffinity(Operation):
         cpus = list(cpus)
 
         self.write_irqbalance_service(not tune)
-        # FIXME: skip on old Linux not supported it?
+        # FIXME: skip on old Linux not supporting IRQ affinity?
         self.write_default(cpus)
         self.write_irqs(cpus)
 
@@ -762,10 +775,11 @@ class System:
     def __init__(self):
         self.operations = []
 
-        self.infos = []
+        self.actions = []
+        self.states = []
         self.advices = []
         self.errors = []
-        self.has_messages = False
+        self.empty_output = True
 
         self.logical_cpu_count = None
         # CPUs used for benchmarking: tuple of CPU identifiers
@@ -792,8 +806,11 @@ class System:
     def advice(self, msg):
         self.advices.append(msg)
 
-    def info(self, msg):
-        self.infos.append(msg)
+    def log_state(self, msg):
+        self.states.append(msg)
+
+    def log_action(self, msg):
+        self.actions.append(msg)
 
     def error(self, msg):
         self.errors.append(msg)
@@ -802,10 +819,13 @@ class System:
         if not messages:
             return
 
+        if not self.empty_output:
+            print()
+        self.empty_output = False
+
         display_title(title)
         for msg in messages:
             print(msg)
-        print()
 
     def run_operations(self, action):
         if action in ('tune', 'reset'):
@@ -813,15 +833,9 @@ class System:
             for operation in self.operations:
                 operation.write(tune)
 
-        self.write_messages("Actions", self.infos)
-        del self.infos[:]
-
         for operation in self.operations:
             # FIXME: merge read() and show()?
             operation.read()
-
-        self.write_messages("Info", self.infos)
-        del self.infos[:]
 
         for operation in self.operations:
             operation.show()
@@ -849,7 +863,8 @@ class System:
                 msg += ", retry as root"
             self.error(msg)
 
-        self.write_messages("System state", self.infos)
+        self.write_messages("Actions", self.actions)
+        self.write_messages("System state", self.states)
         # Advices are for tuning: hide them for reset
         if action == 'tune':
             self.write_messages("Advices", self.advices)
