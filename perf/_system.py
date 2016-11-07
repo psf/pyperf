@@ -3,6 +3,7 @@ from __future__ import division, print_function, absolute_import
 import errno
 import os
 import re
+import struct
 import subprocess
 import sys
 
@@ -89,7 +90,7 @@ class Operation(object):
 
 class TurboBoostMSR(Operation):
     """
-    Get/Set Turbo Boost mode of Intel CPUs using rdmsr/wrmsr.
+    Get/Set Turbo Boost mode of Intel CPUs using /dev/cpu/N/msr.
     """
 
     def __init__(self, system):
@@ -113,49 +114,61 @@ class TurboBoostMSR(Operation):
         if text:
             self.info(', '.join(text))
 
-    def read_msr(self, cpu, reg_num, bitfield=None):
-        # -x for hexadecimal output
-        cmd = ['rdmsr', '-p%s' % cpu, '-x']
-        if bitfield:
-            cmd.extend(('-f', bitfield))
-        cmd.append('%#x' % reg_num)
-
-        exitcode, stdout = get_output(cmd)
-        stdout = stdout.rstrip()
-
-        if exitcode or not stdout:
-            msg = ('Failed to read MSR %#x of CPU %s (exit code %s). '
-                   'Is rdmsr tool installed?'
-                   % (reg_num, cpu, exitcode))
+    def read_msr(self, cpu, reg_num, bit=None):
+        path = '/dev/cpu/%s/msr' % cpu
+        size = struct.calcsize('Q')
+        if size != 8:
+            # FIXME: always use size=8 but replace unpack() with something else
+            raise ValueError("need a 64-bit unsigned integer type")
+        try:
+            fd = os.open(path, os.O_RDONLY)
+            try:
+                data = os.pread(fd, size, reg_num)
+            finally:
+                os.close(fd)
+        except IOError as exc:
+            msg = 'Failed to read MSR %#x from %s' % (reg_num, path)
             if not is_root():
-                msg += ' Retry as root?'
-            self.error(msg)
+                msg += ' (retry as root?)'
+            self.error("%s: %s" % (msg, exc))
             return None
 
-        return int(stdout, 16)
+        reg = struct.unpack('Q', data)[0]
+        if bit is not None:
+            return bool(reg & (1 << bit))
+        else:
+            return reg
 
     def read_cpu(self, cpu):
-        bit = MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT
-        msr = self.read_msr(cpu, MSR_IA32_MISC_ENABLE, '%s:%s' % (bit, bit))
+        msr = self.read_msr(cpu, MSR_IA32_MISC_ENABLE,
+                            bit=MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT)
         if msr is None:
             return
 
-        if msr == 0:
-            self.cpu_states[cpu] = True
-        elif msr == 1:
-            self.cpu_states[cpu] = False
-        else:
-            self.error('invalid MSR bit: %#x' % msr)
+        self.cpu_states[cpu] = (not msr)
 
     def read(self):
         for cpu in range(self.system.logical_cpu_count):
             self.read_cpu(cpu)
 
     def write_msr(self, cpu, reg_num, value):
-        cmd = ['wrmsr', '-p%s' % cpu, "%#x" % reg_num, '%#x' % value]
-        exitcode = run_cmd(cmd)
-        if exitcode:
-            self.error("Failed to write %#x into MSR %#x of CPU %s" % (value, reg_num, cpu))
+        path = '/dev/cpu/%s/msr' % cpu
+        size = struct.calcsize('Q')
+        if size != 8:
+            # FIXME: always use size=8 but replace pack() with something else
+            raise ValueError("need a 64-bit unsigned integer type")
+        data = struct.pack('Q', value)
+        try:
+            fd = os.open(path, os.O_WRONLY)
+            try:
+                data = os.pwrite(fd, data, reg_num)
+            finally:
+                os.close(fd)
+        except IOError as exc:
+            msg = 'Failed to write %#x into MSR %#x using %s' % (value, reg_num, path)
+            if not is_root():
+                msg += ' (retry as root?)'
+            self.error("%s: %s" % (msg, exc))
             return False
 
         return True

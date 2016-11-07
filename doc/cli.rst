@@ -489,7 +489,7 @@ Operations
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
   CPUs.
-* "Turbo Boost (MSR)": use ``rdmsr`` and ``wrmsr`` commands to read and set
+* "Turbo Boost (MSR)": use ``/dev/cpu/N/msr`` to read/write
   the Turbo Boost mode of Intel CPUs
 * "Turbo Boost (intel_pstate driver)": read from/write into
   ``/sys/devices/system/cpu/intel_pstate/no_turbo`` to control the Turbo Boost

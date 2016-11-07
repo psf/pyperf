@@ -23,7 +23,6 @@ TODO
 * Calibration run: display time per iteration and total duration
 * system:
 
-  * rewrite rdmsr and wrmsr using /dev/cpu/N/msr?
   * use cpupower if available and rdmsr doesn't work?
   * advice: use --affinity when no CPU is isolated
   * set the CPU scaling governor when intel_pstate is not used.
