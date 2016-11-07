@@ -268,9 +268,15 @@ class TurboBoostIntelPstate(Operation):
 
             action = 'enable' if enable else 'disable'
             msg = "Failed to %s Turbo Boost" % action
-            if is_permission_error(exc) and is_root():
+            disabled_in_bios = is_permission_error(exc) and is_root()
+            if disabled_in_bios:
                 msg += " (Turbo Boost disabled in the BIOS?)"
-            self.error("%s: failed to write into %s: %s" % (msg, self.path, exc))
+            msg = "%s: failed to write into %s: %s" % (msg, self.path, exc)
+
+            if disabled_in_bios:
+                self.log_action("WARNING: %s" % msg)
+            else:
+                self.error(msg)
             return
 
         msg = "%r written into %s" % (content, self.path)
