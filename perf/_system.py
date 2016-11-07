@@ -261,13 +261,16 @@ class TurboBoostIntelPstate(Operation):
         try:
             write_text(self.path, content)
         except IOError as exc:
-            self.check_permission_error(exc)
+            # don't log a permission error if the user is root: permission
+            # error as root means that Turbo Boost is disabled in the BIOS
+            if not is_root():
+                self.check_permission_error(exc)
+
             action = 'enable' if enable else 'disable'
             msg = "Failed to %s Turbo Boost" % action
             if is_permission_error(exc) and is_root():
                 msg += " (Turbo Boost disabled in the BIOS?)"
-            msg += ": failed to write into %s" % self.path
-            self.error("%s: %s" % (msg, exc))
+            self.error("%s: failed to write into %s: %s" % (msg, self.path, exc))
             return
 
         msg = "%r written into %s" % (content, self.path)
