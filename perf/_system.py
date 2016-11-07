@@ -97,9 +97,6 @@ class Operation(object):
 
     # FIXME: add read_first_line() method which calls check_permission_error()
 
-    def read(self):
-        pass
-
     def show(self):
         pass
 
@@ -115,23 +112,6 @@ class TurboBoostMSR(Operation):
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
         self.cpu_states = {}
-
-    def show(self):
-        enabled = set()
-        disabled = set()
-        for cpu, state in self.cpu_states.items():
-            if state:
-                enabled.add(cpu)
-            else:
-                disabled.add(cpu)
-
-        text = []
-        if enabled:
-            text.append('CPU %s: enabled' % format_cpu_list(enabled))
-        if disabled:
-            text.append('CPU %s: disabled' % format_cpu_list(disabled))
-        if text:
-            self.log_state(', '.join(text))
 
     def read_msr(self, cpu, reg_num, bit=None):
         path = '/dev/cpu/%s/msr' % cpu
@@ -165,11 +145,27 @@ class TurboBoostMSR(Operation):
 
         self.cpu_states[cpu] = (not msr)
 
-    def read(self):
+    def show(self):
         for cpu in range(self.system.logical_cpu_count):
             if self.permission_error:
                 break
             self.read_cpu(cpu)
+
+        enabled = set()
+        disabled = set()
+        for cpu, state in self.cpu_states.items():
+            if state:
+                enabled.add(cpu)
+            else:
+                disabled.add(cpu)
+
+        text = []
+        if enabled:
+            text.append('CPU %s: enabled' % format_cpu_list(enabled))
+        if disabled:
+            text.append('CPU %s: disabled' % format_cpu_list(disabled))
+        if text:
+            self.log_state(', '.join(text))
 
     def write_msr(self, cpu, reg_num, value):
         path = '/dev/cpu/%s/msr' % cpu
@@ -237,7 +233,7 @@ class TurboBoostIntelPstate(Operation):
         self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
         self.enabled = None
 
-    def read(self):
+    def read_turbo_boost(self):
         no_turbo = read_first_line(self.path)
         if no_turbo == '1':
             self.enabled = False
@@ -248,6 +244,7 @@ class TurboBoostIntelPstate(Operation):
             self.enabled = None
 
     def show(self):
+        self.read_turbo_boost()
         if self.enabled is not None:
             state = 'enabled' if self.enabled else 'disabled'
             self.log_state("Turbo Boost %s" % state)
@@ -255,7 +252,7 @@ class TurboBoostIntelPstate(Operation):
     def write(self, tune):
         enable = (not tune)
 
-        self.read()
+        self.read_turbo_boost()
         if self.enabled == enable:
             # no_turbo already set to the expected value
             return
@@ -289,7 +286,7 @@ class CPUGovernorIntelPstate(Operation):
         self.path = sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
         self.governor = None
 
-    def read(self):
+    def read_governor(self):
         governor = read_first_line(self.path)
         if governor:
             self.governor = governor
@@ -297,15 +294,16 @@ class CPUGovernorIntelPstate(Operation):
             self.error("Unable to read CPU scaling governor from %s" % self.path)
 
     def show(self):
+        self.read_governor()
         if self.governor:
             self.log_state(self.governor)
 
     def write(self, tune):
-        new_governor = 'performance' if tune else 'powersave'
-        self.read()
+        self.read_governor()
         if not self.governor:
             return
 
+        new_governor = 'performance' if tune else 'powersave'
         if new_governor == self.governor:
             return
         try:
@@ -395,25 +393,18 @@ class ASLR(Operation):
     def __init__(self, system):
         Operation.__init__(self, 'ASLR', system)
         self.path = proc_path("sys/kernel/randomize_va_space")
-        self.aslr = None
-
-    def read(self):
-        line = read_first_line(self.path)
-        if line in self.STATE:
-            self.aslr = line
-        else:
-            self.error("Failed to read %s" % self.path)
 
     def show(self):
-        if not self.aslr:
-            return
-
-        state = self.STATE[self.aslr]
-        self.log_state(state)
+        line = read_first_line(self.path)
+        try:
+            state = self.STATE[line]
+        except KeyError:
+            self.error("Failed to read %s" % self.path)
+        else:
+            self.log_state(state)
 
     def write(self, tune):
-        self.read()
-        value = self.aslr
+        value = read_first_line(self.path)
         if not value:
             return
 
@@ -439,7 +430,6 @@ class CPUFrequency(Operation):
     def __init__(self, system):
         Operation.__init__(self, 'CPU Frequency', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
-        self.cpus = {}
 
     def read_cpu(self, cpu):
         path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
@@ -458,22 +448,18 @@ class CPUFrequency(Operation):
                     % (min_mhz, max_mhz))
         else:
             freq = 'min=max=%s MHz' % max_mhz
-        self.cpus[cpu] = freq
-
-    def read(self):
-        cpus = get_logical_cpu_count()
-        if not cpus:
-            self.error("Unable to get the number of CPUs")
-            return
-
-        for cpu in range(cpus):
-            self.read_cpu(cpu)
+        return freq
 
     def show(self):
-        infos = format_cpu_infos(self.cpus)
+        cpus = {}
+        for cpu in range(self.system.logical_cpu_count):
+            freq = self.read_cpu(cpu)
+            if freq is not None:
+                cpus[cpu] = freq
+
+        infos = format_cpu_infos(cpus)
         if not infos:
             return
-
         self.log_state('; '.join(infos))
 
     def read_freq(self, filename):
@@ -536,11 +522,8 @@ class IRQAffinity(Operation):
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
-        self.irqbalance_active = None
         self.systemctl = True
         self.irqs = None
-        self.irq_affinity = {}
-        self.default_smp_affinity = None
 
     def read_irqbalance_systemctl(self):
         cmd = ('systemctl', 'status', 'irqbalance')
@@ -568,9 +551,9 @@ class IRQAffinity(Operation):
 
         active = match.group(1)
         if active in ('active', 'activating'):
-            self.irqbalance_active = True
+            return True
         elif active in ('inactive', 'deactivating', 'dead'):
-            self.irqbalance_active = False
+            return False
         else:
             self.error("Unknown service state: %r" % active)
 
@@ -584,16 +567,17 @@ class IRQAffinity(Operation):
         stdout = stdout.rstrip()
         state = stdout.split(' ', 1)[-1]
         if state.startswith('stop'):
-            self.irqbalance_active = False
+            return False
         elif state.startswith('start'):
-            self.irqbalance_active = True
+            return True
         else:
             self.error("Unknown service state: %r" % stdout)
 
     def read_irqbalance_state(self):
-        self.read_irqbalance_systemctl()
+        active = self.read_irqbalance_systemctl()
         if self.systemctl is False:
-            self.read_irqbalance_service()
+            active = self.read_irqbalance_service()
+        return active
 
     def parse_affinity(self, mask):
         mask = int(mask, 16)
@@ -609,7 +593,7 @@ class IRQAffinity(Operation):
         if not mask:
             return
 
-        self.default_smp_affinity = self.parse_affinity(mask)
+        return self.parse_affinity(mask)
 
     def get_irqs(self):
         if self.irqs is None:
@@ -627,32 +611,33 @@ class IRQAffinity(Operation):
             self.error("Failed to read %s: %s" % (path, exc))
             return
 
-        cpus = self.parse_affinity(mask)
-        self.irq_affinity[irq] = cpus
+        return self.parse_affinity(mask)
 
     def read_irqs_affinity(self):
+        affinity = {}
         for irq in self.get_irqs():
             if self.permission_error:
                 break
-            self.read_irq_affinity(irq)
-
-    def read(self):
-        self.read_irqbalance_state()
-        self.read_default_affinity()
-        self.read_irqs_affinity()
+            cpus = self.read_irq_affinity(irq)
+            if cpus is not None:
+                affinity[irq] = cpus
+        return affinity
 
     def show(self):
-        if self.irqbalance_active is not None:
-            state = 'active' if self.irqbalance_active else 'inactive'
+        irqbalance_active = self.read_irqbalance_state()
+        if irqbalance_active is not None:
+            state = 'active' if irqbalance_active else 'inactive'
             self.log_state("irqbalance service: %s" % state)
 
-        if self.default_smp_affinity:
+        default_smp_affinity = self.read_default_affinity()
+        if default_smp_affinity:
             self.log_state("Default IRQ affinity: CPU %s"
-                           % format_cpu_list(self.default_smp_affinity))
+                           % format_cpu_list(default_smp_affinity))
 
-        if self.irq_affinity:
+        irq_affinity = self.read_irqs_affinity()
+        if irq_affinity:
             infos = {irq: format_cpu_list(cpus)
-                     for irq, cpus in self.irq_affinity.items()}
+                     for irq, cpus in irq_affinity.items()}
             infos = format_cpu_infos(infos)
             self.log_state('IRQ affinity: %s' % ', '.join(infos))
 
@@ -663,13 +648,13 @@ class IRQAffinity(Operation):
         return "%x" % mask
 
     def write_irqbalance_service(self, enable):
-        self.read_irqbalance_state()
-        if self.irqbalance_active is None:
+        irqbalance_active = self.read_irqbalance_state()
+        if irqbalance_active is None:
             # systemd service missing or failed to get its state:
             # don't try to start/stop the irqbalance service
             return
 
-        if self.irqbalance_active == enable:
+        if irqbalance_active == enable:
             # service is already in the expected state: nothing to do
             return
 
@@ -689,8 +674,8 @@ class IRQAffinity(Operation):
         self.log_action("%s irqbalance service" % action)
 
     def write_default(self, new_affinity):
-        self.read_default_affinity()
-        if new_affinity == self.default_smp_affinity:
+        default_smp_affinity = self.read_default_affinity()
+        if new_affinity == default_smp_affinity:
             return
 
         mask = self.create_affinity(new_affinity)
@@ -720,13 +705,13 @@ class IRQAffinity(Operation):
             return False
 
     def write_irqs(self, new_cpus):
-        self.read_irqs_affinity()
+        affinity = self.read_irqs_affinity()
         modified = []
         for irq in self.get_irqs():
             if self.permission_error:
                 break
 
-            cpus = self.irq_affinity.get(irq)
+            cpus = affinity.get(irq)
             if new_cpus == cpus:
                 continue
 
@@ -837,10 +822,6 @@ class System:
             tune = (action == 'tune')
             for operation in self.operations:
                 operation.write(tune)
-
-        for operation in self.operations:
-            # FIXME: merge read() and show()?
-            operation.read()
 
         for operation in self.operations:
             operation.show()
