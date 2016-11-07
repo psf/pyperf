@@ -858,3 +858,6 @@ class System:
         if action == 'tune':
             self.write_messages("Advices", self.advices)
         self.write_messages("Errors", self.errors)
+
+        if self.errors:
+            sys.exit(1)
