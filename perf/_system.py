@@ -817,5 +817,7 @@ class System:
             operation.show()
 
         self.write_messages("System state", self.infos)
-        self.write_messages("Advices", self.advices)
+        # Advices are for tuning: hide them for reset
+        if action == 'tune':
+            self.write_messages("Advices", self.advices)
         self.write_messages("Errors", self.errors)
