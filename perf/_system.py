@@ -590,6 +590,7 @@ class IRQAffinity(Operation):
         if self.irqs is None:
             filenames = os.listdir(self.irq_path)
             self.irqs = [int(name) for name in filenames if name.isdigit()]
+            self.irqs.sort()
         return self.irqs
 
     def read_irqs_affinity(self):
