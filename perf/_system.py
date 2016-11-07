@@ -35,13 +35,18 @@ def write_text(filename, content):
 
 def run_cmd(cmd):
     try:
-        proc = subprocess.Popen(cmd)
+        # ignore stdout and stderr
+        # FIXME: redirect output to /dev/null
+        proc = subprocess.Popen(cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
     except OSError as exc:
         if exc.errno == errno.ENOENT:
             return 127
         else:
             raise
 
+    popen_communicate(proc)
     proc.wait()
     return proc.returncode
 
