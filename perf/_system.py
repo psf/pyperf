@@ -23,6 +23,10 @@ def is_root():
     return (os.getuid() == 0)
 
 
+def is_permission_error(exc):
+    return exc.errno in (errno.EACCES, errno.EPERM)
+
+
 def write_text(filename, content):
     with open_text(filename, write=True) as fp:
         fp.write(content)
@@ -68,6 +72,7 @@ class Operation(object):
     def __init__(self, name, system):
         self.name = name
         self.system = system
+        self.permission_error = False
 
     def advice(self, msg):
         self.system.advice('%s: %s' % (self.name, msg))
@@ -77,6 +82,10 @@ class Operation(object):
 
     def error(self, msg):
         self.system.error('%s: %s' % (self.name, msg))
+
+    def check_permission_error(self, exc):
+        if is_permission_error(exc):
+            self.permission_error = True
 
     def read(self):
         pass
@@ -127,10 +136,9 @@ class TurboBoostMSR(Operation):
             finally:
                 os.close(fd)
         except IOError as exc:
-            msg = 'Failed to read MSR %#x from %s' % (reg_num, path)
-            if not is_root():
-                msg += ' (retry as root?)'
-            self.error("%s: %s" % (msg, exc))
+            self.check_permission_error(exc)
+            self.error("Failed to read MSR %#x from %s: %s"
+                       % (reg_num, path, exc))
             return None
 
         reg = struct.unpack('Q', data)[0]
@@ -149,6 +157,8 @@ class TurboBoostMSR(Operation):
 
     def read(self):
         for cpu in range(self.system.logical_cpu_count):
+            if self.permission_error:
+                break
             self.read_cpu(cpu)
 
     def write_msr(self, cpu, reg_num, value):
@@ -165,10 +175,9 @@ class TurboBoostMSR(Operation):
             finally:
                 os.close(fd)
         except IOError as exc:
-            msg = 'Failed to write %#x into MSR %#x using %s' % (value, reg_num, path)
-            if not is_root():
-                msg += ' (retry as root?)'
-            self.error("%s: %s" % (msg, exc))
+            self.check_permission_error(exc)
+            self.error("Failed to write %#x into MSR %#x using %s: %s"
+                       % (value, reg_num, path, exc))
             return False
 
         return True
@@ -196,8 +205,11 @@ class TurboBoostMSR(Operation):
             cpus = self.system.cpus
         else:
             cpus = range(self.system.logical_cpu_count)
+
         for cpu in cpus:
             self.write_cpu(cpu, enabled)
+            if self.permission_error:
+                break
 
 
 class TurboBoostIntelPstate(Operation):
@@ -238,14 +250,11 @@ class TurboBoostIntelPstate(Operation):
         try:
             write_text(self.path, content)
         except IOError as exc:
+            self.check_permission_error(exc)
             action = 'enable' if enable else 'disable'
             msg = "Failed to %s Turbo Boost" % action
-            if exc.errno in (errno.EPERM, errno.EACCES):
-                if not is_root():
-                    msg += " (retry as root?)"
-                elif enable:
-                    msg += " (Turbo Boost disabled in the BIOS?)"
-
+            if is_permission_error(exc) and is_root():
+                msg += " (Turbo Boost disabled in the BIOS?)"
             msg += ": failed to write into %s" % self.path
             self.error("%s: %s" % (msg, exc))
             return
@@ -495,13 +504,17 @@ class CPUFrequency(Operation):
                 if self.write_freq(filename, min_freq):
                     self.info("Minimum frequency of CPU %s "
                               "reset to the minimum frequency" % cpu)
-        except IOError:
-            self.error("Unable to write scaling_max_freq of CPU %s" % cpu)
+        except IOError as exc:
+            self.check_permission_error(exc)
+            self.error("Unable to write scaling_max_freq of CPU %s: %s"
+                       % (cpu, exc))
             return
 
     def write(self, tune):
         for cpu in self.system.cpus:
             self.write_cpu(cpu, tune)
+            if self.permission_error:
+                break
 
 
 class IRQAffinity(Operation):
@@ -593,17 +606,23 @@ class IRQAffinity(Operation):
             self.irqs.sort()
         return self.irqs
 
+    def read_irq_affinity(self, irq):
+        path = self.irq_affinity_path % irq
+        try:
+            mask = read_first_line(path, error=True)
+        except IOError as exc:
+            self.check_permission_error(exc)
+            self.error("Failed to read %s: %s" % (path, exc))
+            return
+
+        cpus = self.parse_affinity(mask)
+        self.irq_affinity[irq] = cpus
+
     def read_irqs_affinity(self):
         for irq in self.get_irqs():
-            path = self.irq_affinity_path % irq
-            try:
-                mask = read_first_line(path, error=True)
-            except IOError as exc:
-                self.error("Failed to read %s: %s" % (path, exc))
-                continue
-
-            cpus = self.parse_affinity(mask)
-            self.irq_affinity[irq] = cpus
+            if self.permission_error:
+                break
+            self.read_irq_affinity(irq)
 
     def read(self):
         self.read_irqbalance_state()
@@ -666,6 +685,7 @@ class IRQAffinity(Operation):
         try:
             write_text(self.default_affinity_path, mask)
         except IOError as exc:
+            self.check_permission_error(exc)
             self.error("Failed to write %r into %s: %s"
                        % (mask, self.default_affinity_path, exc))
         else:
@@ -679,6 +699,7 @@ class IRQAffinity(Operation):
         try:
             write_text(path, mask)
         except IOError as exc:
+            self.check_permission_error(exc)
             # EIO means that the IRQ doesn't support SMP affinity:
             # ignore the error
             if exc.errno != errno.EIO:
@@ -691,13 +712,14 @@ class IRQAffinity(Operation):
     def write_irqs(self, new_cpus):
         self.read_irqs_affinity()
         for irq in self.get_irqs():
+            if self.permission_error:
+                break
+
             cpus = self.irq_affinity.get(irq)
             if new_cpus != cpus:
                 self.write_irq(irq, new_cpus)
 
     def write(self, tune):
-        self.write_irqbalance_service(not tune)
-
         cpus = range(self.system.logical_cpu_count)
         if tune:
             excluded = set(self.system.cpus)
@@ -706,6 +728,7 @@ class IRQAffinity(Operation):
                 cpus = (cpu for cpu in cpus if cpu not in excluded)
         cpus = list(cpus)
 
+        self.write_irqbalance_service(not tune)
         # FIXME: skip on old Linux not supported it?
         self.write_default(cpus)
         self.write_irqs(cpus)
@@ -784,21 +807,7 @@ class System:
             print(msg)
         print()
 
-    def main(self, action, args):
-        self.logical_cpu_count = get_logical_cpu_count()
-        if not self.logical_cpu_count:
-            sys.exit(1)
-
-        isolated = get_isolated_cpus()
-        if isolated:
-            self.cpus = tuple(isolated)
-        elif args.affinity:
-            self.cpus = tuple(args.affinity)
-        else:
-            self.cpus = tuple(range(self.logical_cpu_count))
-        # The list of cpus must be sorted to avoid useless write in operations
-        assert sorted(self.cpus) == list(self.cpus)
-
+    def run_operations(self, action):
         if action in ('tune', 'reset'):
             tune = (action == 'tune')
             for operation in self.operations:
@@ -816,6 +825,29 @@ class System:
 
         for operation in self.operations:
             operation.show()
+
+    def main(self, action, args):
+        self.logical_cpu_count = get_logical_cpu_count()
+        if not self.logical_cpu_count:
+            sys.exit(1)
+
+        isolated = get_isolated_cpus()
+        if isolated:
+            self.cpus = tuple(isolated)
+        elif args.affinity:
+            self.cpus = tuple(args.affinity)
+        else:
+            self.cpus = tuple(range(self.logical_cpu_count))
+        # The list of cpus must be sorted to avoid useless write in operations
+        assert sorted(self.cpus) == list(self.cpus)
+
+        self.run_operations(action)
+
+        if any(operation.permission_error for operation in self.operations):
+            msg = "ERROR: At least one operation failed with permission error"
+            if not is_root():
+                msg += ", retry as root"
+            self.error(msg)
 
         self.write_messages("System state", self.infos)
         # Advices are for tuning: hide them for reset
