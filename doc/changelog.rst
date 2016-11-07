@@ -4,21 +4,27 @@ Changelog
 Version 0.8.4
 -------------
 
-* Add ``--affinity`` option to the system command
-* system: tune stops the irqbalance service and sets the CPU affinity of
-  interruptions (IRQ).
-* ``get_dates()`` methods now return ``None`` rather than an empty tuple
-  if runs don't have the ``date`` metadata.
-* The ``--stdout`` internal option has been removed, replaced by a new
-  ``--pipe`` option. Workers can now use stdout for regular messages.
-* Runner doesn't eat worker stdout and stderr anymore.
+Enhancements:
+
+* Runner doesn't ignore worker stdout and stderr anymore. Regular ``print()``
+  now works as expected.
+* ``system`` command: Add a new ``--affinity`` command line option
 * check and system emit a warning if nohz_full is used with the intel_pstate
   driver.
-* collect_metadata: On CPUs not using the intel_pstate driver, don't run
-  cpupower command anymore to check if the Turbo Boost is enabled. It avoids to
-  spawn N processes in each worker process, where N is the number of CPUs (used
-  by the worker process). The system command can be used to tune correctly
-  Turbo Boost, or just to check the state of Turbo Boost.
+* ``collect_metadata``: On CPUs not using the intel_pstate driver, don't run
+  the cpupower command anymore to check if the Turbo Boost is enabled. It
+  avoids to spawn N processes in each worker process, where N is the number of
+  CPUs used by the worker process. The ``system`` command can be used to tune
+  correctly Turbo Boost, or just to check the state of Turbo Boost.
+
+Changes:
+
+* system: tune stops the irqbalance service and sets the CPU affinity of
+  interruptions (IRQ).
+* The ``--stdout`` internal option has been removed, replaced by a new
+  ``--pipe`` option. Workers can now use stdout for regular messages.
+* ``get_dates()`` methods now return ``None`` rather than an empty tuple
+  if runs don't have the ``date`` metadata.
 
 Version 0.8.3 (2016-11-03)
 --------------------------
