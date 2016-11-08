@@ -394,8 +394,8 @@ class LinuxScheduler(Operation):
                               format_cpu_list(rcu_nocbs)))
         elif self.ncpu > 1:
             self.advice('Use rcu_nocbs=<cpu list> kernel parameter '
-                        '(with isolcpus) to not not schedule RCU '
-                        'on isolated CPUs (Linux 3.8 and newer)')
+                        '(with isolcpus) to not schedule RCU '
+                        'on isolated CPUs')
 
 
 class ASLR(Operation):
