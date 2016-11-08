@@ -474,6 +474,10 @@ Operations
 
 * "ASLR": Check that Full randomization (``2``) is enabled
   in ``/proc/sys/kernel/randomize_va_space``
+* "Check nohz_full": Make sure that nohz_full kernel option is not used with
+  the CPU driver intel_pstate. The intel_pstate drive is incompatible
+  with nohz_full: see https://bugzilla.redhat.com/show_bug.cgi?id=1378529 bug
+  report.
 * "CPU scaling governor (intel_pstate driver)": Get/Set the CPU scaling
   governor. ``tune`` sets the governor to ``performance``, ``reset`` sets the
   governor to ``powersave``.
@@ -489,6 +493,9 @@ Operations
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
   CPUs.
+* "Power supply": check that the power cable is plugged. If the power cable is
+  unplugged (a laptop running only on a battery), the CPU speed can change
+  when the battery level becomes too low.
 * "Turbo Boost (MSR)": use ``/dev/cpu/N/msr`` to read/write
   the Turbo Boost mode of Intel CPUs
 * "Turbo Boost (intel_pstate driver)": read from/write into

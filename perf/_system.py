@@ -778,6 +778,40 @@ class CheckNOHZFullIntelPstate(Operation):
         self.advice("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
 
 
+class PowerSupply(Operation):
+    def __init__(self, system):
+        Operation.__init__(self, 'Power supply', system)
+
+    def read_power_supply(self):
+        # Python implementation of the on_ac_power shell script
+        path = sysfs_path('class/power_supply')
+
+        for name in os.listdir(path):
+            filename = os.path.join(path, name, 'online')
+            if not os.path.exists(filename):
+                continue
+
+            line = read_first_line(filename)
+            if line == '1':
+                return True
+            if line == '0':
+                return False
+            self.error("Failed to parse %s: %r" % (filename, line))
+            break
+
+        return None
+
+    def show(self):
+        plugged = self.read_power_supply()
+        if plugged is None:
+            return
+
+        state = 'plugged' if plugged else 'unplugged'
+        self.log_state('the power cable is %s' % state)
+        if not plugged:
+            self.advice('The power cable must be plugged')
+
+
 class System:
     def __init__(self):
         self.operations = []
@@ -809,6 +843,8 @@ class System:
             self.operations.append(TurboBoostMSR(self))
 
         self.operations.append(IRQAffinity(self))
+
+        self.operations.append(PowerSupply(self))
 
     def advice(self, msg):
         self.advices.append(msg)

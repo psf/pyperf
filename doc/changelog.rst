@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.9.1
+-------------
+
+* ``system`` now detects when running on a laptop with the power cable
+  unplugged.
+
 Version 0.9.0 (2016-11-07)
 --------------------------
 

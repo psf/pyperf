@@ -23,7 +23,6 @@ TODO
 * Calibration run: display time per iteration and total duration
 * system:
 
-  * on a laptop, detect if the power cable is plugged?
   * advice: use --affinity when no CPU is isolated
   * set the CPU scaling governor when intel_pstate is not used.
     Use "userland" governor with a fixed CPU speed (max speed)?
