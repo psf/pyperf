@@ -112,6 +112,7 @@ class TurboBoostMSR(Operation):
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
         self.cpu_states = {}
+        self.have_device = True
 
     def read_msr(self, cpu, reg_num, bit=None):
         path = '/dev/cpu/%s/msr' % cpu
@@ -129,6 +130,9 @@ class TurboBoostMSR(Operation):
             self.check_permission_error(exc)
             self.error("Failed to read MSR %#x from %s: %s"
                        % (reg_num, path, exc))
+            if exc.errno == errno.ENOENT:
+                self.have_device = False
+                self.error("Try to load the msr kernel module: sudo modprobe msr")
             return None
 
         reg = struct.unpack('Q', data)[0]
@@ -141,15 +145,18 @@ class TurboBoostMSR(Operation):
         msr = self.read_msr(cpu, MSR_IA32_MISC_ENABLE,
                             bit=MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT)
         if msr is None:
-            return
+            return False
 
         self.cpu_states[cpu] = (not msr)
+        return True
 
     def show(self):
+        if not self.have_device:
+            return
+
         for cpu in range(self.system.logical_cpu_count):
-            if self.permission_error:
+            if not self.read_cpu(cpu):
                 break
-            self.read_cpu(cpu)
 
         enabled = set()
         disabled = set()
@@ -191,7 +198,7 @@ class TurboBoostMSR(Operation):
     def write_cpu(self, cpu, enabled):
         value = self.read_msr(cpu, MSR_IA32_MISC_ENABLE)
         if value is None:
-            return
+            return False
 
         mask = (1 << MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT)
         if not enabled:
@@ -200,14 +207,15 @@ class TurboBoostMSR(Operation):
             new_value = value & ~mask
 
         if new_value == value:
-            return
+            return True
 
         if not self.write_msr(cpu, MSR_IA32_MISC_ENABLE, new_value):
-            return
+            return False
 
         state = "enabled" if enabled else "disabled"
         self.log_action("Turbo Boost %s on CPU %s: MSR %#x set to %#x"
                         % (state, cpu, MSR_IA32_MISC_ENABLE, new_value))
+        return True
 
     def write(self, tune):
         enabled = (not tune)
@@ -217,8 +225,7 @@ class TurboBoostMSR(Operation):
             cpus = range(self.system.logical_cpu_count)
 
         for cpu in cpus:
-            self.write_cpu(cpu, enabled)
-            if self.permission_error:
+            if not self.write_cpu(cpu, enabled):
                 break
 
 
