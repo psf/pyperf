@@ -652,10 +652,11 @@ class IRQAffinity(Operation):
 
         irq_affinity = self.read_irqs_affinity()
         if irq_affinity:
-            infos = {irq: format_cpu_list(cpus)
+            infos = {irq: 'CPU %s' % format_cpu_list(cpus)
                      for irq, cpus in irq_affinity.items()}
             infos = format_cpu_infos(infos)
-            self.log_state('IRQ affinity: %s' % ', '.join(infos))
+            infos = ['IRQ %s' % info for info in infos]
+            self.log_state('IRQ affinity: %s' % '; '.join(infos))
 
     def create_affinity(self, cpus):
         mask = 0
