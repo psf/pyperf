@@ -208,6 +208,10 @@ by Zia Ansari (Intel), November 2016.
 
 See the :ref:`system command <system_cmd>`.
 
+See also: `SPEC CPU2000: Measuring CPU Performance in the New Millennium
+<https://open.spec.org/cpu2000/papers/COMPUTER_200007.JLH.pdf>`_ by John L.
+Henning (Compaq), 2000.
+
 
 .. _pin-cpu:
 
