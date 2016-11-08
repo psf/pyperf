@@ -905,7 +905,7 @@ class System:
         self.write_messages("Actions", self.actions)
         self.write_messages("System state", self.states)
         # Advices are for tuning: hide them for reset
-        if action == 'tune':
+        if action != 'reset':
             self.write_messages("Advices", self.advices)
         self.write_messages("Errors", self.errors)
 
