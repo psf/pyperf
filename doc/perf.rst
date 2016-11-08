@@ -201,6 +201,11 @@ Stable and reliable benchmarks
 Getting stable and reliable benchark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`.
 
+Modern Intel CPU are more and more complex: `Causes of Performance Swings Due
+to Code Placement in IA
+<https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_
+by Zia Ansari (Intel), November 2016.
+
 See the :ref:`system command <system_cmd>`.
 
 
