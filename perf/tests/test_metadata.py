@@ -228,5 +228,6 @@ class CpuFunctionsTests(unittest.TestCase):
             self.assertEqual(metadata['cpu_machine'],
                              'PowerNV 8247-22L')
 
+
 if __name__ == "__main__":
     unittest.main()
