@@ -4,8 +4,11 @@ Changelog
 Version 0.9.1
 -------------
 
+* ``system show`` command now also displays advices, not only ``system tune``
 * ``system`` now detects when running on a laptop with the power cable
   unplugged.
+* ``system tune`` now handles errors when /dev/cpu/N/msr device is missing:
+  log an error suggesting to load the ``msr`` kernel module
 
 Version 0.9.0 (2016-11-07)
 --------------------------
