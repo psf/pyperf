@@ -4,6 +4,7 @@ Changelog
 Version 0.9.1
 -------------
 
+* ``system tune`` now also sets the maximum sample rate of perf event.
 * ``system show`` command now also displays advices, not only ``system tune``
 * ``system`` now detects when running on a laptop with the power cable
   unplugged.

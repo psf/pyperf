@@ -493,6 +493,9 @@ Operations
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
   CPUs.
+* "Perf event": Use ``/proc/sys/kernel/perf_event_max_sample_rate`` to set
+  the maximum sample rate of perf event to ``1`` for tune, or ``100,000`` for
+  reset.
 * "Power supply": check that the power cable is plugged. If the power cable is
   unplugged (a laptop running only on a battery), the CPU speed can change
   when the battery level becomes too low.
@@ -537,6 +540,10 @@ Articles
 * Linux-RT: `HOWTO: Build an RT-application
   <https://rt.wiki.kernel.org/index.php/HOWTO:_Build_an_RT-application>`_
 * The `Linux realtime wiki <https://rt.wiki.kernel.org/>`_
+
+See also the `Krun program <https://github.com/softdevteam/krun/>`_ which
+tunes Linux and OpenBSD to run benchmarks.
+
 
 More options
 ^^^^^^^^^^^^

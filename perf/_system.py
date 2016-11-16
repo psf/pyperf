@@ -429,9 +429,9 @@ class ASLR(Operation):
             return
 
         try:
-            with open(self.path, 'w') as fp:
-                fp.write(new_value)
+            write_text(self.path, new_value)
         except IOError as exc:
+            self.check_permission_error(exc)
             self.error("Failed to write into %s: %s" % (self.path, exc))
         else:
             self.log_action("Full randomization enabled: %r written into %s"
@@ -812,10 +812,48 @@ class PowerSupply(Operation):
             self.advice('The power cable must be plugged')
 
 
+class PerfEvent(Operation):
+    # Minimise time spent by the Linux perf kernel profiler.
+
+    def __init__(self, system):
+        Operation.__init__(self, 'Perf event', system)
+        self.path = proc_path("sys/kernel/perf_event_max_sample_rate")
+
+    def read_max_sample_rate(self):
+        line = read_first_line(self.path)
+        if not line:
+            return None
+        return int(line)
+
+    def show(self):
+        max_sample_rate = self.read_max_sample_rate()
+        if not max_sample_rate:
+            return
+
+        self.log_state("Maximum sample rate: %s per second" % max_sample_rate)
+
+    def write(self, tune):
+        if tune:
+            new_rate = 1
+        else:
+            new_rate = 100000
+
+        max_sample_rate = self.read_max_sample_rate()
+        if max_sample_rate == new_rate:
+            return
+
+        try:
+            write_text(self.path, str(new_rate))
+        except IOError as exc:
+            self.check_permission_error(exc)
+            self.error("Failed to write into %s: %s" % (self.path, exc))
+        else:
+            self.log_action("Max sample rate set to %s per second" % new_rate)
+
+
 class System:
     def __init__(self):
         self.operations = []
-
         self.actions = []
         self.states = []
         self.advices = []
@@ -826,11 +864,10 @@ class System:
         # CPUs used for benchmarking: tuple of CPU identifiers
         self.cpus = None
 
+        self.operations.append(PerfEvent(self))
         self.operations.append(ASLR(self))
-
         if sys.platform.startswith('linux'):
             self.operations.append(LinuxScheduler(self))
-
         self.operations.append(CPUFrequency(self))
 
         if use_intel_pstate(0):
@@ -843,7 +880,6 @@ class System:
             self.operations.append(TurboBoostMSR(self))
 
         self.operations.append(IRQAffinity(self))
-
         self.operations.append(PowerSupply(self))
 
     def advice(self, msg):
