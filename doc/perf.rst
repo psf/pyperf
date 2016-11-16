@@ -206,11 +206,6 @@ to Code Placement in IA
 <https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_
 by Zia Ansari (Intel), November 2016.
 
-* `Virtual Machine Warmup Blows Hot and Cold <https://arxiv.org/abs/1602.00602>`_
-  (Feb 2016)
-  by Edd Barrett, Carl Friedrich Bolz, Rebecca Killick, Vincent Knight, Sarah
-  Mount, Laurence Tratt
-
 See the :ref:`system command <system_cmd>`.
 
 See also: `SPEC CPU2000: Measuring CPU Performance in the New Millennium
@@ -246,6 +241,33 @@ See the :ref:`system command <system_cmd>`.
 See also the `Microbenchmarks article
 <http://haypo-notes.readthedocs.io/microbenchmark.html>`_ which contains misc
 information on running benchmarks.
+
+
+JIT compilers
+^^^^^^^^^^^^^
+
+PyPy uses a JIT compiler. It is more complex to benchmark a Python
+implementation using a JIT compiler, see this paper for more information:
+`Virtual Machine Warmup Blows Hot and Cold <https://arxiv.org/abs/1602.00602>`_
+(Feb 2016) by Edd Barrett, Carl Friedrich Bolz, Rebecca Killick, Vincent
+Knight, Sarah Mount, Laurence Tratt.
+
+Don't tune the JIT to force compilation: ``pypy --jit
+threshold=1,function_threshold=1`` is a bad idea:
+
+* It causes a lot of tracing and compilation.
+* Benchmark results would not be representative of an application: such
+  parameters are not used in production.
+* It probably increases the pressure on the garbage collector.
+
+See the `perf issue #14 <https://github.com/haypo/perf/issues/14>`_ for more
+information.
+
+perf does not implement a function to warmup the benchmark until results seem
+to be stable. On some benchmarks, performances are never stable: see the paper
+mentionned above. Running an arbitrary number of warmup samples may also make
+the benchmark less reliable since two runs may use a different number of warmup
+samples.
 
 
 .. _metadata:
