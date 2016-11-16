@@ -206,6 +206,11 @@ to Code Placement in IA
 <https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_
 by Zia Ansari (Intel), November 2016.
 
+* `Virtual Machine Warmup Blows Hot and Cold <https://arxiv.org/abs/1602.00602>`_
+  (Feb 2016)
+  by Edd Barrett, Carl Friedrich Bolz, Rebecca Killick, Vincent Knight, Sarah
+  Mount, Laurence Tratt
+
 See the :ref:`system command <system_cmd>`.
 
 See also: `SPEC CPU2000: Measuring CPU Performance in the New Millennium
