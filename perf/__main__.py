@@ -10,7 +10,7 @@ import perf
 from perf._metadata import _common_metadata
 from perf._cli import (format_metadata, empty_line,
                        format_checks, format_histogram, format_title,
-                       format_benchmark, display_title, get_benchmark_name)
+                       format_benchmark, display_title)
 from perf._formatter import format_timedelta
 from perf._cpu_utils import get_isolated_cpus, parse_cpu_list, set_cpu_affinity
 from perf._timeit import TimeitRunner
@@ -242,7 +242,7 @@ class Benchmarks:
 
             benchmarks = suite.get_benchmarks()
             for bench_index, benchmark in enumerate(benchmarks):
-                name = get_benchmark_name(benchmark)
+                name = benchmark.get_name()
                 # FIXME: remove title, move logic to the caller?
                 if show_name:
                     title = name
@@ -256,17 +256,9 @@ class Benchmarks:
                 yield DataItem(suite, filename, benchmark, name, title, is_last)
 
     def _group_by_name_names(self):
-        def suite_to_name_set(suite):
-            result = set()
-            for bench in suite:
-                name = bench.get_name()
-                if name:
-                    result.add(name)
-            return result
-
-        names = suite_to_name_set(self.suites[0])
+        names = set(self.suites[0].get_benchmark_names())
         for suite in self.suites[1:]:
-            names &= suite_to_name_set(suite)
+            names &= set(suite.get_benchmark_names())
         return names
 
     def group_by_name(self):
@@ -549,7 +541,7 @@ def cmd_hist(args):
 
     for suite, ignored in ignored:
         for bench in ignored:
-            name = get_benchmark_name(bench)
+            name = bench.get_name()
             print("[ %s ]" % name)
             for line in format_histogram([name], bins=args.bins,
                                          extend=args.extend):
@@ -611,7 +603,7 @@ def cmd_convert(args):
                 benchmark._filter_runs(include, only_runs)
             except ValueError:
                 print("ERROR: Benchmark %r has no more run"
-                      % get_benchmark_name(benchmark),
+                      % benchmark.get_name(),
                       file=sys.stderr)
                 sys.exit(1)
 
@@ -640,13 +632,13 @@ def cmd_convert(args):
                 benchmark._extract_metadata(name)
             except KeyError:
                 print("ERROR: Benchmark %r has no metadata %r"
-                      % (get_benchmark_name(benchmark), name),
+                      % (benchmark.get_name(), name),
                       file=sys.stderr)
                 sys.exit(1)
             except TypeError:
                 raise
                 print("ERROR: Metadata %r of benchmark %r is not an integer"
-                      % (name, get_benchmark_name(benchmark)),
+                      % (name, benchmark.get_name()),
                       file=sys.stderr)
                 sys.exit(1)
 
@@ -660,7 +652,7 @@ def cmd_convert(args):
                 benchmark._remove_outliers()
             except ValueError:
                 print("ERROR: Benchmark %r has no more run after removing "
-                      "outliers" % get_benchmark_name(benchmark),
+                      "outliers" % benchmark.get_name(),
                       file=sys.stderr)
                 sys.exit(1)
 
@@ -688,9 +680,8 @@ def cmd_slowest(args):
 
         for index, item in enumerate(benchs[:nslowest], 1):
             duration, bench = item
-            name = get_benchmark_name(bench)
             print("#%s: %s (%s)"
-                  % (index, name, format_timedelta(duration)))
+                  % (index, bench.get_name(), format_timedelta(duration)))
 
 
 def cmd_system(args):

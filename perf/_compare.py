@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import sys
 
 import perf
-from perf._cli import display_title, get_benchmark_name
+from perf._cli import display_title
 
 
 def is_significant(bench1, bench2):
@@ -232,7 +232,7 @@ def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
         for suite, hidden in benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
-            hidden_names = [get_benchmark_name(bench) for bench in hidden]
+            hidden_names = [bench.get_name() for bench in hidden]
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 

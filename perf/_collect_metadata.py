@@ -316,8 +316,8 @@ def get_cpu_temperature(path, cpu_temp):
 
         temp_input = read_first_line(template % 'input', error=True)
         temp_input = float(temp_input) / 1000
-        # FIXME: On Python 2, u"%.0f\xb0C" introduces unicode errors if the
-        # locale encoding is ASCII
+        # On Python 2, u"%.0f\xb0C" introduces unicode errors if the
+        # locale encoding is ASCII, so use a space.
         temp_input = "%.0f C" % temp_input
 
         item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input)

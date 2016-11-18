@@ -405,11 +405,6 @@ def format_benchmark(bench, checks=True, metadata=False,
     return lines
 
 
-def get_benchmark_name(benchmark):
-    # FIXME: better fallback value
-    return benchmark.get_name() or '<no name>'
-
-
 # FIXME: remove this function?
 def multiline_output(args):
     return (args.hist or args.stats or args.dump or args.metadata)
