@@ -599,7 +599,7 @@ class Runner:
 
         return cmd
 
-    def _spawn_worker_suite(self, calibrate=False):
+    def _spawn_worker(self, calibrate=False):
         rpipe, wpipe = pipe_cloexec()
         if six.PY3:
             rfile = open(rpipe, "r", encoding="utf8")
@@ -626,15 +626,6 @@ class Runner:
                                % (cmd[0], exitcode))
 
         return _load_suite_from_pipe(bench_json)
-
-    def _spawn_worker_bench(self, calibrate=False):
-        suite = self._spawn_worker_suite(calibrate)
-
-        benchmarks = suite.get_benchmarks()
-        if len(benchmarks) != 1:
-            raise ValueError("worker produced %s benchmarks instead of 1"
-                             % len(benchmarks))
-        return benchmarks[0]
 
     def _display_result(self, bench, checks=True):
         args = self.args
@@ -695,7 +686,13 @@ class Runner:
             print()
 
         for process in range(1, nprocess + 1):
-            worker_bench = self._spawn_worker_bench(calibrate)
+            suite = self._spawn_worker(calibrate)
+
+            benchmarks = suite.get_benchmarks()
+            if len(benchmarks) != 1:
+                raise ValueError("worker produced %s benchmarks instead of 1"
+                                 % len(benchmarks))
+            worker_bench = benchmarks[0]
 
             if verbose:
                 run = worker_bench.get_runs()[-1]
