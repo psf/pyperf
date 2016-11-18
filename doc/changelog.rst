@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.9.1
--------------
+Version 0.9.1 (2016-11-18)
+--------------------------
 
 * ``system tune`` now also sets the maximum sample rate of perf event.
 * ``system show`` command now also displays advices, not only ``system tune``
