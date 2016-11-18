@@ -156,7 +156,6 @@ class Run(object):
 
     def _get_raw_samples(self, warmups=False):
         if warmups and self._warmups:
-            # FIXME: store the number of loops in each warmup sample
             raw_samples = [raw_sample for loops, raw_sample in self._warmups]
         else:
             raw_samples = []

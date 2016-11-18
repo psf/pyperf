@@ -95,7 +95,12 @@ class Operation(object):
         if is_permission_error(exc):
             self.permission_error = True
 
-    # FIXME: add read_first_line() method which calls check_permission_error()
+    def read_first_line(self, path):
+        try:
+            return read_first_line(path, error=True)
+        except IOError as exc:
+            self.check_permission_error(exc)
+            return ''
 
     def show(self):
         pass
@@ -118,7 +123,6 @@ class TurboBoostMSR(Operation):
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
         if size != 8:
-            # FIXME: always use size=8 but replace unpack() with something else
             raise ValueError("need a 64-bit unsigned integer type")
         try:
             fd = os.open(path, os.O_RDONLY)
@@ -178,7 +182,6 @@ class TurboBoostMSR(Operation):
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
         if size != 8:
-            # FIXME: always use size=8 but replace pack() with something else
             raise ValueError("need a 64-bit unsigned integer type")
         data = struct.pack('Q', value)
         try:
@@ -241,7 +244,7 @@ class TurboBoostIntelPstate(Operation):
         self.enabled = None
 
     def read_turbo_boost(self):
-        no_turbo = read_first_line(self.path)
+        no_turbo = self.read_first_line(self.path)
         if no_turbo == '1':
             self.enabled = False
         elif no_turbo == '0':
@@ -303,7 +306,7 @@ class CPUGovernorIntelPstate(Operation):
         self.governor = None
 
     def read_governor(self):
-        governor = read_first_line(self.path)
+        governor = self.read_first_line(self.path)
         if governor:
             self.governor = governor
         else:
@@ -375,7 +378,7 @@ class LinuxScheduler(Operation):
                         'to isolate CPUs')
 
     def read_rcu_nocbs(self):
-        cmdline = read_first_line(proc_path('cmdline'))
+        cmdline = self.read_first_line(proc_path('cmdline'))
         if not cmdline:
             return
 
@@ -411,7 +414,7 @@ class ASLR(Operation):
         self.path = proc_path("sys/kernel/randomize_va_space")
 
     def show(self):
-        line = read_first_line(self.path)
+        line = self.read_first_line(self.path)
         try:
             state = self.STATE[line]
         except KeyError:
@@ -420,7 +423,7 @@ class ASLR(Operation):
             self.log_state(state)
 
     def write(self, tune):
-        value = read_first_line(self.path)
+        value = self.read_first_line(self.path)
         if not value:
             return
 
@@ -450,8 +453,8 @@ class CPUFrequency(Operation):
     def read_cpu(self, cpu):
         path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
 
-        scaling_min_freq = read_first_line(os.path.join(path, "scaling_min_freq"))
-        scaling_max_freq = read_first_line(os.path.join(path, "scaling_max_freq"))
+        scaling_min_freq = self.read_first_line(os.path.join(path, "scaling_min_freq"))
+        scaling_max_freq = self.read_first_line(os.path.join(path, "scaling_max_freq"))
         if not scaling_min_freq or not scaling_max_freq:
             self.error("Unable to read scaling_min_freq "
                        "or scaling_max_freq of CPU %s" % cpu)
@@ -532,6 +535,9 @@ class CPUFrequency(Operation):
 
 
 class IRQAffinity(Operation):
+    # /proc/irq/N/smp_affinity existed prior to 2.6.12-rc2 (2005)
+    # which is first commit of the Linux git repository
+
     def __init__(self, system):
         Operation.__init__(self, 'IRQ affinity', system)
         self.irq_path = proc_path('irq')
@@ -605,7 +611,7 @@ class IRQAffinity(Operation):
         return cpus
 
     def read_default_affinity(self):
-        mask = read_first_line(self.default_affinity_path)
+        mask = self.read_first_line(self.default_affinity_path)
         if not mask:
             return
 
@@ -620,11 +626,9 @@ class IRQAffinity(Operation):
 
     def read_irq_affinity(self, irq):
         path = self.irq_affinity_path % irq
-        try:
-            mask = read_first_line(path, error=True)
-        except IOError as exc:
-            self.check_permission_error(exc)
-            self.error("Failed to read %s: %s" % (path, exc))
+        mask = self.read_first_line(path)
+        if not mask:
+            self.error("Failed to read %s" % path)
             return
 
         return self.parse_affinity(mask)
@@ -749,7 +753,6 @@ class IRQAffinity(Operation):
         cpus = list(cpus)
 
         self.write_irqbalance_service(not tune)
-        # FIXME: skip on old Linux not supporting IRQ affinity?
         self.write_default(cpus)
         self.write_irqs(cpus)
 
@@ -759,7 +762,7 @@ class CheckNOHZFullIntelPstate(Operation):
         Operation.__init__(self, 'Check nohz_full', system)
 
     def show(self):
-        nohz_full = read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+        nohz_full = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
         if not nohz_full:
             return
 
@@ -791,7 +794,7 @@ class PowerSupply(Operation):
             if not os.path.exists(filename):
                 continue
 
-            line = read_first_line(filename)
+            line = self.read_first_line(filename)
             if line == '1':
                 return True
             if line == '0':
@@ -820,7 +823,7 @@ class PerfEvent(Operation):
         self.path = proc_path("sys/kernel/perf_event_max_sample_rate")
 
     def read_max_sample_rate(self):
-        line = read_first_line(self.path)
+        line = self.read_first_line(self.path)
         if not line:
             return None
         return int(line)

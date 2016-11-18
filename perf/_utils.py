@@ -322,7 +322,6 @@ def abs_executable(python):
 def create_environ(inherit_environ):
     env = {}
 
-    # FIXME: copy the locale? LC_ALL, LANG, LC_*
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
     if inherit_environ:
         copy_env.extend(inherit_environ)

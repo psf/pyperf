@@ -179,6 +179,7 @@ def format_filename_noop(filename):
 def format_filename_func(suites):
     filenames = [suite.filename for suite in suites]
 
+    # FIXME: reuse get_python_names()
     base_filenames = {os.path.basename(filename) for filename in filenames}
     if len(base_filenames) != len(filenames):
         # FIXME: try harder: try to get differente names by keeping only
