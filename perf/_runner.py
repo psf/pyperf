@@ -615,15 +615,15 @@ class Runner:
                 if sys.version_info >= (3, 2):
                     kw['pass_fds'] = [wpipe]
                 proc = subprocess.Popen(cmd, env=env, **kw)
-
-                if proc.returncode:
-                    raise RuntimeError("%s failed with exit code %s"
-                                       % (cmd[0], proc.returncode))
-
             finally:
                 os.close(wpipe)
 
             bench_json = rfile.read()
+
+        exitcode = proc.wait()
+        if exitcode:
+            raise RuntimeError("%s failed with exit code %s"
+                               % (cmd[0], exitcode))
 
         return _load_suite_from_pipe(bench_json)
 

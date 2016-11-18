@@ -10,6 +10,8 @@ Version 0.9.1
   unplugged.
 * ``system tune`` now handles errors when /dev/cpu/N/msr device is missing:
   log an error suggesting to load the ``msr`` kernel module
+* Fix a ResourceWarning in Runner._spawn_worker_suite(): wait until the worker
+  complets.
 
 Version 0.9.0 (2016-11-07)
 --------------------------
