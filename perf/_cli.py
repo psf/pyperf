@@ -139,12 +139,13 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
     else:
         common_metadata = None
 
-    if runs:
-        # FIXME: only if we display at least one run (count non-calibration runs)
-        empty_line(lines)
+    empty_line_written = False
     for run_index, run in enumerate(runs, 1):
         if quiet and run._is_calibration():
             continue
+        if not empty_line_written:
+            empty_line_written = True
+            empty_line(lines)
         format_run(bench, run_index, run,
                    common_metadata=common_metadata,
                    verbose=verbose, raw=raw, lines=lines)
