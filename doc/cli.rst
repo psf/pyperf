@@ -472,12 +472,6 @@ Commands:
 Operations
 ^^^^^^^^^^
 
-* "ASLR": Check that Full randomization (``2``) is enabled
-  in ``/proc/sys/kernel/randomize_va_space``
-* "Check nohz_full": Make sure that nohz_full kernel option is not used with
-  the CPU driver intel_pstate. The intel_pstate drive is incompatible
-  with nohz_full: see https://bugzilla.redhat.com/show_bug.cgi?id=1378529 bug
-  report.
 * "CPU scaling governor (intel_pstate driver)": Get/Set the CPU scaling
   governor. ``tune`` sets the governor to ``performance``, ``reset`` sets the
   governor to ``powersave``.
@@ -489,10 +483,6 @@ Operations
   stops the service, ``reset`` starts the service. Read/Write the CPU affinity
   of interruptions: ``/proc/irq/default_smp_affinity`` and
   ``/proc/irq/N/smp_affinity`` of all IRQs
-* "Linux scheduler": Check that CPUs are isolated using the
-  ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
-  ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
-  CPUs.
 * "Perf event": Use ``/proc/sys/kernel/perf_event_max_sample_rate`` to set
   the maximum sample rate of perf event to ``1`` for tune, or ``100,000`` for
   reset.
@@ -507,6 +497,20 @@ Operations
 
 "Turbo Boost (intel_pstate driver)" is used automatically if the CPU 0 uses the
 ``intel_pstate`` driver.
+
+Checks
+^^^^^^
+
+* "ASLR": Check that Full randomization (``2``) is enabled
+  in ``/proc/sys/kernel/randomize_va_space``
+* "Check nohz_full": Make sure that nohz_full kernel option is not used with
+  the CPU driver intel_pstate. The intel_pstate drive is incompatible
+  with nohz_full: see https://bugzilla.redhat.com/show_bug.cgi?id=1378529 bug
+  report.
+* "Linux scheduler": Check that CPUs are isolated using the
+  ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
+  ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
+  CPUs.
 
 Linux documentation
 ^^^^^^^^^^^^^^^^^^^
