@@ -397,7 +397,7 @@ class TestBenchmarkSuite(unittest.TestCase):
 
         self.assertIsNone(suite.filename)
         self.assertEqual(len(suite), 2)
-        self.assertEqual(suite.get_benchmarks(), [go, telco])
+        self.assertEqual(suite.get_benchmarks(), [telco, go])
         self.assertEqual(suite.get_benchmark('go'), go)
         with self.assertRaises(KeyError):
             suite.get_benchmark('non_existent')
@@ -410,8 +410,8 @@ class TestBenchmarkSuite(unittest.TestCase):
     def check_dummy_suite(self, suite):
         benchmarks = suite.get_benchmarks()
         self.assertEqual(len(benchmarks), 2)
-        self.assertEqual(benchmarks[0].get_name(), 'go')
-        self.assertEqual(benchmarks[1].get_name(), 'telco')
+        self.assertEqual(benchmarks[0].get_name(), 'telco')
+        self.assertEqual(benchmarks[1].get_name(), 'go')
 
     def test_json(self):
         suite = self.create_dummy_suite()
