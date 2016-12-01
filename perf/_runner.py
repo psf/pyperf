@@ -456,8 +456,9 @@ class Runner:
 
         return (loops, warmups, samples)
 
-    def _worker(self, name, sample_func, inner_loops):
+    def _worker(self, name, sample_func, inner_loops, func_metadata):
         metadata = dict(self.metadata, name=name)
+        metadata.update(func_metadata)
         start_time = perf.monotonic_clock()
 
         self._cpu_affinity()
@@ -477,7 +478,7 @@ class Runner:
         self._display_result(bench, checks=False)
         return bench
 
-    def _main(self, name, sample_func, inner_loops):
+    def _main(self, name, sample_func, inner_loops, metadata):
         if not name.strip():
             raise ValueError("name must be a non-empty string")
 
@@ -491,7 +492,7 @@ class Runner:
 
         try:
             if args.worker:
-                bench = self._worker(name, sample_func, inner_loops)
+                bench = self._worker(name, sample_func, inner_loops, metadata)
             else:
                 bench = self._master()
         except KeyboardInterrupt:
@@ -519,20 +520,22 @@ class Runner:
         perf.perf_counter() should be used to measure the elapsed time.
         """
         inner_loops = kwargs.pop('inner_loops', None)
+        metadata = kwargs.pop('metadata', {})
         self._no_keyword_argument(kwargs)
 
         if not args:
-            return self._main(name, sample_func, inner_loops)
+            return self._main(name, sample_func, inner_loops, metadata)
 
         def wrap_sample_func(loops):
             return sample_func(loops, *args)
 
-        return self._main(name, wrap_sample_func, inner_loops)
+        return self._main(name, wrap_sample_func, inner_loops, metadata)
 
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
 
         inner_loops = kwargs.pop('inner_loops', None)
+        metadata = kwargs.pop('metadata', {})
         self._no_keyword_argument(kwargs)
 
         def sample_func(loops):
@@ -571,7 +574,7 @@ class Runner:
 
             return dt
 
-        return self._main(name, sample_func, inner_loops)
+        return self._main(name, sample_func, inner_loops, metadata)
 
     def _worker_cmd(self, calibrate, wpipe):
         args = self.args

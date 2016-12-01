@@ -432,7 +432,7 @@ Runner
 
    Methods:
 
-   .. method:: bench_func(name, func, \*args, inner_loops=None)
+   .. method:: bench_func(name, func, \*args, inner_loops=None, metadata={})
 
       Benchmark the function ``func(*args)``.
 
@@ -451,7 +451,10 @@ Runner
 
       Return a :class:`Benchmark` instance.
 
-   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None)
+      .. versionchanged:: 0.9.2
+         Added *metadata* parameter.
+
+   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None, metadata={})
 
       Benchmark ``sample_func(loops, *args)``.
 
@@ -467,6 +470,9 @@ Runner
       ``functools.partial``.
 
       Return a :class:`Benchmark` instance.
+
+      .. versionchanged:: 0.9.2
+         Added *metadata* parameter.
 
    .. method:: parse_args(args=None)
 

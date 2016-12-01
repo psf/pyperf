@@ -77,7 +77,7 @@ class TimeitRunner(Runner):
         return self._spawn_workers(newline=False)
 
 
-def _format_stmt(statements):
+def strip_statements(statements):
     result = []
     for stmt in statements:
         stmt = stmt.rstrip()
@@ -88,7 +88,7 @@ def _format_stmt(statements):
     return result
 
 
-def _stmt_metadata(statements):
+def format_statements(statements):
     return ' '.join(repr(stmt) for stmt in statements)
 
 
@@ -154,12 +154,13 @@ def cmd_compare(runner):
 
 def main(runner):
     args = runner.args
-    args.setup = _format_stmt(args.setup)
-    args.stmt = _format_stmt(args.stmt)
+    args.setup = strip_statements(args.setup)
+    args.stmt = strip_statements(args.stmt)
     if args.compare_to:
         cmd_compare(runner)
         return
 
+    metadata = {}
     # args must not be modified, it's passed to the worker process,
     # so use local variables.
     stmt = args.stmt
@@ -170,14 +171,14 @@ def main(runner):
             inner_loops *= args.duplicate
         else:
             inner_loops = args.duplicate
-        runner.metadata['timeit_duplicate'] = args.duplicate
+        metadata['timeit_duplicate'] = args.duplicate
 
-    runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
-    runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
+    metadata['timeit_setup'] = format_statements(args.setup)
+    metadata['timeit_stmt'] = format_statements(args.stmt)
 
     timer = create_timer(stmt, runner.args.setup)
 
-    kwargs = {}
+    kwargs = {'metadata': metadata}
     if inner_loops:
         kwargs['inner_loops'] = inner_loops
 
