@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.9.2
+-------------
+
+* Fix ``stats`` command: display again statistics on the whole benchmark suite.
+
 Version 0.9.1 (2016-11-18)
 --------------------------
 
