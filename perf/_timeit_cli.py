@@ -10,7 +10,7 @@ import perf
 from perf._cli import display_title, format_checks
 from perf._utils import get_python_names, abs_executable
 from perf._runner import Runner
-from perf._timeit import timeit_sample_func
+from perf._timeit import timeit
 
 
 DEFAULT_NAME = 'timeit'
@@ -77,34 +77,6 @@ class TimeitRunner(Runner):
         return self._spawn_workers(newline=False)
 
 
-def strip_statements(statements):
-    result = []
-    for stmt in statements:
-        stmt = stmt.rstrip()
-        if stmt:
-            result.append(stmt)
-    if not result:
-        result.append('pass')
-    return result
-
-
-def format_statements(statements):
-    return ' '.join(repr(stmt) for stmt in statements)
-
-
-def create_timer(stmt, setup):
-    # Include the current directory, so that local imports work (sys.path
-    # contains the directory of this script, rather than the current
-    # directory)
-    import os
-    sys.path.insert(0, os.curdir)
-
-    stmt = "\n".join(stmt)
-    setup = "\n".join(setup)
-
-    return timeit.Timer(stmt, setup, timer=perf.perf_counter)
-
-
 def cmd_compare(runner):
     from perf._compare import timeit_compare_benchs
 
@@ -153,40 +125,9 @@ def cmd_compare(runner):
 
 
 def main(runner):
-    args = runner.args
-    args.setup = strip_statements(args.setup)
-    args.stmt = strip_statements(args.stmt)
-    if args.compare_to:
+    if runner.args.compare_to:
         cmd_compare(runner)
-        return
-
-    metadata = {}
-    # args must not be modified, it's passed to the worker process,
-    # so use local variables.
-    stmt = args.stmt
-    inner_loops = args.inner_loops
-    if args.duplicate and args.duplicate > 1:
-        stmt = stmt * args.duplicate
-        if inner_loops:
-            inner_loops *= args.duplicate
-        else:
-            inner_loops = args.duplicate
-        metadata['timeit_duplicate'] = args.duplicate
-
-    metadata['timeit_setup'] = format_statements(args.setup)
-    metadata['timeit_stmt'] = format_statements(args.stmt)
-
-    timer = create_timer(stmt, runner.args.setup)
-
-    kwargs = {'metadata': metadata}
-    if inner_loops:
-        kwargs['inner_loops'] = inner_loops
-
-    try:
-        runner.bench_sample_func(args.name, timeit_sample_func,
-                                 timer, **kwargs)
-    except SystemExit:
-        raise
-    except:
-        timer.print_exc()
-        sys.exit(1)
+    else:
+        args = runner.args
+        timeit(runner, args.name, args.stmt, args.setup,
+               args.inner_loops, args.duplicate)
