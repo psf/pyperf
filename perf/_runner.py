@@ -479,18 +479,24 @@ class Runner:
         self._display_result(bench, checks=False)
         return bench
 
+    def _check_worker_task(self):
+        args = self.parse_args()
+
+        if args.worker_task is None:
+            return True
+
+        if args.worker_task != self._worker_task:
+            # Skip the benchmark if it's not the expected worker task
+            self._worker_task += 1
+            return False
+
+        return True
+
     def _main(self, name, sample_func, inner_loops, metadata):
         if not name.strip():
             raise ValueError("name must be a non-empty string")
 
         args = self.parse_args()
-
-        if (self.args.worker_task is not None
-           and self.args.worker_task != self._worker_task):
-            # Skip the benchmark if it's not the expected worker task
-            self._worker_task += 1
-            return None
-
         try:
             if args.worker:
                 bench = self._worker(name, sample_func, inner_loops, metadata)
@@ -524,6 +530,9 @@ class Runner:
         metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
 
+        if not self._check_worker_task():
+            return None
+
         if not args:
             return self._main(name, sample_func, inner_loops, metadata)
 
@@ -538,6 +547,9 @@ class Runner:
         inner_loops = kwargs.pop('inner_loops', None)
         metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
+
+        if not self._check_worker_task():
+            return None
 
         def sample_func(loops):
             # use fast local variables
@@ -579,6 +591,10 @@ class Runner:
 
     def timeit(self, name, stmt, setup="pass", inner_loops=None,
                duplicate=None, metadata=None):
+
+        if not self._check_worker_task():
+            return None
+
         from perf._timeit import bench_timeit
         return bench_timeit(self, name, stmt, setup, inner_loops, duplicate, metadata)
 
