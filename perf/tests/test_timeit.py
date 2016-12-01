@@ -220,8 +220,8 @@ class TestTimeit(unittest.TestCase):
         metadata = bench.get_metadata()
         self.assertEqual(metadata['inner_loops'], inner_loops)
 
-    def test_compare(self):
-        args = PERF_TIMEIT + ('--compare', sys.executable) + COMPARE_BENCH
+    def test_compare_to(self):
+        args = PERF_TIMEIT + ('--compare-to', sys.executable) + COMPARE_BENCH
         cmd = tests.get_output(args)
 
         # ".*" and DOTALL ignore stability warnings
@@ -236,8 +236,8 @@ class TestTimeit(unittest.TestCase):
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
 
-    def test_compare_verbose(self):
-        args = PERF_TIMEIT + ('--compare', sys.executable, '--verbose')
+    def test_compare_to_verbose(self):
+        args = PERF_TIMEIT + ('--compare-to', sys.executable, '--verbose')
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 
@@ -262,8 +262,8 @@ class TestTimeit(unittest.TestCase):
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
 
-    def test_compare_quiet(self):
-        args = PERF_TIMEIT + ('--compare', sys.executable, '--quiet')
+    def test_compare_to_quiet(self):
+        args = PERF_TIMEIT + ('--compare-to', sys.executable, '--quiet')
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 

@@ -13,7 +13,7 @@ from perf._cli import (format_metadata, empty_line,
                        format_benchmark, display_title)
 from perf._formatter import format_timedelta, format_seconds, format_datetime
 from perf._cpu_utils import get_isolated_cpus, parse_cpu_list, set_cpu_affinity
-from perf._timeit import TimeitRunner
+from perf._timeit_cli import TimeitRunner
 from perf._utils import parse_run_list
 
 
@@ -526,10 +526,10 @@ def cmd_dump(args):
 
 
 def cmd_timeit(args, timeit_runner):
-    import perf._timeit
+    import perf._timeit_cli as timeit_cli
     timeit_runner.args = args
     timeit_runner._process_args()
-    perf._timeit.main(timeit_runner)
+    timeit_cli.main(timeit_runner)
 
 
 def cmd_stats(args):
