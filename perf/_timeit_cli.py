@@ -154,9 +154,11 @@ def cmd_compare(runner):
 
 def main(runner):
     args = runner.args
-
     args.setup = _format_stmt(args.setup)
     args.stmt = _format_stmt(args.stmt)
+    if args.compare_to:
+        cmd_compare(runner)
+        return
 
     # args must not be modified, it's passed to the worker process,
     # so use local variables.
@@ -173,20 +175,17 @@ def main(runner):
     runner.metadata['timeit_setup'] = _stmt_metadata(args.setup)
     runner.metadata['timeit_stmt'] = _stmt_metadata(args.stmt)
 
-    if args.compare_to:
-        cmd_compare(runner)
-    else:
-        timer = create_timer(stmt, runner.args.setup)
+    timer = create_timer(stmt, runner.args.setup)
 
-        kwargs = {}
-        if inner_loops:
-            kwargs['inner_loops'] = inner_loops
+    kwargs = {}
+    if inner_loops:
+        kwargs['inner_loops'] = inner_loops
 
-        try:
-            runner.bench_sample_func(args.name, timeit_sample_func,
-                                     timer, **kwargs)
-        except SystemExit:
-            raise
-        except:
-            timer.print_exc()
-            sys.exit(1)
+    try:
+        runner.bench_sample_func(args.name, timeit_sample_func,
+                                 timer, **kwargs)
+    except SystemExit:
+        raise
+    except:
+        timer.print_exc()
+        sys.exit(1)
