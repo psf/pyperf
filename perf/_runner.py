@@ -458,7 +458,8 @@ class Runner:
 
     def _worker(self, name, sample_func, inner_loops, func_metadata):
         metadata = dict(self.metadata, name=name)
-        metadata.update(func_metadata)
+        if func_metadata:
+            metadata.update(func_metadata)
         start_time = perf.monotonic_clock()
 
         self._cpu_affinity()
@@ -520,7 +521,7 @@ class Runner:
         perf.perf_counter() should be used to measure the elapsed time.
         """
         inner_loops = kwargs.pop('inner_loops', None)
-        metadata = kwargs.pop('metadata', {})
+        metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
 
         if not args:
@@ -535,7 +536,7 @@ class Runner:
         """"Benchmark func(*args)."""
 
         inner_loops = kwargs.pop('inner_loops', None)
-        metadata = kwargs.pop('metadata', {})
+        metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
 
         def sample_func(loops):
@@ -575,6 +576,11 @@ class Runner:
             return dt
 
         return self._main(name, sample_func, inner_loops, metadata)
+
+    def timeit(self, name, stmt, setup="pass", inner_loops=None,
+               duplicate=None, metadata=None):
+        from perf._timeit import bench_timeit
+        return bench_timeit(self, name, stmt, setup, inner_loops, duplicate, metadata)
 
     def _worker_cmd(self, calibrate, wpipe):
         args = self.args

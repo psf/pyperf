@@ -4,13 +4,12 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
-import timeit
 
 import perf
 from perf._cli import display_title, format_checks
 from perf._utils import get_python_names, abs_executable
 from perf._runner import Runner
-from perf._timeit import timeit
+from perf._timeit import bench_timeit
 
 
 DEFAULT_NAME = 'timeit'
@@ -129,5 +128,5 @@ def main(runner):
         cmd_compare(runner)
     else:
         args = runner.args
-        timeit(runner, args.name, args.stmt, args.setup,
-               args.inner_loops, args.duplicate)
+        bench_timeit(runner, args.name, args.stmt, args.setup,
+                     args.inner_loops, args.duplicate)

@@ -432,7 +432,7 @@ Runner
 
    Methods:
 
-   .. method:: bench_func(name, func, \*args, inner_loops=None, metadata={})
+   .. method:: bench_func(name, func, \*args, inner_loops=None, metadata=None)
 
       Benchmark the function ``func(*args)``.
 
@@ -454,7 +454,7 @@ Runner
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
 
-   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None, metadata={})
+   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None, metadata=None)
 
       Benchmark ``sample_func(loops, *args)``.
 
@@ -473,6 +473,28 @@ Runner
 
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
+
+   .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None)
+
+      Run a benchmark on ``timeit.Timer(stmt, setup)``.
+
+      *stmt* is a Python statement. It can be a string or a sequence of
+      strings.
+
+      *setup* is a Python statement used to setup the benchmark: it is executed
+      before each benchmark sample. It can be a string or a sequence of
+      strings.
+
+      Parameters:
+
+      * *inner_loops*: Number of inner-loops. Can be used when *stmt* manually
+        duplicates the same expression *inner_loops* times.
+      * *duplicate*: Duplicate the *stmt* statement *duplicate* times to reduce
+        the cost of the outer loop.
+      * *metadata*: Metadata of this benchmark, added to the runner
+        :attr:`metadata`.
+
+      .. versionadded:: 0.9.2
 
    .. method:: parse_args(args=None)
 

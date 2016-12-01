@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import itertools
 import sys
+import timeit
 
 import perf
 
@@ -43,11 +44,19 @@ def create_timer(stmt, setup):
     return timeit.Timer(stmt, setup, timer=perf.perf_counter)
 
 
-def timeit(runner, name, stmt, setup, inner_loops, duplicate):
+def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
+                 func_metadata=None):
+    if isinstance(stmt, str):
+        stmt = (stmt,)
+    if isinstance(setup, str):
+        setup = (setup,)
+
     stmt = strip_statements(stmt)
     setup = strip_statements(setup)
 
     metadata = {}
+    if func_metadata:
+        metadata.update(func_metadata)
     metadata['timeit_setup'] = format_statements(setup)
     metadata['timeit_stmt'] = format_statements(stmt)
 
@@ -61,19 +70,24 @@ def timeit(runner, name, stmt, setup, inner_loops, duplicate):
             inner_loops = duplicate
         metadata['timeit_duplicate'] = duplicate
 
-    timer = create_timer(stmt, setup)
-
     kwargs = {'metadata': metadata}
     if inner_loops:
         kwargs['inner_loops'] = inner_loops
 
     try:
+        timer = create_timer(stmt, setup)
         runner.bench_sample_func(name, sample_func,
                                  timer, **kwargs)
     except SystemExit:
         raise
     except:
+        print("Error when running timeit benchmark:")
+        print()
+        print("Statement:")
+        print(format_statements(setup))
+        print()
+        print("Setup:")
+        print(format_statements(stmt))
+        print()
         timer.print_exc()
         sys.exit(1)
-
-
