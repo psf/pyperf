@@ -7,6 +7,7 @@ Version 0.9.2
 * Fix ``stats`` command: display again statistics on the whole benchmark suite.
 * Fix a ResourceWarning if interrupted:  Runner now kills the worker process
   when interrupted.
+* ``compare`` and ``compare_to``: add percent difference to faster/slower
 
 Version 0.9.1 (2016-11-18)
 --------------------------

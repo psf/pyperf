@@ -100,7 +100,7 @@ Options:
 Example::
 
     $ python3 -m perf compare py2.json py3.json
-    Median +- std dev: [py2] 11.4 ms +- 2.1 ms -> [py3] 13.6 ms +- 1.3 ms: 1.19x slower
+    Median +- std dev: [py2] 11.4 ms +- 2.1 ms -> [py3] 13.6 ms +- 1.3 ms: 1.19x slower (+19%)
 
 On this example, py2 is faster and so used as the reference.
 

@@ -41,6 +41,7 @@ class CompareResult(object):
         self._significant = None
         self._t_score = None
         self._speed = None
+        self._percent = None
 
     def _set_significant(self):
         bench1 = self.ref.benchmark
@@ -59,13 +60,24 @@ class CompareResult(object):
             self._set_significant()
         return self._t_score
 
+    def _compute_speed(self):
+        ref_avg = self.ref.benchmark.median()
+        changed_avg = self.changed.benchmark.median()
+        # Note: medians cannot be zero, it's a warranty of perf API
+        self._speed = ref_avg / changed_avg
+        self._percent = (changed_avg - ref_avg) * 100.0 / ref_avg
+
     @property
     def speed(self):
         if self._speed is None:
-            ref_avg = self.ref.benchmark.median()
-            changed_avg = self.changed.benchmark.median()
-            self._speed = ref_avg / changed_avg
+            self._compute_speed()
         return self._speed
+
+    @property
+    def percent(self):
+        if self._percent is None:
+            self._compute_speed()
+        return self._percent
 
     def oneliner(self, verbose=True, show_name=True, check_significant=True):
         if check_significant and not self.significant:
@@ -89,9 +101,9 @@ class CompareResult(object):
         if speed == 1.0:
             text = "%s: no change" % text
         elif speed > 1.0:
-            text = "%s: %.2fx faster" % (text, speed)
+            text = "%s: %.2fx faster (%+.0f%%)" % (text, speed, self.percent)
         else:
-            text = "%s: %.2fx slower" % (text, 1.0 / speed)
+            text = "%s: %.2fx slower (%+.0f%%)" % (text, 1.0 / speed, self.percent)
         return text
 
     def format(self, verbose=True, show_name=True):
