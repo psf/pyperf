@@ -335,7 +335,10 @@ BenchmarkSuite
 
    .. method:: get_benchmarks() -> List[Benchmark]
 
-      Get the list of benchmarks sorted by their name.
+      Get the list of benchmarks.
+
+      .. versionadded:: 0.9.2
+         The list is no more sorted by name.
 
    .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 

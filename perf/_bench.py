@@ -615,8 +615,7 @@ class BenchmarkSuite(object):
         raise KeyError("there is no benchmark called %r" % name)
 
     def get_benchmarks(self):
-        return sorted(self._benchmarks,
-                      key=lambda bench: bench.get_name())
+        return list(self._benchmarks)
 
     def add_benchmark(self, benchmark):
         if benchmark in self._benchmarks:
