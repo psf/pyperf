@@ -16,6 +16,7 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
+* Need to write unit test for Runner.timeit()
 * BenchmarkSuite.get_benchmarks(): don't sort by name?
 * Add CLI option to sort benchmarks by start date, not by name
 * load(): remove '-' special case

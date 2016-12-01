@@ -5,7 +5,6 @@ from __future__ import division, print_function, absolute_import
 
 import sys
 
-import perf
 from perf._cli import display_title, format_checks
 from perf._utils import get_python_names, abs_executable
 from perf._runner import Runner
