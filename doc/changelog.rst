@@ -5,6 +5,8 @@ Version 0.9.2
 -------------
 
 * Fix ``stats`` command: display again statistics on the whole benchmark suite.
+* Fix a ResourceWarning if interrupted:  Runner now kills the worker process
+  when interrupted.
 
 Version 0.9.1 (2016-11-18)
 --------------------------
@@ -16,7 +18,7 @@ Version 0.9.1 (2016-11-18)
 * ``system tune`` now handles errors when /dev/cpu/N/msr device is missing:
   log an error suggesting to load the ``msr`` kernel module
 * Fix a ResourceWarning in Runner._spawn_worker_suite(): wait until the worker
-  complets.
+  completes.
 
 Version 0.9.0 (2016-11-07)
 --------------------------

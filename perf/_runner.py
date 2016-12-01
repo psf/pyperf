@@ -15,7 +15,7 @@ from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta, format_number, format_sample
-from perf._utils import (MS_WINDOWS,
+from perf._utils import (MS_WINDOWS, popen_killer,
                          abs_executable, create_environ, pipe_cloexec)
 
 try:
@@ -495,7 +495,8 @@ class Runner:
             else:
                 bench = self._master()
         except KeyboardInterrupt:
-            print("Interrupted: exit", file=sys.stderr)
+            what = "Benchmark worker" if args.worker else "Benchmark"
+            print("%s interrupted: exit" % what, file=sys.stderr)
             sys.exit(1)
 
         self._worker_task += 1
@@ -618,9 +619,12 @@ class Runner:
             finally:
                 os.close(wpipe)
 
-            bench_json = rfile.read()
+            with popen_killer(proc):
+                bench_json = rfile.read()
+                rfile.close()
 
-        exitcode = proc.wait()
+                exitcode = proc.wait()
+
         if exitcode:
             raise RuntimeError("%s failed with exit code %s"
                                % (cmd[0], exitcode))

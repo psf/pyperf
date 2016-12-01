@@ -1,5 +1,6 @@
 from __future__ import division, print_function, absolute_import
 
+import contextlib
 import datetime
 import math
 import os
@@ -206,9 +207,10 @@ def python_has_jit():
     return False
 
 
-def popen_communicate(proc):
+@contextlib.contextmanager
+def popen_killer(proc):
     try:
-        return proc.communicate()
+        yield
     except:
         # Close pipes
         if proc.stdin:
@@ -224,6 +226,11 @@ def popen_communicate(proc):
             pass
         proc.wait()
         raise
+
+
+def popen_communicate(proc):
+    with popen_killer(proc):
+        return proc.communicate()
 
 
 def get_python_names(python1, python2):
