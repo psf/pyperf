@@ -3,6 +3,7 @@ from __future__ import division, print_function, absolute_import
 import itertools
 import sys
 import timeit
+import traceback
 
 import perf
 
@@ -22,8 +23,6 @@ def strip_statements(statements):
         stmt = stmt.rstrip()
         if stmt:
             result.append(stmt)
-    if not result:
-        result.append('pass')
     return result
 
 
@@ -44,8 +43,30 @@ def create_timer(stmt, setup):
     return timeit.Timer(stmt, setup, timer=perf.perf_counter)
 
 
+def display_error(timer, stmt, setup):
+    print("Error when running timeit benchmark:")
+    print()
+
+    print("Statement:")
+    for expr in stmt:
+        print(repr(expr))
+    print()
+
+    if setup:
+        print("Setup:")
+        for expr in setup:
+            print(repr(expr))
+        print()
+
+    if timeit is not None:
+        timer.print_exc()
+    else:
+        traceback.print_exc()
+
+
 def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
                  func_metadata=None):
+
     if isinstance(stmt, str):
         stmt = (stmt,)
     if isinstance(setup, str):
@@ -53,6 +74,9 @@ def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
 
     stmt = strip_statements(stmt)
     setup = strip_statements(setup)
+
+    if not stmt:
+        raise ValueError("need at least one statement")
 
     metadata = {}
     if func_metadata:
@@ -74,6 +98,7 @@ def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
     if inner_loops:
         kwargs['inner_loops'] = inner_loops
 
+    timer = None
     try:
         timer = create_timer(stmt, setup)
         runner.bench_sample_func(name, sample_func,
@@ -81,13 +106,5 @@ def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
     except SystemExit:
         raise
     except:
-        print("Error when running timeit benchmark:")
-        print()
-        print("Statement:")
-        print(format_statements(setup))
-        print()
-        print("Setup:")
-        print(format_statements(stmt))
-        print()
-        timer.print_exc()
+        display_error(timer, stmt, setup)
         sys.exit(1)

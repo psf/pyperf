@@ -478,8 +478,8 @@ Runner
 
       Run a benchmark on ``timeit.Timer(stmt, setup)``.
 
-      *stmt* is a Python statement. It can be a string or a sequence of
-      strings.
+      *stmt* is a Python statement. It can be a non-empty string or a non-empty
+      sequence of strings.
 
       *setup* is a Python statement used to setup the benchmark: it is executed
       before each benchmark sample. It can be a string or a sequence of
