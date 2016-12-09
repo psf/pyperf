@@ -590,13 +590,18 @@ class Runner:
         return self._main(name, sample_func, inner_loops, metadata)
 
     def timeit(self, name, stmt, setup="pass", inner_loops=None,
-               duplicate=None, metadata=None):
+               duplicate=None, metadata=None, globals=None):
 
         if not self._check_worker_task():
             return None
 
         from perf._timeit import bench_timeit
-        return bench_timeit(self, name, stmt, setup, inner_loops, duplicate, metadata)
+        return bench_timeit(self, name, stmt,
+                            setup=setup,
+                            inner_loops=inner_loops,
+                            duplicate=duplicate,
+                            func_metadata=metadata,
+                            globals=globals)
 
     def _worker_cmd(self, calibrate, wpipe):
         args = self.args

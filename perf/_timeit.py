@@ -30,7 +30,7 @@ def format_statements(statements):
     return ' '.join(repr(stmt) for stmt in statements)
 
 
-def create_timer(stmt, setup):
+def create_timer(stmt, setup, globals):
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
     # directory)
@@ -40,7 +40,9 @@ def create_timer(stmt, setup):
     stmt = "\n".join(stmt)
     setup = "\n".join(setup)
 
-    return timeit.Timer(stmt, setup, timer=perf.perf_counter)
+    return timeit.Timer(stmt, setup,
+                        timer=perf.perf_counter,
+                        globals=globals)
 
 
 def display_error(timer, stmt, setup):
@@ -64,8 +66,9 @@ def display_error(timer, stmt, setup):
         traceback.print_exc()
 
 
-def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
-                 func_metadata=None):
+def bench_timeit(runner, name, stmt, setup,
+                 inner_loops=None, duplicate=None,
+                 func_metadata=None, globals=None):
 
     if isinstance(stmt, str):
         stmt = (stmt,)
@@ -100,7 +103,7 @@ def bench_timeit(runner, name, stmt, setup, inner_loops, duplicate,
 
     timer = None
     try:
-        timer = create_timer(stmt, setup)
+        timer = create_timer(stmt, setup, globals)
         runner.bench_sample_func(name, sample_func,
                                  timer, **kwargs)
     except SystemExit:

@@ -477,7 +477,7 @@ Runner
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
 
-   .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None)
+   .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
       Run a benchmark on ``timeit.Timer(stmt, setup)``.
 
@@ -496,6 +496,8 @@ Runner
         the cost of the outer loop.
       * *metadata*: Metadata of this benchmark, added to the runner
         :attr:`metadata`.
+      * *globals*: Namespace used to run *setup* and *stmt*. By default, an
+        empty namespace is created. It can be used to pass variables.
 
       .. versionadded:: 0.9.2
 
