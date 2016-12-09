@@ -4,6 +4,8 @@ Changelog
 Version 0.9.2
 -------------
 
+* Issue #15: Added ``--no-locale`` command line option and locale environment
+  variables are now inherited by default.
 * Add :meth:`Runner.timeit` method.
 * Fix ``stats`` command: display again statistics on the whole benchmark suite.
 * Fix a ResourceWarning if interrupted:  Runner now kills the worker process

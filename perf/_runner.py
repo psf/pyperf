@@ -179,6 +179,10 @@ class Runner:
                             help='Comma-separated list of environment '
                                  'variables inherited by worker child '
                                  'processes.')
+        parser.add_argument("--no-locale",
+                            dest="locale", action="store_false", default=True,
+                            help="Don't copy locale environment variables "
+                                 "like LANG or LC_CTYPE.")
         parser.add_argument("--python", default=sys.executable,
                             help='Python executable '
                                  '(default: use running Python, '
@@ -640,7 +644,8 @@ class Runner:
         with rfile:
             try:
                 cmd = self._worker_cmd(calibrate, wpipe)
-                env = create_environ(self.args.inherit_environ)
+                env = create_environ(self.args.inherit_environ,
+                                     self.args.locale)
 
                 kw = {}
                 if sys.version_info >= (3, 2):

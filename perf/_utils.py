@@ -326,10 +326,15 @@ def abs_executable(python):
     return os.path.normpath(abs_python)
 
 
-def create_environ(inherit_environ):
+def create_environ(inherit_environ, locale):
     env = {}
 
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
+    if locale:
+        copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
+                         'LC_CTYPE', 'LC_IDENTIFICATION', 'LC_MEASUREMENT',
+                         'LC_MESSAGES', 'LC_MONETARY', 'LC_NAME', 'LC_NUMERIC',
+                         'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'))
     if inherit_environ:
         copy_env.extend(inherit_environ)
 

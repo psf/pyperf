@@ -201,6 +201,9 @@ Stable and reliable benchmarks
 Getting stable and reliable benchark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`.
 
+The ``--no-locale`` option may be used to use the POSIX locale and so not
+have a result depending on the current locale.
+
 Modern Intel CPU are more and more complex: `Causes of Performance Swings Due
 to Code Placement in IA
 <https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_

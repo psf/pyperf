@@ -107,7 +107,25 @@ Option::
 * ``--inherit-environ=VARS``: ``VARS`` is a comma-separated list of environment
   variable names which are inherited by worker child processes. By default,
   only the following variables are inherited: ``PATH``, ``HOME``, ``TEMP``,
-  ``COMSPEC`` and ``SystemRoot``.
+  ``COMSPEC``, ``SystemRoot`` and locale environment variables. See the
+  ``--no-locale`` below for locale environment variables.
+* ``--no-locale``: Don't inherit locale environment variables:
+
+  - ``LANG``
+  - ``LC_ADDRESS``
+  - ``LC_ALL``
+  - ``LC_COLLATE``
+  - ``LC_CTYPE``
+  - ``LC_IDENTIFICATION``
+  - ``LC_MEASUREMENT``
+  - ``LC_MESSAGES``
+  - ``LC_MONETARY``
+  - ``LC_NAME``
+  - ``LC_NUMERIC``
+  - ``LC_PAPER``
+  - ``LC_TELEPHONE``
+  - ``LC_TIME``
+
 * ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
   allocation and get the peak of memory usage in metadata
   (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
@@ -119,6 +137,11 @@ Option::
   ``/proc/self/smaps``. On Windows, get ``PeakPagefileUsage`` of
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process.
+
+.. versionchanged:: 0.9.2
+
+   Added ``--no-locale`` and locale environment variables are now inherited by
+   default.
 
 .. versionchanged:: 0.7.8
 
