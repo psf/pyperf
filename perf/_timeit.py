@@ -60,7 +60,7 @@ def display_error(timer, stmt, setup):
             print(repr(expr))
         print()
 
-    if timeit is not None:
+    if timer is not None:
         timer.print_exc()
     else:
         traceback.print_exc()
