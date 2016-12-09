@@ -123,7 +123,6 @@ class TestTimeit(unittest.TestCase):
                 '--verbose',
                 SLEEP)
         args = PERF_TIMEIT + args
-        print(' '.join(args))
         # Don't check the exact output, only check that the verbose
         # mode doesn't fail with an error (non-zero exist code)
         self.run_timeit_bench(args)

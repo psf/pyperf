@@ -9,6 +9,8 @@ Version 0.9.2
 * Fix a ResourceWarning if interrupted:  Runner now kills the worker process
   when interrupted.
 * ``compare`` and ``compare_to``: add percent difference to faster/slower
+* Rewrite timeit internally: copy code from CPython 3.7 and adapt it to
+  PyPy.
 
 Version 0.9.1 (2016-11-18)
 --------------------------
