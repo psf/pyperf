@@ -8,7 +8,7 @@ benchmarks.
 Features:
 
 * JSON format to store benchmark results
-* ``pybench`` (or ``python3 -m perf``) command line tool to display, compare,
+* ``pyperf`` (or ``python3 -m perf``) command line tool to display, compare,
   analyze and modify benchmark results
 * Statistical tools to analyze the distribution of benchmark results
 * ``compare`` command supports comparison between multiple benchmark suites
