@@ -694,7 +694,7 @@ class Runner:
 
             if exitcode:
                 raise RuntimeError("%s failed with exit code %s"
-                                % (cmd[0], exitcode))
+                                   % (cmd[0], exitcode))
 
             with open(tmp_file, "r", encoding="utf8") as rfile:
                 bench_json = rfile.read()
