@@ -701,7 +701,7 @@ class Runner:
         except:
             try:
                 os.remove(tmp_file)
-            except FileNotFoundError:
+            except OSError:
                 pass
 
         return _load_suite_from_pipe(bench_json)
