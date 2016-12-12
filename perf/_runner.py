@@ -698,7 +698,7 @@ class Runner:
 
             with open(tmp_file, "r", encoding="utf8") as rfile:
                 bench_json = rfile.read()
-        except:
+        finally:
             try:
                 os.remove(tmp_file)
             except OSError:
