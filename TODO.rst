@@ -17,7 +17,6 @@ TODO
 ====
 
 * Need to write unit test for Runner.timeit()
-* Add CLI option to sort benchmarks by start date, not by name
 * load(): remove '-' special case
 * add stdev() method, maybe median_stdev()
 * Calibration run: display time per iteration and total duration

@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.9.2
--------------
+Version 0.9.2 (2016-12-15)
+--------------------------
 
 * Issue #15: Added ``--no-locale`` command line option and locale environment
   variables are now inherited by default.
