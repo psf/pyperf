@@ -178,6 +178,10 @@ class TurboBoostMSR(Operation):
         if text:
             self.log_state(', '.join(text))
 
+        if enabled:
+            self.advice('Disable Turbo Boost on CPU %s to get more reliable '
+                        'CPU frequency' % format_cpu_list(enabled))
+
     def write_msr(self, cpu, reg_num, value):
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
@@ -258,6 +262,10 @@ class TurboBoostIntelPstate(Operation):
         if self.enabled is not None:
             state = 'enabled' if self.enabled else 'disabled'
             self.log_state("Turbo Boost %s" % state)
+
+            if self.enabled:
+                self.advice('Disable Turbo Boost to get more reliable '
+                            'CPU frequency')
 
     def write(self, tune):
         enable = (not tune)
