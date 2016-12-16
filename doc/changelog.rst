@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.9.3
+-------------
+
+* system: Don't try to read or write CPU frequency when the
+  /sys/devices/system/cpu/cpu0/cpufreq/ directory doesn't exist. For example,
+  virtual machines don't have this directory.
+
 Version 0.9.2 (2016-12-15)
 --------------------------
 

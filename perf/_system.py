@@ -879,7 +879,10 @@ class System:
         self.operations.append(ASLR(self))
         if sys.platform.startswith('linux'):
             self.operations.append(LinuxScheduler(self))
-        self.operations.append(CPUFrequency(self))
+
+        # On virtual machines, there is no cpufreq directory
+        if os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq")):
+            self.operations.append(CPUFrequency(self))
 
         if use_intel_pstate(0):
             # Setting the CPU scaling governor resets no_turbo and so must be
