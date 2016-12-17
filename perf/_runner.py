@@ -607,17 +607,21 @@ class Runner:
                             func_metadata=metadata,
                             globals=globals)
 
-    def _worker_cmd(self, calibrate, wpipe):
+    def _worker_cmd(self, calibrate, wpipe, output=None):
         args = self.args
 
         cmd = [args.python]
         cmd.extend(self._program_args)
-        cmd.extend(('--worker', '--pipe', str(wpipe),
+        cmd.extend(('--worker',
                     '--worker-task=%s' % self._worker_task,
                     '--samples', str(args.samples),
                     '--warmups', str(args.warmups),
                     '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))
+        if wpipe:
+            cmd.extend(('--pipe', str(wpipe)))
+        if output:
+            cmd.extend(('--output', output))
         if calibrate:
             cmd.append('--calibrate')
         if args.verbose:
@@ -635,6 +639,12 @@ class Runner:
         return cmd
 
     def _spawn_worker(self, calibrate=False):
+        if MS_WINDOWS:
+            return self._spawn_worker_windows(calibrate)
+        else:
+            return self._spawn_worker_posix(calibrate)
+
+    def _spawn_worker_posix(self, calibrate=False):
         rpipe, wpipe = pipe_cloexec()
         if six.PY3:
             rfile = open(rpipe, "r", encoding="utf8")
@@ -663,6 +673,36 @@ class Runner:
         if exitcode:
             raise RuntimeError("%s failed with exit code %s"
                                % (cmd[0], exitcode))
+
+        return _load_suite_from_pipe(bench_json)
+
+    def _spawn_worker_windows(self, calibrate=False):
+        import tempfile
+        wpipe, tmp_file = tempfile.mkstemp()
+        os.close(wpipe)
+        os.remove(tmp_file)  # remove for subprocess to create
+
+        cmd = self._worker_cmd(calibrate, None, output=tmp_file)
+        env = create_environ(self.args.inherit_environ,
+                             self.args.locale)
+
+        try:
+            proc = subprocess.Popen(cmd, env=env)
+
+            with popen_killer(proc):
+                exitcode = proc.wait()
+
+            if exitcode:
+                raise RuntimeError("%s failed with exit code %s"
+                                   % (cmd[0], exitcode))
+
+            with open(tmp_file, "r", encoding="utf8") as rfile:
+                bench_json = rfile.read()
+        finally:
+            try:
+                os.remove(tmp_file)
+            except OSError:
+                pass
 
         return _load_suite_from_pipe(bench_json)
 
