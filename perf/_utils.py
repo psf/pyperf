@@ -365,3 +365,32 @@ else:
     pipe_cloexec = os.pipe
 
     # In Python 3.4, file descriptors are non-inheritable by default (PEP 446)
+
+
+if MS_WINDOWS:
+    import msvcrt
+    if sys.version_info < (3, 0):
+        import _subprocess
+
+    class HandleOfPipe:
+        '''
+        On Windows, fd cannot be inherited but file handles can.
+        Creating inheritable handle differs in Python 2 and 3.
+        This class wraps the difference.
+
+        see also: https://digitalenginesoftware.com/blog/archives/47-Passing-pipes-to-subprocesses-in-Python-in-Windows.html
+        '''
+        def __init__(self, fd):
+            handle = msvcrt.get_osfhandle(fd)
+            if sys.version_info >= (3, 4):
+                os.set_handle_inheritable(handle, True)
+            elif sys.version_info < (3, 0):
+                curproc = _subprocess.GetCurrentProcess()
+                self.duplicated_handle = _subprocess.DuplicateHandle(curproc, handle, curproc, 0, True, _subprocess.DUPLICATE_SAME_ACCESS)
+                handle = int(self.duplicated_handle)
+            self.handle = handle
+
+        def close(self):
+            if sys.version_info < (3, 0):
+                # duplicated handle must be closed in parent process
+                self.duplicated_handle.Close()

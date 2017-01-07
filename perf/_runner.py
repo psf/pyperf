@@ -26,8 +26,7 @@ except ImportError:
 
 if MS_WINDOWS:
     import msvcrt
-    if sys.version_info < (3, 0):
-        import _subprocess
+    from perf._utils import HandleOfPipe
 
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
@@ -648,15 +647,9 @@ class Runner:
         with rfile:
             try:
                 if MS_WINDOWS:
-                    whandle = msvcrt.get_osfhandle(wpipe)
-                    if sys.version_info >= (3, 4):
-                        os.set_handle_inheritable(whandle, True)
-                    elif sys.version_info < (3, 0):
-                        curproc = _subprocess.GetCurrentProcess()
-                        duplicated_whandle = _subprocess.DuplicateHandle(curproc, whandle, curproc, 0, True, _subprocess.DUPLICATE_SAME_ACCESS)
-                        whandle = int(duplicated_whandle)
+                    whandle = HandleOfPipe(wpipe)
 
-                    cmd = self._worker_cmd(calibrate, whandle)
+                    cmd = self._worker_cmd(calibrate, whandle.handle)
                 else:
                     cmd = self._worker_cmd(calibrate, wpipe)
                 env = create_environ(self.args.inherit_environ,
@@ -670,8 +663,8 @@ class Runner:
                 proc = subprocess.Popen(cmd, env=env, **kw)
             finally:
                 os.close(wpipe)
-                if MS_WINDOWS and sys.version_info < (3, 0):
-                    duplicated_whandle.Close()
+                if MS_WINDOWS:
+                    whandle.close()
 
             with popen_killer(proc):
                 bench_json = rfile.read()
