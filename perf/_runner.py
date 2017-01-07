@@ -28,6 +28,7 @@ if MS_WINDOWS:
     import msvcrt
     from perf._utils import HandleOfPipe
 
+
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
@@ -648,7 +649,6 @@ class Runner:
             try:
                 if MS_WINDOWS:
                     whandle = HandleOfPipe(wpipe)
-
                     cmd = self._worker_cmd(calibrate, whandle.handle)
                 else:
                     cmd = self._worker_cmd(calibrate, wpipe)
