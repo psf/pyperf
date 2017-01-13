@@ -1,7 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 import errno
-import os
+import os.path
 import re
 import struct
 import subprocess
@@ -921,8 +921,17 @@ class System:
             print(msg)
 
     def run_operations(self, action):
+        if action == 'tune':
+            print("Tune the system configuration to run benchmarks")
+        elif action == 'reset':
+            print("Reset system configuration")
+        else:
+            print("Show the system configuration")
+        print()
+
         if action in ('tune', 'reset'):
             tune = (action == 'tune')
+
             for operation in self.operations:
                 operation.write(tune)
 
@@ -958,6 +967,12 @@ class System:
         if action != 'reset':
             self.write_messages("Advices", self.advices)
         self.write_messages("Errors", self.errors)
+
+        if action not in ('tune', 'reset'):
+            print()
+            print('Run "%s -m perf system tune" to tune the system '
+                  'configuration to run benchmarks'
+                  % os.path.basename(sys.executable))
 
         if self.errors:
             sys.exit(1)
