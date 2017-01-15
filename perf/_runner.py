@@ -24,6 +24,10 @@ try:
 except ImportError:
     psutil = None
 
+if MS_WINDOWS:
+    import msvcrt
+    from perf._utils import HandleOfPipe
+
 
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
@@ -643,16 +647,24 @@ class Runner:
 
         with rfile:
             try:
-                cmd = self._worker_cmd(calibrate, wpipe)
+                if MS_WINDOWS:
+                    whandle = HandleOfPipe(wpipe)
+                    cmd = self._worker_cmd(calibrate, whandle.handle)
+                else:
+                    cmd = self._worker_cmd(calibrate, wpipe)
                 env = create_environ(self.args.inherit_environ,
                                      self.args.locale)
 
                 kw = {}
-                if sys.version_info >= (3, 2):
+                if sys.version_info >= (3, 2) and not MS_WINDOWS:
                     kw['pass_fds'] = [wpipe]
+                if MS_WINDOWS:
+                    kw['close_fds'] = False
                 proc = subprocess.Popen(cmd, env=env, **kw)
             finally:
                 os.close(wpipe)
+                if MS_WINDOWS:
+                    whandle.close()
 
             with popen_killer(proc):
                 bench_json = rfile.read()
@@ -674,7 +686,11 @@ class Runner:
             checks = False
 
         if args.pipe is not None:
-            fd = args.pipe
+            if MS_WINDOWS:
+                handle = args.pipe
+                fd = msvcrt.open_osfhandle(handle, os.O_WRONLY)
+            else:
+                fd = args.pipe
             if six.PY3:
                 wpipe = open(fd, "w", encoding="utf8")
             else:
