@@ -16,7 +16,7 @@
 #  - git tag VERSION
 #  - git push --tags
 #  - rm -rf dist/
-#  - run: python3 setup.py sdist bdist_wheel
+#  - python3 setup.py sdist bdist_wheel
 #  - twine upload dist/*
 #
 # After the release:
@@ -25,7 +25,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '0.9.3'
+VERSION = '0.9.4'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [
