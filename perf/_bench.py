@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 import datetime
+import errno
 import json
 import math
 import os.path
@@ -12,7 +13,7 @@ import statistics
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info)
 from perf._formatter import format_number, DEFAULT_UNIT, format_samples
-from perf._utils import python_implementation, parse_iso8601
+from perf._utils import parse_iso8601
 
 
 # JSON format history:
@@ -700,35 +701,21 @@ class BenchmarkSuite(object):
         else:
             suffix = u'.gz'
 
-        flags = os.O_WRONLY | os.O_CREAT
-        if not replace:
-            flags |= os.O_EXCL
-        fd = os.open(filename, flags)
+        if not replace and os.path.exists(filename):
+            raise OSError(errno.EEXIST, "File already exists")
 
         if filename.endswith(suffix):
             import gzip
 
-            filename = filename[:-3]
             if six.PY3:
-                import io
-
-                fp = open(fd, "wb")
-                gzip_fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
-                return (io.TextIOWrapper(gzip_fp, "utf-8"), fp)
+                return gzip.open(filename, mode="wt", encoding="utf-8")
             else:
-                # FIXME: why PyPy doesn't support buffered writer?
-                if python_implementation() == 'pypy':
-                    fp = os.fdopen(fd, "wb", 0)
-                else:
-                    fp = os.fdopen(fd, "wb")
-                gzip_fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
-                return (gzip_fp, fp)
+                return gzip.open(filename, mode="wb")
         else:
             if six.PY3:
-                fp = open(fd, "w", encoding="utf-8")
+                return open(filename, "w", encoding="utf-8")
             else:
-                fp = os.fdopen(fd, "wb")
-            return (fp, fp)
+                return open(filename, "wb")
 
     def dump(self, file, compact=True, replace=False):
         benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
@@ -745,10 +732,10 @@ class BenchmarkSuite(object):
             fp.flush()
 
         if isinstance(file, (bytes, six.text_type)):
-            fp, close_fp = self._dump_open(file, replace)
-            with close_fp:
-                with fp:
-                    dump(data, fp, compact)
+            fp = self._dump_open(file, replace)
+            with fp:
+                dump(data, fp, compact)
+                fp.close()
         else:
             # file is a file object
             dump(data, file, compact)
