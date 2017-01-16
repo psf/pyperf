@@ -270,16 +270,18 @@ class TestTimeit(unittest.TestCase):
         self.assertRegex(cmd.stdout, expected)
 
     def test_duplicate(self):
+        sleep = 1e-3
         duplicate = 10
-        args = (PERF_TIMEIT
-                + ('--duplicate', str(duplicate), '--loops', '1')
-                + FAST_BENCH_ARGS)
+        args = PERF_TIMEIT
+        args += ('-n3', '-p1',
+                 '--duplicate', str(duplicate), '--loops', '1',
+                 '-s', 'import time', 'time.sleep(%s)' % sleep)
         bench, stdout = self.run_timeit_bench(args)
 
         metadata = bench.get_metadata()
         self.assertEqual(metadata['timeit_duplicate'], duplicate)
         for raw_sample in bench._get_raw_samples():
-            self.assertGreaterEqual(raw_sample, FAST_MIN_TIME * duplicate)
+            self.assertGreaterEqual(raw_sample, sleep * duplicate)
 
 
 if __name__ == "__main__":
