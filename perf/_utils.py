@@ -10,8 +10,17 @@ import sys
 import six
 import statistics
 
+if sys.version_info < (3, 4):
+    try:
+        import fcntl
+    except ImportError:
+        fcntl = None
+
 
 MS_WINDOWS = (sys.platform == 'win32')
+
+if MS_WINDOWS:
+    import msvcrt
 
 
 def parse_iso8601(date):
@@ -344,24 +353,114 @@ def create_environ(inherit_environ, locale):
     return env
 
 
-if sys.version_info < (3, 4):
-    try:
-        import fcntl
-    except ImportError:
-        fcntl = None
+if MS_WINDOWS:
+    if hasattr(os, 'set_handle_inheritable'):
+        # Python 3.4 and newer
+        set_handle_inheritable = os.set_handle_inheritable
+    else:
+        import ctypes
+        from ctypes import WinError
 
-    def _set_cloexec(fd):
-        if fcntl is None:
-            return
+        HANDLE_FLAG_INHERIT = 1
+        SetHandleInformation = ctypes.cdll.kernel32.SetHandleInformation
 
-        flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        flags |= os.O_CLOEXEC
-        fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+        def set_handle_inheritable(handle, inheritable):
+            flags = HANDLE_FLAG_INHERIT if inheritable else 0
 
-    def pipe_cloexec():
-        rfd, wfd = os.pipe()
-        return (rfd, wfd)
+            ok = SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags)
+            if not ok:
+                raise WinError()
 else:
-    pipe_cloexec = os.pipe
+    if hasattr(os, 'set_inheritable'):
+        set_inheritable = os.set_inheritable
+    elif fcntl is not None:
+        def set_inheritable(fd, inheritable):
+            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+            if inheritable:
+                flags &= ~fcntl.FD_CLOEXEC
+            else:
+                flags |= fcntl.FD_CLOEXEC
+            fcntl.fcntl(fd, fcntl.F_SETFD, flags)
+    else:
+        set_inheritable = None
 
-    # In Python 3.4, file descriptors are non-inheritable by default (PEP 446)
+
+class _Pipe(object):
+    _OPEN_MODE = "r"
+
+    def __init__(self, fd):
+        self._fd = fd
+        self._file = None
+        if MS_WINDOWS:
+            self._handle = msvcrt.get_osfhandle(fd)
+
+    @property
+    def fd(self):
+        return self._fd
+
+    def close(self):
+        fd = self._fd
+        self._fd = None
+        file = self._file
+        self._file = None
+
+        if file is not None:
+            file.close()
+        elif fd is not None:
+            os.close(fd)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+
+class ReadPipe(_Pipe):
+    def open_text(self):
+        if six.PY3:
+            file = open(self._fd, "r", encoding="utf8")
+        else:
+            file = os.fdopen(self._fd, "r")
+        self._file = file
+        return file
+
+
+class WritePipe(_Pipe):
+    def to_subprocess(self):
+        if MS_WINDOWS:
+            set_handle_inheritable(self._handle, True)
+            arg = self._handle
+        else:
+            set_inheritable(self._fd, True)
+            arg = self._fd
+        return str(arg)
+
+    @classmethod
+    def from_subprocess(cls, arg):
+        arg = int(arg)
+        if MS_WINDOWS:
+            fd = msvcrt.open_osfhandle(arg, os.O_WRONLY)
+        else:
+            fd = arg
+        return cls(fd)
+
+    def open_text(self):
+        if six.PY3:
+            file = open(self._fd, "w", encoding="utf8")
+        else:
+            file = os.fdopen(self._fd, "w")
+        self._file = file
+        return file
+
+
+def create_pipe():
+    rfd, wfd = os.pipe()
+    # On Windows, os.pipe() creates non-inheritable handles
+    if not MS_WINDOWS:
+        set_inheritable(rfd, False)
+        set_inheritable(wfd, False)
+
+    rpipe = ReadPipe(rfd)
+    wpipe = WritePipe(wfd)
+    return (rpipe, wpipe)

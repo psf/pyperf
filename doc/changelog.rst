@@ -4,6 +4,8 @@ Changelog
 Version 0.9.3
 -------------
 
+* Fix Windows support: make the handle of the write pipe inheritable and
+  pass its handle to the worker process.
 * system: Don't try to read or write CPU frequency when the
   /sys/devices/system/cpu/cpu0/cpufreq/ directory doesn't exist. For example,
   virtual machines don't have this directory.

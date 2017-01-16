@@ -15,8 +15,8 @@ from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta, format_number, format_sample
-from perf._utils import (MS_WINDOWS, popen_killer,
-                         abs_executable, create_environ, pipe_cloexec)
+from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
+                         create_environ, create_pipe, WritePipe)
 
 try:
     # Optional dependency
@@ -635,28 +635,28 @@ class Runner:
         return cmd
 
     def _spawn_worker(self, calibrate=False):
-        rpipe, wpipe = pipe_cloexec()
-        if six.PY3:
-            rfile = open(rpipe, "r", encoding="utf8")
-        else:
-            rfile = os.fdopen(rpipe, "r")
+        env = create_environ(self.args.inherit_environ,
+                             self.args.locale)
 
-        with rfile:
-            try:
-                cmd = self._worker_cmd(calibrate, wpipe)
-                env = create_environ(self.args.inherit_environ,
-                                     self.args.locale)
+        rpipe, wpipe = create_pipe()
+        with rpipe:
+            with wpipe:
+                warg = wpipe.to_subprocess()
+                cmd = self._worker_cmd(calibrate, warg)
 
                 kw = {}
-                if sys.version_info >= (3, 2):
-                    kw['pass_fds'] = [wpipe]
+                if MS_WINDOWS:
+                    # Set close_fds to False to call CreateProcess() with
+                    # bInheritHandles=True. For pass_handles, see
+                    # http://bugs.python.org/issue19764
+                    kw['close_fds'] = False
+                elif sys.version_info >= (3, 2):
+                    kw['pass_fds'] = [wpipe.fd]
                 proc = subprocess.Popen(cmd, env=env, **kw)
-            finally:
-                os.close(wpipe)
 
             with popen_killer(proc):
-                bench_json = rfile.read()
-                rfile.close()
+                with rpipe.open_text() as rfile:
+                    bench_json = rfile.read()
 
                 exitcode = proc.wait()
 
@@ -674,15 +674,11 @@ class Runner:
             checks = False
 
         if args.pipe is not None:
-            fd = args.pipe
-            if six.PY3:
-                wpipe = open(fd, "w", encoding="utf8")
-            else:
-                wpipe = os.fdopen(fd, "w")
+            wpipe = WritePipe.from_subprocess(args.pipe)
 
-            with wpipe:
+            with wpipe.open_text() as wfile:
                 try:
-                    bench.dump(wpipe)
+                    bench.dump(wfile)
                 except IOError as exc:
                     if exc.errno != errno.EPIPE:
                         raise
@@ -726,6 +722,7 @@ class Runner:
 
         for process in range(1, nprocess + 1):
             suite = self._spawn_worker(calibrate)
+            # FIXME: suite can be None if a worker failed
 
             benchmarks = suite.get_benchmarks()
             if len(benchmarks) != 1:

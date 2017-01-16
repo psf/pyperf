@@ -3,11 +3,9 @@ import os.path
 import tempfile
 import textwrap
 
-import six
-
 import perf
 from perf import tests
-from perf._utils import pipe_cloexec
+from perf._utils import create_pipe
 from perf.tests import mock
 from perf.tests import unittest
 
@@ -70,21 +68,19 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(result.bench.get_nsample(), 1)
 
     def test_pipe(self):
-        rpipe, wpipe = pipe_cloexec()
-        if six.PY3:
-            rfile = open(rpipe, "r", encoding="utf8")
-        else:
-            rfile = os.fdopen(rpipe, "r")
+        rpipe, wpipe = create_pipe()
+        with rpipe:
+            with wpipe:
+                arg = wpipe.to_subprocess()
+                # Don't close the file descriptor, it is closed by
+                # the Runner class
+                wpipe._fd = None
 
-        with rfile:
-            # need to duplicate because the worker closes the pipe FD
-            wpipe2 = os.dup(wpipe)
-            try:
-                result = self.exec_runner('--pipe', str(wpipe2), '--worker')
-            finally:
-                os.close(wpipe)
+                result = self.exec_runner('--pipe', str(arg), '--worker')
 
-            bench_json = rfile.read()
+            with rpipe.open_text() as rfile:
+                bench_json = rfile.read()
+
         self.assertEqual(bench_json,
                          tests.benchmark_as_json(result.bench))
 
