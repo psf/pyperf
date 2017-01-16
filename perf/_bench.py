@@ -713,20 +713,22 @@ class BenchmarkSuite(object):
                 import io
 
                 fp = open(fd, "wb")
-                fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
-                return io.TextIOWrapper(fp, "utf-8")
+                gzip_fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
+                return (io.TextIOWrapper(gzip_fp, "utf-8"), fp)
             else:
                 # FIXME: why PyPy doesn't support buffered writer?
                 if python_implementation() == 'pypy':
                     fp = os.fdopen(fd, "wb", 0)
                 else:
                     fp = os.fdopen(fd, "wb")
-                return gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
+                gzip_fp = gzip.GzipFile(fileobj=fp, mode="wb", filename=filename)
+                return (gzip_fp, fp)
         else:
             if six.PY3:
-                return open(fd, "w", encoding="utf-8")
+                fp = open(fd, "w", encoding="utf-8")
             else:
-                return os.fdopen(fd, "wb")
+                fp = os.fdopen(fd, "wb")
+            return (fp, fp)
 
     def dump(self, file, compact=True, replace=False):
         benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
@@ -743,9 +745,10 @@ class BenchmarkSuite(object):
             fp.flush()
 
         if isinstance(file, (bytes, six.text_type)):
-            fp = self._dump_open(file, replace)
-            with fp:
-                dump(data, fp, compact)
+            fp, close_fp = self._dump_open(file, replace)
+            with close_fp:
+                with fp:
+                    dump(data, fp, compact)
         else:
             # file is a file object
             dump(data, file, compact)
