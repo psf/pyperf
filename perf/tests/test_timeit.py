@@ -240,7 +240,7 @@ class TestTimeit(unittest.TestCase):
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 
-        expected = textwrap.dedent('''
+        expected = textwrap.dedent(r'''
             Benchmark .*
             ==========+
 
@@ -266,11 +266,11 @@ class TestTimeit(unittest.TestCase):
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 
-        expected = '(?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
+        expected = r'(?:Median \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
         self.assertRegex(cmd.stdout, expected)
 
     def test_duplicate(self):
-        duplicate = 1000
+        duplicate = 10
         args = (PERF_TIMEIT
                 + ('--duplicate', str(duplicate), '--loops', '1')
                 + FAST_BENCH_ARGS)
