@@ -362,7 +362,7 @@ if MS_WINDOWS:
         from ctypes import WinError
 
         HANDLE_FLAG_INHERIT = 1
-        SetHandleInformation = ctypes.cdll.kernel32.SetHandleInformation
+        SetHandleInformation = ctypes.windll.kernel32.SetHandleInformation
 
         def set_handle_inheritable(handle, inheritable):
             flags = HANDLE_FLAG_INHERIT if inheritable else 0
