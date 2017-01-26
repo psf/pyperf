@@ -16,6 +16,8 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
+* Implement a system-wide lock to prevent running two benchmarks at the same
+  time, especially using CPU pinning
 * system: display uptime
 * Need to write unit test for Runner.timeit()
 * load(): remove '-' special case
