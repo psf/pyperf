@@ -321,18 +321,29 @@ except ImportError:
 
 
 def abs_executable(python):
+    orig_python = python
+
     # Replace "~" with the user home directory
     python = os.path.expanduser(python)
-    # Try to the absolute path to the binary
-    abs_python = which(python)
-    if not abs_python:
-        print("ERROR: Unable to locate the Python executable: %r" % python)
+
+    if os.path.dirname(python):
+        # Get the absolute path to the directory of the program.
+        #
+        # Don't try to get the absolute path to the program, because symlink
+        # must not be followed. The venv module of Python can use a symlink for
+        # the "python" executable of the virtual environment. Running the
+        # symlink adds the venv to sys.path, whereas running the real program
+        # doesn't.
+        path, python = os.path.split(python)
+        path = os.path.realpath(path)
+        python = os.path.join(path, python)
+    else:
+        python = which(python)
+    if not python:
+        print("ERROR: Unable to locate the Python executable: %r" % orig_python)
         sys.exit(1)
 
-    # Don't follow symlinks. The venv module of Python can use a symlink for
-    # the "python" executable of the virtual environment. Running the symlink
-    # gets the modules from the venv, running the linked executable doesn't.
-    return os.path.normpath(abs_python)
+    return os.path.normpath(python)
 
 
 def create_environ(inherit_environ, locale):

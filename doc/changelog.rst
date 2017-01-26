@@ -9,6 +9,9 @@ Version 0.9.3 (2017-01-16)
   /sys/devices/system/cpu/cpu0/cpufreq/ directory doesn't exist. For example,
   virtual machines don't have this directory.
 * Fix a ``ResourceWarning`` in ``BenchmarkSuite.dump()`` for gzip files.
+* Fix the abs_executable() function used to find the absolute path to the
+  Python program. Don't follow symbolic links to support correctly virtual
+  environments.
 
 Version 0.9.2 (2016-12-15)
 --------------------------
