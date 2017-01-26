@@ -16,6 +16,7 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
+* system: display uptime
 * Need to write unit test for Runner.timeit()
 * load(): remove '-' special case
 * add stdev() method, maybe median_stdev()
