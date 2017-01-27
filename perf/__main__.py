@@ -217,6 +217,14 @@ class Benchmarks:
         for filename in filenames:
             self.load_benchmark_suite(filename)
 
+    def has_same_unique_benchmark(self):
+        "True if all suites have one benchmark with the same name"
+        if any(len(suite) > 1 for suite in self.suites):
+            return False
+        names = self.suites[0].get_benchmark_names()
+        return all(suite.get_benchmark_names() == names
+                   for suite in self.suites[1:])
+
     def include_benchmark(self, name):
         for suite in self.suites:
             try:
@@ -411,7 +419,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
     if use_title:
         show_filename = (data.get_nsuite() > 1)
-        show_name = show_filename or (len(data.suites[0]) > 1)
+        show_name = not data.has_same_unique_benchmark()
         if not show_filename and stats:
             show_filename = (len(data) > 1)
 
@@ -446,7 +454,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                     suite = item.suite
                     format_title(item.filename, 1, lines=lines)
 
-                    if stats:
+                    if stats and len(suite) > 1:
                         empty_line(lines)
 
                         duration = suite.get_total_duration()
