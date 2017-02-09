@@ -16,6 +16,9 @@ Blocker issues for perf 1.0 stable API
 TODO
 ====
 
+* Add --compare-to to Runner
+* --append should get the number of loops from the existing file and avoid
+  calibration, at least when no JIT is used.
 * Implement a system-wide lock to prevent running two benchmarks at the same
   time, especially using CPU pinning
 * system: display uptime
