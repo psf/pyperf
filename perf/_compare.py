@@ -196,7 +196,7 @@ class Table:
             write_line(self._render_line('-'))
 
 
-def compare_suites_table(grouped_by_name, args):
+def compare_suites_table(grouped_by_name, by_speed, args):
     headers = ['Benchmark']
     for group in grouped_by_name:
         for item in group.benchmarks:
@@ -205,6 +205,14 @@ def compare_suites_table(grouped_by_name, args):
 
     not_significant = []
 
+    def sort_key(group):
+        ref = group.benchmarks[0].benchmark
+        bench = group.benchmarks[1].benchmark
+        speed, percent = compute_speed(ref, bench)
+        return -speed
+
+    grouped_by_name.sort(key=sort_key)
+
     rows = []
     for group in grouped_by_name:
         all_significant = []
@@ -212,7 +220,6 @@ def compare_suites_table(grouped_by_name, args):
         ref = group.benchmarks[0].benchmark
         for index, item in enumerate(group.benchmarks):
             bench = item.benchmark
-            name = None
             text = bench.format_sample(bench.median())
             if index != 0:
                 speed, percent = compute_speed(ref, bench)
@@ -232,7 +239,7 @@ def compare_suites_table(grouped_by_name, args):
         if any(all_significant):
             rows.append(row)
         else:
-            not_significant.append(repr(group.name))
+            not_significant.append(group.name)
 
     if rows:
         table = Table(headers, rows)
@@ -242,7 +249,7 @@ def compare_suites_table(grouped_by_name, args):
         if rows:
             print()
         print("Not significant (%s): %s"
-              % (len(not_significant), ', '.join(not_significant)))
+              % (len(not_significant), '; '.join(not_significant)))
 
 
 def compare_suites_list(all_results, show_name, args):
@@ -335,7 +342,7 @@ def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
         sys.exit(1)
 
     if getattr(args, 'table', False):
-        compare_suites_table(grouped_by_name, args)
+        compare_suites_table(grouped_by_name, by_speed, args)
     else:
         # List of CompareResults
         all_results = []

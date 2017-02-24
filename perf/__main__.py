@@ -350,11 +350,6 @@ def _display_common_metadata(metadatas, lines):
 def cmd_compare(args):
     from perf._compare import compare_suites
 
-    if getattr(args, 'table', False):
-        if args.group_by_speed:
-            print("--table doesn't support --group-by-speed yet")
-            sys.exit(1)
-
     data = load_benchmarks(args)
     if data.get_nsuite() < 2:
         print("ERROR: need at least two benchmark files")
