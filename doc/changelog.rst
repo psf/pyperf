@@ -4,6 +4,7 @@ Changelog
 Version 0.9.3 (2017-01-16)
 --------------------------
 
+* :ref:`compare_to <compare_cmd>` command: Add ``--table`` option to render a table
 * Fix the Windows support.
 * system: Don't try to read or write CPU frequency when the
   /sys/devices/system/cpu/cpu0/cpufreq/ directory doesn't exist. For example,

@@ -23,25 +23,46 @@ def is_significant(bench1, bench2):
         return (True, None)
 
 
-class CompareResults(list):
-    def __init__(self, name):
-        self.name = name
-
-
 class CompareData:
     def __init__(self, name, benchmark):
         self.name = name
         self.benchmark = benchmark
 
+    def __repr__(self):
+        return '<CompareData name=%r sample#=%s>' % (self.name, self.benchmark.get_nsample())
+
+
+def compute_speed(ref, changed):
+    ref_avg = ref.median()
+    changed_avg = changed.median()
+    # Note: medians cannot be zero, it's a warranty of perf API
+    speed = ref_avg / changed_avg
+    percent = (changed_avg - ref_avg) * 100.0 / ref_avg
+    return (speed, percent)
+
+
+def format_speed(speed, percent):
+    if speed == 1.0:
+        return "no change"
+    elif speed > 1.0:
+        return "%.2fx faster (%+.0f%%)" % (speed, percent)
+    else:
+        return "%.2fx slower (%+.0f%%)" % (1.0 / speed, percent)
+
 
 class CompareResult(object):
     def __init__(self, ref, changed):
+        # CompareData object
         self.ref = ref
+        # CompareData object
         self.changed = changed
         self._significant = None
         self._t_score = None
         self._speed = None
         self._percent = None
+
+    def __repr__(self):
+        return '<CompareResult ref=%r changed=%r>' % (self.ref, self.changed)
 
     def _set_significant(self):
         bench1 = self.ref.benchmark
@@ -61,11 +82,8 @@ class CompareResult(object):
         return self._t_score
 
     def _compute_speed(self):
-        ref_avg = self.ref.benchmark.median()
-        changed_avg = self.changed.benchmark.median()
-        # Note: medians cannot be zero, it's a warranty of perf API
-        self._speed = ref_avg / changed_avg
-        self._percent = (changed_avg - ref_avg) * 100.0 / ref_avg
+        self._speed, self._percent = compute_speed(self.ref.benchmark,
+                                                   self.changed.benchmark)
 
     @property
     def speed(self):
@@ -97,13 +115,7 @@ class CompareResult(object):
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
-        speed = self.speed
-        if speed == 1.0:
-            text = "%s: no change" % text
-        elif speed > 1.0:
-            text = "%s: %.2fx faster (%+.0f%%)" % (text, speed, self.percent)
-        else:
-            text = "%s: %.2fx slower (%+.0f%%)" % (text, 1.0 / speed, self.percent)
+        text = "%s: %s" % (text, format_speed(self.speed, self.percent))
         return text
 
     def format(self, verbose=True, show_name=True):
@@ -125,6 +137,15 @@ class CompareResult(object):
         return lines
 
 
+class CompareResults(list):
+    # list of CompareResult objects
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return '<CompareResult %r>' % (list(self),)
+
+
 def compare_benchmarks(name, benchmarks):
     results = CompareResults(name)
 
@@ -137,6 +158,74 @@ def compare_benchmarks(name, benchmarks):
         results.append(result)
 
     return results
+
+
+class Table:
+    def __init__(self, headers, rows):
+        self.headers = headers
+        self.rows = rows
+        self.widths = [len(header) for header in self.headers]
+        for row in self.rows:
+            for column, cell in enumerate(row):
+                if isinstance(cell, str):
+                    cell_len = len(cell)
+                else:
+                    cell_len = max(len(subcell) for subcell in cell)
+                self.widths[column] = max(self.widths[column], cell_len)
+
+    def _render_line(self, char='-'):
+        parts = ['']
+        for width in self.widths:
+            parts.append(char * (width + 2))
+        parts.append('')
+        return '+'.join(parts)
+
+    def _render_row(self, row):
+        parts = ['']
+        for width, cell in zip(self.widths, row):
+            parts.append(' %s ' % cell.ljust(width))
+        parts.append('')
+        return '|'.join(parts)
+
+    def render(self, write_line):
+        write_line(self._render_line('-'))
+        write_line(self._render_row(self.headers))
+        write_line(self._render_line('='))
+        for row in self.rows:
+            write_line(self._render_row(row))
+            write_line(self._render_line('-'))
+
+
+def compare_suites_table(grouped_by_name, args):
+    headers = ['Benchmark']
+    for group in grouped_by_name:
+        for item in group.benchmarks:
+            headers.append(item.filename)
+        break
+
+    rows = []
+    for group in grouped_by_name:
+        row = [group.name]
+        ref = group.benchmarks[0].benchmark
+        for index, item in enumerate(group.benchmarks):
+            bench = item.benchmark
+            name = None
+            text = bench.format_sample(bench.median())
+            if index != 0:
+                significant = is_significant(ref, bench)[0]
+                if significant:
+                    speed, percent = compute_speed(ref, bench)
+                    if args.quiet:
+                        text = format_speed(speed, percent)
+                    else:
+                        text = "%s: %s" % (text, format_speed(speed, percent))
+                else:
+                    text = "not significant"
+            row.append(text)
+        rows.append(row)
+
+    table = Table(headers, rows)
+    table.render(print)
 
 
 def compare_suites_list(all_results, show_name, args):
@@ -228,19 +317,23 @@ def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
               file=sys.stderr)
         sys.exit(1)
 
-    all_results = []
-    for item in grouped_by_name:
-        cmp_benchmarks = item.benchmarks
-        if sort_benchmarks:
-            cmp_benchmarks.sort(key=bench_sort_key)
-        results = compare_benchmarks(item.name, cmp_benchmarks)
-        all_results.append(results)
-
-    show_name = (len(grouped_by_name) > 1)
-    if by_speed:
-        compare_suites_by_speed(all_results, show_name, args)
+    if getattr(args, 'table', False):
+        compare_suites_table(grouped_by_name, args)
     else:
-        compare_suites_list(all_results, show_name, args)
+        # List of CompareResults
+        all_results = []
+        for item in grouped_by_name:
+            cmp_benchmarks = item.benchmarks
+            if sort_benchmarks:
+                cmp_benchmarks.sort(key=bench_sort_key)
+            results = compare_benchmarks(item.name, cmp_benchmarks)
+            all_results.append(results)
+
+        show_name = (len(grouped_by_name) > 1)
+        if by_speed:
+            compare_suites_by_speed(all_results, show_name, args)
+        else:
+            compare_suites_list(all_results, show_name, args)
 
     if not args.quiet:
         for suite, hidden in benchmarks.group_by_name_ignored():

@@ -89,6 +89,7 @@ Compare benchmark suites, use the first file as the reference::
         [-v/--verbose] [-q/--quiet]
         [-G/--group-by-speed]
         [--min-speed=MIN_SPEED]
+        [--table]
         reference.json changed.json [changed2.json ...]
 
 Options:
@@ -96,6 +97,7 @@ Options:
 * ``--group-by-speed``: group results by "Slower", "Faster" and "Same speed"
 * ``--min-speed``: Absolute minimum of speed in percent to consider that a
   benchmark is significant (default: 0%)
+* ``--table``: Render a table.
 
 Example::
 
@@ -103,6 +105,9 @@ Example::
     Median +- std dev: [py2] 11.4 ms +- 2.1 ms -> [py3] 13.6 ms +- 1.3 ms: 1.19x slower (+19%)
 
 On this example, py2 is faster and so used as the reference.
+
+.. versionchanged:: 0.9.3
+   Added ``--table`` option.
 
 
 .. _stats_cmd:

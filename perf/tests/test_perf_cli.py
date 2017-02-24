@@ -145,6 +145,26 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
+    def test_compare_to_table(self):
+        ref_result = self.create_bench((1.0, 1.5, 2.0),
+                                       metadata={'name': 'telco'})
+
+        changed_result = self.create_bench((1.5, 2.0, 2.5),
+                                           metadata={'name': 'telco'})
+
+        stdout = self.compare('compare_to', ref_result, changed_result, '--table')
+
+        expected = textwrap.dedent('''
+                +-----------+----------+-----------------+
+                | Benchmark | ref      | changed         |
+                +===========+==========+=================+
+                | telco     | 1.50 sec | not significant |
+                +-----------+----------+-----------------+
+        ''').strip()
+
+        self.assertEqual(stdout.rstrip(),
+                         expected)
+
     def test_compare_not_significant(self):
         ref_result = self.create_bench((1.0, 1.5, 2.0),
                                        metadata={'name': 'name'})
