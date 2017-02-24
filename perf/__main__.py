@@ -355,10 +355,6 @@ def cmd_compare(args):
             print("--table doesn't support --group-by-speed yet")
             sys.exit(1)
 
-        if args.min_speed:
-            print("--table doesn't support --min-speed yet")
-            sys.exit(1)
-
     data = load_benchmarks(args)
     if data.get_nsuite() < 2:
         print("ERROR: need at least two benchmark files")

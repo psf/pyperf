@@ -203,8 +203,11 @@ def compare_suites_table(grouped_by_name, args):
             headers.append(item.filename)
         break
 
+    not_significant = []
+
     rows = []
     for group in grouped_by_name:
+        all_significant = []
         row = [group.name]
         ref = group.benchmarks[0].benchmark
         for index, item in enumerate(group.benchmarks):
@@ -212,20 +215,34 @@ def compare_suites_table(grouped_by_name, args):
             name = None
             text = bench.format_sample(bench.median())
             if index != 0:
-                significant = is_significant(ref, bench)[0]
+                speed, percent = compute_speed(ref, bench)
+                if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
+                    significant = False
+                else:
+                    significant = is_significant(ref, bench)[0]
                 if significant:
-                    speed, percent = compute_speed(ref, bench)
                     if args.quiet:
                         text = format_speed(speed, percent)
                     else:
                         text = "%s: %s" % (text, format_speed(speed, percent))
                 else:
                     text = "not significant"
+                all_significant.append(significant)
             row.append(text)
-        rows.append(row)
+        if any(all_significant):
+            rows.append(row)
+        else:
+            not_significant.append(repr(group.name))
 
-    table = Table(headers, rows)
-    table.render(print)
+    if rows:
+        table = Table(headers, rows)
+        table.render(print)
+
+    if not_significant:
+        if rows:
+            print()
+        print("Not significant (%s): %s"
+              % (len(not_significant), ', '.join(not_significant)))
 
 
 def compare_suites_list(all_results, show_name, args):
