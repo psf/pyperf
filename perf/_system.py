@@ -159,7 +159,7 @@ class TurboBoostMSR(Operation):
         if not self.have_device:
             return
 
-        for cpu in range(self.system.logical_cpu_count):
+        for cpu in self.system.cpus:
             if not self.read_cpu(cpu):
                 break
 
@@ -179,7 +179,7 @@ class TurboBoostMSR(Operation):
         if text:
             self.log_state(', '.join(text))
 
-        self.tuned_for_benchmarks = (not self.enabled)
+        self.tuned_for_benchmarks = (not enabled)
         if enabled:
             self.advice('Disable Turbo Boost on CPU %s to get more reliable '
                         'CPU frequency' % format_cpu_list(enabled))
@@ -993,7 +993,7 @@ class System:
             tuned = all(operation.tuned_for_benchmarks in (True, None)
                         for operation in self.operations)
             print()
-            if tuned:
+            if tuned and not self.errors:
                 print("OK! System ready for benchmarking")
             else:
                 print('Run "%s -m perf system tune" to tune the system '
