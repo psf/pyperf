@@ -78,6 +78,7 @@ class Operation(object):
         self.name = name
         self.system = system
         self.permission_error = False
+        self.tuned_for_benchmarks = None
 
     def advice(self, msg):
         self.system.advice('%s: %s' % (self.name, msg))
@@ -178,6 +179,7 @@ class TurboBoostMSR(Operation):
         if text:
             self.log_state(', '.join(text))
 
+        self.tuned_for_benchmarks = (not self.enabled)
         if enabled:
             self.advice('Disable Turbo Boost on CPU %s to get more reliable '
                         'CPU frequency' % format_cpu_list(enabled))
@@ -263,6 +265,7 @@ class TurboBoostIntelPstate(Operation):
             state = 'enabled' if self.enabled else 'disabled'
             self.log_state("Turbo Boost %s" % state)
 
+            self.tuned_for_benchmarks = (not self.enabled)
             if self.enabled:
                 self.advice('Disable Turbo Boost to get more reliable '
                             'CPU frequency')
@@ -306,6 +309,7 @@ class CPUGovernorIntelPstate(Operation):
     """
     Get/Set CPU scaling governor of the intel_pstate driver.
     """
+    BENCHMARK_GOVERNOR = 'performance'
 
     def __init__(self, system):
         Operation.__init__(self, 'CPU scaling governor (intel_pstate)',
@@ -322,8 +326,14 @@ class CPUGovernorIntelPstate(Operation):
 
     def show(self):
         self.read_governor()
-        if self.governor:
-            self.log_state(self.governor)
+        if not self.governor:
+            return
+
+        self.log_state(self.governor)
+        self.tuned_for_benchmarks = (self.governor == self.BENCHMARK_GOVERNOR)
+        if not self.tuned_for_benchmarks:
+            self.advice('Use CPU scaling governor %r'
+                        % self.BENCHMARK_GOVERNOR)
 
     def write(self, tune):
         self.read_governor()
@@ -427,8 +437,13 @@ class ASLR(Operation):
             state = self.STATE[line]
         except KeyError:
             self.error("Failed to read %s" % self.path)
-        else:
-            self.log_state(state)
+            return
+
+        self.log_state(state)
+        self.tuned_for_benchmarks = (line == '2')
+        if not self.tuned_for_benchmarks:
+            self.advice("Enable full randomization: write 2 into %s"
+                        % self.path)
 
     def write(self, tune):
         value = self.read_first_line(self.path)
@@ -787,6 +802,7 @@ class CheckNOHZFullIntelPstate(Operation):
                     "with nohz_full"
                     % format_cpu_list(used))
         self.advice("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
+        self.tuned_for_benchmarks = False
 
 
 class PowerSupply(Operation):
@@ -826,6 +842,8 @@ class PowerSupply(Operation):
 class PerfEvent(Operation):
     # Minimise time spent by the Linux perf kernel profiler.
 
+    BENCHMARK_RATE = 1
+
     def __init__(self, system):
         Operation.__init__(self, 'Perf event', system)
         self.path = proc_path("sys/kernel/perf_event_max_sample_rate")
@@ -842,10 +860,13 @@ class PerfEvent(Operation):
             return
 
         self.log_state("Maximum sample rate: %s per second" % max_sample_rate)
+        self.tuned_for_benchmarks = (max_sample_rate == self.BENCHMARK_RATE)
+        if not self.tuned_for_benchmarks:
+            self.advice("Set max sample rate to %s" % self.BENCHMARK_RATE)
 
     def write(self, tune):
         if tune:
-            new_rate = 1
+            new_rate = self.BENCHMARK_RATE
         else:
             new_rate = 100000
 
@@ -969,10 +990,15 @@ class System:
         self.write_messages("Errors", self.errors)
 
         if action not in ('tune', 'reset'):
+            tuned = all(operation.tuned_for_benchmarks in (True, None)
+                        for operation in self.operations)
             print()
-            print('Run "%s -m perf system tune" to tune the system '
-                  'configuration to run benchmarks'
-                  % os.path.basename(sys.executable))
+            if tuned:
+                print("OK! System ready for benchmarking")
+            else:
+                print('Run "%s -m perf system tune" to tune the system '
+                      'configuration to run benchmarks'
+                      % os.path.basename(sys.executable))
 
         if self.errors:
             sys.exit(1)
