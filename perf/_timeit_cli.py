@@ -46,10 +46,6 @@ class TimeitRunner(Runner):
                               'the number of times that the code is copied '
                               'manually multiple times to reduce the overhead '
                               'of the outer loop.')
-        cmd.add_argument("--compare-to", metavar="REF_PYTHON",
-                         help='Run benchmark on the Python executable REF_PYTHON, '
-                              'run benchmark on Python executable PYTHON, '
-                              'and then compare REF_PYTHON result to PYTHON result')
         cmd.add_argument('--duplicate', type=int,
                          help='duplicate statements to reduce the overhead of '
                               'the outer loop and multiply inner_loops '

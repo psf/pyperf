@@ -10,13 +10,15 @@ import sys
 import six
 
 import perf
-from perf._cli import format_run, format_benchmark, multiline_output
+from perf._cli import (format_run, format_benchmark, format_checks,
+                       multiline_output, display_title)
 from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta, format_number, format_sample
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
-                         create_environ, create_pipe, WritePipe)
+                         create_environ, create_pipe, WritePipe,
+                         get_python_names)
 
 try:
     # Optional dependency
@@ -187,6 +189,10 @@ class Runner:
                             help='Python executable '
                                  '(default: use running Python, '
                                  'sys.executable)')
+        parser.add_argument("--compare-to", metavar="REF_PYTHON",
+                            help='Run benchmark on the Python executable REF_PYTHON, '
+                                 'run benchmark on Python executable PYTHON, '
+                                 'and then compare REF_PYTHON result to PYTHON result')
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -264,6 +270,15 @@ class Runner:
                 sys.exit(1)
 
         args.python = abs_executable(args.python)
+        if args.compare_to:
+            args.compare_to = abs_executable(args.compare_to)
+
+        if args.compare_to:
+            for option in ('output', 'append'):
+                if getattr(args, option):
+                    print("ERROR: --%s option is incompatible "
+                          "with --compare-to option" % option)
+                    sys.exit(1)
 
     def parse_args(self, args=None):
         if self.args is None:
@@ -504,6 +519,9 @@ class Runner:
         try:
             if args.worker:
                 bench = self._worker(name, sample_func, inner_loops, metadata)
+            elif args.compare_to:
+                self._compare_to()
+                bench = None
             else:
                 bench = self._master()
         except KeyboardInterrupt:
@@ -607,10 +625,10 @@ class Runner:
                             func_metadata=metadata,
                             globals=globals)
 
-    def _worker_cmd(self, calibrate, wpipe):
+    def _worker_cmd(self, python, calibrate, wpipe):
         args = self.args
 
-        cmd = [args.python]
+        cmd = [python]
         cmd.extend(self._program_args)
         cmd.extend(('--worker', '--pipe', str(wpipe),
                     '--worker-task=%s' % self._worker_task,
@@ -634,7 +652,10 @@ class Runner:
 
         return cmd
 
-    def _spawn_worker(self, calibrate=False):
+    def _spawn_worker(self, python=None, calibrate=False):
+        if not python:
+            python = self.args.python
+
         env = create_environ(self.args.inherit_environ,
                              self.args.locale)
 
@@ -642,7 +663,7 @@ class Runner:
         with rpipe:
             with wpipe:
                 warg = wpipe.to_subprocess()
-                cmd = self._worker_cmd(calibrate, warg)
+                cmd = self._worker_cmd(python, calibrate, warg)
 
                 kw = {}
                 if MS_WINDOWS:
@@ -705,7 +726,7 @@ class Runner:
             else:
                 bench.dump(args.output)
 
-    def _spawn_workers(self, newline=True):
+    def _spawn_workers(self, python=None, newline=True):
         bench = None
         args = self.args
         verbose = args.verbose
@@ -721,7 +742,7 @@ class Runner:
             print()
 
         for process in range(1, nprocess + 1):
-            suite = self._spawn_worker(calibrate)
+            suite = self._spawn_worker(python, calibrate)
             # FIXME: suite can be None if a worker failed
 
             benchmarks = suite.get_benchmarks()
@@ -768,3 +789,41 @@ class Runner:
         bench = self._spawn_workers()
         self._display_result(bench)
         return bench
+
+    def _compare_to(self):
+        from perf._compare import timeit_compare_benchs
+
+        args = self.args
+        python_ref = args.compare_to
+        python_changed = args.python
+
+        multiline = self._multiline_output()
+        name_ref, name_changed = get_python_names(python_ref, python_changed)
+
+        benchs = []
+        for python, name in ((python_ref, name_ref), (python_changed, name_changed)):
+            if multiline:
+                display_title('Benchmark %s' % name)
+            elif not args.quiet:
+                print(name, end=': ')
+
+            bench = self._spawn_workers(python=python_ref, newline=False)
+            benchs.append(bench)
+
+            if multiline:
+                self._display_result(bench)
+            elif not args.quiet:
+                print(' ' + bench.format())
+
+            if multiline:
+                print()
+            elif not args.quiet:
+                warnings = format_checks(bench)
+                for line in warnings:
+                    print(line)
+
+        if multiline:
+            display_title('Compare')
+        elif not args.quiet:
+            print()
+        timeit_compare_benchs(name_ref, benchs[0], name_changed, benchs[1], args)

@@ -92,6 +92,7 @@ Option::
 
     -h/--help
     --python=PYTHON
+    --compare-to REF_PYTHON
     --affinity=CPU_LIST
     --inherit-environ=VARS
     --track-memory
@@ -100,6 +101,9 @@ Option::
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``perf`` module
   installed.
+* ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
+  run benchmark on Python executable ``PYTHON``, and then compare
+  ``REF_PYTHON`` result to ``PYTHON`` result.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if

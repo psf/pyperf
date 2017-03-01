@@ -343,6 +343,7 @@ Usage
 
 Options:
 
+* ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
 * ``stmt``: Python code executed in the benchmark.
   Multiple statements can be used.
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
@@ -351,16 +352,12 @@ Options:
 * ``--inner-loops=INNER_LOOPS``: Number of inner loops per sample. For example,
   the number of times that the code is copied manually multiple times to reduce
   the overhead of the outer loop.
-* ``--python=PYTHON``: Python executable. By default, use the running Python
-  (``sys.executable``). The Python executable must have the ``perf`` module
-  installed.
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
   run benchmark on Python executable ``PYTHON``, and then compare
   ``REF_PYTHON`` result to ``PYTHON`` result.
 * ``--duplicate=DUPLICATE``: Duplicate statements (``stmt`` statements, not
   ``SETUP``) to reduce the overhead of the outer loop and multiply
   inner loops by DUPLICATE (see ``--inner-loops`` option).
-* ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
