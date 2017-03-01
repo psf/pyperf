@@ -27,6 +27,38 @@ except ImportError:
     psutil = None
 
 
+def strictly_positive(value):
+    value = int(value)
+    if value <= 0:
+        raise ValueError("value must be > 0")
+    return value
+
+
+def positive_or_nul(value):
+    if '^' in value:
+        x, _, y = value.partition('^')
+        x = int(x)
+        y = int(y)
+        value = x ** y
+    else:
+        value = int(value)
+    if value < 0:
+        raise ValueError("value must be >= 0")
+    return value
+
+
+def comma_separated(values):
+    values = [value.strip() for value in values.split(',')]
+    return list(filter(None, values))
+
+
+def parse_python_names(names):
+    parts = names.split(':')
+    if len(parts) != 2:
+        raise ValueError("syntax is REF_NAME:CHANGED_NAME")
+    return parts
+
+
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
@@ -84,28 +116,6 @@ class Runner:
         else:
             self._program_args = (sys.argv[0],)
         self._show_name = show_name
-
-        def strictly_positive(value):
-            value = int(value)
-            if value <= 0:
-                raise ValueError("value must be > 0")
-            return value
-
-        def positive_or_nul(value):
-            if '^' in value:
-                x, _, y = value.partition('^')
-                x = int(x)
-                y = int(y)
-                value = x ** y
-            else:
-                value = int(value)
-            if value < 0:
-                raise ValueError("value must be >= 0")
-            return value
-
-        def comma_separated(values):
-            values = [value.strip() for value in values.split(',')]
-            return list(filter(None, values))
 
         if _argparser is not None:
             parser = _argparser
@@ -193,6 +203,11 @@ class Runner:
                             help='Run benchmark on the Python executable REF_PYTHON, '
                                  'run benchmark on Python executable PYTHON, '
                                  'and then compare REF_PYTHON result to PYTHON result')
+        parser.add_argument("--python-names", metavar="REF_NAME:CHANGED_NAMED",
+                            type=parse_python_names,
+                            help='option used with --compare-to to name '
+                                 'PYTHON as CHANGED_NAME '
+                                 'and REF_PYTHON as REF_NAME in results')
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -798,7 +813,10 @@ class Runner:
         python_changed = args.python
 
         multiline = self._multiline_output()
-        name_ref, name_changed = get_python_names(python_ref, python_changed)
+        if args.python_names:
+            name_ref, name_changed = args.python_names
+        else:
+            name_ref, name_changed = get_python_names(python_ref, python_changed)
 
         benchs = []
         for python, name in ((python_ref, name_ref), (python_changed, name_changed)):

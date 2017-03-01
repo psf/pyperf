@@ -93,6 +93,7 @@ Option::
     -h/--help
     --python=PYTHON
     --compare-to REF_PYTHON
+    --python-names REF_NAME:CHANGED_NAME
     --affinity=CPU_LIST
     --inherit-environ=VARS
     --track-memory
@@ -104,6 +105,11 @@ Option::
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
   run benchmark on Python executable ``PYTHON``, and then compare
   ``REF_PYTHON`` result to ``PYTHON`` result.
+* ``--python-names=REF_NAME:CHANGED_NAME``: Option used with ``--compare-to``
+  to name ``PYTHON`` as ``CHANGED_NAME`` and name ``REF_PYTHON`` as
+  ``REF_NAME`` in results. For example, ``./python ...
+  --compare-to=../ref/python --python-names=ref:patch`` uses "ref" name for
+  ``../ref/python`` and use "patch" name for ``./python``.
 * ``--affinity=CPU_LIST``: Specify CPU affinity for worker processes. This way,
   benchmarks can be forced to run on a given set of CPUs to minimize run to run
   variation. By default, worker processes are pinned to isolate CPUs if

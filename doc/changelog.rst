@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.9.5
+-------------
+
+* Add ``--python-names`` option to the :ref:`Runner CLI <runner_cli>`
+
 Version 0.9.4 (2017-03-01)
 --------------------------
 
