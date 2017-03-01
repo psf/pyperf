@@ -30,6 +30,7 @@ Table Of Content:
 .. toctree::
    :maxdepth: 2
 
+   usage
    perf
    cli
    runner
