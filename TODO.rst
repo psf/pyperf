@@ -7,15 +7,10 @@ BUGS
   on the speed mailing list.
 
 
-Blocker issues for perf 1.0 stable API
-======================================
-
-* store metadata common to all benchmarks at the root in JSON
-
-
 TODO
 ====
 
+* store metadata common to all benchmarks at the root in JSON
 * --append should get the number of loops from the existing file and avoid
   calibration, at least when no JIT is used.
 * Implement a system-wide lock to prevent running two benchmarks at the same
