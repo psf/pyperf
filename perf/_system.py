@@ -142,7 +142,7 @@ class TurboBoostMSR(Operation):
                 data = os.pread(fd, size, reg_num)
             finally:
                 os.close(fd)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Failed to read MSR %#x from %s: %s"
                        % (reg_num, path, exc))
