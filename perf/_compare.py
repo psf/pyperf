@@ -205,13 +205,14 @@ def compare_suites_table(grouped_by_name, by_speed, args):
 
     not_significant = []
 
-    def sort_key(group):
-        ref = group.benchmarks[0].benchmark
-        bench = group.benchmarks[1].benchmark
-        speed, percent = compute_speed(ref, bench)
-        return -speed
+    if by_speed:
+        def sort_key(group):
+            ref = group.benchmarks[0].benchmark
+            bench = group.benchmarks[1].benchmark
+            speed, percent = compute_speed(ref, bench)
+            return -speed
 
-    grouped_by_name.sort(key=sort_key)
+        grouped_by_name.sort(key=sort_key)
 
     rows = []
     for group in grouped_by_name:
@@ -333,8 +334,6 @@ def bench_sort_key(item):
 
 
 def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
-    # FIXME: don't group by name to not loose order
-    # kw1, kw5, kw10 must not become kw1, kw10, kw5
     grouped_by_name = benchmarks.group_by_name()
     if not grouped_by_name:
         print("ERROR: Benchmark suites have no benchmark in common",

@@ -275,7 +275,9 @@ class Benchmarks:
         names = set(self.suites[0].get_benchmark_names())
         for suite in self.suites[1:]:
             names &= set(suite.get_benchmark_names())
-        return names
+        # Keep original name order
+        return [name for name in self.suites[0].get_benchmark_names()
+                if name in names]
 
     def group_by_name(self):
         format_filename = format_filename_func(self.suites)
@@ -283,7 +285,6 @@ class Benchmarks:
         show_filename = (self.get_nsuite() > 1)
 
         names = self._group_by_name_names()
-        names = sorted(names)
         show_name = (len(names) > 1)
 
         groups = []
@@ -309,7 +310,7 @@ class Benchmarks:
         return groups
 
     def group_by_name_ignored(self):
-        names = self._group_by_name_names()
+        names = set(self._group_by_name_names())
         for suite in self.suites:
             ignored = []
             for bench in suite:

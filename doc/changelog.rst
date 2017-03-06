@@ -10,6 +10,8 @@ Version 0.9.5
   Python, instead of being run first with reference Python and then changed
   Python.
 * Runner now raises an exception if a benchmark name is not unique.
+* ``compare_to`` command now keeps the original order of benchmarks, only
+  sort if ``--by-speed`` option is used.
 
 Version 0.9.4 (2017-03-01)
 --------------------------
