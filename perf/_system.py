@@ -1036,6 +1036,9 @@ class System:
         # The list of cpus must be sorted to avoid useless write in operations
         assert sorted(self.cpus) == list(self.cpus)
 
+        self.log_state("CPU: use %s logical CPUs: %s"
+                       % (len(self.cpus), format_cpu_list(self.cpus)))
+
     def render_messages(self, action):
         self.write_messages("Actions", self.actions)
         self.write_messages("System state", self.states)
