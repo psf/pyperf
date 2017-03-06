@@ -426,10 +426,10 @@ class ASLR(Operation):
     STATE = {'0': 'No randomization',
              '1': 'Conservative randomization',
              '2': 'Full randomization'}
+    path = proc_path("sys/kernel/randomize_va_space")
 
     def __init__(self, system):
         Operation.__init__(self, 'ASLR', system)
-        self.path = proc_path("sys/kernel/randomize_va_space")
 
     def show(self):
         line = self.read_first_line(self.path)
@@ -561,9 +561,10 @@ class IRQAffinity(Operation):
     # /proc/irq/N/smp_affinity existed prior to 2.6.12-rc2 (2005)
     # which is first commit of the Linux git repository
 
+    irq_path = proc_path('irq')
+
     def __init__(self, system):
         Operation.__init__(self, 'IRQ affinity', system)
-        self.irq_path = proc_path('irq')
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
@@ -806,15 +807,15 @@ class CheckNOHZFullIntelPstate(Operation):
 
 
 class PowerSupply(Operation):
+    path = sysfs_path('class/power_supply')
+
     def __init__(self, system):
         Operation.__init__(self, 'Power supply', system)
 
     def read_power_supply(self):
         # Python implementation of the on_ac_power shell script
-        path = sysfs_path('class/power_supply')
-
-        for name in os.listdir(path):
-            filename = os.path.join(path, name, 'online')
+        for name in os.listdir(self.path):
+            filename = os.path.join(self.path, name, 'online')
             if not os.path.exists(filename):
                 continue
 
@@ -897,7 +898,8 @@ class System:
         self.cpus = None
 
         self.operations.append(PerfEvent(self))
-        self.operations.append(ASLR(self))
+        if os.path.exists(ASLR.path):
+            self.operations.append(ASLR(self))
         if sys.platform.startswith('linux'):
             self.operations.append(LinuxScheduler(self))
 
@@ -914,8 +916,10 @@ class System:
         else:
             self.operations.append(TurboBoostMSR(self))
 
-        self.operations.append(IRQAffinity(self))
-        self.operations.append(PowerSupply(self))
+        if os.path.exists(IRQAffinity.irq_path):
+            self.operations.append(IRQAffinity(self))
+        if os.path.exists(PowerSupply.path):
+            self.operations.append(PowerSupply(self))
 
     def advice(self, msg):
         self.advices.append(msg)

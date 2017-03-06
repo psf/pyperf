@@ -12,6 +12,8 @@ Version 0.9.5
 * Runner now raises an exception if a benchmark name is not unique.
 * ``compare_to`` command now keeps the original order of benchmarks, only
   sort if ``--by-speed`` option is used.
+* Fix ``system`` comand on macOS on non-existent ``/proc`` and ``/sys``
+  pseudo-files.
 
 Version 0.9.4 (2017-03-01)
 --------------------------
