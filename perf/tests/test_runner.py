@@ -3,11 +3,14 @@ import os.path
 import tempfile
 import textwrap
 
+import six
+
 import perf
 from perf import tests
 from perf._utils import create_pipe
 from perf.tests import mock
 from perf.tests import unittest
+from perf.tests import ExitStack
 
 
 def check_args(loops, a, b):
@@ -299,6 +302,55 @@ class TestRunner(unittest.TestCase):
         result = self.exec_runner('--worker', name='NAME', show_name=False)
         self.assertRegex(result.stdout,
                          r'^Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+
+    def test_compare_to(self):
+        def sample_func(loops):
+            return 1.0
+
+        def abs_executable(python):
+            return python
+
+        run = perf.Run([1.5],
+                       metadata={'name': 'name'},
+                       collect_metadata=False)
+        bench = perf.Benchmark([run])
+        suite = perf.BenchmarkSuite([bench])
+
+        with ExitStack() as cm:
+            def popen(*args, **kw):
+                mock_popen = mock.Mock()
+                mock_popen.wait.return_value = 0
+                return mock_popen
+
+            mock_subprocess = cm.enter_context(mock.patch('perf._runner.subprocess'))
+            mock_subprocess.Popen.side_effect = popen
+
+            cm.enter_context(mock.patch('perf._runner.abs_executable',
+                             side_effect=abs_executable))
+            cm.enter_context(mock.patch('perf._runner._load_suite_from_pipe',
+                                        return_value=suite))
+
+            runner = perf.Runner()
+
+            args = ["--python=python1", "--compare-to=python2", "--min-time=5",
+                    "-p1", "-w3", "-n7", "-l11"]
+            runner.parse_args(args)
+            with tests.capture_stdout():
+                runner.bench_sample_func('name', sample_func)
+
+            def popen_call(python):
+                args = [python, mock.ANY, '--worker',
+                        '--pipe', mock.ANY, '--worker-task=0',
+                        '--samples', '7', '--warmups', '3',
+                        '--loops', '11', '--min-time', '5.0']
+                if six.PY3:
+                    return mock.call(args, env=mock.ANY, pass_fds=mock.ANY)
+                else:
+                    return mock.call(args, env=mock.ANY)
+
+            call1 = popen_call('python2')
+            call2 = popen_call('python1')
+            mock_subprocess.Popen.assert_has_calls([call1, call2])
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):

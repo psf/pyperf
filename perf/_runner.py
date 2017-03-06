@@ -825,7 +825,7 @@ class Runner:
             elif not args.quiet:
                 print(name, end=': ')
 
-            bench = self._spawn_workers(python=python_ref, newline=False)
+            bench = self._spawn_workers(python=python, newline=False)
             benchs.append(bench)
 
             if multiline:

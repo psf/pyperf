@@ -6,6 +6,9 @@ Version 0.9.5
 
 * Add ``--python-names`` option to the :ref:`Runner CLI <runner_cli>`
 * ``system show`` command now checks if the system is ready for benchmarking
+* Fix ``--compare-to`` option: the benchmark was run twice with the reference
+  Python, instead of being run first with reference Python and then changed
+  Python.
 
 Version 0.9.4 (2017-03-01)
 --------------------------

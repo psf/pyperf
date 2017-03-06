@@ -18,6 +18,12 @@ try:
     import unittest2 as unittest   # noqa
 except ImportError:
     import unittest   # noqa
+try:
+    # Python 3.3
+    from contextlib import ExitStack   # noqa
+except ImportError:
+    # Python 2.7: use contextlib2 backport
+    from contextlib2 import ExitStack   # noqa
 
 from perf._utils import popen_communicate
 
