@@ -67,13 +67,18 @@ def get_output(cmd):
     return (exitcode, stdout)
 
 
-def use_intel_pstate(cpu):
+def use_intel_pstate():
+    cpu = 0
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
     return (scaling_driver == 'intel_pstate')
 
 
 class Operation(object):
+    @staticmethod
+    def available():
+        return True
+
     def __init__(self, name, system):
         self.name = name
         self.system = system
@@ -114,6 +119,10 @@ class TurboBoostMSR(Operation):
     """
     Get/Set Turbo Boost mode of Intel CPUs using /dev/cpu/N/msr.
     """
+
+    @staticmethod
+    def available():
+        return not use_intel_pstate()
 
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
@@ -244,6 +253,10 @@ class TurboBoostIntelPstate(Operation):
     /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
     """
 
+    @staticmethod
+    def available():
+        return use_intel_pstate()
+
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (intel_pstate)', system)
         self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
@@ -311,6 +324,10 @@ class CPUGovernorIntelPstate(Operation):
     """
     BENCHMARK_GOVERNOR = 'performance'
 
+    @staticmethod
+    def available():
+        return use_intel_pstate()
+
     def __init__(self, system):
         Operation.__init__(self, 'CPU scaling governor (intel_pstate)',
                            system)
@@ -356,6 +373,10 @@ class LinuxScheduler(Operation):
     Check isolcpus=cpus and rcu_nocbs=cpus paramaters of the Linux kernel
     command line.
     """
+
+    @staticmethod
+    def available():
+        return sys.platform.startswith('linux')
 
     def __init__(self, system):
         Operation.__init__(self, 'Linux scheduler', system)
@@ -428,6 +449,10 @@ class ASLR(Operation):
              '2': 'Full randomization'}
     path = proc_path("sys/kernel/randomize_va_space")
 
+    @classmethod
+    def available(cls):
+        return os.path.exists(cls.path)
+
     def __init__(self, system):
         Operation.__init__(self, 'ASLR', system)
 
@@ -468,6 +493,11 @@ class CPUFrequency(Operation):
     """
     Read/Write /sys/devices/system/cpu/cpuN/cpufreq/scaling_min_freq.
     """
+
+    @staticmethod
+    def available():
+        # On virtual machines, there is no cpufreq directory
+        return os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq"))
 
     def __init__(self, system):
         Operation.__init__(self, 'CPU Frequency', system)
@@ -562,6 +592,10 @@ class IRQAffinity(Operation):
     # which is first commit of the Linux git repository
 
     irq_path = proc_path('irq')
+
+    @classmethod
+    def available(cls):
+        return os.path.exists(cls.irq_path)
 
     def __init__(self, system):
         Operation.__init__(self, 'IRQ affinity', system)
@@ -782,6 +816,10 @@ class IRQAffinity(Operation):
 
 
 class CheckNOHZFullIntelPstate(Operation):
+    @staticmethod
+    def available():
+        return use_intel_pstate()
+
     def __init__(self, system):
         Operation.__init__(self, 'Check nohz_full', system)
 
@@ -808,6 +846,10 @@ class CheckNOHZFullIntelPstate(Operation):
 
 class PowerSupply(Operation):
     path = sysfs_path('class/power_supply')
+
+    @classmethod
+    def available(cls):
+        return os.path.exists(cls.path)
 
     def __init__(self, system):
         Operation.__init__(self, 'Power supply', system)
@@ -884,6 +926,22 @@ class PerfEvent(Operation):
             self.log_action("Max sample rate set to %s per second" % new_rate)
 
 
+OPERATIONS = [
+    PerfEvent,
+    ASLR,
+    LinuxScheduler,
+    CPUFrequency,
+    # Setting the CPU scaling governor resets no_turbo
+    # and so must be set before Turbo Boost
+    CPUGovernorIntelPstate,
+    TurboBoostIntelPstate,
+    CheckNOHZFullIntelPstate,
+    TurboBoostMSR,
+    IRQAffinity,
+    PowerSupply,
+]
+
+
 class System:
     def __init__(self):
         self.operations = []
@@ -897,29 +955,12 @@ class System:
         # CPUs used for benchmarking: tuple of CPU identifiers
         self.cpus = None
 
-        self.operations.append(PerfEvent(self))
-        if os.path.exists(ASLR.path):
-            self.operations.append(ASLR(self))
-        if sys.platform.startswith('linux'):
-            self.operations.append(LinuxScheduler(self))
-
-        # On virtual machines, there is no cpufreq directory
-        if os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq")):
-            self.operations.append(CPUFrequency(self))
-
-        if use_intel_pstate(0):
-            # Setting the CPU scaling governor resets no_turbo and so must be
-            # set before Turbo Boost
-            self.operations.append(CPUGovernorIntelPstate(self))
-            self.operations.append(TurboBoostIntelPstate(self))
-            self.operations.append(CheckNOHZFullIntelPstate(self))
-        else:
-            self.operations.append(TurboBoostMSR(self))
-
-        if os.path.exists(IRQAffinity.irq_path):
-            self.operations.append(IRQAffinity(self))
-        if os.path.exists(PowerSupply.path):
-            self.operations.append(PowerSupply(self))
+        self.operations = []
+        for operation_class in OPERATIONS:
+            if not operation_class.available():
+                continue
+            operation = operation_class(self)
+            self.operations.append(operation)
 
     def advice(self, msg):
         self.advices.append(msg)
