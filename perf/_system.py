@@ -951,7 +951,6 @@ class System:
         self.states = []
         self.advices = []
         self.errors = []
-        self.empty_output = True
 
         self.logical_cpu_count = None
         # CPUs used for benchmarking: tuple of CPU identifiers
@@ -980,10 +979,7 @@ class System:
         if not messages:
             return
 
-        if not self.empty_output:
-            print()
-        self.empty_output = False
-
+        print()
         display_title(title)
         for msg in messages:
             print(msg)
@@ -995,7 +991,6 @@ class System:
             print("Reset system configuration")
         else:
             print("Show the system configuration")
-        print()
 
         if action in ('tune', 'reset'):
             tune = (action == 'tune')
