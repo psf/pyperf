@@ -299,6 +299,8 @@ class Runner:
         if self.args is None:
             self.args = self.argparser.parse_args(args)
             self._process_args()
+        elif args is not None:
+            raise RuntimeError("arguments already parsed")
         return self.args
 
     def _range(self):
@@ -758,7 +760,8 @@ class Runner:
 
         for process in range(1, nprocess + 1):
             suite = self._spawn_worker(python, calibrate)
-            # FIXME: suite can be None if a worker failed
+            if suite is None:
+                raise RuntimeError("perf worker process didn't produce JSON result")
 
             benchmarks = suite.get_benchmarks()
             if len(benchmarks) != 1:

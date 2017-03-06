@@ -506,6 +506,8 @@ Runner
       Parse command line arguments using :attr:`argparser` and put the result
       into the :attr:`args` attribute.
 
+      If *args* is set, the method must only be called once.
+
       Return the :attr:`args` attribute.
 
    Attributes:

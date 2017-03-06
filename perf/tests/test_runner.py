@@ -352,6 +352,13 @@ class TestRunner(unittest.TestCase):
             call2 = popen_call('python1')
             mock_subprocess.Popen.assert_has_calls([call1, call2])
 
+    def test_parse_args_twice_error(self):
+        args = ["--worker"]
+        runner = perf.Runner()
+        runner.parse_args(args)
+        with self.assertRaises(RuntimeError):
+            runner.parse_args(args)
+
 
 class TestRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):
