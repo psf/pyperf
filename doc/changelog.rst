@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 0.9.5
--------------
+Version 0.9.5 (2017-03-06)
+--------------------------
 
 * Add ``--python-names`` option to the :ref:`Runner CLI <runner_cli>`
 * ``system show`` command now checks if the system is ready for benchmarking
