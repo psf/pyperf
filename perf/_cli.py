@@ -228,13 +228,13 @@ def _format_stats(bench, lines):
 
     lines.append("Minimum: %s" % format_limit(median, min(samples)))
 
-    # Median +- std dev
+    # Median +- MAD
     lines.append(str(bench))
 
     # Mean +- std dev
-    mean = statistics.mean(samples)
+    mean = bench.mean()
     if len(samples) > 2:
-        stdev = statistics.stdev(samples, mean)
+        stdev = bench.stdev()
         lines.append("Mean +- std dev: %s +- %s"
                      % bench.format_samples((mean, stdev)))
     else:

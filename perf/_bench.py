@@ -13,7 +13,7 @@ import statistics
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info)
 from perf._formatter import format_number, DEFAULT_UNIT, format_samples
-from perf._utils import parse_iso8601
+from perf._utils import parse_iso8601, median_abs_dev
 
 
 # JSON format history:
@@ -315,17 +315,49 @@ class Benchmark(object):
 
     def _clear_runs_cache(self, keep_common_metadata=False):
         self._samples = None
+        self._mean = None
+        self._stdev = None
         self._median = None
+        self._mad = None
         if not keep_common_metadata:
             self._common_metadata = None
         self._dates = _UNSET
 
+    def mean(self):
+        if self._mean is None:
+            value = statistics.mean(self.get_samples())
+            # add_run() ensures that all samples are greater than zero
+            if value <= 0:
+                raise ValueError("MAD must be > 0")
+            self._mean = value
+        return self._mean
+
+    def stdev(self):
+        if self._stdev is None:
+            samples = self.get_samples()
+            value = statistics.stdev(samples)
+            # add_run() ensures that all samples are greater than zero
+            if value < 0:
+                raise ValueError("std dev must be >= 0")
+            self._stdev = value
+        return self._stdev
+
     def median(self):
         if self._median is None:
-            self._median = statistics.median(self.get_samples())
+            value = statistics.median(self.get_samples())
             # add_run() ensures that all samples are greater than zero
-            assert self._median != 0
+            if value <= 0:
+                raise ValueError("median must be > 0")
+            self._median = value
         return self._median
+
+    def median_abs_dev(self):
+        if self._mad is None:
+            self._mad = median_abs_dev(self.get_samples())
+            # add_run() ensures that all samples are greater than zero
+            if self._mad < 0:
+                raise ValueError("MAD must be >= 0")
+        return self._mad
 
     def add_run(self, run):
         if not isinstance(run, Run):
@@ -408,9 +440,8 @@ class Benchmark(object):
             return '<calibration: %s>' % format_number(loops, 'loop')
 
         if self.get_nsample() >= 2:
-            samples = self.get_samples()
             numbers = [self.median()]
-            numbers.append(statistics.stdev(samples))
+            numbers.append(self.median_abs_dev())
             numbers = self.format_samples(numbers)
             text = '%s +- %s' % numbers
         else:
@@ -424,7 +455,7 @@ class Benchmark(object):
 
         text = self.format()
         if self.get_nsample() >= 2:
-            return 'Median +- std dev: %s' % text
+            return 'Median +- MAD: %s' % text
         else:
             return 'Median: %s' % text
 

@@ -253,13 +253,41 @@ Benchmark
 
       See :ref:`perf JSON <json>`.
 
+   .. method:: mean()
+
+      Get the `arithmetic mean
+      <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of :meth:`get_samples`.
+
+      The mean is greater than zero: :meth:`add_run` raises an error
+      if a sample is equal to zero.
+
+      Raise an exception if the benchmark has no samples.
+
    .. method:: median()
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
       :meth:`get_samples`.
 
-      The median cannot be equal to zero: :meth:`add_run` raises an error
+      The median is greater than zero: :meth:`add_run` raises an error
       if a sample is equal to zero.
+
+      Raise an exception if the benchmark has no samples.
+
+   .. method:: stdev()
+
+      Get the `standard deviation
+      <https://en.wikipedia.org/wiki/Standard_deviation>`_ of
+      :meth:`get_samples`.
+
+      Raise an exception if the benchmark has less than 2 samples.
+
+   .. method:: median_abs_dev()
+
+      Get the `median absolute deviation (MAD)
+      <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_ of
+      :meth:`get_samples`.
+
+      Raise an exception if the benchmark has no samples.
 
    .. method:: __str__() -> str
 

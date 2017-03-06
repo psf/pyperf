@@ -175,7 +175,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
-                         'Median +- std dev: 1.50 sec +- 0.50 sec')
+                         'Median +- MAD: 1.50 sec +- 0.50 sec')
 
     def test_get_unit(self):
         run = perf.Run((1.0,),
@@ -381,6 +381,41 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(str(bench), 'Calibration: 100 loops')
         self.assertEqual(bench.format(), '<calibration: 100 loops>')
         self.assertRaises(ValueError, bench.median)
+
+    def test_stats(self):
+        samples = [float(value) for value in range(1, 96)]
+        run = create_run(samples)
+        bench = perf.Benchmark([run])
+        self.assertEqual(bench.mean(), 48.0)
+        self.assertEqual(bench.median(), 48.0)
+        self.assertAlmostEqual(bench.stdev(), 27.5680, delta=1e-3)
+        self.assertEqual(bench.median_abs_dev(), 24.0)
+
+    def test_stats_same(self):
+        samples = [5.0 for i in range(10)]
+        run = create_run(samples)
+        bench = perf.Benchmark([run])
+        self.assertEqual(bench.mean(), 5.0)
+        self.assertEqual(bench.median(), 5.0)
+        self.assertEqual(bench.stdev(), 0.0)
+        self.assertEqual(bench.median_abs_dev(), 0.0)
+
+    def test_stats_empty(self):
+        run = create_run(samples=[], warmups=[(4, 10.0)])
+        bench = perf.Benchmark([run])
+        self.assertRaises(Exception, bench.mean)
+        self.assertRaises(Exception, bench.median)
+        self.assertRaises(Exception, bench.stdev)
+        self.assertRaises(Exception, bench.median_abs_dev)
+
+    def test_stats_single(self):
+        samples = [7.0]
+        run = create_run(samples)
+        bench = perf.Benchmark([run])
+        self.assertEqual(bench.mean(), 7.0)
+        self.assertEqual(bench.median(), 7.0)
+        self.assertRaises(Exception, bench.stdev)
+        self.assertEqual(bench.median_abs_dev(), 0.0)
 
 
 class TestBenchmarkSuite(unittest.TestCase):

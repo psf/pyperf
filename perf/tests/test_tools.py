@@ -66,6 +66,10 @@ class TestStatistics(unittest.TestCase):
         #                  (True, -141.4213562373095))
         pass
 
+    def test_median_abs_dev(self):
+        self.assertEqual(utils.median_abs_dev(range(97)), 24.0)
+        self.assertEqual(utils.median_abs_dev((1, 1, 2, 2, 4, 6, 9)), 1.0)
+
 
 class TestUtils(unittest.TestCase):
     def test_parse_iso8601(self):

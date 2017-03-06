@@ -475,3 +475,9 @@ def create_pipe():
     rpipe = ReadPipe(rfd)
     wpipe = WritePipe(wfd)
     return (rpipe, wpipe)
+
+
+def median_abs_dev(samples):
+    # Median Absolute Deviation
+    median = float(statistics.median(samples))
+    return statistics.median([abs(median - sample) for sample in samples])

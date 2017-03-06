@@ -70,7 +70,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
-            Median +- std dev: 1.50 sec +- 0.50 sec
+            Median +- MAD: 1.50 sec +- 0.50 sec
 
             py3
             ---
@@ -81,7 +81,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
-            Median +- std dev: 2.00 sec +- 0.50 sec
+            Median +- MAD: 2.00 sec +- 0.50 sec
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
 
@@ -139,7 +139,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
-        expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
+        expected = ('Median +- MAD: [ref] 1.50 sec +- 0.50 sec '
                     '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -197,7 +197,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
-        expected = ('Median +- std dev: [ref] 1.50 sec +- 0.50 sec '
+        expected = ('Median +- MAD: [ref] 1.50 sec +- 0.50 sec '
                     '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -210,7 +210,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
-        expected = ('Median +- std dev: [changed] 1.50 sec +- 0.50 sec '
+        expected = ('Median +- MAD: [changed] 1.50 sec +- 0.50 sec '
                     '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -255,7 +255,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_show(self):
         expected = ("""
-            Median +- std dev: 22.5 ms +- 0.2 ms
+            Median +- MAD: 22.5 ms +- 0.1 ms
         """)
         self.check_command(expected, 'show', TELCO)
 
@@ -274,7 +274,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Loop iterations per sample: 8
 
             Minimum: 22.1 ms (-2%)
-            Median +- std dev: 22.5 ms +- 0.2 ms
+            Median +- MAD: 22.5 ms +- 0.1 ms
             Mean +- std dev: 22.5 ms +- 0.2 ms
             Maximum: 22.9 ms (+2%)
         """)

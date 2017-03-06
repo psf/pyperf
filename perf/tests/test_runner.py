@@ -64,7 +64,7 @@ class TestRunner(unittest.TestCase):
     def test_worker(self):
         result = self.exec_runner('--worker')
         self.assertRegex(result.stdout,
-                         r'^bench: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'^bench: Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_debug_single_sample(self):
         result = self.exec_runner('--debug-single-sample', '--worker')
@@ -115,7 +115,7 @@ class TestRunner(unittest.TestCase):
                          r'Metadata:\n'
                          r'(?:- .*\n)+'
                          r'\n'
-                         r'bench: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'bench: Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_loops_calibration(self):
         def sample_func(loops):
@@ -297,11 +297,11 @@ class TestRunner(unittest.TestCase):
     def test_show_name(self):
         result = self.exec_runner('--worker', name='NAME')
         self.assertRegex(result.stdout,
-                         r'^NAME: Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'^NAME: Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
         result = self.exec_runner('--worker', name='NAME', show_name=False)
         self.assertRegex(result.stdout,
-                         r'^Median \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
+                         r'^Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_compare_to(self):
         def sample_func(loops):
