@@ -97,6 +97,9 @@ class Operation(object):
     def log_action(self, msg):
         self.system.log_action('%s: %s' % (self.name, msg))
 
+    def warning(self, msg):
+        self.system.warning('%s: %s' % (self.name, msg))
+
     def error(self, msg):
         self.system.error('%s: %s' % (self.name, msg))
 
@@ -132,7 +135,7 @@ class TurboBoostMSR(Operation):
         self.cpu_states = {}
         self.have_device = True
 
-    def read_msr(self, cpu, reg_num, bit=None):
+    def read_msr(self, cpu, reg_num, use_warnings=False):
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
         if size != 8:
@@ -145,25 +148,28 @@ class TurboBoostMSR(Operation):
                 os.close(fd)
         except OSError as exc:
             self.check_permission_error(exc)
-            self.error("Failed to read MSR %#x from %s: %s"
-                       % (reg_num, path, exc))
+            msg = "Failed to read MSR %#x from %s: %s" % (reg_num, path, exc)
+            if use_warnings:
+                self.warning(msg)
+            else:
+                self.error(msg)
             if exc.errno == errno.ENOENT:
                 self.have_device = False
-                self.error("Try to load the msr kernel module: sudo modprobe msr")
+                msg = "Try to load the msr kernel module: sudo modprobe msr"
+                if use_warnings:
+                    self.warning(msg)
+                else:
+                    self.error(msg)
             return None
 
-        reg = struct.unpack('Q', data)[0]
-        if bit is not None:
-            return bool(reg & (1 << bit))
-        else:
-            return reg
+        return struct.unpack('Q', data)[0]
 
     def read_cpu(self, cpu):
-        msr = self.read_msr(cpu, MSR_IA32_MISC_ENABLE,
-                            bit=MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT)
-        if msr is None:
+        reg = self.read_msr(cpu, MSR_IA32_MISC_ENABLE, use_warnings=True)
+        if reg is None:
             return False
 
+        msr = bool(reg & (1 << MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT))
         self.cpu_states[cpu] = (not msr)
         return True
 
@@ -949,6 +955,7 @@ class System:
         self.actions = []
         self.states = []
         self.advices = []
+        self.warnings = []
         self.errors = []
 
         self.logical_cpu_count = None
@@ -970,6 +977,9 @@ class System:
 
     def log_action(self, msg):
         self.actions.append(msg)
+
+    def warning(self, msg):
+        self.warnings.append(msg)
 
     def error(self, msg):
         self.errors.append(msg)
@@ -1032,6 +1042,7 @@ class System:
         # Advices are for tuning: hide them for reset
         if action != 'reset':
             self.write_messages("Advices", self.advices)
+        self.write_messages("Warnings", self.warnings)
         self.write_messages("Errors", self.errors)
 
         if action == 'show':
