@@ -18,8 +18,6 @@ TODO
   time, especially using CPU pinning
 * system: display uptime
 * Need to write unit test for Runner.timeit()
-* load(): remove '-' special case
-* add stdev() method, maybe median_stdev()
 * Calibration run: display time per iteration and total duration
 * system:
 
