@@ -359,6 +359,20 @@ class TestRunner(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             runner.parse_args(args)
 
+    def test_duplicated_named(self):
+        def sample_func(loops):
+            return 1.0
+
+        runner = perf.Runner()
+        runner.parse_args('-l1 -w0 -n1 --worker'.split())
+        with tests.capture_stdout():
+            runner.bench_sample_func('optim', sample_func)
+            with self.assertRaises(ValueError) as cm:
+                runner.bench_sample_func('optim', sample_func)
+
+        self.assertEqual(str(cm.exception),
+                         "duplicated benchmark name: 'optim'")
+
 
 class TestRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_args(self):

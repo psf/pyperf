@@ -9,6 +9,7 @@ Version 0.9.5
 * Fix ``--compare-to`` option: the benchmark was run twice with the reference
   Python, instead of being run first with reference Python and then changed
   Python.
+* Runner now raises an exception if a benchmark name is not unique.
 
 Version 0.9.4 (2017-03-01)
 --------------------------

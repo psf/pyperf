@@ -439,7 +439,7 @@ Runner
 
       Benchmark the function ``func(*args)``.
 
-      *name* is the name of the benchmark.
+      *name* is the benchmark name, it must be unique in the same script.
 
       The *inner_loops* parameter is used to normalize timing per loop
       iteration.
@@ -461,7 +461,7 @@ Runner
 
       Benchmark ``sample_func(loops, *args)``.
 
-      *name* is the name of the benchmark.
+      *name* is the benchmark name, it must be unique in the same script.
 
       The function must return raw samples: the total elapsed time of all
       loops. Runner will divide raw samples by ``loops x inner_loops``
@@ -480,6 +480,8 @@ Runner
    .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
       Run a benchmark on ``timeit.Timer(stmt, setup)``.
+
+      *name* is the benchmark name, it must be unique in the same script.
 
       *stmt* is a Python statement. It can be a non-empty string or a non-empty
       sequence of strings.

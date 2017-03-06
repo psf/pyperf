@@ -98,6 +98,9 @@ class Runner:
         # see the --worker-task command line option
         self._worker_task = 0
 
+        # Set used to check that benchmark names are unique
+        self._bench_names = set()
+
         # result of argparser.parse_args()
         self.args = None
 
@@ -529,8 +532,12 @@ class Runner:
         return True
 
     def _main(self, name, sample_func, inner_loops, metadata):
-        if not name.strip():
+        name = name.strip()
+        if not name:
             raise ValueError("name must be a non-empty string")
+        if name in self._bench_names:
+            raise ValueError("duplicated benchmark name: %r" % name)
+        self._bench_names.add(name)
 
         args = self.parse_args()
         try:
