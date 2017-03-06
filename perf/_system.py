@@ -18,6 +18,8 @@ from perf._utils import (read_first_line, sysfs_path, proc_path, open_text,
 MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
 
+OS_LINUX = sys.platform.startswith('linux')
+
 
 def is_root():
     return (os.getuid() == 0)
@@ -122,7 +124,7 @@ class TurboBoostMSR(Operation):
 
     @staticmethod
     def available():
-        return not use_intel_pstate()
+        return (OS_LINUX and not use_intel_pstate())
 
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
@@ -376,7 +378,7 @@ class LinuxScheduler(Operation):
 
     @staticmethod
     def available():
-        return sys.platform.startswith('linux')
+        return OS_LINUX
 
     def __init__(self, system):
         Operation.__init__(self, 'Linux scheduler', system)
