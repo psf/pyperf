@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.9.6
+-------------
+
+* Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
+* ``check`` command now tests stdev/mean, instead of testing stdev/median
+* Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
+
 Version 0.9.5 (2017-03-06)
 --------------------------
 

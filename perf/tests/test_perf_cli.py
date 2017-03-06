@@ -67,7 +67,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 2.7
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
             Median +- MAD: 1.50 sec +- 0.50 sec
@@ -78,7 +78,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 3.4
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
             Median +- MAD: 2.00 sec +- 0.50 sec
@@ -104,7 +104,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 2.7
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
             py3
@@ -113,7 +113,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 3.4
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
             Try to rerun the benchmark with more runs, samples and/or loops
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
@@ -380,13 +380,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             py2
             ---
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 33%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
             Try to rerun the benchmark with more runs, samples and/or loops
 
             py3
             ---
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 25%)!
+            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
             Try to rerun the benchmark with more runs, samples and/or loops
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)

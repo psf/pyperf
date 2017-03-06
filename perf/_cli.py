@@ -1,7 +1,5 @@
 from __future__ import division, print_function, absolute_import
 
-import statistics
-
 from perf._formatter import (format_seconds, format_number,
                              format_timedelta, format_datetime)
 from perf._metadata import format_metadata as _format_metadata
@@ -319,20 +317,18 @@ def format_checks(bench, lines=None):
     samples = bench.get_samples()
 
     # Display a warning if the standard deviation is larger than 10%
-    median = bench.median()
-    # Avoid division by zero
-    if median and len(samples) > 1:
-        k = statistics.stdev(samples) / median
+    if len(samples) >= 2:
+        k = bench.stdev() / bench.mean()
         if k > 0.10:
             empty_line(lines)
 
             if k > 0.20:
                 warn("ERROR: the benchmark is very unstable, the standard "
-                     "deviation is very high (stdev/median: %.0f%%)!"
+                     "deviation is very high (stdev/mean: %.0f%%)!"
                      % (k * 100))
             else:
                 warn("WARNING: the benchmark seems unstable, the standard "
-                     "deviation is high (stdev/median: %.0f%%)"
+                     "deviation is high (stdev/mean: %.0f%%)"
                      % (k * 100))
             warn("Try to rerun the benchmark with more runs, samples "
                  "and/or loops")
