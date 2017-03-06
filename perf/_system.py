@@ -1000,13 +1000,20 @@ class System:
         for operation in self.operations:
             operation.show()
 
-    def main(self, action, args):
+        if any(operation.permission_error for operation in self.operations):
+            msg = "ERROR: At least one operation failed with permission error"
+            if not is_root():
+                msg += ", retry as root"
+            self.error(msg)
+
+    def init(self, args):
         if not self.operations:
             print("WARNING: no operation available for your platform")
             sys.exit()
 
         self.logical_cpu_count = get_logical_cpu_count()
         if not self.logical_cpu_count:
+            print("ERROR: failed to get the number of logical CPUs")
             sys.exit(1)
 
         isolated = get_isolated_cpus()
@@ -1019,14 +1026,7 @@ class System:
         # The list of cpus must be sorted to avoid useless write in operations
         assert sorted(self.cpus) == list(self.cpus)
 
-        self.run_operations(action)
-
-        if any(operation.permission_error for operation in self.operations):
-            msg = "ERROR: At least one operation failed with permission error"
-            if not is_root():
-                msg += ", retry as root"
-            self.error(msg)
-
+    def render_messages(self, action):
         self.write_messages("Actions", self.actions)
         self.write_messages("System state", self.states)
         # Advices are for tuning: hide them for reset
@@ -1034,7 +1034,7 @@ class System:
             self.write_messages("Advices", self.advices)
         self.write_messages("Errors", self.errors)
 
-        if action not in ('tune', 'reset'):
+        if action == 'show':
             tuned = all(operation.tuned_for_benchmarks in (True, None)
                         for operation in self.operations)
             print()
@@ -1045,5 +1045,9 @@ class System:
                       'configuration to run benchmarks'
                       % os.path.basename(sys.executable))
 
+    def main(self, action, args):
+        self.init(args)
+        self.run_operations(action)
+        self.render_messages(action)
         if self.errors:
             sys.exit(1)
