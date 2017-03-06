@@ -10,6 +10,7 @@ BUGS
 TODO
 ====
 
+* Implement a few system operations on macOS
 * store metadata common to all benchmarks at the root in JSON
 * --append should get the number of loops from the existing file and avoid
   calibration, at least when no JIT is used.

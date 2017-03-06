@@ -535,6 +535,17 @@ Linux documentation
   * `NO_HZ: Reducing Scheduling-Clock Ticks
     <https://www.kernel.org/doc/Documentation/timers/NO_HZ.txt>`_
 
+macOS
+^^^^^
+
+To disable Turbo Boost, see:
+
+* `Intel Power Gadget
+  <https://software.intel.com/en-us/articles/intel-power-gadget-20>`_
+* `Turbo Boost Switcher for OS X
+  <http://www.rugarciap.com/turbo-boost-switcher-for-os-x/>`_
+
+
 Articles
 ^^^^^^^^
 
