@@ -68,6 +68,21 @@ def _check_warmups(warmups):
     return True
 
 
+def _cached_attr(func):
+    attr = '_' + func.__name__
+
+    def method(self):
+        value = getattr(self, attr)
+        if value is not None:
+            return value
+
+        value = func(self)
+        setattr(self, attr, value)
+        return value
+
+    return method
+
+
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
@@ -318,46 +333,43 @@ class Benchmark(object):
         self._mean = None
         self._stdev = None
         self._median = None
-        self._mad = None
+        self._median_abs_dev = None
         if not keep_common_metadata:
             self._common_metadata = None
         self._dates = _UNSET
 
+    @_cached_attr
     def mean(self):
-        if self._mean is None:
-            value = statistics.mean(self.get_samples())
-            # add_run() ensures that all samples are greater than zero
-            if value <= 0:
-                raise ValueError("MAD must be > 0")
-            self._mean = value
-        return self._mean
+        value = statistics.mean(self.get_samples())
+        # add_run() ensures that all samples are greater than zero
+        if value <= 0:
+            raise ValueError("MAD must be > 0")
+        return value
 
+    @_cached_attr
     def stdev(self):
-        if self._stdev is None:
-            samples = self.get_samples()
-            value = statistics.stdev(samples)
-            # add_run() ensures that all samples are greater than zero
-            if value < 0:
-                raise ValueError("std dev must be >= 0")
-            self._stdev = value
-        return self._stdev
+        samples = self.get_samples()
+        value = statistics.stdev(samples)
+        # add_run() ensures that all samples are greater than zero
+        if value < 0:
+            raise ValueError("std dev must be >= 0")
+        return value
 
+    @_cached_attr
     def median(self):
-        if self._median is None:
-            value = statistics.median(self.get_samples())
-            # add_run() ensures that all samples are greater than zero
-            if value <= 0:
-                raise ValueError("median must be > 0")
-            self._median = value
-        return self._median
+        value = statistics.median(self.get_samples())
+        # add_run() ensures that all samples are greater than zero
+        if value <= 0:
+            raise ValueError("median must be > 0")
+        return value
 
+    @_cached_attr
     def median_abs_dev(self):
-        if self._mad is None:
-            self._mad = median_abs_dev(self.get_samples())
-            # add_run() ensures that all samples are greater than zero
-            if self._mad < 0:
-                raise ValueError("MAD must be >= 0")
-        return self._mad
+        value = median_abs_dev(self.get_samples())
+        # add_run() ensures that all samples are greater than zero
+        if value < 0:
+            raise ValueError("MAD must be >= 0")
+        return value
 
     def add_run(self, run):
         if not isinstance(run, Run):
