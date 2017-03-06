@@ -1014,7 +1014,10 @@ class System:
             msg = "ERROR: At least one operation failed with permission error"
             if not is_root():
                 msg += ", retry as root"
-            self.error(msg)
+            if action == 'show':
+                self.warning(msg)
+            else:
+                self.error(msg)
 
     def init(self, args):
         if not self.operations:
