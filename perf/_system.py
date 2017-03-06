@@ -888,10 +888,14 @@ class PerfEvent(Operation):
     # Minimise time spent by the Linux perf kernel profiler.
 
     BENCHMARK_RATE = 1
+    path = proc_path("sys/kernel/perf_event_max_sample_rate")
+
+    @classmethod
+    def available(cls):
+        return os.path.exists(cls.path)
 
     def __init__(self, system):
         Operation.__init__(self, 'Perf event', system)
-        self.path = proc_path("sys/kernel/perf_event_max_sample_rate")
 
     def read_max_sample_rate(self):
         line = self.read_first_line(self.path)
@@ -1002,6 +1006,10 @@ class System:
             operation.show()
 
     def main(self, action, args):
+        if not self.operations:
+            print("WARNING: no operation available for your platform")
+            sys.exit()
+
         self.logical_cpu_count = get_logical_cpu_count()
         if not self.logical_cpu_count:
             sys.exit(1)

@@ -12,7 +12,8 @@ class SystemTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
 
         regex = ('(Run "%s -m perf system tune" to tune the system configuration to run benchmarks'
-                 '|OK! System ready for benchmarking)'
+                 '|OK! System ready for benchmarking'
+                 '|WARNING: no operation available for your platform)'
                  % os.path.basename(sys.executable))
         self.assertRegex(proc.stdout, regex)
 
