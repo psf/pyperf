@@ -98,6 +98,32 @@ def parse_cpu_list(cpu_list):
     return cpus
 
 
+def parse_cpu_mask(line):
+    mask = 0
+    for part in line.split(','):
+        mask <<= 32
+        mask |= int(part, 16)
+    return mask
+
+
+def format_cpu_mask(mask):
+    parts = []
+    while 1:
+        part = "%08x" % (mask & 0xffffffff)
+        parts.append(part)
+        mask >>= 32
+        if not mask:
+            break
+    return ','.join(reversed(parts))
+
+
+def format_cpus_as_mask(cpus):
+    mask = 0
+    for cpu in cpus:
+        mask |= (1 << cpu)
+    return format_cpu_mask(mask)
+
+
 def get_isolated_cpus():
     """Get the list of isolated CPUs.
 

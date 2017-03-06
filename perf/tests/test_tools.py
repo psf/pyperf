@@ -211,6 +211,27 @@ class CPUToolsTests(unittest.TestCase):
         with mock.patch(BUILTIN_OPEN, side_effect=IOError):
             self.assertIsNone(cpu_utils.get_isolated_cpus())
 
+    def test_parse_cpu_mask(self):
+        parse_cpu_mask = cpu_utils.parse_cpu_mask
+        self.assertEqual(parse_cpu_mask('f0'),
+                         0xf0)
+        self.assertEqual(parse_cpu_mask('fedcba00,12345678'),
+                         0xfedcba0012345678)
+        self.assertEqual(parse_cpu_mask('ffffffff,ffffffff,ffffffff,ffffffff'),
+                         2**128 - 1)
+
+    def test_format_cpu_mask(self):
+        format_cpu_mask = cpu_utils.format_cpu_mask
+        self.assertEqual(format_cpu_mask(0xf0),
+                         '000000f0')
+        self.assertEqual(format_cpu_mask(0xfedcba0012345678),
+                         'fedcba00,12345678')
+
+    def test_format_cpus_as_mask(self):
+        format_cpus_as_mask = cpu_utils.format_cpus_as_mask
+        self.assertEqual(format_cpus_as_mask({4, 5, 6, 7}),
+                         '000000f0')
+
 
 class MiscTests(unittest.TestCase):
     def test_format_metadata(self):

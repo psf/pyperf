@@ -10,7 +10,8 @@ import sys
 from perf._cli import display_title
 from perf._cpu_utils import (parse_cpu_list,
                              get_logical_cpu_count, get_isolated_cpus,
-                             format_cpu_list, format_cpu_infos)
+                             format_cpu_list, format_cpu_infos,
+                             parse_cpu_mask, format_cpus_as_mask)
 from perf._utils import (read_first_line, sysfs_path, proc_path, open_text,
                          popen_communicate)
 
@@ -662,7 +663,7 @@ class IRQAffinity(Operation):
         return active
 
     def parse_affinity(self, mask):
-        mask = int(mask, 16)
+        mask = parse_cpu_mask(mask)
         cpus = []
         for cpu in range(self.system.logical_cpu_count):
             cpu_mask = 1 << cpu
@@ -722,12 +723,6 @@ class IRQAffinity(Operation):
             infos = ['IRQ %s' % info for info in infos]
             self.log_state('IRQ affinity: %s' % '; '.join(infos))
 
-    def create_affinity(self, cpus):
-        mask = 0
-        for cpu in cpus:
-            mask |= (1 << cpu)
-        return "%x" % mask
-
     def write_irqbalance_service(self, enable):
         irqbalance_active = self.read_irqbalance_state()
         if irqbalance_active is None:
@@ -759,7 +754,7 @@ class IRQAffinity(Operation):
         if new_affinity == default_smp_affinity:
             return
 
-        mask = self.create_affinity(new_affinity)
+        mask = format_cpus_as_mask(new_affinity)
         try:
             write_text(self.default_affinity_path, mask)
         except IOError as exc:
@@ -772,7 +767,7 @@ class IRQAffinity(Operation):
 
     def write_irq(self, irq, cpus):
         path = self.irq_affinity_path % irq
-        mask = self.create_affinity(cpus)
+        mask = format_cpus_as_mask(cpus)
         try:
             write_text(path, mask)
             return True

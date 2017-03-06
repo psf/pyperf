@@ -14,6 +14,7 @@ Version 0.9.5
   sort if ``--by-speed`` option is used.
 * Fix ``system`` comand on macOS on non-existent ``/proc`` and ``/sys``
   pseudo-files.
+* Fix ``system`` bugs on systems with more than 32 processors.
 
 Version 0.9.4 (2017-03-01)
 --------------------------
