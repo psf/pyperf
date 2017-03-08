@@ -59,7 +59,12 @@ def main():
         'author_email': 'victor.stinner@gmail.com',
         'classifiers': CLASSIFIERS,
         'packages': ['perf', 'perf.tests'],
-        'install_requires': ["statistics; python_version < '3.4'", "six"],
+        'install_requires': ["six"],
+        # don't use environment markers in install_requires, but use weird
+        # syntax of extras_require, to support setuptools 18
+        'extras_require': {
+            ":python_version < '3.4'": ["statistics"],
+        },
         'entry_points': {
             'console_scripts': ['pyperf=perf.__main__:main']
         }

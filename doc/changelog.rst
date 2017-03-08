@@ -7,6 +7,8 @@ Version 0.9.6
 * Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
 * ``check`` command now tests stdev/mean, instead of testing stdev/median
 * Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
+* setup.py: statistics dependency is now installed using ``extras_require`` to
+  support setuptools 18 and newer
 
 Version 0.9.5 (2017-03-06)
 --------------------------
