@@ -9,6 +9,8 @@ Version 0.9.6
 * Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
 * setup.py: statistics dependency is now installed using ``extras_require`` to
   support setuptools 18 and newer
+* Add setup.cfg to enable universal builds: same wheel package for Python 2
+  and Python 3
 
 Version 0.9.5 (2017-03-06)
 --------------------------
