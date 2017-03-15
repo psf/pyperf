@@ -13,7 +13,7 @@ Version 0.9.6
   and Python 3
 * Add ``perf.VERSION`` constant: tuple of int
 * JSON version 6: write metadata common to all benchmarks (common to all runs
-  of all benchmarks) at the root
+  of all benchmarks) at the root; rename 'samples' to 'values' in runs.
 
 Version 0.9.5 (2017-03-06)
 --------------------------

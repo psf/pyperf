@@ -20,7 +20,8 @@ from perf._utils import parse_iso8601, median_abs_dev
 # JSON format history:
 #
 # 6 - (perf 0.9.6) add common_metadata to the root: metadata common to all
-#     benchmarks (common to all runs of all benchmarks)
+#     benchmarks (common to all runs of all benchmarks); rename 'samples'
+#     to 'values' in runs
 # 5 - (perf 0.8.3) timestamps in metadata are now formatted using a space
 #      separator
 # 4 - (perf 0.7.4) warmups are now a lists of (loops, raw_sample)
@@ -202,9 +203,11 @@ class Run(object):
         return self._metadata.get('date', None)
 
     def _as_json(self, common_metadata):
-        data = {'samples': self._samples}
+        data = {}
         if self._warmups:
             data['warmups'] = self._warmups
+        if self._samples:
+            data['values'] = self._samples
 
         metadata = _exclude_common_metadata(self._metadata, common_metadata)
         if metadata:
@@ -220,7 +223,10 @@ class Run(object):
         warmups = run_data.get('warmups', None)
         if warmups:
             warmups = [tuple(item) for item in warmups]
-        samples = run_data['samples']
+        if version >= 6:
+            samples = run_data.get('values', ())
+        else:
+            samples = run_data['samples']
 
         return cls(samples,
                    warmups=warmups,
