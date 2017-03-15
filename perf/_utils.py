@@ -115,7 +115,6 @@ def tscore(sample1, sample2):
     if len(sample1) != len(sample2):
         raise ValueError("different number of samples")
     error = pooled_sample_variance(sample1, sample2) / len(sample1)
-    # FIXME: use median?
     diff = statistics.mean(sample1) - statistics.mean(sample2)
     return diff / math.sqrt(error * 2)
 

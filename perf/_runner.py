@@ -147,7 +147,7 @@ class Runner:
                                  % warmups)
         parser.add_argument('-l', '--loops',
                             type=positive_or_nul, default=loops,
-                            help='number of loops per sample, 0 means '
+                            help='number of loops per value, 0 means '
                                  'automatic calibration (default: %s)'
                             % loops)
         parser.add_argument('-v', '--verbose', action="store_true",
@@ -163,7 +163,7 @@ class Runner:
                             help='append results encoded to JSON into FILENAME')
         parser.add_argument('--min-time', type=float, default=min_time,
                             help='Minimum duration in seconds of a single '
-                                 'sample, used to calibrate the number of '
+                                 'value, used to calibrate the number of '
                                  'loops (default: %s)'
                             % format_timedelta(min_time))
         parser.add_argument('--worker', action='store_true',
@@ -347,7 +347,7 @@ class Runner:
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
-    def _run_bench(self, metadata, sample_func, inner_loops, loops, nsample,
+    def _run_bench(self, metadata, sample_func, inner_loops, loops, nvalue,
                    is_warmup=False, is_calibrate=False, calibrate=False):
         unit = metadata.get('unit')
         args = self.args
@@ -355,52 +355,52 @@ class Runner:
             raise ValueError("loops must be >= 1")
 
         if is_calibrate:
-            sample_name = 'Calibration'
+            value_name = 'Calibration'
         elif is_warmup:
-            sample_name = 'Warmup'
+            value_name = 'Warmup'
         else:
-            sample_name = 'Sample'
+            value_name = 'Sample'
 
         values = []
         index = 1
         if not inner_loops:
             inner_loops = 1
         while True:
-            if index > nsample:
+            if index > nvalue:
                 break
 
-            raw_sample = sample_func(loops)
-            raw_sample = float(raw_sample)
-            sample = raw_sample / (loops * inner_loops)
+            raw_value = sample_func(loops)
+            raw_value = float(raw_value)
+            value = raw_value / (loops * inner_loops)
             if is_warmup:
-                value = raw_sample
+                run_value = raw_value
             else:
-                value = sample
+                run_value = value
 
-            if not value and not(is_calibrate or is_warmup):
+            if not run_value and not(is_calibrate or is_warmup):
                 raise ValueError("sample function returned zero")
 
             if is_warmup:
-                values.append((loops, value))
+                values.append((loops, run_value))
             else:
-                values.append(value)
+                values.append(run_value)
 
             if args.verbose:
-                text = format_value(unit, sample)
+                text = format_value(unit, value)
                 if is_warmup or is_calibrate:
                     text = ('%s (%s: %s)'
                             % (text,
                                format_number(loops, 'loop'),
-                               format_value(unit, raw_sample)))
-                print("%s %s: %s" % (sample_name, index, text))
+                               format_value(unit, raw_value)))
+                print("%s %s: %s" % (value_name, index, text))
 
-            if calibrate and raw_sample < args.min_time:
+            if calibrate and raw_value < args.min_time:
                 loops *= 2
                 if loops > 2 ** 32:
                     raise ValueError("error in calibration, loops is "
                                      "too big: %s" % loops)
                 # need more values for the calibration
-                nsample += 1
+                nvalue += 1
 
             index += 1
 
@@ -416,7 +416,7 @@ class Runner:
         if metadata is None:
             metadata = {}
         return self._run_bench(metadata, sample_func, inner_loops,
-                               loops=1, nsample=1,
+                               loops=1, nvalue=1,
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
@@ -435,15 +435,17 @@ class Runner:
             calibrate_warmups = None
 
         if args.warmups:
-            loops, warmups = self._run_bench(metadata, sample_func, inner_loops,
-                                             loops, args.warmups,
+            loops, warmups = self._run_bench(metadata, sample_func,
+                                             inner_loops=inner_loops,
+                                             loops=loops, nvalue=args.warmups,
                                              is_warmup=True, calibrate=calibrate)
         else:
             warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
-        loops, values = self._run_bench(metadata, sample_func, inner_loops,
-                                        loops, args.values)
+        loops, values = self._run_bench(metadata, sample_func,
+                                        inner_loops=inner_loops,
+                                        loops=loops, nvalue=args.values)
 
         return (loops, warmups, values)
 

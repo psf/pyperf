@@ -444,7 +444,7 @@ BenchmarkSuite
 Runner
 ------
 
-.. class:: Runner(samples=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, show_name=True, program_args=None, add_cmdline_args=None)
+.. class:: Runner(values=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, show_name=True, program_args=None, add_cmdline_args=None)
 
    Tool to run a benchmark in text mode.
 
@@ -452,8 +452,8 @@ Runner
 
    *metadata* is passed to the :class:`~Run` constructor.
 
-   *samples*, *warmups* and *processes* are the default number of samples,
-   warmup samples and processes. These values can be changed with command line
+   *values*, *warmups* and *processes* are the default number of values,
+   warmup values and processes. These values can be changed with command line
    options. See :ref:`Runner CLI <runner_cli>` for command line
    options.
 
