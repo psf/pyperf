@@ -86,6 +86,8 @@ def _cached_attr(func):
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
+    __slots__ = ('_warmups', '_samples', '_metadata')
+
     def __init__(self, samples, warmups=None,
                  metadata=None, collect_metadata=True):
         if any(not(isinstance(sample, NUMBER_TYPES) and sample > 0)
