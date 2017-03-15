@@ -167,11 +167,7 @@ class Table:
         self.widths = [len(header) for header in self.headers]
         for row in self.rows:
             for column, cell in enumerate(row):
-                if isinstance(cell, str):
-                    cell_len = len(cell)
-                else:
-                    cell_len = max(len(subcell) for subcell in cell)
-                self.widths[column] = max(self.widths[column], cell_len)
+                self.widths[column] = max(self.widths[column], len(cell))
 
     def _render_line(self, char='-'):
         parts = ['']
