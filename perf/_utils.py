@@ -113,7 +113,7 @@ def tscore(sample1, sample2):
         The t-test score, as a float.
     """
     if len(sample1) != len(sample2):
-        raise ValueError("different number of samples")
+        raise ValueError("different number of values")
     error = pooled_sample_variance(sample1, sample2) / len(sample1)
     diff = statistics.mean(sample1) - statistics.mean(sample2)
     return diff / math.sqrt(error * 2)
