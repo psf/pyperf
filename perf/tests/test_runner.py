@@ -7,7 +7,7 @@ import six
 
 import perf
 from perf import tests
-from perf._utils import create_pipe
+from perf._utils import create_pipe, MS_WINDOWS
 from perf.tests import mock
 from perf.tests import unittest
 from perf.tests import ExitStack
@@ -343,10 +343,12 @@ class TestRunner(unittest.TestCase):
                         '--pipe', mock.ANY, '--worker-task=0',
                         '--samples', '7', '--warmups', '3',
                         '--loops', '11', '--min-time', '5.0']
-                if six.PY3:
-                    return mock.call(args, env=mock.ANY, pass_fds=mock.ANY)
-                else:
-                    return mock.call(args, env=mock.ANY)
+                kw = {}
+                if MS_WINDOWS:
+                    kw['close_fds'] = False
+                elif six.PY3:
+                    kw['pass_fds'] = mock.ANY
+                return mock.call(args, env=mock.ANY, **kw)
 
             call1 = popen_call('python2')
             call2 = popen_call('python1')
