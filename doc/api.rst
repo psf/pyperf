@@ -1,6 +1,9 @@
 API
 ===
 
+The module version can be read from ``perf.VERSION`` (tuple of int) or
+``perf.__version__`` (str).
+
 Statistics
 ----------
 

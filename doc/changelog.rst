@@ -11,6 +11,7 @@ Version 0.9.6
   support setuptools 18 and newer
 * Add setup.cfg to enable universal builds: same wheel package for Python 2
   and Python 3
+* Add ``perf.VERSION`` constant: tuple of int
 
 Version 0.9.5 (2017-03-06)
 --------------------------
