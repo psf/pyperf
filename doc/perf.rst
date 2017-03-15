@@ -140,52 +140,58 @@ Example of JSON, ``...`` is used in the example for readability::
     {
         "benchmarks": [
             {
-                "common_metadata": {
-                    "name": "telco",
-                    "perf_version": "0.7",
-                    "platform": "Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four",
-                    ...
-                },
                 "runs": [
                     {
                         "metadata": {
-                            "date": "2016-07-17T22:50:27",
+                            "date": "2016-10-21 03:14:19.670631",
+                            "duration": 0.33765527700597886,
+                            "load_avg_1min": 0.29,
                             ...
                         },
-                        "samples": [
-                            0.0244653635,
-                            0.02445928275,
-                            0.02450589075
+                        "warmups": [
+                            [
+                                1,
+                                0.023075559991411865
+                            ],
+                            [
+                                2,
+                                0.04504403499595355
+                            ],
+                            ...
+                        ]
+                    },
+                    {
+                        "metadata": {
+                            ...
+                        },
+                        "values": [
+                            0.022752201875846367,
+                            0.022529058374857414,
+                            0.022569017250134493
                         ],
                         "warmups": [
                             [
-                                4,
-                                0.098872539
+                                8,
+                                0.1799866840010509
                             ]
                         ]
                     },
                     ...
-                    {
-                        "metadata": {
-                            "date": "2016-07-17T22:50:45",
-                            ...
-                        },
-                        "samples": [
-                            0.024512332,
-                            0.02449233075,
-                            0.02454807875
-                        ],
-                        "warmups": [
-                            [
-                                4,
-                                0.098347475
-                            ]
-                        ]
-                    }
                 ]
             }
         ],
-        "version": 4
+        "metadata": {
+            "cpu_count": 4,
+            "cpu_model_name": "Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz",
+            "description": "Telco decimal benchmark",
+            "hostname": "selma",
+            "loops": 8,
+            "name": "telco",
+            "perf_version": "0.8.2",
+            "performance_version": "0.3.3",
+            ...
+        },
+        "version": 6
     }
 
 See also the `jq tool <https://stedolan.github.io/jq/>`_: "lightweight and
