@@ -9,6 +9,7 @@ Enhancements:
 * Add a new ``Runner.bench_command()`` method to measure the execution time of
   a command.
 * Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
+* ``check`` command: test also minimum and maximum compared to the mean
 
 Major API change, rename "sample" to "value":
 

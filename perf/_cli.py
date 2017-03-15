@@ -1,5 +1,8 @@
 from __future__ import division, print_function, absolute_import
 
+import os.path
+import sys
+
 from perf._formatter import (format_seconds, format_number,
                              format_timedelta, format_datetime)
 from perf._metadata import format_metadata as _format_metadata
@@ -222,7 +225,8 @@ def _format_stats(bench, lines):
 
     # Minimum
     def format_limit(median, value):
-        return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100.0 / median)
+        return ("%s (%+.0f%% of the median)"
+                % (fmt(value), (value - median) * 100.0 / median))
 
     lines.append("Minimum: %s" % format_limit(median, min(values)))
 
@@ -313,40 +317,53 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None):
 def format_checks(bench, lines=None):
     if lines is None:
         lines = []
-    warn = lines.append
     values = bench.get_values()
+    mean = bench.mean()
+    warnings = []
+    warn = warnings.append
 
     # Display a warning if the standard deviation is larger than 10%
     if len(values) >= 2:
-        k = bench.stdev() / bench.mean()
-        if k > 0.10:
-            empty_line(lines)
+        stdev = bench.stdev()
+        percent = stdev * 100.0 / mean
+        if percent >= 10.0:
+            warn("the standard deviation (%s) is %.0f%% of the mean (%s)"
+                 % (bench.format_value(stdev), percent, bench.format_value(mean)))
 
-            if k > 0.20:
-                warn("ERROR: the benchmark is very unstable, the standard "
-                     "deviation is very high (stdev/mean: %.0f%%)!"
-                     % (k * 100))
+    # Minimum and maximum, detect obvious outliers
+    for minimum, value in (
+        ('minimum', min(values)),
+        ('maximum', max(values)),
+    ):
+        percent = (value - mean) * 100.0 / mean
+        if abs(percent) >= 25:
+            if percent >= 0:
+                text = "%.0f%% greater" % (percent)
             else:
-                warn("WARNING: the benchmark seems unstable, the standard "
-                     "deviation is high (stdev/mean: %.0f%%)"
-                     % (k * 100))
-            warn("Try to rerun the benchmark with more runs, values "
-                 "and/or loops")
+                text = "%.0f%% smaller" % (-percent)
+            warn("the %s (%s) is %s than the mean (%s)"
+                 % (minimum, bench.format_value(value), text, bench.format_value(mean)))
 
     # Check that the shortest value took at least 1 ms
-    shortest = min(bench._get_raw_values())
-    text = bench.format_value(shortest)
-    if shortest < 1e-3:
-        empty_line(lines)
+    if bench.get_unit() == 'second':
+        shortest = min(bench._get_raw_values())
+        if shortest < 1e-3:
+            warn("the shortest raw value only took %s"
+                 % bench.format_value(shortest))
 
-        if shortest < 1e-6:
-            warn("ERROR: the benchmark may be very unstable, "
-                 "the shortest raw value only took %s" % text)
-        else:
-            warn("WARNING: the benchmark may be unstable, "
-                 "the shortest raw value only took %s" % text)
-        warn("Try to rerun the benchmark with more loops "
-             "or increase --min-time")
+    if warnings:
+        empty_line(lines)
+        lines.append("WARNING: the benchmark result may be unstable")
+        for msg in warnings:
+            lines.append("* %s" % msg)
+        empty_line(lines)
+        lines.append("Try to rerun the benchmark with more runs, values "
+                     "and/or loops.")
+        lines.append("Run '%s -m perf system tune' command to reduce "
+                     "the system jitter."
+                     % os.path.basename(sys.executable))
+        lines.append("Use perf stats to analyze results, "
+                     "or --quiet to hide warnings.")
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:

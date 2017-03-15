@@ -53,7 +53,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
-            stdout = self.run_command('show', '--metadata', tmp_name)
+            stdout = self.run_command('show', '-q', '--metadata', tmp_name)
 
         expected = textwrap.dedent("""
             Common metadata
@@ -67,9 +67,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 2.7
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, values and/or loops
-
             Median +- MAD: 1.50 sec +- 0.50 sec
 
             py3
@@ -77,9 +74,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Metadata:
             - python_version: 3.4
-
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, values and/or loops
 
             Median +- MAD: 2.00 sec +- 0.50 sec
         """).strip()
@@ -90,7 +84,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
-            stdout = self.run_command('metadata', tmp_name)
+            stdout = self.run_command('metadata', '-q', tmp_name)
 
         expected = textwrap.dedent("""
             Common metadata
@@ -104,17 +98,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 2.7
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, values and/or loops
-
             py3
             ---
 
             Metadata:
             - python_version: 3.4
-
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, values and/or loops
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
 
@@ -273,10 +261,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Number of warmups per run: 1
             Loop iterations per value: 8
 
-            Minimum: 22.1 ms (-2%)
+            Minimum: 22.1 ms (-2% of the median)
             Median +- MAD: 22.5 ms +- 0.1 ms
             Mean +- std dev: 22.5 ms +- 0.2 ms
-            Maximum: 22.9 ms (+2%)
+            Maximum: 22.9 ms (+2% of the median)
         """)
         self.check_command(expected, 'stats', TELCO)
 
@@ -380,15 +368,28 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             py2
             ---
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, values and/or loops
+            WARNING: the benchmark result may be unstable
+            * the standard deviation (500 ms) is 33% of the mean (1.50 sec)
+            * the minimum (1.00 sec) is 33% smaller than the mean (1.50 sec)
+            * the maximum (2.00 sec) is 33% greater than the mean (1.50 sec)
+
+            Try to rerun the benchmark with more runs, values and/or loops.
+            Run 'python -m perf system tune' command to reduce the system jitter.
+            Use perf stats to analyze results, or --quiet to hide warnings.
 
             py3
             ---
 
-            ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, values and/or loops
+            WARNING: the benchmark result may be unstable
+            * the standard deviation (500 ms) is 25% of the mean (2.00 sec)
+            * the minimum (1.50 sec) is 25% smaller than the mean (2.00 sec)
+            * the maximum (2.50 sec) is 25% greater than the mean (2.00 sec)
+
+            Try to rerun the benchmark with more runs, values and/or loops.
+            Run '{} -m perf system tune' command to reduce the system jitter.
+            Use perf stats to analyze results, or --quiet to hide warnings.
         """).strip()
+        expected = expected.format(os.path.basename(sys.executable))
         self.assertEqual(stdout.rstrip(), expected)
 
 
