@@ -368,8 +368,8 @@ def format_checks(bench, lines=None):
         lines.append("Run '%s -m perf system tune' command to reduce "
                      "the system jitter."
                      % os.path.basename(sys.executable))
-        lines.append("Use perf stats to analyze results, "
-                     "or --quiet to hide warnings.")
+        lines.append("Use perf stats, perf dump and perf hist to analyze results.")
+        lines.append("Use --quiet option to hide these warnings.")
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:

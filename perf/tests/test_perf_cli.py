@@ -375,7 +375,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Try to rerun the benchmark with more runs, values and/or loops.
             Run '{0} -m perf system tune' command to reduce the system jitter.
-            Use perf stats to analyze results, or --quiet to hide warnings.
+            Use perf stats, perf dump and perf hist to analyze results.
+            Use --quiet option to hide these warnings.
 
             py3
             ---
@@ -387,7 +388,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Try to rerun the benchmark with more runs, values and/or loops.
             Run '{0} -m perf system tune' command to reduce the system jitter.
-            Use perf stats to analyze results, or --quiet to hide warnings.
+            Use perf stats, perf dump and perf hist to analyze results.
+            Use --quiet option to hide these warnings.
         """).strip()
         expected = expected.format(os.path.basename(sys.executable))
         self.assertEqual(stdout.rstrip(), expected)
