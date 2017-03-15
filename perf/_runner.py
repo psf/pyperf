@@ -571,6 +571,11 @@ class Runner:
         metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
 
+        if not metadata:
+            metadata = {'unit': 'second'}
+        elif 'unit' not in metadata:
+            metadata['unit'] = 'second'
+
         if not self._check_worker_task():
             return None
 

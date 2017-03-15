@@ -501,8 +501,8 @@ Runner
    .. method:: bench_time_func(name, time_func, \*args, inner_loops=None, metadata=None)
 
       Benchmark ``time_func(loops, *args)``. The *time_func* function must
-      return raw values: the total elapsed time of all loops. Runner will
-      divide raw values by ``loops x inner_loops`` (*loops* and *inner_loops*
+      return raw timings: the total elapsed time of all loops. Runner will
+      divide raw timings by ``loops x inner_loops`` (*loops* and *inner_loops*
       parameters).
 
       :func:`perf_counter` should be used to measure the elapsed time.
