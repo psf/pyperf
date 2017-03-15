@@ -14,7 +14,7 @@ class ExampleTests(unittest.TestCase):
         proc = tests.get_output(cmd)
 
         self.assertRegex(proc.stdout,
-                         r'Median \+- MAD: [0-9.]+ [mun]s '
+                         r'Mean \+- std dev: [0-9.]+ [mun]s '
                          r'\+- [0-9.]+ [mun]s\n')
         self.assertEqual(proc.returncode, 0)
 

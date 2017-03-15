@@ -93,7 +93,6 @@ def pooled_sample_variance(sample1, sample2):
         Pooled sample variance, as a float.
     """
     deg_freedom = len(sample1) + len(sample2) - 2
-    # FIXME: use median?
     mean1 = statistics.mean(sample1)
     squares1 = ((x - mean1) ** 2 for x in sample1)
     mean2 = statistics.mean(sample2)

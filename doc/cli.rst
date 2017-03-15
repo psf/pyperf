@@ -171,15 +171,17 @@ Example of stable benchmark::
 
 Example of unstable benchmark::
 
-    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json
-    (...)
+    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json -q
+    Mean +- std dev: 858 ns +- 118 ns
 
     $ python3 -m perf check json
-    ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 42%)!
-    Try to rerun the benchmark with more runs, values and/or loops
+    WARNING: the benchmark result may be unstable
+    * the standard deviation (118 ns) is 14% of the mean (858 ns)
+    * the shortest raw value only took 721 ns
 
-    ERROR: the benchmark may be very unstable, the shortest raw value only took 303 ns
-    Try to rerun the benchmark with more loops or increase --min-time
+    Try to rerun the benchmark with more runs, values and/or loops.
+    Run 'python3 -m perf system tune' command to reduce the system jitter.
+    Use perf stats to analyze results, or --quiet to hide warnings.
 
 
 .. _dump_cmd:
@@ -415,9 +417,6 @@ Verbose example::
     187 ns:  0 |
     191 ns:  0 |
     196 ns:  1 #
-
-    WARNING: the benchmark seems unstable, the standard deviation is high (stdev/median: 11%)
-    Try to rerun the benchmark with more runs, values and/or loops
 
     Median +- std dev: 114 ns +- 12 ns
 

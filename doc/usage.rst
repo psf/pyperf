@@ -126,14 +126,14 @@ values::
     Number of warmups per run: 1
     Loop iterations per value: 2^15
 
-    Minimum: 5.11 us (-2%)
+    Minimum: 5.11 us (-2% of the mean)
     Median +- std dev: 5.22 us +- 0.22 us
     Mean +- std dev: 5.31 us +- 0.22 us
-    Maximum: 6.15 us (+18%)
+    Maximum: 6.15 us (+18% of the mean)
 
 The last section is the most interesting. It shows that the minimum (5.11 us)
-is 2% faster than the median (5.22 us), and the maximum (6.15 us) is 18%
-slower than the median.
+is 2% faster than the mean (5.31 us), and the maximum (6.15 us) is 18%
+slower than the mean.
 
 The mean (5.31 us) is also different than the median (5.22 us).
 
@@ -163,7 +163,7 @@ the distribution::
     6.03 us:  0 |
     6.09 us:  2 ######
 
-On the histogram, the center is around 5.18 us (the median is 5.22 us).
+On the histogram, the center is around 5.18 us (the mean is 5.31 us).
 
 The shape of the the curve looks like a skewed gaussian curve: the right side
 ([5.18 us; 6.09 us]: 0.91 us) is longer than the left side ([5.06 us; 5.18 us]:

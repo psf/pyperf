@@ -175,7 +175,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench.format(),
                          '1.50 sec +- 0.50 sec')
         self.assertEqual(str(bench),
-                         'Median +- MAD: 1.50 sec +- 0.50 sec')
+                         'Mean +- std dev: 1.50 sec +- 0.50 sec')
 
     def test_get_unit(self):
         run = perf.Run((1.0,),

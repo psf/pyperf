@@ -33,9 +33,9 @@ class CompareData:
 
 
 def compute_speed(ref, changed):
-    ref_avg = ref.median()
-    changed_avg = changed.median()
-    # Note: medians cannot be zero, it's a warranty of perf API
+    ref_avg = ref.mean()
+    changed_avg = changed.mean()
+    # Note: means cannot be zero, it's a warranty of perf API
     speed = ref_avg / changed_avg
     percent = (changed_avg - ref_avg) * 100.0 / ref_avg
     return (speed, percent)
@@ -109,9 +109,9 @@ class CompareResult(object):
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
             if (self.ref.benchmark.get_nvalue() > 1
                or self.changed.benchmark.get_nvalue() > 1):
-                text = "Median +- MAD: %s -> %s" % (ref_text, chg_text)
+                text = "Mean +- std dev: %s -> %s" % (ref_text, chg_text)
             else:
-                text = "Median: %s -> %s" % (ref_text, chg_text)
+                text = "%s -> %s" % (ref_text, chg_text)
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
@@ -221,7 +221,7 @@ def compare_suites_table(grouped_by_name, by_speed, args):
         ref = group.benchmarks[0].benchmark
         for index, item in enumerate(group.benchmarks):
             bench = item.benchmark
-            text = bench.format_value(bench.median())
+            text = bench.format_value(bench.mean())
             if index != 0:
                 speed, percent = compute_speed(ref, bench)
                 if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
@@ -330,7 +330,7 @@ def compare_suites_by_speed(all_results, show_name, args):
 
 
 def bench_sort_key(item):
-    return (item.benchmark.median(), item.filename or '')
+    return (item.benchmark.mean(), item.filename or '')
 
 
 def compare_suites(benchmarks, sort_benchmarks, by_speed, args):

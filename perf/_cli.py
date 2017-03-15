@@ -66,14 +66,14 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
         if not percent:
             return values_str
 
-        median = bench.median()
-        max_delta = median * 0.05
+        mean = bench.mean()
+        max_delta = mean * 0.05
         for index, value in enumerate(values):
             if raw:
                 value = float(value) / total_loops
-            delta = float(value) - median
+            delta = float(value) - mean
             if abs(delta) > max_delta:
-                values_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
+                values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
         return values_str
 
     values = run.values
@@ -160,7 +160,7 @@ def _format_stats(bench, lines):
 
     nrun = bench.get_nrun()
     nvalue = len(values)
-    median = bench.median()
+    mean = bench.mean()
 
     empty_line(lines)
 
@@ -224,14 +224,20 @@ def _format_stats(bench, lines):
     lines.append('')
 
     # Minimum
-    def format_limit(median, value):
-        return ("%s (%+.0f%% of the median)"
-                % (fmt(value), (value - median) * 100.0 / median))
+    def format_limit(mean, value):
+        return ("%s (%+.0f%% of the mean)"
+                % (fmt(value), (value - mean) * 100.0 / mean))
 
-    lines.append("Minimum: %s" % format_limit(median, min(values)))
+    lines.append("Minimum: %s" % format_limit(mean, min(values)))
 
     # Median +- MAD
-    lines.append(str(bench))
+    median = bench.median()
+    if len(values) > 2:
+        median_abs_dev = bench.median_abs_dev()
+        lines.append("Median +- MAD: %s +- %s"
+                     % bench.format_values((median, median_abs_dev)))
+    else:
+        lines.append("Mean: %s" % bench.format_value(median))
 
     # Mean +- std dev
     mean = bench.mean()
@@ -243,7 +249,7 @@ def _format_stats(bench, lines):
         lines.append("Mean: %s" % bench.format_value(mean))
 
     # Maximum
-    lines.append("Maximum: %s" % format_limit(median, max(values)))
+    lines.append("Maximum: %s" % format_limit(mean, max(values)))
     return lines
 
 

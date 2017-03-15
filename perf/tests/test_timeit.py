@@ -29,7 +29,7 @@ MIN_SAMPLE = 0.9  # ms
 MAX_SAMPLE = 50.0  # ms
 MIN_MEAN = MIN_SAMPLE
 MAX_MEAN = MAX_SAMPLE / 2
-MAX_MAD = 10.0  # ms
+MAX_STD_DEV = 10.0  # ms
 
 
 class TestTimeit(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestTimeit(unittest.TestCase):
                           r'Metadata:\n'
                           r'(- .*\n)+'
                           r'\n'
-                          r'Median \+- MAD: (?P<median>[0-9.]+) ms \+-'
+                          r'Mean \+- std dev: (?P<mean>[0-9.]+) ms \+-'
                           ' (?P<mad>[0-9.]+) ms\n'
                           r'$',
                           cmd.stdout)
@@ -67,10 +67,10 @@ class TestTimeit(unittest.TestCase):
             self.assertTrue(MIN_SAMPLE <= value <= MAX_SAMPLE,
                             repr(value))
 
-        median = float(match.group('median'))
-        self.assertTrue(MIN_MEAN <= median <= MAX_MEAN, median)
+        mean = float(match.group('mean'))
+        self.assertTrue(MIN_MEAN <= mean <= MAX_MEAN, mean)
         mad = float(match.group('mad'))
-        self.assertLessEqual(mad, MAX_MAD)
+        self.assertLessEqual(mad, MAX_STD_DEV)
 
     def test_cli(self):
         args = ('-p', '2',
@@ -87,18 +87,18 @@ class TestTimeit(unittest.TestCase):
 
         # ignore lines before to ignore random warnings like
         # "ERROR: the benchmark is very unstable"
-        match = re.search(r'Median \+- MAD: (?P<median>[0-9.]+) ms'
+        match = re.search(r'Mean \+- std dev: (?P<mean>[0-9.]+) ms'
                           r' \+- (?P<mad>[0-9.]+) ms'
                           r'$',
                           cmd.stdout.rstrip())
         self.assertIsNotNone(match, repr(cmd.stdout))
 
         # Tolerate large differences on busy systems
-        median = float(match.group('median'))
-        self.assertTrue(MIN_MEAN <= median <= MAX_MEAN, median)
+        mean = float(match.group('mean'))
+        self.assertTrue(MIN_MEAN <= mean <= MAX_MEAN, mean)
 
         mad = float(match.group('mad'))
-        self.assertLessEqual(mad, MAX_MAD)
+        self.assertLessEqual(mad, MAX_STD_DEV)
 
     def run_timeit(self, args):
         cmd = tests.get_output(args)
@@ -230,7 +230,7 @@ class TestTimeit(unittest.TestCase):
             .*: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
 
-            (?:Median \+- MAD: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
+            (?:Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
@@ -245,18 +245,18 @@ class TestTimeit(unittest.TestCase):
             ==========+
 
             .*
-            Median \+- MAD: .*
+            Mean \+- std dev: .*
 
             Benchmark .*
             ==========+
 
             .*
-            Median \+- MAD: .*
+            Mean \+- std dev: .*
 
             Compare
             =======
 
-            Median \+- MAD: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
+            Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
@@ -266,7 +266,7 @@ class TestTimeit(unittest.TestCase):
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 
-        expected = r'(?:Median \+- MAD: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
+        expected = r'(?:Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
         self.assertRegex(cmd.stdout, expected)
 
     def test_duplicate(self):

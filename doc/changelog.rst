@@ -4,6 +4,10 @@ Changelog
 Version 0.9.6
 -------------
 
+Major change:
+
+* Display ``Median +- std dev`` instead of ``Median +- std dev``
+
 Enhancements:
 
 * Add a new ``Runner.bench_command()`` method to measure the execution time of
@@ -30,7 +34,6 @@ Major API change, rename "sample" to "value":
 Changes:
 
 * ``convert``: Remove ``--remove-outliers`` option
-* Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
 * ``check`` command now tests stdev/mean, instead of testing stdev/median
 * setup.py: statistics dependency is now installed using ``extras_require`` to
   support setuptools 18 and newer

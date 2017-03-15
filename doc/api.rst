@@ -161,7 +161,7 @@ Benchmark
 
    .. method:: format() -> str
 
-      Format the result as ``... +- ...`` (median +- standard deviation) string
+      Format the result as ``... +- ...`` (mean +- standard deviation) string
       (``str``).
 
    .. method:: format_value(value) -> str
@@ -304,7 +304,7 @@ Benchmark
 
    .. method:: __str__() -> str
 
-      Format the result as ``Median +- std dev: ... +- ...`` (median +-
+      Format the result as ``Mean +- std dev: ... +- ...`` (mean +-
       standard deviation) string (``str``).
 
    .. method:: update_metadata(metadata: dict)

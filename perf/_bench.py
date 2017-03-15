@@ -345,7 +345,7 @@ class Benchmark(object):
         value = statistics.mean(self.get_values())
         # add_run() ensures that all values are greater than zero
         if value <= 0:
-            raise ValueError("MAD must be > 0")
+            raise ValueError("mean must be > 0")
         return value
 
     @_cached_attr
@@ -454,12 +454,12 @@ class Benchmark(object):
             return '<calibration: %s>' % format_number(loops, 'loop')
 
         if self.get_nvalue() >= 2:
-            numbers = [self.median()]
-            numbers.append(self.median_abs_dev())
+            numbers = [self.mean()]
+            numbers.append(self.stdev())
             numbers = self.format_values(numbers)
             text = '%s +- %s' % numbers
         else:
-            text = self.format_value(self.median())
+            text = self.format_value(self.mean())
         return text
 
     def __str__(self):
@@ -469,9 +469,9 @@ class Benchmark(object):
 
         text = self.format()
         if self.get_nvalue() >= 2:
-            return 'Median +- MAD: %s' % text
+            return 'Mean +- std dev: %s' % text
         else:
-            return 'Median: %s' % text
+            return text
 
     @classmethod
     def _json_load(cls, version, data, suite_metadata):

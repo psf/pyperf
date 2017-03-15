@@ -67,7 +67,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 2.7
 
-            Median +- MAD: 1.50 sec +- 0.50 sec
+            Mean +- std dev: 1.50 sec +- 0.50 sec
 
             py3
             ---
@@ -75,7 +75,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Metadata:
             - python_version: 3.4
 
-            Median +- MAD: 2.00 sec +- 0.50 sec
+            Mean +- std dev: 2.00 sec +- 0.50 sec
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
 
@@ -127,7 +127,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
-        expected = ('Median +- MAD: [ref] 1.50 sec +- 0.50 sec '
+        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
                     '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -185,7 +185,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
-        expected = ('Median +- MAD: [ref] 1.50 sec +- 0.50 sec '
+        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
                     '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -198,7 +198,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
-        expected = ('Median +- MAD: [changed] 1.50 sec +- 0.50 sec '
+        expected = ('Mean +- std dev: [changed] 1.50 sec +- 0.50 sec '
                     '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
@@ -243,7 +243,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_show(self):
         expected = ("""
-            Median +- MAD: 22.5 ms +- 0.1 ms
+            Mean +- std dev: 22.5 ms +- 0.2 ms
         """)
         self.check_command(expected, 'show', TELCO)
 
@@ -261,10 +261,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Number of warmups per run: 1
             Loop iterations per value: 8
 
-            Minimum: 22.1 ms (-2% of the median)
+            Minimum: 22.1 ms (-2% of the mean)
             Median +- MAD: 22.5 ms +- 0.1 ms
             Mean +- std dev: 22.5 ms +- 0.2 ms
-            Maximum: 22.9 ms (+2% of the median)
+            Maximum: 22.9 ms (+2% of the mean)
         """)
         self.check_command(expected, 'stats', TELCO)
 
@@ -374,7 +374,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             * the maximum (2.00 sec) is 33% greater than the mean (1.50 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
-            Run 'python -m perf system tune' command to reduce the system jitter.
+            Run '{0} -m perf system tune' command to reduce the system jitter.
             Use perf stats to analyze results, or --quiet to hide warnings.
 
             py3
@@ -386,7 +386,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             * the maximum (2.50 sec) is 25% greater than the mean (2.00 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
-            Run '{} -m perf system tune' command to reduce the system jitter.
+            Run '{0} -m perf system tune' command to reduce the system jitter.
             Use perf stats to analyze results, or --quiet to hide warnings.
         """).strip()
         expected = expected.format(os.path.basename(sys.executable))
