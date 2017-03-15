@@ -487,7 +487,7 @@ Runner
 
       The design of :meth:`bench_func` has a non negligible overhead on
       microbenchmarks: each loop iteration calls ``func(*args)`` but Python
-      function calls are expensive. The :meth:`bench_sample_func` method is
+      function calls are expensive. The :meth:`bench_time_func` method is
       recommended if ``func(*args)`` takes less than ``1`` millisecond
       (``0.001`` second).
 
@@ -498,19 +498,18 @@ Runner
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
 
-   .. method:: bench_sample_func(name, sample_func, \*args, inner_loops=None, metadata=None)
+   .. method:: bench_time_func(name, time_func, \*args, inner_loops=None, metadata=None)
 
-      Benchmark ``sample_func(loops, *args)``.
-
-      *name* is the benchmark name, it must be unique in the same script.
-
-      The function must return raw values: the total elapsed time of all
-      loops. Runner will divide raw values by ``loops x inner_loops``
-      (*loops* and *inner_loops* parameters).
+      Benchmark ``time_func(loops, *args)``. The *time_func* function must
+      return raw values: the total elapsed time of all loops. Runner will
+      divide raw values by ``loops x inner_loops`` (*loops* and *inner_loops*
+      parameters).
 
       :func:`perf_counter` should be used to measure the elapsed time.
 
-      To call ``sample_func()`` with keyword arguments, use
+      *name* is the benchmark name, it must be unique in the same script.
+
+      To call ``time_func()`` with keyword arguments, use
       ``functools.partial``.
 
       Return a :class:`Benchmark` instance.
@@ -518,9 +517,13 @@ Runner
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
 
+      .. versionchanged:: 0.9.6
+         The method was renamed from ``bench_sample_func()`` to
+         ``bench_time_func()``.
+
    .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
-      Run a benchmark on ``timeit.Timer(stmt, setup)``.
+      Run a benchmark on ``timeit.Timer(stmt, setup, globals=globals)``.
 
       *name* is the benchmark name, it must be unique in the same script.
 

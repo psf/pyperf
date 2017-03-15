@@ -6,16 +6,19 @@ Version 0.9.6
 
 Major API change, rename "sample" to "value":
 
-* ``Run.samples`` => ``Run.values``
-* ``Benchmark.get_samples()`` => ``Benchmark.get_values()``
-* ``get_nsample()`` => ``get_nvalue()``
-* ``Benchmark.format_sample()`` => ``Benchmark.format_value()``
-* ``Benchmark.format_samples()`` => ``Benchmark.format_values()``
+* Rename attributes and methods:
 
-Rename Runner command line options:
+  - ``Benchmark.bench_sample_func()`` => ``Benchmark.bench_time_func()``.
+  - ``Run.samples`` => ``Run.values``
+  - ``Benchmark.get_samples()`` => ``Benchmark.get_values()``
+  - ``get_nsample()`` => ``get_nvalue()``
+  - ``Benchmark.format_sample()`` => ``Benchmark.format_value()``
+  - ``Benchmark.format_samples()`` => ``Benchmark.format_values()``
 
-* ``--samples`` => ``--values``
-* ``--debug-single-sample`` => ``--debug-single-value``
+* Rename Runner command line options:
+
+  - ``--samples`` => ``--values``
+  - ``--debug-single-sample`` => ``--debug-single-value``
 
 Changes:
 

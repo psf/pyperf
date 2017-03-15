@@ -347,7 +347,7 @@ class Runner:
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
-    def _run_bench(self, metadata, sample_func, inner_loops, loops, nvalue,
+    def _run_bench(self, metadata, time_func, inner_loops, loops, nvalue,
                    is_warmup=False, is_calibrate=False, calibrate=False):
         unit = metadata.get('unit')
         args = self.args
@@ -369,7 +369,7 @@ class Runner:
             if index > nvalue:
                 break
 
-            raw_value = sample_func(loops)
+            raw_value = time_func(loops)
             raw_value = float(raw_value)
             value = raw_value / (loops * inner_loops)
             if is_warmup:
@@ -412,21 +412,21 @@ class Runner:
         # Run collects metadata
         return (loops, values)
 
-    def _calibrate(self, sample_func, metadata=None, inner_loops=None):
+    def _calibrate(self, time_func, metadata=None, inner_loops=None):
         if metadata is None:
             metadata = {}
-        return self._run_bench(metadata, sample_func, inner_loops,
+        return self._run_bench(metadata, time_func, inner_loops,
                                loops=1, nvalue=1,
                                calibrate=True,
                                is_calibrate=True, is_warmup=True)
 
-    def _worker_run_bench(self, metadata, sample_func, inner_loops):
+    def _worker_run_bench(self, metadata, time_func, inner_loops):
         args = self.args
         loops = args.loops
 
         calibrate = (not loops)
         if calibrate:
-            loops, calibrate_warmups = self._calibrate(sample_func, metadata,
+            loops, calibrate_warmups = self._calibrate(time_func, metadata,
                                                        inner_loops)
         else:
             if perf.python_has_jit():
@@ -435,7 +435,7 @@ class Runner:
             calibrate_warmups = None
 
         if args.warmups:
-            loops, warmups = self._run_bench(metadata, sample_func,
+            loops, warmups = self._run_bench(metadata, time_func,
                                              inner_loops=inner_loops,
                                              loops=loops, nvalue=args.warmups,
                                              is_warmup=True, calibrate=calibrate)
@@ -443,13 +443,13 @@ class Runner:
             warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
-        loops, values = self._run_bench(metadata, sample_func,
+        loops, values = self._run_bench(metadata, time_func,
                                         inner_loops=inner_loops,
                                         loops=loops, nvalue=args.values)
 
         return (loops, warmups, values)
 
-    def _worker_run_bench_mem(self, metadata, sample_func, inner_loops):
+    def _worker_run_bench_mem(self, metadata, time_func, inner_loops):
         args = self.args
 
         if args.track_memory:
@@ -464,7 +464,7 @@ class Runner:
             import tracemalloc
             tracemalloc.start()
 
-        loops, warmups, values = self._worker_run_bench(metadata, sample_func,
+        loops, warmups, values = self._worker_run_bench(metadata, time_func,
                                                         inner_loops)
 
         if args.tracemalloc:
@@ -497,7 +497,7 @@ class Runner:
 
         return (loops, warmups, values)
 
-    def _worker(self, name, sample_func, inner_loops, func_metadata):
+    def _worker(self, name, time_func, inner_loops, func_metadata):
         metadata = dict(self.metadata, name=name)
         if func_metadata:
             metadata.update(func_metadata)
@@ -506,7 +506,7 @@ class Runner:
         self._cpu_affinity()
 
         loops, warmups, values = self._worker_run_bench_mem(metadata,
-                                                            sample_func,
+                                                            time_func,
                                                             inner_loops)
 
         duration = perf.monotonic_clock() - start_time
@@ -533,7 +533,7 @@ class Runner:
 
         return True
 
-    def _main(self, name, sample_func, inner_loops, metadata):
+    def _main(self, name, time_func, inner_loops, metadata):
         name = name.strip()
         if not name:
             raise ValueError("name must be a non-empty string")
@@ -544,7 +544,7 @@ class Runner:
         args = self.parse_args()
         try:
             if args.worker:
-                bench = self._worker(name, sample_func, inner_loops, metadata)
+                bench = self._worker(name, time_func, inner_loops, metadata)
             elif args.compare_to:
                 self._compare_to()
                 bench = None
@@ -565,15 +565,7 @@ class Runner:
         args = ', '.join(map(repr, sorted(kwargs)))
         raise TypeError('unexpected keyword argument %s' % args)
 
-    def bench_sample_func(self, name, sample_func, *args, **kwargs):
-        """"Benchmark sample_func(loops, *args)
-
-        The function must return the total elapsed time, not the average time
-        per loop iteration. The total elapsed time is required to be able
-        to automatically calibrate the number of loops.
-
-        perf.perf_counter() should be used to measure the elapsed time.
-        """
+    def bench_time_func(self, name, time_func, *args, **kwargs):
         inner_loops = kwargs.pop('inner_loops', None)
         metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
@@ -582,12 +574,12 @@ class Runner:
             return None
 
         if not args:
-            return self._main(name, sample_func, inner_loops, metadata)
+            return self._main(name, time_func, inner_loops, metadata)
 
-        def wrap_sample_func(loops):
-            return sample_func(loops, *args)
+        def wrap_time_func(loops):
+            return time_func(loops, *args)
 
-        return self._main(name, wrap_sample_func, inner_loops, metadata)
+        return self._main(name, wrap_time_func, inner_loops, metadata)
 
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
@@ -599,7 +591,7 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        def sample_func(loops):
+        def time_func(loops):
             # use fast local variables
             local_timer = perf.perf_counter
             local_func = func
@@ -635,7 +627,7 @@ class Runner:
 
             return dt
 
-        return self._main(name, sample_func, inner_loops, metadata)
+        return self._main(name, time_func, inner_loops, metadata)
 
     def timeit(self, name, stmt, setup="pass", inner_loops=None,
                duplicate=None, metadata=None, globals=None):

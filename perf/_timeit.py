@@ -101,7 +101,7 @@ class Timer:
                                           self.src.split("\n"),
                                           self.filename)
 
-    def sample_func(self, loops):
+    def time_func(self, loops):
         inner = self.make_inner()
         timer = perf.perf_counter
         if not PYPY:
@@ -200,7 +200,7 @@ def bench_timeit(runner, name, stmt, setup,
     timer = None
     try:
         timer = create_timer(stmt, setup, globals)
-        runner.bench_sample_func(name, timer.sample_func, **kwargs)
+        runner.bench_time_func(name, timer.time_func, **kwargs)
     except SystemExit:
         raise
     except:

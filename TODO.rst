@@ -11,7 +11,6 @@ TODO
 ====
 
 * Update JSON example
-* Rename Runner.bench_sample_func()
 * Compute duration in the main process, not in the worker process? Or replace
   the value in the main process?
 * Implement a few system operations on macOS

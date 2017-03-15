@@ -29,8 +29,8 @@ class ExampleTests(unittest.TestCase):
         cmd = [script, '-p2', '-w0', '--min-time=0.001']
         self.check_command(cmd)
 
-    def test_bench_sample_func(self):
-        script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_sample_func.py')
+    def test_bench_time_func(self):
+        script = os.path.join(ROOT_DIR, 'doc', 'examples', 'bench_time_func.py')
         cmd = [script, '-p2', '-w1', '--min-time=0.001']
         self.check_command(cmd)
 

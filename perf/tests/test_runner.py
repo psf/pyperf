@@ -34,7 +34,7 @@ class TestRunner(unittest.TestCase):
         fake_timer.value = 0.0
 
         name = kwargs.pop('name', 'bench')
-        sample_func = kwargs.pop('sample_func', None)
+        time_func = kwargs.pop('time_func', None)
 
         runner = perf.Runner(**kwargs)
         # disable CPU affinity to not pollute stdout
@@ -44,8 +44,8 @@ class TestRunner(unittest.TestCase):
         with mock.patch('perf.perf_counter', fake_timer):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
-                    if sample_func:
-                        bench = runner.bench_sample_func(name, sample_func)
+                    if time_func:
+                        bench = runner.bench_time_func(name, time_func)
                     else:
                         bench = runner.bench_func(name, check_args, None, 1, 2)
 
@@ -54,7 +54,7 @@ class TestRunner(unittest.TestCase):
         if '--stdout' not in args:
             self.assertEqual(stderr, '')
 
-        # check bench_sample_func() bench
+        # check bench_time_func() bench
         self.assertIsInstance(bench, perf.Benchmark)
         self.assertEqual(bench.get_name(), name)
         self.assertEqual(bench.get_nrun(), 1)
@@ -118,11 +118,11 @@ class TestRunner(unittest.TestCase):
                          r'bench: Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_loops_calibration(self):
-        def sample_func(loops):
+        def time_func(loops):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
-        result = self.exec_runner('--worker', '-v', sample_func=sample_func)
+        result = self.exec_runner('--worker', '-v', time_func=time_func)
 
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 17)
@@ -151,12 +151,12 @@ class TestRunner(unittest.TestCase):
         self.assertIn(expected, result.stdout)
 
     def test_loops_calibration_min_time(self):
-        def sample_func(loops):
+        def time_func(loops):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
         result = self.exec_runner('--worker', '--min-time', '0.001',
-                                  sample_func=sample_func)
+                                  time_func=time_func)
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 10)
 
@@ -169,7 +169,7 @@ class TestRunner(unittest.TestCase):
             loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
 
-    def test_sample_func_zero(self):
+    def test_time_func_zero(self):
         if perf.python_has_jit():
             # If Python has a JIT, perf forces calibration which is already
             # tested by test_calibration_zero()
@@ -180,11 +180,11 @@ class TestRunner(unittest.TestCase):
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker', '-l1'])
 
-        def sample_func(loops):
+        def time_func(loops):
             return 0
 
         with self.assertRaises(ValueError) as cm:
-            runner.bench_sample_func('bench', sample_func)
+            runner.bench_time_func('bench', time_func)
         self.assertEqual(str(cm.exception), 'sample function returned zero')
 
     def test_calibration_zero(self):
@@ -193,11 +193,11 @@ class TestRunner(unittest.TestCase):
         runner._cpu_affinity = lambda: None
         runner.parse_args(['--worker'])
 
-        def sample_func(loops):
+        def time_func(loops):
             return 0
 
         with self.assertRaises(ValueError) as cm:
-            runner.bench_sample_func('bench', sample_func)
+            runner.bench_time_func('bench', time_func)
         self.assertIn('error in calibration, loops is too big:',
                       str(cm.exception))
 
@@ -209,21 +209,21 @@ class TestRunner(unittest.TestCase):
 
         # Simulate PyPy JIT: running the same function becomes faster
         # after 2 values while running warmup values
-        def sample_func(loops):
+        def time_func(loops):
             if loops < 16:
                 return 0
 
-            sample_func.step += 1
-            if sample_func.step == 1:
+            time_func.step += 1
+            if time_func.step == 1:
                 return 3.0
-            elif sample_func.step == 2:
+            elif time_func.step == 2:
                 return 0.5
             else:
                 return 1.0
-        sample_func.step = 0
+        time_func.step = 0
 
         with tests.capture_stdout():
-            bench = runner.bench_sample_func('bench', sample_func)
+            bench = runner.bench_time_func('bench', time_func)
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 1)
@@ -259,15 +259,15 @@ class TestRunner(unittest.TestCase):
             args.append('--worker-task=%s' % task)
         runner.parse_args(args)
 
-        def sample_func(loops):
+        def time_func(loops):
             return 1.0
 
-        def sample_func2(loops):
+        def time_func2(loops):
             return 2.0
 
         with tests.capture_stdout():
-            bench1 = runner.bench_sample_func('bench1', sample_func)
-            bench2 = runner.bench_sample_func('bench2', sample_func2)
+            bench1 = runner.bench_time_func('bench1', time_func)
+            bench2 = runner.bench_time_func('bench2', time_func2)
 
         return (bench1, bench2)
 
@@ -304,7 +304,7 @@ class TestRunner(unittest.TestCase):
                          r'^Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
     def test_compare_to(self):
-        def sample_func(loops):
+        def time_func(loops):
             return 1.0
 
         def abs_executable(python):
@@ -336,7 +336,7 @@ class TestRunner(unittest.TestCase):
                     "-p1", "-w3", "-n7", "-l11"]
             runner.parse_args(args)
             with tests.capture_stdout():
-                runner.bench_sample_func('name', sample_func)
+                runner.bench_time_func('name', time_func)
 
             def popen_call(python):
                 args = [python, mock.ANY, '--worker',
@@ -362,15 +362,15 @@ class TestRunner(unittest.TestCase):
             runner.parse_args(args)
 
     def test_duplicated_named(self):
-        def sample_func(loops):
+        def time_func(loops):
             return 1.0
 
         runner = perf.Runner()
         runner.parse_args('-l1 -w0 -n1 --worker'.split())
         with tests.capture_stdout():
-            runner.bench_sample_func('optim', sample_func)
+            runner.bench_time_func('optim', time_func)
             with self.assertRaises(ValueError) as cm:
-                runner.bench_sample_func('optim', sample_func)
+                runner.bench_time_func('optim', time_func)
 
         self.assertEqual(str(cm.exception),
                          "duplicated benchmark name: 'optim'")

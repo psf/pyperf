@@ -13,18 +13,18 @@ measure the time elasped when sleeping 1 ms:
 
 .. note::
 
-   The :meth:`Runner.bench_sample_func` method is recommended if ``func()``
+   The :meth:`Runner.bench_time_func` method is recommended if ``func()``
    takes less than 1 ms. The :meth:`Runner.bench_func` method has a non
    negligible overhead on microbenchmarks.
 
 
-bench_sample_func()
--------------------
+bench_time_func()
+-----------------
 
-Microbenchmark using the :meth:`Runner.bench_sample_func`
+Microbenchmark using the :meth:`Runner.bench_time_func`
 method to measure the performance of ``dict[key]``:
 
-.. literalinclude:: examples/bench_sample_func.py
+.. literalinclude:: examples/bench_time_func.py
 
 Pass ``--help`` to the script to see the command line options automatically
 added by ``perf``.

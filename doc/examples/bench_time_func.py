@@ -21,4 +21,4 @@ def bench_dict(loops, mydict):
 runner = perf.Runner()
 mydict = {str(k): k for k in range(1000)}
 # inner-loops: dict[str] is duplicated 10 times
-runner.bench_sample_func('dict[str]', bench_dict, mydict, inner_loops=10)
+runner.bench_time_func('dict[str]', bench_dict, mydict, inner_loops=10)
