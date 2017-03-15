@@ -451,22 +451,6 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         self.assertEqual(suite3.get_benchmark_names(),
                          ['call_simple', 'telco'])
 
-    def test_remove_outliers(self):
-        values = (100.0,) * 100 + (99.0, 101.0)
-        outliers = (90.0, 110.0)
-        bench = self.create_bench(values + outliers)
-
-        with tests.temporary_directory() as tmpdir:
-            filename = os.path.join(tmpdir, 'test.json')
-            bench.dump(filename)
-
-            stdout = self.run_command('convert', filename,
-                                      '--remove-outliers', '--stdout')
-            bench2 = perf.Benchmark.loads(stdout)
-
-        self.assertEqual(bench2.get_values(),
-                         values)
-
     def test_remove_warmups(self):
         values = [1.0, 2.0, 3.0]
         raw_values = [5.0] + values

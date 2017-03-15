@@ -14,6 +14,7 @@ Major API change, rename "sample" to "value":
 
 Changes:
 
+* ``convert``: Remove ``--remove-outliers`` option
 * Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
 * ``check`` command now tests stdev/mean, instead of testing stdev/median
 * Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``

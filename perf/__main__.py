@@ -136,8 +136,6 @@ def create_parser():
                      help='Remove the benchmark called NAMED')
     cmd.add_argument('--include-runs', help='Only keep benchmark runs RUNS')
     cmd.add_argument('--exclude-runs', help='Remove specified benchmark runs')
-    cmd.add_argument('--remove-outliers', action='store_true',
-                     help='Remove outlier runs')
     cmd.add_argument('--indent', action='store_true',
                      help='Indent JSON (rather using compact JSON)')
     cmd.add_argument('--remove-warmups', action='store_true',
@@ -676,16 +674,6 @@ def cmd_convert(args):
     if args.remove_all_metadata:
         for benchmark in suite:
             benchmark._remove_all_metadata()
-
-    if args.remove_outliers:
-        for benchmark in suite:
-            try:
-                benchmark._remove_outliers()
-            except ValueError:
-                print("ERROR: Benchmark %r has no more run after removing "
-                      "outliers" % benchmark.get_name(),
-                      file=sys.stderr)
-                sys.exit(1)
 
     compact = not(args.indent)
     if args.output_filename:

@@ -146,6 +146,8 @@ Values:
 * "std dev": `Standard deviation (standard error)
   <https://en.wikipedia.org/wiki/Standard_error>`_
 
+See also `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
+
 
 .. _check_cmd:
 
@@ -672,7 +674,6 @@ Convert or modify a benchmark suite::
         [--include-benchmark=NAME]
         [--exclude-benchmark=NAME]
         [--include-runs=RUNS]
-        [--remove-outliers]
         [--indent]
         [--remove-warmups]
         [--add=FILE]
@@ -691,9 +692,6 @@ Operations:
   list of runs separated by commas, it can include a range using format
   ``first-last`` which includes ``first`` and ``last`` values. Example:
   ``1-3,7`` (1, 2, 3, 7).
-* ``--remove-outliers`` removes "outlier runs", runs which contains at least
-  one value which is not in the range ``[median - 5%; median + 5%]``.
-  See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 * ``--remove-warmups``: remove warmup values
 * ``--add=FILE``: Add benchmark runs of benchmark *FILE*
 * ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values

@@ -12,7 +12,6 @@ TODO
 
 * Update JSON example
 * Rename --samples to --values, rename --debug-single-sample
-* Remove --remove-outliers from convert
 * Rename Runner.bench_sample_func()
 * Compute duration in the main process, not in the worker process? Or replace
   the value in the main process?
@@ -77,4 +76,3 @@ Low priority
 * fix hist if benchmark only contains one value
 * support --fast + -p1
 * perf CLI: handle FileNotFoundError for input file (need unit test)
-* convert --remove-outliers: more serious algorithm? or configurable percent?

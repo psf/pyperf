@@ -550,19 +550,6 @@ class Benchmark(object):
         new_runs = [run._remove_warmups() for run in self._runs]
         self._replace_runs(new_runs)
 
-    def _remove_outliers(self):
-        median = self.median()
-        min_value = median * 0.95
-        max_value = median * 1.05
-
-        new_runs = []
-        for run in self._runs:
-            # FIXME: only remove outliers, not whole runs
-            if all(min_value <= value <= max_value
-                   for value in run.values):
-                new_runs.append(run)
-        self._replace_runs(new_runs)
-
     def add_runs(self, benchmark):
         if not isinstance(benchmark, Benchmark):
             raise TypeError("expected Benchmark, got %s"
