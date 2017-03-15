@@ -558,7 +558,8 @@ class Runner:
         self._worker_task += 1
         return bench
 
-    def _no_keyword_argument(self, kwargs):
+    @staticmethod
+    def _no_keyword_argument(kwargs):
         if not kwargs:
             return
 
