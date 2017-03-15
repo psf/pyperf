@@ -17,7 +17,7 @@ FAST_BENCH_ARGS = ('--debug-single-sample',
                    '-s', 'import time',
                    'time.sleep(1e-6)')
 FAST_MIN_TIME = 1e-6
-# test with a least with two samples
+# test with a least with two values
 COMPARE_BENCH = ('-l1', '-p1', '-w0', '-n3',
                  '-s', 'import time',
                  'time.sleep(1e-6)')
@@ -148,10 +148,10 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(len(runs), 2)
         for run in runs:
             self.assertIsInstance(run, perf.Run)
-            raw_samples = run._get_raw_samples(warmups=True)
-            self.assertEqual(len(raw_samples), 4)
-            for raw_sample in raw_samples:
-                ms = (raw_sample / loops) * 1e3
+            raw_values = run._get_raw_values(warmups=True)
+            self.assertEqual(len(raw_values), 4)
+            for raw_value in raw_values:
+                ms = (raw_value / loops) * 1e3
                 self.assertTrue(MIN_SAMPLE <= ms <= MAX_SAMPLE, ms)
 
     def test_append(self):
@@ -161,11 +161,11 @@ class TestTimeit(unittest.TestCase):
 
             self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
-            self.assertEqual(bench.get_nsample(), 1)
+            self.assertEqual(bench.get_nvalue(), 1)
 
             self.run_timeit(args)
             bench = perf.Benchmark.load(filename)
-            self.assertEqual(bench.get_nsample(), 2)
+            self.assertEqual(bench.get_nvalue(), 2)
 
     def test_cli_snippet_error(self):
         args = PERF_TIMEIT + ('x+1',)
@@ -280,8 +280,8 @@ class TestTimeit(unittest.TestCase):
 
         metadata = bench.get_metadata()
         self.assertEqual(metadata['timeit_duplicate'], duplicate)
-        for raw_sample in bench._get_raw_samples():
-            self.assertGreaterEqual(raw_sample, sleep * duplicate)
+        for raw_value in bench._get_raw_values():
+            self.assertGreaterEqual(raw_value, sleep * duplicate)
 
 
 if __name__ == "__main__":

@@ -47,10 +47,10 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
 
     if run._is_calibration():
         lines.append("Run %s: calibrate" % (run_index,))
-        for loops, sample in run.warmups:
+        for loops, value in run.warmups:
             lines.append("- %s: %s"
                          % (format_number(loops, 'loop'),
-                            format_timedelta(sample)))
+                            format_timedelta(value)))
         return lines
 
     show_warmup = (verbose >= 0)
@@ -58,41 +58,41 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     total_loops = run.get_total_loops()
     inner_loops = run._get_inner_loops()
 
-    def format_samples(samples, percent=True):
-        samples_str = [bench.format_sample(sample) for sample in samples]
+    def format_values(values, percent=True):
+        values_str = [bench.format_value(value) for value in values]
         if not percent:
-            return samples_str
+            return values_str
 
         median = bench.median()
         max_delta = median * 0.05
-        for index, sample in enumerate(samples):
+        for index, value in enumerate(values):
             if raw:
-                sample = float(sample) / total_loops
-            delta = float(sample) - median
+                value = float(value) / total_loops
+            delta = float(value) - median
             if abs(delta) > max_delta:
-                samples_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
-        return samples_str
+                values_str[index] += ' (%+.0f%%)' % (delta * 100 / median)
+        return values_str
 
-    samples = run.samples
+    values = run.values
     if raw:
         warmups = [('%s (%s)'
-                    % (bench.format_sample(raw_sample),
+                    % (bench.format_value(raw_value),
                        format_number(loops, 'loop')))
-                   for loops, raw_sample in run.warmups]
-        samples = [sample * total_loops for sample in samples]
+                   for loops, raw_value in run.warmups]
+        values = [value * total_loops for value in values]
     else:
         warmups = run.warmups
         if warmups:
-            warmups = [raw_sample / (loops * inner_loops)
-                       for loops, raw_sample in warmups]
-            warmups = format_samples(warmups)
-    samples = format_samples(samples)
+            warmups = [raw_value / (loops * inner_loops)
+                       for loops, raw_value in warmups]
+            warmups = format_values(warmups)
+    values = format_values(values)
 
     if raw:
-        name = 'raw samples'
+        name = 'raw values'
     else:
-        name = 'samples'
-    text = '%s (%s): %s' % (name, len(samples), ', '.join(samples))
+        name = 'values'
+    text = '%s (%s): %s' % (name, len(values), ', '.join(values))
     if warmups and show_warmup:
         if raw:
             name = 'raw warmup'
@@ -152,11 +152,11 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
 
 
 def _format_stats(bench, lines):
-    fmt = bench.format_sample
-    samples = bench.get_samples()
+    fmt = bench.format_value
+    values = bench.get_values()
 
     nrun = bench.get_nrun()
-    nsample = len(samples)
+    nvalue = len(values)
     median = bench.median()
 
     empty_line(lines)
@@ -173,21 +173,21 @@ def _format_stats(bench, lines):
         lines.append("Start date: %s" % format_datetime(start, microsecond=False))
         lines.append("End date: %s" % format_datetime(end, microsecond=False))
 
-    # Raw sample minimize/maximum
-    raw_samples = bench._get_raw_samples()
-    lines.append("Raw sample minimum: %s" % bench.format_sample(min(raw_samples)))
-    lines.append("Raw sample maximum: %s" % bench.format_sample(max(raw_samples)))
+    # Raw value minimize/maximum
+    raw_values = bench._get_raw_values()
+    lines.append("Raw value minimum: %s" % bench.format_value(min(raw_values)))
+    lines.append("Raw value maximum: %s" % bench.format_value(max(raw_values)))
     lines.append('')
 
-    # Number of samples
+    # Number of values
     lines.append("Number of runs: %s" % format_number(nrun))
-    lines.append("Total number of samples: %s" % format_number(nsample))
+    lines.append("Total number of values: %s" % format_number(nvalue))
 
-    nsample_per_run = bench._get_nsample_per_run()
-    text = format_number(nsample_per_run)
-    if isinstance(nsample_per_run, float):
+    nvalue_per_run = bench._get_nvalue_per_run()
+    text = format_number(nvalue_per_run)
+    if isinstance(nvalue_per_run, float):
         text += ' (average)'
-    lines.append('Number of samples per run: %s' % text)
+    lines.append('Number of values per run: %s' % text)
 
     nwarmup = bench._get_nwarmup()
     text = format_number(nwarmup)
@@ -195,7 +195,7 @@ def _format_stats(bench, lines):
         text += ' (average)'
     lines.append('Number of warmups per run: %s' % text)
 
-    # Loop iterations per sample
+    # Loop iterations per value
     loops = bench._get_loops()
     inner_loops = bench._get_inner_loops()
     total_loops = loops * inner_loops
@@ -217,29 +217,29 @@ def _format_stats(bench, lines):
 
         text = '%s (%s x %s)' % (text, loops, inner_loops)
 
-    lines.append("Loop iterations per sample: %s" % text)
+    lines.append("Loop iterations per value: %s" % text)
     lines.append('')
 
     # Minimum
     def format_limit(median, value):
         return "%s (%+.0f%%)" % (fmt(value), (value - median) * 100.0 / median)
 
-    lines.append("Minimum: %s" % format_limit(median, min(samples)))
+    lines.append("Minimum: %s" % format_limit(median, min(values)))
 
     # Median +- MAD
     lines.append(str(bench))
 
     # Mean +- std dev
     mean = bench.mean()
-    if len(samples) > 2:
+    if len(values) > 2:
         stdev = bench.stdev()
         lines.append("Mean +- std dev: %s +- %s"
-                     % bench.format_samples((mean, stdev)))
+                     % bench.format_values((mean, stdev)))
     else:
-        lines.append("Mean: %s" % bench.format_sample(mean))
+        lines.append("Mean: %s" % bench.format_value(mean))
 
     # Maximum
-    lines.append("Maximum: %s" % format_limit(median, max(samples)))
+    lines.append("Maximum: %s" % format_limit(median, max(values)))
     return lines
 
 
@@ -257,21 +257,21 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None):
         if not extend:
             bins = min(bins, 25)
 
-    all_samples = []
+    all_values = []
     for bench, title in benchmarks:
-        all_samples.extend(bench.get_samples())
-    all_min = min(all_samples)
-    all_max = max(all_samples)
-    sample_k = float(all_max - all_min) / bins
-    if not sample_k:
-        sample_k = 1.0
+        all_values.extend(bench.get_values())
+    all_min = min(all_values)
+    all_max = max(all_values)
+    value_k = float(all_max - all_min) / bins
+    if not value_k:
+        value_k = 1.0
 
-    def sample_bucket(value):
+    def value_bucket(value):
         # round towards zero (ROUND_DOWN)
-        return int(value / sample_k)
+        return int(value / value_k)
 
-    bucket_min = sample_bucket(all_min)
-    bucket_max = sample_bucket(all_max)
+    bucket_min = value_bucket(all_min)
+    bucket_max = value_bucket(all_max)
     if lines is None:
         lines = []
 
@@ -282,19 +282,19 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None):
         if title:
             lines.append("[ %s ]" % title)
 
-        samples = bench.get_samples()
+        values = bench.get_values()
 
-        buckets = [sample_bucket(value) for value in samples]
+        buckets = [value_bucket(value) for value in values]
         counter = collections.Counter(buckets)
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
-        sample_width = max([len(bench.format_sample(bucket * sample_k))
-                            for bucket in range(bucket_min, bucket_max + 1)])
-        width = columns - sample_width
+        value_width = max([len(bench.format_value(bucket * value_k))
+                           for bucket in range(bucket_min, bucket_max + 1)])
+        width = columns - value_width
 
         line = ': %s #' % count_max
-        width = columns - (sample_width + len(line))
+        width = columns - (value_width + len(line))
         if not extend:
             width = min(width, 79)
         width = max(width, 3)
@@ -302,9 +302,9 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None):
         for bucket in range(bucket_min, bucket_max + 1):
             count = counter.get(bucket, 0)
             linelen = int(round(count * line_k))
-            text = bench.format_sample(bucket * sample_k)
+            text = bench.format_value(bucket * value_k)
             line = ('#' * linelen) or '|'
-            lines.append("{:>{}}: {:>{}} {}".format(text, sample_width,
+            lines.append("{:>{}}: {:>{}} {}".format(text, value_width,
                                                     count, count_width, line))
 
     return lines
@@ -314,10 +314,10 @@ def format_checks(bench, lines=None):
     if lines is None:
         lines = []
     warn = lines.append
-    samples = bench.get_samples()
+    values = bench.get_values()
 
     # Display a warning if the standard deviation is larger than 10%
-    if len(samples) >= 2:
+    if len(values) >= 2:
         k = bench.stdev() / bench.mean()
         if k > 0.10:
             empty_line(lines)
@@ -330,21 +330,21 @@ def format_checks(bench, lines=None):
                 warn("WARNING: the benchmark seems unstable, the standard "
                      "deviation is high (stdev/mean: %.0f%%)"
                      % (k * 100))
-            warn("Try to rerun the benchmark with more runs, samples "
+            warn("Try to rerun the benchmark with more runs, values "
                  "and/or loops")
 
-    # Check that the shortest sample took at least 1 ms
-    shortest = min(bench._get_raw_samples())
-    text = bench.format_sample(shortest)
+    # Check that the shortest value took at least 1 ms
+    shortest = min(bench._get_raw_values())
+    text = bench.format_value(shortest)
     if shortest < 1e-3:
         empty_line(lines)
 
         if shortest < 1e-6:
             warn("ERROR: the benchmark may be very unstable, "
-                 "the shortest raw sample only took %s" % text)
+                 "the shortest raw value only took %s" % text)
         else:
             warn("WARNING: the benchmark may be unstable, "
-                 "the shortest raw sample only took %s" % text)
+                 "the shortest raw value only took %s" % text)
         warn("Try to rerun the benchmark with more loops "
              "or increase --min-time")
 

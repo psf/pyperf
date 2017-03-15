@@ -38,7 +38,7 @@ class TimeitRunner(Runner):
                          help='setup statements')
         cmd.add_argument('--inner-loops',
                          type=int,
-                         help='Number of inner loops per sample. For example, '
+                         help='Number of inner loops per value. For example, '
                               'the number of times that the code is copied '
                               'manually multiple times to reduce the overhead '
                               'of the outer loop.')

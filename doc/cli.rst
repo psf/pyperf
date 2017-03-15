@@ -45,7 +45,7 @@ Show benchmarks of one or multiple benchmark suites::
   see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays benchmark metadata: see :ref:`perf metadata
   <metadata_cmd>` command
-* ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of values, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
@@ -126,14 +126,14 @@ Example::
     Total duration: 16.0 sec
     Start date: 2016-07-17 22:50:27
     End date: 2016-07-17 22:50:46
-    Raw sample minimum: 96.9 ms
-    Raw sample maximum: 100 ms
+    Raw value minimum: 96.9 ms
+    Raw value maximum: 100 ms
 
     Number of runs: 40
-    Total number of samples: 120
-    Number of samples per run: 3
+    Total number of values: 120
+    Number of values per run: 3
     Number of warmups per run: 1
-    Loop iterations per sample: 4
+    Loop iterations per value: 4
 
     Minimum: 24.2 ms (-1%)
     Median +- std dev: 24.6 ms +- 0.2 ms
@@ -174,9 +174,9 @@ Example of unstable benchmark::
 
     $ python3 -m perf check json
     ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/median: 42%)!
-    Try to rerun the benchmark with more runs, samples and/or loops
+    Try to rerun the benchmark with more runs, values and/or loops
 
-    ERROR: the benchmark may be very unstable, the shortest raw sample only took 303 ns
+    ERROR: the benchmark may be very unstable, the shortest raw value only took 303 ns
     Try to rerun the benchmark with more loops or increase --min-time
 
 
@@ -195,18 +195,18 @@ Display the benchmark run results::
 
 Options:
 
-* ``--quiet`` enables the quiet mode: hide warmup samples
+* ``--quiet`` enables the quiet mode: hide warmup values
 * ``--verbose`` enables the verbose mode: show run metadata
-* ``--raw`` displays raw samples rather than samples
+* ``--raw`` displays raw values rather than values
 
 Example::
 
     $ python3 -m perf dump telco.json
-    Run 1/50: warmup (1): 24.9 ms; samples (3): 24.6 ms, 24.6 ms, 24.6 ms
-    Run 2/50: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.8 ms, 24.6 ms
-    Run 3/50: warmup (1): 24.6 ms; samples (3): 24.6 ms, 24.5 ms, 24.3 ms
+    Run 1/50: warmup (1): 24.9 ms; values (3): 24.6 ms, 24.6 ms, 24.6 ms
+    Run 2/50: warmup (1): 25.0 ms; values (3): 24.8 ms, 24.8 ms, 24.6 ms
+    Run 3/50: warmup (1): 24.6 ms; values (3): 24.6 ms, 24.5 ms, 24.3 ms
     (...)
-    Run 50/50: warmup (1): 24.8 ms; samples (3): 24.6 ms, 24.8 ms, 24.8 ms
+    Run 50/50: warmup (1): 24.8 ms; values (3): 24.6 ms, 24.8 ms, 24.8 ms
 
 Example in verbose mode::
 
@@ -219,11 +219,11 @@ Example in verbose mode::
       name: telco
       ...
 
-    Run 1: warmup (1): 24.7 ms; samples (3): 24.5 ms, 24.5 ms, 24.5 ms
+    Run 1: warmup (1): 24.7 ms; values (3): 24.5 ms, 24.5 ms, 24.5 ms
       cpu_freq: 1=3588 MHz
       date: 2016-07-17T22:50:27
       load_avg_1min: 0.12
-    Run 2: warmup (1): 25.0 ms; samples (3): 24.8 ms, 24.6 ms, 24.8 ms
+    Run 2: warmup (1): 25.0 ms; values (3): 24.8 ms, 24.6 ms, 24.8 ms
       cpu_freq: 1=3586 MHz
       date: 2016-07-17T22:50:27
       load_avg_1min: 0.12
@@ -349,7 +349,7 @@ Options:
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
   The option can be specified multiple times.
 * ``--name=NAME``: Benchmark name (default: ``timeit``).
-* ``--inner-loops=INNER_LOOPS``: Number of inner loops per sample. For example,
+* ``--inner-loops=INNER_LOOPS``: Number of inner loops per value. For example,
   the number of times that the code is copied manually multiple times to reduce
   the overhead of the outer loop.
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
@@ -386,11 +386,11 @@ Verbose example::
     - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
     ...
 
-    Run 1: warmup (1): 135 ns (+18%); samples (3): 112 ns, 112 ns, 114 ns
-    Run 2: warmup (1): 122 ns (+7%); samples (3): 121 ns (+6%), 112 ns, 112 ns
-    Run 3: warmup (1): 112 ns; samples (3): 112 ns, 112 ns, 112 ns
+    Run 1: warmup (1): 135 ns (+18%); values (3): 112 ns, 112 ns, 114 ns
+    Run 2: warmup (1): 122 ns (+7%); values (3): 121 ns (+6%), 112 ns, 112 ns
+    Run 3: warmup (1): 112 ns; values (3): 112 ns, 112 ns, 112 ns
     ...
-    Run 40: warmup (1): 117 ns; samples (3): 114 ns, 137 ns (+20%), 123 ns (+8%)
+    Run 40: warmup (1): 117 ns; values (3): 114 ns, 137 ns (+20%), 123 ns (+8%)
 
     107 ns:  8 ###########
     111 ns: 59 ###############################################################################
@@ -415,7 +415,7 @@ Verbose example::
     196 ns:  1 #
 
     WARNING: the benchmark seems unstable, the standard deviation is high (stdev/median: 11%)
-    Try to rerun the benchmark with more runs, samples and/or loops
+    Try to rerun the benchmark with more runs, values and/or loops
 
     Median +- std dev: 114 ns +- 12 ns
 
@@ -426,7 +426,7 @@ timeit versus perf timeit
 The timeit module of the Python standard library has multiple issues:
 
 * It displays the minimum
-* It only runs the benchmark 3 times using a single process (1 run, 3 samples)
+* It only runs the benchmark 3 times using a single process (1 run, 3 values)
 * It disables the garbage collector
 
 perf timeit is more reliable and gives a result more representative of a real
@@ -434,7 +434,7 @@ use case:
 
 * It displays the average and the standard deviation
 * It runs the benchmark in multiple processes
-* By default, it skips the first sample in each process to warmup the benchmark
+* By default, it skips the first value in each process to warmup the benchmark
 * It does not disable the garbage collector
 
 If a benchmark is run using a single process, we get the performance for one
@@ -692,9 +692,9 @@ Operations:
   ``first-last`` which includes ``first`` and ``last`` values. Example:
   ``1-3,7`` (1, 2, 3, 7).
 * ``--remove-outliers`` removes "outlier runs", runs which contains at least
-  one sample which is not in the range ``[median - 5%; median + 5%]``.
+  one value which is not in the range ``[median - 5%; median + 5%]``.
   See `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
-* ``--remove-warmups``: remove warmup samples
+* ``--remove-warmups``: remove warmup values
 * ``--add=FILE``: Add benchmark runs of benchmark *FILE*
 * ``--extract-metadata=NAME``: Use metadata *NAME* as the new run values
 * ``--remove-all-metadata``: Remove all benchmarks metadata except ``name`` and

@@ -4,6 +4,16 @@ Changelog
 Version 0.9.6
 -------------
 
+Major API change, rename "sample" to "value":
+
+* ``Run.samples`` => ``Run.values``
+* ``Benchmark.get_samples()`` => ``Benchmark.get_values()``
+* ``get_nsample()`` => ``get_nvalue()``
+* ``Benchmark.format_sample()`` => ``Benchmark.format_value()``
+* ``Benchmark.format_samples()`` => ``Benchmark.format_values()``
+
+Changes:
+
 * Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
 * ``check`` command now tests stdev/mean, instead of testing stdev/median
 * Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``

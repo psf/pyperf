@@ -13,7 +13,7 @@ import statistics
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info,
                             _exclude_common_metadata)
-from perf._formatter import format_number, DEFAULT_UNIT, format_samples
+from perf._formatter import format_number, DEFAULT_UNIT, format_values
 from perf._utils import parse_iso8601, median_abs_dev
 
 
@@ -58,15 +58,15 @@ def _check_warmups(warmups):
         if len(item) != 2:
             return False
 
-        loops, sample = item
+        loops, value = item
         if not isinstance(loops, int):
             return False
         if loops < 1:
             return False
 
-        if not isinstance(sample, NUMBER_TYPES):
+        if not isinstance(value, NUMBER_TYPES):
             return False
-        if sample < 0:
+        if value < 0:
             return False
 
     return True
@@ -90,27 +90,27 @@ def _cached_attr(func):
 class Run(object):
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
-    __slots__ = ('_warmups', '_samples', '_metadata')
+    __slots__ = ('_warmups', '_values', '_metadata')
 
-    def __init__(self, samples, warmups=None,
+    def __init__(self, values, warmups=None,
                  metadata=None, collect_metadata=True):
-        if any(not(isinstance(sample, NUMBER_TYPES) and sample > 0)
-               for sample in samples):
-            raise ValueError("samples must be a sequence of number > 0.0")
+        if any(not(isinstance(value, NUMBER_TYPES) and value > 0)
+               for value in values):
+            raise ValueError("values must be a sequence of number > 0.0")
 
         if warmups is not None and not _check_warmups(warmups):
-            raise ValueError("warmups must be a sequence of (loops, sample) "
-                             "where loops is a int >= 1 and sample "
+            raise ValueError("warmups must be a sequence of (loops, value) "
+                             "where loops is a int >= 1 and value "
                              "is a float >= 0.0")
 
         if warmups:
             self._warmups = tuple(warmups)
         else:
             self._warmups = None
-        self._samples = tuple(samples)
+        self._values = tuple(values)
 
-        if not self._samples and not self._warmups:
-            raise ValueError("samples and warmups are empty sequence")
+        if not self._values and not self._warmups:
+            raise ValueError("values and warmups are empty sequence")
 
         if collect_metadata:
             from perf._collect_metadata import collect_metadata as collect_func
@@ -130,9 +130,9 @@ class Run(object):
         else:
             self._metadata = {}
 
-    def _replace(self, samples=None, warmups=True, metadata=None):
-        if samples is None:
-            samples = self._samples
+    def _replace(self, values=None, warmups=True, metadata=None):
+        if values is None:
+            values = self._values
         if warmups:
             warmups = self._warmups
         else:
@@ -140,12 +140,12 @@ class Run(object):
         if metadata is None:
             # share metadata dict since Run metadata is immutable
             metadata = self._metadata
-        run = Run(samples, warmups=warmups, collect_metadata=False)
+        run = Run(values, warmups=warmups, collect_metadata=False)
         run._metadata = metadata
         return run
 
     def _is_calibration(self):
-        return (not self.samples)
+        return (not self._values)
 
     def _has_metadata(self, name):
         return (name in self._metadata)
@@ -164,8 +164,8 @@ class Run(object):
             return ()
 
     @property
-    def samples(self):
-        return self._samples
+    def values(self):
+        return self._values
 
     def _get_loops(self):
         return self._metadata.get('loops', 1)
@@ -176,15 +176,15 @@ class Run(object):
     def get_total_loops(self):
         return self._get_loops() * self._get_inner_loops()
 
-    def _get_raw_samples(self, warmups=False):
+    def _get_raw_values(self, warmups=False):
         if warmups and self._warmups:
-            raw_samples = [raw_sample for loops, raw_sample in self._warmups]
+            raw_values = [raw_value for loops, raw_value in self._warmups]
         else:
-            raw_samples = []
+            raw_values = []
 
         total_loops = self.get_total_loops()
-        raw_samples.extend(sample * total_loops for sample in self._samples)
-        return tuple(raw_samples)
+        raw_values.extend(value * total_loops for value in self._values)
+        return tuple(raw_values)
 
     def _remove_warmups(self):
         if not self._warmups:
@@ -196,8 +196,8 @@ class Run(object):
         duration = self._metadata.get('duration', None)
         if duration is not None:
             return duration
-        raw_samples = self._get_raw_samples(warmups=True)
-        return math.fsum(raw_samples)
+        raw_values = self._get_raw_values(warmups=True)
+        return math.fsum(raw_values)
 
     def _get_date(self):
         return self._metadata.get('date', None)
@@ -206,8 +206,8 @@ class Run(object):
         data = {}
         if self._warmups:
             data['warmups'] = self._warmups
-        if self._samples:
-            data['values'] = self._samples
+        if self._values:
+            data['values'] = self._values
 
         metadata = _exclude_common_metadata(self._metadata, common_metadata)
         if metadata:
@@ -224,11 +224,11 @@ class Run(object):
         if warmups:
             warmups = [tuple(item) for item in warmups]
         if version >= 6:
-            samples = run_data.get('values', ())
+            values = run_data.get('values', ())
         else:
-            samples = run_data['samples']
+            values = run_data['samples']
 
-        return cls(samples,
+        return cls(values,
                    warmups=warmups,
                    metadata=metadata,
                    collect_metadata=False)
@@ -248,7 +248,7 @@ class Run(object):
             raise TypeError("metadata %r value is not an integer: got %s"
                             % (name, type(value).__name__))
 
-        return self._replace(samples=(value,), warmups=False, metadata=metadata)
+        return self._replace(values=(value,), warmups=False, metadata=metadata)
 
     def _remove_all_metadata(self):
         name = self._metadata.get('name', None)
@@ -318,8 +318,8 @@ class Benchmark(object):
     def _get_nwarmup(self):
         return self._get_run_property(lambda run: len(run.warmups))
 
-    def _get_nsample_per_run(self):
-        return self._get_run_property(lambda run: len(run.samples))
+    def _get_nvalue_per_run(self):
+        return self._get_run_property(lambda run: len(run.values))
 
     def _get_loops(self):
         return self._get_run_property(lambda run: run._get_loops())
@@ -331,7 +331,7 @@ class Benchmark(object):
         return self._get_run_property(lambda run: run._get_inner_loops())
 
     def _clear_runs_cache(self, keep_common_metadata=False):
-        self._samples = None
+        self._values = None
         self._mean = None
         self._stdev = None
         self._median = None
@@ -342,33 +342,33 @@ class Benchmark(object):
 
     @_cached_attr
     def mean(self):
-        value = statistics.mean(self.get_samples())
-        # add_run() ensures that all samples are greater than zero
+        value = statistics.mean(self.get_values())
+        # add_run() ensures that all values are greater than zero
         if value <= 0:
             raise ValueError("MAD must be > 0")
         return value
 
     @_cached_attr
     def stdev(self):
-        samples = self.get_samples()
-        value = statistics.stdev(samples)
-        # add_run() ensures that all samples are greater than zero
+        values = self.get_values()
+        value = statistics.stdev(values)
+        # add_run() ensures that all values are greater than zero
         if value < 0:
             raise ValueError("std dev must be >= 0")
         return value
 
     @_cached_attr
     def median(self):
-        value = statistics.median(self.get_samples())
-        # add_run() ensures that all samples are greater than zero
+        value = statistics.median(self.get_values())
+        # add_run() ensures that all values are greater than zero
         if value <= 0:
             raise ValueError("median must be > 0")
         return value
 
     @_cached_attr
     def median_abs_dev(self):
-        value = median_abs_dev(self.get_samples())
-        # add_run() ensures that all samples are greater than zero
+        value = median_abs_dev(self.get_values())
+        # add_run() ensures that all values are greater than zero
         if value < 0:
             raise ValueError("MAD must be >= 0")
         return value
@@ -402,12 +402,12 @@ class Benchmark(object):
         run = self._runs[0]
         return run._metadata.get('unit', DEFAULT_UNIT)
 
-    def format_samples(self, samples):
+    def format_values(self, values):
         unit = self.get_unit()
-        return format_samples(unit, samples)
+        return format_values(unit, values)
 
-    def format_sample(self, sample):
-        return self.format_samples((sample,))[0]
+    def format_value(self, value):
+        return self.format_values((value,))[0]
 
     def get_nrun(self):
         return len(self._runs)
@@ -415,28 +415,28 @@ class Benchmark(object):
     def get_runs(self):
         return list(self._runs)
 
-    def get_nsample(self):
-        if self._samples is not None:
-            return len(self._samples)
+    def get_nvalue(self):
+        if self._values is not None:
+            return len(self._values)
         else:
-            return sum(len(run.samples) for run in self._runs)
+            return sum(len(run.values) for run in self._runs)
 
-    def get_samples(self):
-        if self._samples is not None:
-            return self._samples
+    def get_values(self):
+        if self._values is not None:
+            return self._values
 
-        samples = []
+        values = []
         for run in self._runs:
-            samples.extend(run.samples)
-        samples = tuple(samples)
-        self._samples = samples
-        return samples
+            values.extend(run.values)
+        values = tuple(values)
+        self._values = values
+        return values
 
-    def _get_raw_samples(self, warmups=False):
-        raw_samples = []
+    def _get_raw_values(self, warmups=False):
+        raw_values = []
         for run in self._runs:
-            raw_samples.extend(run._get_raw_samples(warmups))
-        return raw_samples
+            raw_values.extend(run._get_raw_values(warmups))
+        return raw_values
 
     def _only_calibration(self):
         # If the benchmark only contains a single run which is a calibration
@@ -453,13 +453,13 @@ class Benchmark(object):
         if loops is not None:
             return '<calibration: %s>' % format_number(loops, 'loop')
 
-        if self.get_nsample() >= 2:
+        if self.get_nvalue() >= 2:
             numbers = [self.median()]
             numbers.append(self.median_abs_dev())
-            numbers = self.format_samples(numbers)
+            numbers = self.format_values(numbers)
             text = '%s +- %s' % numbers
         else:
-            text = self.format_sample(self.median())
+            text = self.format_value(self.median())
         return text
 
     def __str__(self):
@@ -468,7 +468,7 @@ class Benchmark(object):
             return 'Calibration: %s' % format_number(loops, 'loop')
 
         text = self.format()
-        if self.get_nsample() >= 2:
+        if self.get_nvalue() >= 2:
             return 'Median +- MAD: %s' % text
         else:
             return 'Median: %s' % text
@@ -552,14 +552,14 @@ class Benchmark(object):
 
     def _remove_outliers(self):
         median = self.median()
-        min_sample = median * 0.95
-        max_sample = median * 1.05
+        min_value = median * 0.95
+        max_value = median * 1.05
 
         new_runs = []
         for run in self._runs:
             # FIXME: only remove outliers, not whole runs
-            if all(min_sample <= sample <= max_sample
-                   for sample in run.samples):
+            if all(min_value <= value <= max_value
+                   for value in run.values):
                 new_runs.append(run)
         self._replace_runs(new_runs)
 

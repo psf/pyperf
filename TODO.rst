@@ -2,7 +2,7 @@ BUGS
 ====
 
 * BUG: "python perf timeit --compare-to=pypy" doesn't tune correctly the runner
-  for pypy. pypy requires more warmup samples (10) than cpython (1).
+  for pypy. pypy requires more warmup values (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
   on the speed mailing list.
 
@@ -10,6 +10,10 @@ BUGS
 TODO
 ====
 
+* Update JSON example
+* Rename --samples to --values, rename --debug-single-sample
+* Remove --remove-outliers from convert
+* Rename Runner.bench_sample_func()
 * Compute duration in the main process, not in the worker process? Or replace
   the value in the main process?
 * Implement a few system operations on macOS
@@ -59,7 +63,7 @@ TODO
   /proc/self/status? or/and read /proc/interrupts to count interruptions?
 * Pass Python arguments to subprocesses like -I, -O, etc.
 * "venv/pypy5.0-ec75e7c13ad0/bin/python -m perf timeit -w0 -l1 -n 10 pass -v --worker"
-  sometimes create a sample equals to 0
+  sometimes create a value equals to 0
 * Write unit test for compare_to --group-by-speed
 * Write unit test for tracemalloc and track memory: allocate 30 MB,
   check usage >= 30 MB
@@ -70,7 +74,7 @@ Low priority
 ============
 
 * compare: display metadata
-* fix hist if benchmark only contains one sample
+* fix hist if benchmark only contains one value
 * support --fast + -p1
 * perf CLI: handle FileNotFoundError for input file (need unit test)
 * convert --remove-outliers: more serious algorithm? or configurable percent?

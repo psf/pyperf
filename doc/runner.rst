@@ -18,27 +18,27 @@ Options::
     -w WARMUPS/--warmups=WARMUPS
     --min-time=MIN_TIME
 
-Default (no JIT, ex: CPython): 20 processes, 3 samples per process (total: 60
-samples), and 1 warmup.
+Default (no JIT, ex: CPython): 20 processes, 3 values per process (total: 60
+values), and 1 warmup.
 
-Default (with a JIT, ex: PyPy): 6 processes, 10 samples per process (total: 60
-samples), and 10 warmups.
+Default (with a JIT, ex: PyPy): 6 processes, 10 values per process (total: 60
+values), and 10 warmups.
 
 * ``--rigorous``: Spend longer running tests to get more accurate results.
   Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
-  samples per process (120 samples).
+  values per process (120 values).
 * ``--fast``: Get rough answers quickly. Divide the number of ``PROCESSES`` by
   2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 10 processes
-  and 2 samples per process (total: 20 samples).
+  and 2 values per process (total: 20 values).
 * ``PROCESSES``: number of processes used to run the benchmark
   (default: ``20``, or ``6`` with a JIT)
-* ``SAMPLES``: number of samples per process
+* ``SAMPLES``: number of values per process
   (default: ``3``, or ``10`` with a JIT)
-* ``WARMUPS``: the number of ignored samples used to warmup to benchmark
+* ``WARMUPS``: the number of ignored values used to warmup to benchmark
   (default: ``1``, or ``10`` with a JIT)
 * ``LOOPS``: number of loops per sample. ``x^y`` syntax is accepted, example:
   ``--loops=2^8`` uses ``256`` iterations. By default, the timer is calibrated
-  to get raw samples taking at least ``MIN_TIME`` seconds.
+  to get raw values taking at least ``MIN_TIME`` seconds.
 * ``MIN_TIME``: Minimum duration of a single raw sample in seconds
   (default: ``100 ms``)
 
@@ -62,7 +62,7 @@ Options::
   see :ref:`perf dump <dump_cmd>` command
 * ``--metadata`` displays metadata: see :ref:`perf show metadata
   <show_cmd_metadata>` command
-* ``--hist`` renders an histogram of samples, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of values, see :ref:`perf hist <hist_cmd>`
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
@@ -172,5 +172,5 @@ explicitly::
 * ``--worker``: a worker process, run the benchmark in the running processs
 * ``--worker-task``: Identifier of the worker task, only execute the benchmark
   function number ``TASK_ID``.
-* ``--calibrate``: only calibrate the benchmark, don't compute samples
+* ``--calibrate``: only calibrate the benchmark, don't compute values
 * ``--debug-single-sample``: Debug mode, only produce a single sample

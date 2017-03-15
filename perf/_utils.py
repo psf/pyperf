@@ -477,7 +477,7 @@ def create_pipe():
     return (rpipe, wpipe)
 
 
-def median_abs_dev(samples):
+def median_abs_dev(values):
     # Median Absolute Deviation
-    median = float(statistics.median(samples))
-    return statistics.median([abs(median - sample) for sample in samples])
+    median = float(statistics.median(values))
+    return statistics.median([abs(median - sample) for sample in values])

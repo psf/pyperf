@@ -51,15 +51,15 @@ class TestStatistics(unittest.TestCase):
     def test_is_significant_FIXME(self):
         # FIXME: _TScore() division by zero: error=0
         # n = 100
-        # samples1 = (1.0,) * n
-        # samples2 = (2.0,) * n
-        # self.assertEqual(perf.is_significant(samples1, samples2),
+        # values1 = (1.0,) * n
+        # values2 = (2.0,) * n
+        # self.assertEqual(perf.is_significant(values1, values2),
         #                  (True, -141.4213562373095))
 
         # FIXME: same error
-        # # same samples
-        # samples = (1.0,) * 50
-        # self.assertEqual(perf.is_significant(samples, samples),
+        # # same values
+        # values = (1.0,) * 50
+        # self.assertEqual(perf.is_significant(values, values),
         #                  (True, -141.4213562373095))
         pass
 

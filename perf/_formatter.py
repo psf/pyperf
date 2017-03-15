@@ -111,15 +111,15 @@ UNIT_FORMATTERS = {
 }
 
 
-def format_samples(unit, samples):
+def format_values(unit, values):
     if not unit:
         unit = DEFAULT_UNIT
     formatter = UNIT_FORMATTERS[unit]
-    return formatter(samples)
+    return formatter(values)
 
 
-def format_sample(unit, sample):
-    return format_samples(unit, (sample,))[0]
+def format_value(unit, value):
+    return format_values(unit, (value,))[0]
 
 
 def format_datetime(dt, microsecond=True):

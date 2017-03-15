@@ -38,11 +38,11 @@ The ``perf`` module uses 5 options to configure benchmarks:
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
 * "samples": Number of samples per run,  ``-n/--samples`` command line option:
   calls "samples"
-* "warmups": Number of samples per run used to warmup the benchmark,
+* "warmups": Number of values per run used to warmup the benchmark,
   ``-w/--warmups`` command line option
-* "loops": Number of outer-loop iterations per sample,  ``-l/--loops`` command
+* "loops": Number of outer-loop iterations per value,  ``-l/--loops`` command
   line option
-* "inner_loops": Number of inner-loop iterations per sample, hardcoded in
+* "inner_loops": Number of inner-loop iterations per value, hardcoded in
   benchmark.
 
 See also :ref:`Runner CLI <runner_cli>` for default values.
@@ -51,15 +51,15 @@ The number of runs should be large enough to reduce the effect of random
 factors like randomized address space layer (ASLR) and the Python randomized
 hash function.
 
-The total number of samples (runs x samples) should be large enough to get
-an uniform distribution.
+The total number of values (runs x values per run) should be large enough to
+get an uniform distribution.
 
-The "warmups" parameter should be configured by analyzing manually samples.
-Usually, skipping the first sample is enough to warmup the benchmark.
-Sometimes, more samples should be skipped to warmup the benchmark.
+The "warmups" parameter should be configured by analyzing manually values.
+Usually, skipping the first value is enough to warmup the benchmark.
+Sometimes, more values should be skipped to warmup the benchmark.
 
 By default, the number of outer-loops is automatically computed by calibrating
-the benchmark: a sample should take betwen 100 ms and 1 sec (values
+the benchmark: a value should take betwen 100 ms and 1 sec (values
 configurable using ``--min-time`` and ``--max-time`` command line options).
 
 The number of inner-loops microbenchmarks when the tested instruction is
@@ -72,9 +72,9 @@ Example of unstable benchmark because the number of loops is too low::
     $ python3 -m perf timeit --loops=10 pass
     .........................
     WARNING: the benchmark seems unstable, the standard deviation is high (11%)
-    Try to rerun the benchmark with more runs, samples and/or loops
+    Try to rerun the benchmark with more runs, values and/or loops
 
-    ERROR: the benchmark may be very unstable, the shortest sample only took 310 ns
+    ERROR: the benchmark may be very unstable, the shortest value only took 310 ns
     Try to rerun the benchmark with more loops or increase --min-time
 
     Average: 36.9 ns +- 4.2 ns
@@ -109,7 +109,7 @@ Distribution
 ============
 
 The :ref:`hist command <hist_cmd>` renders an histogram of the distribution of
-all samples.
+all values.
 
 See also:
 
@@ -268,9 +268,9 @@ information.
 
 perf does not implement a function to warmup the benchmark until results seem
 to be stable. On some benchmarks, performances are never stable: see the paper
-mentionned above. Running an arbitrary number of warmup samples may also make
+mentionned above. Running an arbitrary number of warmup values may also make
 the benchmark less reliable since two runs may use a different number of warmup
-samples.
+values.
 
 
 .. _metadata:
@@ -340,7 +340,7 @@ System metadata:
 Other:
 
 * ``perf_version``: Version of the ``perf`` module
-* ``unit``: Unit of samples: ``byte``, ``integer`` or ``second``
+* ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
 
 See the :func:`perf.metadata.collect_metadata` function.
 
@@ -353,5 +353,5 @@ duration of benchmarks. The ``perf`` module is not optimized for the total
 duration but to produce :ref:`reliable benchmarks <stable_bench>`.
 
 The ``--fast`` is designed to be fast, but remain reliable enough to be
-sensitive. Using less worker processes and less samples per worker would
+sensitive. Using less worker processes and less values per worker would
 produce unstable results.

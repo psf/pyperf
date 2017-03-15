@@ -7,16 +7,16 @@ from perf._cli import display_title
 
 
 def is_significant(bench1, bench2):
-    samples1 = bench1.get_samples()
-    samples2 = bench2.get_samples()
+    values1 = bench1.get_values()
+    values2 = bench2.get_values()
 
-    if len(samples1) == 1 and len(samples2) == 1:
-        # FIXME: is it ok to consider that comparison between two samples
+    if len(values1) == 1 and len(values2) == 1:
+        # FIXME: is it ok to consider that comparison between two values
         # is significant?
         return (True, None)
 
     try:
-        significant, t_score = perf.is_significant(samples1, samples2)
+        significant, t_score = perf.is_significant(values1, values2)
         return (significant, t_score)
     except Exception:
         # FIXME: fix the root bug, don't work around it
@@ -29,7 +29,7 @@ class CompareData:
         self.benchmark = benchmark
 
     def __repr__(self):
-        return '<CompareData name=%r sample#=%s>' % (self.name, self.benchmark.get_nsample())
+        return '<CompareData name=%r value#=%s>' % (self.name, self.benchmark.get_nvalue())
 
 
 def compute_speed(ref, changed):
@@ -107,8 +107,8 @@ class CompareResult(object):
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
-            if (self.ref.benchmark.get_nsample() > 1
-               or self.changed.benchmark.get_nsample() > 1):
+            if (self.ref.benchmark.get_nvalue() > 1
+               or self.changed.benchmark.get_nvalue() > 1):
                 text = "Median +- MAD: %s -> %s" % (ref_text, chg_text)
             else:
                 text = "Median: %s -> %s" % (ref_text, chg_text)
@@ -124,7 +124,7 @@ class CompareResult(object):
 
         # significant?
         if self.t_score is None:
-            lines.append("ERROR when testing if samples are significant")
+            lines.append("ERROR when testing if values are significant")
 
         if self.significant:
             if verbose:
@@ -221,7 +221,7 @@ def compare_suites_table(grouped_by_name, by_speed, args):
         ref = group.benchmarks[0].benchmark
         for index, item in enumerate(group.benchmarks):
             bench = item.benchmark
-            text = bench.format_sample(bench.median())
+            text = bench.format_value(bench.median())
             if index != 0:
                 speed, percent = compute_speed(ref, bench)
                 if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:

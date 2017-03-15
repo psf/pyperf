@@ -55,7 +55,7 @@ def create_parser():
     cmd.add_argument('-m', '--metadata', dest='metadata', action="store_true",
                      help="Show metadata.")
     cmd.add_argument('-g', '--hist', action="store_true",
-                     help='display an histogram of samples')
+                     help='display an histogram of values')
     cmd.add_argument('-t', '--stats', action="store_true",
                      help='display statistics (min, max, ...)')
     cmd.add_argument('-d', '--dump', action="store_true",
@@ -141,7 +141,7 @@ def create_parser():
     cmd.add_argument('--indent', action='store_true',
                      help='Indent JSON (rather using compact JSON)')
     cmd.add_argument('--remove-warmups', action='store_true',
-                     help='Remove warmup samples')
+                     help='Remove warmup values')
     cmd.add_argument('--add', metavar='FILE',
                      help='Add benchmark runs of benchmark FILE')
     cmd.add_argument('--extract-metadata', metavar='NAME',
@@ -158,7 +158,7 @@ def create_parser():
     cmd.add_argument('-v', '--verbose', action='store_true',
                      help='enable verbose mode')
     cmd.add_argument('--raw', action='store_true',
-                     help='display raw samples')
+                     help='display raw values')
     display_options(cmd)
 
     # slowest

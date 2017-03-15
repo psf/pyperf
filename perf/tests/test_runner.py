@@ -68,7 +68,7 @@ class TestRunner(unittest.TestCase):
 
     def test_debug_single_sample(self):
         result = self.exec_runner('--debug-single-sample', '--worker')
-        self.assertEqual(result.bench.get_nsample(), 1)
+        self.assertEqual(result.bench.get_nvalue(), 1)
 
     def test_pipe(self):
         rpipe, wpipe = create_pipe()
@@ -275,20 +275,20 @@ class TestRunner(unittest.TestCase):
         bench1, bench2 = self.check_two_benchmarks()
 
         self.assertEqual(bench1.get_name(), 'bench1')
-        self.assertEqual(bench1.get_samples(), (1.0, 1.0, 1.0))
+        self.assertEqual(bench1.get_values(), (1.0, 1.0, 1.0))
         self.assertEqual(bench2.get_name(), 'bench2')
-        self.assertEqual(bench2.get_samples(), (2.0, 2.0, 2.0))
+        self.assertEqual(bench2.get_values(), (2.0, 2.0, 2.0))
 
     def test_worker_task(self):
         bench1, bench2 = self.check_two_benchmarks(task=0)
         self.assertEqual(bench1.get_name(), 'bench1')
-        self.assertEqual(bench1.get_samples(), (1.0, 1.0, 1.0))
+        self.assertEqual(bench1.get_values(), (1.0, 1.0, 1.0))
         self.assertIs(bench2, None)
 
         bench1, bench2 = self.check_two_benchmarks(task=1)
         self.assertIs(bench1, None)
         self.assertEqual(bench2.get_name(), 'bench2')
-        self.assertEqual(bench2.get_samples(), (2.0, 2.0, 2.0))
+        self.assertEqual(bench2.get_values(), (2.0, 2.0, 2.0))
 
         bench1, bench2 = self.check_two_benchmarks(task=2)
         self.assertIs(bench1, None)

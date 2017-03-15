@@ -13,14 +13,14 @@ TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
 class BaseTestCase(object):
     maxDiff = 100 * 80
 
-    def create_bench(self, samples, metadata=None):
+    def create_bench(self, values, metadata=None):
         if metadata is None:
             metadata = {'name': 'bench'}
         elif 'name' not in metadata:
             metadata['name'] = 'bench'
         runs = []
-        for sample in samples:
-            run = perf.Run([sample],
+        for value in values:
+            run = perf.Run([value],
                            metadata=metadata,
                            collect_metadata=False)
             runs.append(run)
@@ -68,7 +68,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - python_version: 2.7
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
 
             Median +- MAD: 1.50 sec +- 0.50 sec
 
@@ -79,7 +79,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - python_version: 3.4
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
 
             Median +- MAD: 2.00 sec +- 0.50 sec
         """).strip()
@@ -105,7 +105,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - python_version: 2.7
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
 
             py3
             ---
@@ -114,7 +114,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - python_version: 3.4
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
 
@@ -204,9 +204,9 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                          expected)
 
     def test_compare_same(self):
-        samples = (1.0, 1.5, 2.0)
-        ref_result = self.create_bench(samples, metadata={'name': 'name'})
-        changed_result = self.create_bench(samples, metadata={'name': 'name'})
+        values = (1.0, 1.5, 2.0)
+        ref_result = self.create_bench(values, metadata={'name': 'name'})
+        changed_result = self.create_bench(values, metadata={'name': 'name'})
 
         stdout = self.compare('compare', ref_result, changed_result, '-v')
 
@@ -264,14 +264,14 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Total duration: 29.2 sec
             Start date: 2016-10-21 03:14:19
             End date: 2016-10-21 03:14:53
-            Raw sample minimum: 177 ms
-            Raw sample maximum: 183 ms
+            Raw value minimum: 177 ms
+            Raw value maximum: 183 ms
 
             Number of runs: 41
-            Total number of samples: 120
-            Number of samples per run: 3
+            Total number of values: 120
+            Number of values per run: 3
             Number of warmups per run: 1
-            Loop iterations per sample: 8
+            Loop iterations per value: 8
 
             Minimum: 22.1 ms (-2%)
             Median +- MAD: 22.5 ms +- 0.1 ms
@@ -287,8 +287,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - 2 loops: 45.0 ms
             - 4 loops: 89.9 ms
             - 8 loops: 179 ms
-            Run 2: raw warmup (1): 180 ms (8 loops); raw samples (3): 182 ms, 180 ms, 181 ms
-            Run 3: raw warmup (1): 179 ms (8 loops); raw samples (3): 178 ms, 179 ms, 179 ms
+            Run 2: raw warmup (1): 180 ms (8 loops); raw values (3): 182 ms, 180 ms, 181 ms
+            Run 3: raw warmup (1): 179 ms (8 loops); raw values (3): 178 ms, 179 ms, 179 ms
         """
         stdout = self.run_command('dump', '--raw', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
@@ -300,16 +300,16 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - 2 loops: 45.0 ms
             - 4 loops: 89.9 ms
             - 8 loops: 179 ms
-            Run 2: warmup (1): 22.5 ms; samples (3): 22.8 ms, 22.5 ms, 22.6 ms
-            Run 3: warmup (1): 22.4 ms; samples (3): 22.3 ms, 22.4 ms, 22.3 ms
+            Run 2: warmup (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
+            Run 3: warmup (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
         """
         stdout = self.run_command('dump', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_quiet(self):
         expected = """
-            Run 2: samples (3): 22.8 ms, 22.5 ms, 22.6 ms
-            Run 3: samples (3): 22.3 ms, 22.4 ms, 22.3 ms
+            Run 2: values (3): 22.8 ms, 22.5 ms, 22.6 ms
+            Run 3: values (3): 22.3 ms, 22.4 ms, 22.3 ms
         """
         stdout = self.run_command('dump', '--quiet', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
@@ -341,7 +341,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - 2 loops: 45.0 ms
             - 4 loops: 89.9 ms
             - 8 loops: 179 ms
-            Run 2: warmup (1): 22.5 ms; samples (3): 22.8 ms, 22.5 ms, 22.6 ms
+            Run 2: warmup (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
               cpu_freq: 2=3596 MHz, 3=2998 MHz
               cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
               date: 2016-10-21 03:14:20.496710
@@ -381,13 +381,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             ---
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 33%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
 
             py3
             ---
 
             ERROR: the benchmark is very unstable, the standard deviation is very high (stdev/mean: 25%)!
-            Try to rerun the benchmark with more runs, samples and/or loops
+            Try to rerun the benchmark with more runs, values and/or loops
         """).strip()
         self.assertEqual(stdout.rstrip(), expected)
 
@@ -426,10 +426,10 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         tests.compare_benchmarks(self, bench2, bench)
 
     def test_filter_benchmarks(self):
-        samples = (1.0, 1.5, 2.0)
+        values = (1.0, 1.5, 2.0)
         benchmarks = []
         for name in ("call_simple", "go", "telco"):
-            bench = self.create_bench(samples, metadata={'name': name})
+            bench = self.create_bench(values, metadata={'name': name})
             benchmarks.append(bench)
         suite = perf.BenchmarkSuite(benchmarks)
 
@@ -452,9 +452,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                          ['call_simple', 'telco'])
 
     def test_remove_outliers(self):
-        samples = (100.0,) * 100 + (99.0, 101.0)
+        values = (100.0,) * 100 + (99.0, 101.0)
         outliers = (90.0, 110.0)
-        bench = self.create_bench(samples + outliers)
+        bench = self.create_bench(values + outliers)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -464,19 +464,19 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                                       '--remove-outliers', '--stdout')
             bench2 = perf.Benchmark.loads(stdout)
 
-        self.assertEqual(bench2.get_samples(),
-                         samples)
+        self.assertEqual(bench2.get_values(),
+                         values)
 
     def test_remove_warmups(self):
-        samples = [1.0, 2.0, 3.0]
-        raw_samples = [5.0] + samples
-        run = perf.Run(samples, warmups=[(1, 5.0)],
+        values = [1.0, 2.0, 3.0]
+        raw_values = [5.0] + values
+        run = perf.Run(values, warmups=[(1, 5.0)],
                        metadata={'name': 'bench'})
         bench = perf.Benchmark([run])
 
         self.assertEqual(bench._get_nwarmup(), 1)
-        self.assertEqual(bench._get_raw_samples(warmups=True),
-                         raw_samples)
+        self.assertEqual(bench._get_raw_values(warmups=True),
+                         raw_values)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -487,14 +487,14 @@ class TestConvert(BaseTestCase, unittest.TestCase):
             bench2 = perf.Benchmark.loads(stdout)
 
         self.assertEqual(bench2._get_nwarmup(), 0)
-        self.assertEqual(bench2._get_raw_samples(warmups=True),
-                         raw_samples[1:])
+        self.assertEqual(bench2._get_raw_values(warmups=True),
+                         raw_values[1:])
 
     def test_filter_runs(self):
         runs = (1.0, 2.0, 3.0, 4.0, 5.0)
         bench = self.create_bench(runs)
 
-        self.assertEqual(bench.get_samples(), runs)
+        self.assertEqual(bench.get_values(), runs)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -512,9 +512,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                                       '--exclude-runs', '2,4', '--stdout')
             bench4 = perf.Benchmark.loads(stdout)
 
-        self.assertEqual(bench2.get_samples(), (4.0,))
-        self.assertEqual(bench3.get_samples(), (1.0, 2.0, 3.0, 5.0))
-        self.assertEqual(bench4.get_samples(), (1.0, 3.0, 5.0))
+        self.assertEqual(bench2.get_values(), (4.0,))
+        self.assertEqual(bench3.get_values(), (1.0, 2.0, 3.0, 5.0))
+        self.assertEqual(bench4.get_values(), (1.0, 3.0, 5.0))
 
 
 if __name__ == "__main__":

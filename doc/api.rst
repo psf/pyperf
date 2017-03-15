@@ -7,7 +7,7 @@ The module version can be read from ``perf.VERSION`` (tuple of int) or
 Statistics
 ----------
 
-.. function:: is_significant(samples1, samples2)
+.. function:: is_significant(sample1, sample2)
 
     Determine whether two samples differ significantly.
 
@@ -53,26 +53,29 @@ Clocks
 Run
 ---
 
-.. class:: Run(samples: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
+.. class:: Run(values: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
 
-   A benchmark run result is made of multiple samples.
+   A benchmark run result is made of multiple values.
 
-   *samples* must be a sequence of numbers (integer or float) greater
-   than zero. Usually, *samples* is a list of number of seconds. Samples must
+   *values* must be a sequence of numbers (integer or float) greater
+   than zero. Usually, *values* is a list of number of seconds. Samples must
    be normalized per loop iteration (total of outer and inner loops).
 
-   *warmups* is an optional sequence of ``(loops: int, sample: float)`` tuples
-   where *sample* must be greater than or equal to zero. Warmup samples are
-   "raw samples", they must not be normalized per loop iteration.
+   *warmups* is an optional sequence of ``(loops: int, value: float)`` tuples
+   where *value* must be greater than or equal to zero. Warmup values are
+   "raw values", they must not be normalized per loop iteration.
 
-   *samples* and/or *warmups* must be a non-empty sequence. If *samples* is
+   *values* and/or *warmups* must be a non-empty sequence. If *values* is
    empty, the run is a calibration run.
 
-   Samples must not be equal to zero. If a sample is zero, use more
-   loop iterations: see :ref:`Runs, samples, warmups, outer and inner loops
+   Samples must not be equal to zero. If a value is zero, use more
+   loop iterations: see :ref:`Runs, values, warmups, outer and inner loops
    <loops>`.
 
    Set *collect_metadata* to false to not collect system metadata.
+
+   .. versionchanged:: 0.9.6
+      The attribute ``samples`` was renamed to ``values``.
 
    Methods:
 
@@ -91,13 +94,13 @@ Run
 
    Attributes:
 
-   .. attribute:: samples
+   .. attribute:: values
 
-      Benchmark run samples (``tuple`` of numbers).
+      Benchmark run values (``tuple`` of numbers).
 
    .. attribute:: warmups
 
-      Benchmark warmup samples (``tuple`` of numbers).
+      Benchmark warmup values (``tuple`` of numbers).
 
 
 
@@ -161,17 +164,21 @@ Benchmark
       Format the result as ``... +- ...`` (median +- standard deviation) string
       (``str``).
 
-   .. method:: format_sample(sample) -> str
+   .. method:: format_value(value) -> str
 
-      Format a sample including the unit.
-
-      .. versionadded:: 0.7.8
-
-   .. method:: format_samples(samples) -> str
-
-      Format samples including the unit.
+      Format a value including the unit.
 
       .. versionadded:: 0.7.8
+      .. versionchanged:: 0.9.6
+         Method renamed from ``format_sample()`` to ``format_value()``.
+
+   .. method:: format_values(values) -> str
+
+      Format values including the unit.
+
+      .. versionadded:: 0.7.8
+      .. versionchanged:: 0.9.6
+         Method renamed from ``format_samples()`` to ``format_values()``.
 
    .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
@@ -198,13 +205,13 @@ Benchmark
 
       Get the number of runs.
 
-   .. method:: get_nsample() -> int
+   .. method:: get_nvalue() -> int
 
-      Get the total number of samples.
+      Get the total number of values.
 
    .. method:: get_nwarmup() -> int or float
 
-      Get the number of warmup samples per run.
+      Get the number of warmup values per run.
 
       Return an ``int`` if all runs use the same number of warmups, or return
       the average as a ``float``.
@@ -213,27 +220,30 @@ Benchmark
 
       Get the list of :class:`Run` objects.
 
-   .. method:: get_samples()
+   .. method:: get_values()
 
-      Get samples of all runs (values are average per loop iteration).
+      Get values of all runs (values are average per loop iteration).
+
+      .. versionchanged:: 0.9.6
+         Method renamed from ``get_samples()`` to ``get_values()``.
 
    .. method:: get_total_duration() -> float
 
       Get the total duration of the benchmark in seconds.
 
       Use the ``duration`` metadata of runs, or compute the sum of their
-      raw samples including warmup samples.
+      raw values including warmup values.
 
    .. method:: get_total_loops() -> int or float
 
-      Get the total number of loops per sample (loops x inner-loops).
+      Get the total number of loops per value (loops x inner-loops).
 
       Return an ``int`` if all runs have the same number of
       loops, return the average as a ``float`` otherwise.
 
    .. method:: get_unit() -> str
 
-      Get the unit of samples:
+      Get the unit of values:
 
       * ``'byte'``: File size in bytes
       * ``'integer'``: Integer number
@@ -259,38 +269,38 @@ Benchmark
    .. method:: mean()
 
       Get the `arithmetic mean
-      <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of :meth:`get_samples`.
+      <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of :meth:`get_values`.
 
       The mean is greater than zero: :meth:`add_run` raises an error
-      if a sample is equal to zero.
+      if a value is equal to zero.
 
-      Raise an exception if the benchmark has no samples.
+      Raise an exception if the benchmark has no values.
 
    .. method:: median()
 
       Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
-      :meth:`get_samples`.
+      :meth:`get_values`.
 
       The median is greater than zero: :meth:`add_run` raises an error
-      if a sample is equal to zero.
+      if a value is equal to zero.
 
-      Raise an exception if the benchmark has no samples.
+      Raise an exception if the benchmark has no values.
 
    .. method:: stdev()
 
       Get the `standard deviation
       <https://en.wikipedia.org/wiki/Standard_deviation>`_ of
-      :meth:`get_samples`.
+      :meth:`get_values`.
 
-      Raise an exception if the benchmark has less than 2 samples.
+      Raise an exception if the benchmark has less than 2 values.
 
    .. method:: median_abs_dev()
 
       Get the `median absolute deviation (MAD)
       <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_ of
-      :meth:`get_samples`.
+      :meth:`get_values`.
 
-      Raise an exception if the benchmark has no samples.
+      Raise an exception if the benchmark has no values.
 
    .. method:: __str__() -> str
 
@@ -494,8 +504,8 @@ Runner
 
       *name* is the benchmark name, it must be unique in the same script.
 
-      The function must return raw samples: the total elapsed time of all
-      loops. Runner will divide raw samples by ``loops x inner_loops``
+      The function must return raw values: the total elapsed time of all
+      loops. Runner will divide raw values by ``loops x inner_loops``
       (*loops* and *inner_loops* parameters).
 
       :func:`perf_counter` should be used to measure the elapsed time.
@@ -518,8 +528,8 @@ Runner
       sequence of strings.
 
       *setup* is a Python statement used to setup the benchmark: it is executed
-      before each benchmark sample. It can be a string or a sequence of
-      strings.
+      before computing each benchmark value. It can be a string or a sequence
+      of strings.
 
       Parameters:
 

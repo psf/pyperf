@@ -73,13 +73,13 @@ Use the :ref:`dump <dump_cmd>` command to see all timings::
     ...
     - 2^14 loops: 84.4 ms
     - 2^15 loops: 170 ms
-    Run 2: warmup (1): 5.42 us; samples (3): 5.16 us, 5.16 us, 6.15 us (+18%)
-    Run 3: warmup (1): 5.41 us; samples (3): 5.19 us, 5.29 us, 5.27 us
-    Run 4: warmup (1): 5.20 us; samples (3): 5.31 us, 5.27 us, 5.62 us (+8%)
+    Run 2: warmup (1): 5.42 us; values (3): 5.16 us, 5.16 us, 6.15 us (+18%)
+    Run 3: warmup (1): 5.41 us; values (3): 5.19 us, 5.29 us, 5.27 us
+    Run 4: warmup (1): 5.20 us; values (3): 5.31 us, 5.27 us, 5.62 us (+8%)
     ...
-    Run 9: warmup (1): 5.37 us; samples (3): 5.60 us (+7%), 5.52 us (+6%), 5.25 us
+    Run 9: warmup (1): 5.37 us; values (3): 5.60 us (+7%), 5.52 us (+6%), 5.25 us
     ...
-    Run 21: warmup (1): 5.48 us; samples (3): 5.21 us, 5.16 us, 5.18 us
+    Run 21: warmup (1): 5.48 us; values (3): 5.21 us, 5.16 us, 5.18 us
 
 * perf starts by spawning a first worker process (Run 1) only to calibrate the
   benchmark: compute the number of outer loops: 2^15 loops on the example.
@@ -96,35 +96,35 @@ To only see values used to compute the result, use the ``--quiet`` (``-q``)
 option::
 
     $ python3 -m perf dump bench.json -q
-    Run 2: samples (3): 5.16 us, 5.16 us, 6.15 us (+18%)
-    Run 3: samples (3): 5.19 us, 5.29 us, 5.27 us
-    Run 4: samples (3): 5.31 us, 5.27 us, 5.62 us (+8%)
+    Run 2: values (3): 5.16 us, 5.16 us, 6.15 us (+18%)
+    Run 3: values (3): 5.19 us, 5.29 us, 5.27 us
+    Run 4: values (3): 5.31 us, 5.27 us, 5.62 us (+8%)
     ...
-    Run 9: samples (3): 5.60 us (+7%), 5.52 us (+6%), 5.25 us
+    Run 9: values (3): 5.60 us (+7%), 5.52 us (+6%), 5.25 us
     ...
-    Run 21: samples (3): 5.21 us, 5.16 us, 5.18 us
+    Run 21: values (3): 5.21 us, 5.16 us, 5.18 us
 
-It's interesting to see small variations between samples: up to 18% slower. But
+It's interesting to see small variations between values: up to 18% slower. But
 the stats command is better to analyze variations.
 
 stats
 -----
 
 The :ref:`stats <stats_cmd>` command computes various kinds of statistics on
-samples::
+values::
 
     $ python3 -m perf stats bench.json
     Total duration: 14.3 sec
     Start date: 2017-03-01 17:01:35
     End date: 2017-03-01 17:01:53
-    Raw sample minimum: 168 ms
-    Raw sample maximum: 202 ms
+    Raw value minimum: 168 ms
+    Raw value maximum: 202 ms
 
     Number of runs: 21
-    Total number of samples: 60
-    Number of samples per run: 3
+    Total number of values: 60
+    Number of values per run: 3
     Number of warmups per run: 1
-    Loop iterations per sample: 2^15
+    Loop iterations per value: 2^15
 
     Minimum: 5.11 us (-2%)
     Median +- std dev: 5.22 us +- 0.22 us
