@@ -1,5 +1,6 @@
 import collections
 import os.path
+import sys
 import tempfile
 import textwrap
 
@@ -374,6 +375,17 @@ class TestRunner(unittest.TestCase):
 
         self.assertEqual(str(cm.exception),
                          "duplicated benchmark name: 'optim'")
+
+    def test_bench_command(self):
+        args = [sys.executable, '-c', 'pass']
+
+        runner = perf.Runner()
+        runner.parse_args('-l1 -w0 -n1 --worker'.split())
+        with tests.capture_stdout():
+            bench = runner.bench_command('bench', args)
+
+        self.assertEqual(bench.get_metadata()['command'],
+                         ' '.join(map(repr, args)))
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):

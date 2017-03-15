@@ -547,6 +547,23 @@ Runner
 
       .. versionadded:: 0.9.2
 
+   .. method:: bench_command(name, command)
+
+      Benchmark the execution time of a command using :func:`perf_counter`
+      timer. Measure the wall-time, not CPU time.
+
+      *command* must be a sequence of arguments, the first argument must be the
+      program.
+
+      Basically, the function measures the timing of ``Popen(command).wait()``,
+      but tries to reduce the benchmark overhead.
+
+      Standard streams (stdin, stdout and stderr) are redirected to
+      ``/dev/null`` (or ``NUL`` on Windows).
+
+      Use ``--inherit-environ`` and ``--no-locale`` :ref:`command line options
+      <runner_cli>` to control environment variables.
+
    .. method:: parse_args(args=None)
 
       Parse command line arguments using :attr:`argparser` and put the result

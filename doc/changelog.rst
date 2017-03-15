@@ -4,6 +4,12 @@ Changelog
 Version 0.9.6
 -------------
 
+Enhancements:
+
+* Add a new ``Runner.bench_command()`` method to measure the execution time of
+  a command.
+* Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
+
 Major API change, rename "sample" to "value":
 
 * Rename attributes and methods:
@@ -25,7 +31,6 @@ Changes:
 * ``convert``: Remove ``--remove-outliers`` option
 * Issue #20: Display ``Median +- MAD`` instead of ``Median +- std dev``
 * ``check`` command now tests stdev/mean, instead of testing stdev/median
-* Add ``mean()``, ``median_abs_dev()`` and ``stdev()`` methods to ``Benchmark``
 * setup.py: statistics dependency is now installed using ``extras_require`` to
   support setuptools 18 and newer
 * Add setup.cfg to enable universal builds: same wheel package for Python 2

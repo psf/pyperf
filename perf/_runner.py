@@ -18,7 +18,7 @@ from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
 from perf._formatter import format_timedelta, format_number, format_value
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
-                         get_python_names)
+                         get_python_names, popen_communicate)
 
 try:
     # Optional dependency
@@ -855,3 +855,28 @@ class Runner:
         elif not args.quiet:
             print()
         timeit_compare_benchs(name_ref, benchs[0], name_changed, benchs[1], args)
+
+    def bench_command(self, name, command):
+        def time_func(loops, run_script, command):
+            args = run_script + [str(loops)] + command
+            proc = subprocess.Popen(args,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    universal_newlines=True)
+            output = popen_communicate(proc)[0]
+            try:
+                timing = float(output.rstrip())
+            except ValueError:
+                raise ValueError("failed to parse script output: %r" % output)
+
+            return timing
+
+        command_str = ' '.join(map(repr, command))
+        metadata = {'command': command_str}
+
+        path = os.path.dirname(__file__)
+        script = os.path.join(path, '_process_time.py')
+        run_script = [sys.executable, script]
+
+        return self.bench_time_func(name, time_func, run_script, command,
+                                    metadata=metadata)
