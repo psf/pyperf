@@ -30,14 +30,13 @@ Optional dependencies:
 
 .. _loops:
 
-Runs, samples, warmups, outer and inner loops
+Runs, values, warmups, outer and inner loops
 ==============================================
 
 The ``perf`` module uses 5 options to configure benchmarks:
 
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
-* "samples": Number of samples per run,  ``-n/--samples`` command line option:
-  calls "samples"
+* "values": Number of values per run,  ``-n/--values`` command line option
 * "warmups": Number of values per run used to warmup the benchmark,
   ``-w/--warmups`` command line option
 * "loops": Number of outer-loop iterations per value,  ``-l/--loops`` command
@@ -285,7 +284,7 @@ Benchmark:
 * ``date``: date when the benchmark run started, formatted as ISO 8601
 * ``duration``: total duration of the benchmark run in seconds (``float``)
 * ``name``: name of the benchmark
-* ``loops``: number of outer-loops per sample (``int``)
+* ``loops``: number of outer-loops per value (``int``)
 * ``inner_loops``: number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
   available

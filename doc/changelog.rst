@@ -12,6 +12,11 @@ Major API change, rename "sample" to "value":
 * ``Benchmark.format_sample()`` => ``Benchmark.format_value()``
 * ``Benchmark.format_samples()`` => ``Benchmark.format_values()``
 
+Rename Runner command line options:
+
+* ``--samples`` => ``--values``
+* ``--debug-single-sample`` => ``--debug-single-value``
+
 Changes:
 
 * ``convert``: Remove ``--remove-outliers`` option

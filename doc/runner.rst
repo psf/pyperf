@@ -13,7 +13,7 @@ Options::
     --rigorous
     --fast
     -p PROCESSES/--processes=PROCESSES
-    -n SAMPLES/--samples=SAMPLES
+    -n VALUES/--values=VALUES
     -l LOOPS/--loops=LOOPS
     -w WARMUPS/--warmups=WARMUPS
     --min-time=MIN_TIME
@@ -36,13 +36,13 @@ values), and 10 warmups.
   (default: ``3``, or ``10`` with a JIT)
 * ``WARMUPS``: the number of ignored values used to warmup to benchmark
   (default: ``1``, or ``10`` with a JIT)
-* ``LOOPS``: number of loops per sample. ``x^y`` syntax is accepted, example:
+* ``LOOPS``: number of loops per value. ``x^y`` syntax is accepted, example:
   ``--loops=2^8`` uses ``256`` iterations. By default, the timer is calibrated
   to get raw values taking at least ``MIN_TIME`` seconds.
-* ``MIN_TIME``: Minimum duration of a single raw sample in seconds
+* ``MIN_TIME``: Minimum duration of a single raw value in seconds
   (default: ``100 ms``)
 
-The :ref:`Runs, samples, warmups, outer and inner loops <loops>` section
+The :ref:`Runs, values, warmups, outer and inner loops <loops>` section
 explains the purpose of these parameters and how to configure them.
 
 
@@ -167,10 +167,10 @@ explicitly::
     --worker
     --worker-task=TASK_ID
     --calibrate
-    --debug-single-sample
+    --debug-single-value
 
 * ``--worker``: a worker process, run the benchmark in the running processs
 * ``--worker-task``: Identifier of the worker task, only execute the benchmark
   function number ``TASK_ID``.
 * ``--calibrate``: only calibrate the benchmark, don't compute values
-* ``--debug-single-sample``: Debug mode, only produce a single sample
+* ``--debug-single-value``: Debug mode, only produce a single value

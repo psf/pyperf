@@ -13,7 +13,7 @@ from perf.tests import unittest
 
 PERF_TIMEIT = (sys.executable, '-m', 'perf', 'timeit')
 # We only need a statement taking longer than 0 nanosecond
-FAST_BENCH_ARGS = ('--debug-single-sample',
+FAST_BENCH_ARGS = ('--debug-single-value',
                    '-s', 'import time',
                    'time.sleep(1e-6)')
 FAST_MIN_TIME = 1e-6

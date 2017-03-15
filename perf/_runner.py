@@ -62,19 +62,19 @@ def parse_python_names(names):
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, samples=None, warmups=None, processes=None,
+    def __init__(self, values=None, warmups=None, processes=None,
                  loops=0, min_time=0.1, max_time=1.0, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
         has_jit = perf.python_has_jit()
-        if not samples:
+        if not values:
             if has_jit:
                 # Since PyPy JIT has less processes:
-                # run more samples per process
-                samples = 10
+                # run more values per process
+                values = 10
             else:
-                samples = 3
+                values = 3
         if not warmups:
             if has_jit:
                 # PyPy JIT needs a longer warmup (at least 1 second)
@@ -130,19 +130,19 @@ class Runner:
                                  'to get more accurate results')
         parser.add_argument('--fast', action="store_true",
                             help='Get rough answers quickly')
-        parser.add_argument("--debug-single-sample", action="store_true",
-                            help="Debug mode, only collect a single sample")
+        parser.add_argument("--debug-single-value", action="store_true",
+                            help="Debug mode, only compute a single value")
         parser.add_argument('-p', '--processes',
                             type=strictly_positive, default=processes,
                             help='number of processes used to run benchmarks '
                                  '(default: %s)' % processes)
-        parser.add_argument('-n', '--samples', dest="samples",
-                            type=strictly_positive, default=samples,
-                            help='number of samples per process (default: %s)'
-                                 % samples)
+        parser.add_argument('-n', '--values', dest="values",
+                            type=strictly_positive, default=values,
+                            help='number of values per process (default: %s)'
+                                 % values)
         parser.add_argument('-w', '--warmups', dest="warmups",
                             type=positive_or_nul, default=warmups,
-                            help='number of skipped samples per run used '
+                            help='number of skipped values per run used '
                                  'to warmup the benchmark (default: %s)'
                                  % warmups)
         parser.add_argument('-l', '--loops',
@@ -173,13 +173,13 @@ class Runner:
                                  'only execute the benchmark function TASK_ID')
         parser.add_argument('--calibrate', action="store_true",
                             help="only calibrate the benchmark, "
-                                 "don't compute samples")
+                                 "don't compute values")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
                             help='show metadata')
         parser.add_argument('--hist', '-g', action="store_true",
-                            help='display an histogram of samples')
+                            help='display an histogram of values')
         parser.add_argument('--stats', '-t', action="store_true",
                             help='display statistics (min, max, ...)')
         parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
@@ -233,19 +233,19 @@ class Runner:
             args.verbose = False
 
         nprocess = self.argparser.get_default('processes')
-        nsamples = self.argparser.get_default('samples')
+        nvalues = self.argparser.get_default('values')
         if args.rigorous:
             args.processes = nprocess * 2
-            # args.samples = nsamples * 5 // 3
+            # args.values = nvalues * 5 // 3
         elif args.fast:
             # use at least 3 processes to benchmark 3 different (randomized)
             # hash functions
             args.processes = max(nprocess // 2, 3)
-            args.samples = max(nsamples * 2 // 3, 2)
-        elif args.debug_single_sample:
+            args.values = max(nvalues * 2 // 3, 2)
+        elif args.debug_single_value:
             args.processes = 1
             args.warmups = 0
-            args.samples = 1
+            args.values = 1
             args.loops = 1
             args.min_time = 1e-9
 
@@ -256,9 +256,9 @@ class Runner:
                 sys.exit(1)
 
             args.loops = 0
-            # calibration samples will be stored as warmup samples
+            # calibration values will be stored as warmup values
             args.warmups = 0
-            args.samples = 0
+            args.values = 0
 
         filename = args.output
         if filename and os.path.exists(filename):
@@ -309,7 +309,7 @@ class Runner:
     def _range(self):
         for warmup in six.moves.xrange(self.args.warmups):
             yield (True, 1 + warmup)
-        for run in six.moves.xrange(self.args.samples):
+        for run in six.moves.xrange(self.args.values):
             yield (False, 1 + run)
 
     def _cpu_affinity(self):
@@ -361,7 +361,7 @@ class Runner:
         else:
             sample_name = 'Sample'
 
-        samples = []
+        values = []
         index = 1
         if not inner_loops:
             inner_loops = 1
@@ -381,9 +381,9 @@ class Runner:
                 raise ValueError("sample function returned zero")
 
             if is_warmup:
-                samples.append((loops, value))
+                values.append((loops, value))
             else:
-                samples.append(value)
+                values.append(value)
 
             if args.verbose:
                 text = format_value(unit, sample)
@@ -399,7 +399,7 @@ class Runner:
                 if loops > 2 ** 32:
                     raise ValueError("error in calibration, loops is "
                                      "too big: %s" % loops)
-                # need more samples for the calibration
+                # need more values for the calibration
                 nsample += 1
 
             index += 1
@@ -410,7 +410,7 @@ class Runner:
             print()
 
         # Run collects metadata
-        return (loops, samples)
+        return (loops, values)
 
     def _calibrate(self, sample_func, metadata=None, inner_loops=None):
         if metadata is None:
@@ -442,10 +442,10 @@ class Runner:
             warmups = []
         if calibrate_warmups:
             warmups = calibrate_warmups + warmups
-        loops, samples = self._run_bench(metadata, sample_func, inner_loops,
-                                         loops, args.samples)
+        loops, values = self._run_bench(metadata, sample_func, inner_loops,
+                                        loops, args.values)
 
-        return (loops, warmups, samples)
+        return (loops, warmups, values)
 
     def _worker_run_bench_mem(self, metadata, sample_func, inner_loops):
         args = self.args
@@ -462,8 +462,8 @@ class Runner:
             import tracemalloc
             tracemalloc.start()
 
-        loops, warmups, samples = self._worker_run_bench(metadata, sample_func,
-                                                         inner_loops)
+        loops, warmups, values = self._worker_run_bench(metadata, sample_func,
+                                                        inner_loops)
 
         if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
@@ -476,7 +476,7 @@ class Runner:
             # drop timings, replace them with the memory peak
             metadata['unit'] = 'byte'
             warmups = None
-            samples = (float(traced_peak),)
+            values = (float(traced_peak),)
 
         if args.track_memory:
             if MS_WINDOWS:
@@ -491,9 +491,9 @@ class Runner:
             # drop timings, replace them with the memory peak
             metadata['unit'] = 'byte'
             warmups = None
-            samples = (float(mem_peak),)
+            values = (float(mem_peak),)
 
-        return (loops, warmups, samples)
+        return (loops, warmups, values)
 
     def _worker(self, name, sample_func, inner_loops, func_metadata):
         metadata = dict(self.metadata, name=name)
@@ -503,9 +503,9 @@ class Runner:
 
         self._cpu_affinity()
 
-        loops, warmups, samples = self._worker_run_bench_mem(metadata,
-                                                             sample_func,
-                                                             inner_loops)
+        loops, warmups, values = self._worker_run_bench_mem(metadata,
+                                                            sample_func,
+                                                            inner_loops)
 
         duration = perf.monotonic_clock() - start_time
         metadata['duration'] = duration
@@ -513,7 +513,7 @@ class Runner:
         if inner_loops is not None:
             metadata['inner_loops'] = inner_loops
 
-        run = perf.Run(samples, warmups=warmups, metadata=metadata)
+        run = perf.Run(values, warmups=warmups, metadata=metadata)
         bench = perf.Benchmark((run,))
         self._display_result(bench, checks=False)
         return bench
@@ -656,7 +656,7 @@ class Runner:
         cmd.extend(self._program_args)
         cmd.extend(('--worker', '--pipe', str(wpipe),
                     '--worker-task=%s' % self._worker_task,
-                    '--samples', str(args.samples),
+                    '--values', str(args.values),
                     '--warmups', str(args.warmups),
                     '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))

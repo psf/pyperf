@@ -66,8 +66,8 @@ class TestRunner(unittest.TestCase):
         self.assertRegex(result.stdout,
                          r'^bench: Median \+- MAD: 1\.00 sec \+- 0\.00 sec\n$')
 
-    def test_debug_single_sample(self):
-        result = self.exec_runner('--debug-single-sample', '--worker')
+    def test_debug_single_value(self):
+        result = self.exec_runner('--debug-single-value', '--worker')
         self.assertEqual(result.bench.get_nvalue(), 1)
 
     def test_pipe(self):
@@ -208,7 +208,7 @@ class TestRunner(unittest.TestCase):
         runner.parse_args(['--worker', '-w2', '-n1', '--min-time=1.0'])
 
         # Simulate PyPy JIT: running the same function becomes faster
-        # after 2 samples while running warmup samples
+        # after 2 values while running warmup values
         def sample_func(loops):
             if loops < 16:
                 return 0
@@ -230,7 +230,7 @@ class TestRunner(unittest.TestCase):
 
         run = runs[0]
         self.assertEqual(run.warmups,
-                         # first calibration samples are zero
+                         # first calibration values are zero
                          ((1, 0.0),
                           (2, 0.0),
                           (4, 0.0),
@@ -341,7 +341,7 @@ class TestRunner(unittest.TestCase):
             def popen_call(python):
                 args = [python, mock.ANY, '--worker',
                         '--pipe', mock.ANY, '--worker-task=0',
-                        '--samples', '7', '--warmups', '3',
+                        '--values', '7', '--warmups', '3',
                         '--loops', '11', '--min-time', '5.0']
                 kw = {}
                 if MS_WINDOWS:
