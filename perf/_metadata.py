@@ -157,3 +157,10 @@ class Metadata(object):
     def __repr__(self):
         return ('<perf.Metadata name=%r value=%r>'
                 % (self._name, self._value))
+
+
+def _exclude_common_metadata(metadata, common_metadata):
+    if common_metadata:
+        metadata = {key: value for key, value in metadata.items()
+                    if key not in common_metadata}
+    return metadata

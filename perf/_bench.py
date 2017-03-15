@@ -11,13 +11,16 @@ import six
 import statistics
 
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
-                            _common_metadata, get_metadata_info)
+                            _common_metadata, get_metadata_info,
+                            _exclude_common_metadata)
 from perf._formatter import format_number, DEFAULT_UNIT, format_samples
 from perf._utils import parse_iso8601, median_abs_dev
 
 
 # JSON format history:
 #
+# 6 - (perf 0.9.6) add common_metadata to the root: metadata common to all
+#     benchmarks (common to all runs of all benchmarks)
 # 5 - (perf 0.8.3) timestamps in metadata are now formatted using a space
 #      separator
 # 4 - (perf 0.7.4) warmups are now a lists of (loops, raw_sample)
@@ -25,7 +28,7 @@ from perf._utils import parse_iso8601, median_abs_dev
 # 3 - (perf 0.7) add Run class
 # 2 - (perf 0.6) support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 5
+_JSON_VERSION = 6
 
 # Metadata checked by add_run(): all runs have must have the same
 # value for these metadata (or no run must have this metadata)
@@ -203,25 +206,16 @@ class Run(object):
         if self._warmups:
             data['warmups'] = self._warmups
 
-        if common_metadata:
-            metadata = {key: value
-                        for key, value in self._metadata.items()
-                        if key not in common_metadata}
-        else:
-            metadata = self._metadata
-
+        metadata = _exclude_common_metadata(self._metadata, common_metadata)
         if metadata:
             data['metadata'] = metadata
         return data
 
     @classmethod
-    def _json_load(cls, run_data, common_metadata):
-        metadata = run_data.get('metadata', None)
+    def _json_load(cls, version, run_data, common_metadata):
+        metadata = run_data.get('metadata', {})
         if common_metadata:
-            metadata2 = dict(common_metadata)
-            if metadata:
-                metadata2.update(metadata)
-            metadata = metadata2
+            metadata = dict(common_metadata, **metadata)
 
         warmups = run_data.get('warmups', None)
         if warmups:
@@ -474,14 +468,18 @@ class Benchmark(object):
             return 'Median: %s' % text
 
     @classmethod
-    def _json_load(cls, data):
-        common_metadata = data.get('common_metadata', None)
-        if common_metadata is not None:
-            common_metadata = parse_metadata(common_metadata)
+    def _json_load(cls, version, data, suite_metadata):
+        if version >= 6:
+            metadata = data.get('metadata', {})
+        else:
+            metadata = data.get('common_metadata', {})
+        metadata = parse_metadata(metadata)
+        if suite_metadata:
+            metadata = dict(suite_metadata, **metadata)
 
         runs = []
         for run_data in data['runs']:
-            run = Run._json_load(run_data, common_metadata)
+            run = Run._json_load(version, run_data, metadata)
             # Don't call add_run() to avoid O(n) complexity:
             # expect that runs were already validated before being written
             # into a JSON file
@@ -489,12 +487,15 @@ class Benchmark(object):
 
         return cls(runs)
 
-    def _as_json(self):
+    def _as_json(self, suite_metadata):
+        metadata = self._get_common_metadata()
+        common_metadata = dict(metadata, **suite_metadata)
+
         data = {}
-        common_metadata = self._get_common_metadata()
-        if common_metadata:
-            data['common_metadata'] = common_metadata
         data['runs'] = [run._as_json(common_metadata) for run in self._runs]
+        metadata = _exclude_common_metadata(metadata, suite_metadata)
+        if metadata:
+            data['metadata'] = metadata
         return data
 
     @staticmethod
@@ -680,15 +681,22 @@ class BenchmarkSuite(object):
         self._benchmarks.append(benchmark)
 
     @classmethod
-    def _json_load(cls, filename, bench_file):
-        version = bench_file.get('version')
-        if version not in (4, _JSON_VERSION):
+    def _json_load(cls, filename, data):
+        version = data.get('version')
+        if version not in (4, 5, _JSON_VERSION):
             raise ValueError("file format version %r not supported" % version)
-        benchmarks_json = bench_file['benchmarks']
+        benchmarks_json = data['benchmarks']
+
+        if version >= 6:
+            metadata = data.get('metadata', {})
+            if metadata is not None:
+                metadata = parse_metadata(metadata)
+        else:
+            metadata = {}
 
         benchmarks = []
         for bench_data in benchmarks_json:
-            benchmark = Benchmark._json_load(bench_data)
+            benchmark = Benchmark._json_load(version, bench_data, metadata)
             benchmarks.append(benchmark)
         suite = cls(benchmarks, filename=filename)
 
@@ -723,21 +731,21 @@ class BenchmarkSuite(object):
                 filename = file
                 fp = cls._load_open(filename)
                 with fp:
-                    bench_file = json.load(fp)
+                    data = json.load(fp)
             else:
                 filename = '<stdin>'
-                bench_file = json.load(sys.stdin)
+                data = json.load(sys.stdin)
         else:
             # file is a file object
             filename = getattr(file, 'name', None)
-            bench_file = json.load(file)
+            data = json.load(file)
 
-        return cls._json_load(filename, bench_file)
+        return cls._json_load(filename, data)
 
     @classmethod
     def loads(cls, string):
-        bench_file = json.loads(string)
-        return cls._json_load(None, bench_file)
+        data = json.loads(string)
+        return cls._json_load(None, data)
 
     @staticmethod
     def _dump_open(filename, replace):
@@ -762,9 +770,17 @@ class BenchmarkSuite(object):
             else:
                 return open(filename, "wb")
 
-    def dump(self, file, compact=True, replace=False):
-        benchmarks = [benchmark._as_json() for benchmark in self._benchmarks]
+    def _as_json(self):
+        metadata = self.get_metadata()
+        benchmarks = [benchmark._as_json(metadata)
+                      for benchmark in self._benchmarks]
         data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
+        if metadata:
+            data['metadata'] = metadata
+        return data
+
+    def dump(self, file, compact=True, replace=False):
+        data = self._as_json()
 
         def dump(data, fp, compact):
             kw = {}

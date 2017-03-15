@@ -12,6 +12,8 @@ Version 0.9.6
 * Add setup.cfg to enable universal builds: same wheel package for Python 2
   and Python 3
 * Add ``perf.VERSION`` constant: tuple of int
+* JSON version 6: write metadata common to all benchmarks (common to all runs
+  of all benchmarks) at the root
 
 Version 0.9.5 (2017-03-06)
 --------------------------

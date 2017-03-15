@@ -10,8 +10,9 @@ BUGS
 TODO
 ====
 
+* Compute duration in the main process, not in the worker process? Or replace
+  the value in the main process?
 * Implement a few system operations on macOS
-* store metadata common to all benchmarks at the root in JSON
 * --append should get the number of loops from the existing file and avoid
   calibration, at least when no JIT is used.
 * Implement a system-wide lock to prevent running two benchmarks at the same
