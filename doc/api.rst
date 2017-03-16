@@ -77,18 +77,17 @@ Run class
    A benchmark run result is made of multiple values.
 
    *values* must be a sequence of numbers (integer or float) greater
-   than zero. Usually, *values* is a list of number of seconds. Samples must
-   be normalized per loop iteration.
+   than zero. Values must be normalized per loop iteration. Usually, *values*
+   is a list of number of seconds.
 
    *warmups* is an optional sequence of ``(loops: int, value)`` tuples
    where *value* must be a number (integer or float) greater than or equal to
-   zero. Warmup values are "raw values", they must not be normalized per loop
-   iteration.
+   zero. Warmup values must be normalized per loop iteration.
 
    *values* and/or *warmups* must be a non-empty sequence. If *values* is
    empty, the run is a calibration run.
 
-   Samples must not be equal to zero. If a value is zero, use more
+   Values must not be equal to zero. If a value is zero, use more
    loop iterations: see :ref:`Runs, values, warmups, outer and inner loops
    <loops>`.
 

@@ -27,7 +27,7 @@ def create_run(values=None, warmups=None, metadata=None):
 class RunTests(unittest.TestCase):
     def test_attr(self):
         run = perf.Run((2.0, 3.0),
-                       warmups=((4, 10.0),),
+                       warmups=((4, 0.5),),
                        metadata={'loops': 2, 'inner_loops': 5},
                        collect_metadata=False)
         self.assertEqual(run._get_loops(), 2)
@@ -36,9 +36,9 @@ class RunTests(unittest.TestCase):
         self.assertEqual(run.values,
                          (2.0, 3.0))
         self.assertEqual(run._get_raw_values(),
-                         (20.0, 30.0))
+                         [20.0, 30.0])
         self.assertEqual(run._get_raw_values(warmups=True),
-                         (10.0, 20.0, 30.0))
+                         [10.0, 20.0, 30.0])
 
         run = perf.Run((2.0, 3.0), warmups=((1, 1.0),))
         self.assertEqual(run._get_loops(), 1)

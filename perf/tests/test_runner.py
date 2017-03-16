@@ -238,15 +238,15 @@ class TestRunner(unittest.TestCase):
                           (8, 0.0),
 
                           # first non-zero calibration sample
-                          (16, 3.0),
+                          (16, 3.0 / 16),
 
                           # warmup 1, JIT triggered, 3.0 => 0.5 for loops=128
-                          (16, 0.5),
+                          (16, 0.5 / 16),
                           # warmup 1, new try with loops x 2
-                          (32, 1.0),
+                          (32, 1.0 / 32),
 
                           # warmup 2
-                          (32, 1.0)))
+                          (32, 1.0 / 32)))
 
     def test_loops_power(self):
         runner = perf.Runner()

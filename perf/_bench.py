@@ -19,6 +19,8 @@ from perf._utils import parse_iso8601, median_abs_dev
 
 # JSON format history:
 #
+# 7 - (perf 0.9.7) warmup values are now per loop iteration,
+#      rather than raw values.
 # 6 - (perf 0.9.6) add common_metadata to the root: metadata common to all
 #     benchmarks (common to all runs of all benchmarks); rename 'samples'
 #     to 'values' in runs
@@ -29,7 +31,7 @@ from perf._utils import parse_iso8601, median_abs_dev
 # 3 - (perf 0.7) add Run class
 # 2 - (perf 0.6) support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 6
+_JSON_VERSION = 7
 
 # Metadata checked by add_run(): all runs have must have the same
 # value for these metadata (or no run must have this metadata)
@@ -177,14 +179,16 @@ class Run(object):
         return self._get_loops() * self._get_inner_loops()
 
     def _get_raw_values(self, warmups=False):
+        raw_values = []
+
         if warmups and self._warmups:
-            raw_values = [raw_value for loops, raw_value in self._warmups]
-        else:
-            raw_values = []
+            inner_loops = self._get_inner_loops()
+            raw_values.extend(value * (loops * inner_loops)
+                              for loops, value in self._warmups)
 
         total_loops = self.get_total_loops()
         raw_values.extend(value * total_loops for value in self._values)
-        return tuple(raw_values)
+        return raw_values
 
     def _remove_warmups(self):
         if not self._warmups:
@@ -222,7 +226,12 @@ class Run(object):
 
         warmups = run_data.get('warmups', None)
         if warmups:
-            warmups = [tuple(item) for item in warmups]
+            if version >= 7:
+                warmups = [tuple(item) for item in warmups]
+            else:
+                inner_loops = metadata.get('inner_loops', 1)
+                warmups = [(loops, raw_value / (loops * inner_loops))
+                           for loops, raw_value in warmups]
         if version >= 6:
             values = run_data.get('values', ())
         else:
@@ -675,7 +684,7 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, data):
         version = data.get('version')
-        if version not in (4, 5, _JSON_VERSION):
+        if version not in (4, 5, 6, _JSON_VERSION):
             raise ValueError("file format version %r not supported" % version)
         benchmarks_json = data['benchmarks']
 

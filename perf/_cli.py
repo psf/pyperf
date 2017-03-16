@@ -48,24 +48,29 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if lines is None:
         lines = []
 
+    inner_loops = run._get_inner_loops()
+
     if run._is_calibration():
         lines.append("Run %s: calibrate" % (run_index,))
         for loops, value in run.warmups:
-            lines.append("- %s: %s"
-                         % (format_number(loops, 'loop'),
-                            format_timedelta(value)))
+            raw_value = value * (loops * inner_loops)
+            if raw:
+                lines.append("- %s: %s"
+                             % (format_number(loops, 'loop'),
+                                format_timedelta(raw_value)))
+            else:
+                lines.append("- %s: %s (raw: %s)"
+                             % (format_number(loops, 'loop'),
+                                format_timedelta(value),
+                                format_timedelta(raw_value)))
         return lines
 
     show_warmup = (verbose >= 0)
 
     total_loops = run.get_total_loops()
-    inner_loops = run._get_inner_loops()
 
-    def format_values(values, percent=True):
+    def format_values(values):
         values_str = [bench.format_value(value) for value in values]
-        if not percent:
-            return values_str
-
         mean = bench.mean()
         max_delta = mean * 0.05
         for index, value in enumerate(values):
@@ -78,16 +83,13 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
 
     values = run.values
     if raw:
-        warmups = [('%s (%s)'
-                    % (bench.format_value(raw_value),
-                       format_number(loops, 'loop')))
-                   for loops, raw_value in run.warmups]
+        warmups = [bench.format_value(value * (loops * inner_loops))
+                   for loops, value in run.warmups]
         values = [value * total_loops for value in values]
     else:
         warmups = run.warmups
         if warmups:
-            warmups = [raw_value / (loops * inner_loops)
-                       for loops, raw_value in warmups]
+            warmups = [value for loops, value in warmups]
             warmups = format_values(warmups)
     values = format_values(values)
 
@@ -98,9 +100,9 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     text = '%s (%s): %s' % (name, len(values), ', '.join(values))
     if warmups and show_warmup:
         if raw:
-            name = 'raw warmup'
+            name = 'raw warmups'
         else:
-            name = 'warmup'
+            name = 'warmups'
         text = ('%s (%s): %s; %s'
                 % (name, len(warmups), ', '.join(warmups), text))
 

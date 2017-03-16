@@ -379,18 +379,14 @@ class Runner:
             raw_value = time_func(loops)
             raw_value = float(raw_value)
             value = raw_value / (loops * inner_loops)
-            if is_warmup:
-                run_value = raw_value
-            else:
-                run_value = value
 
-            if not run_value and not(is_calibrate or is_warmup):
+            if not value and not(is_calibrate or is_warmup):
                 raise ValueError("sample function returned zero")
 
             if is_warmup:
-                values.append((loops, run_value))
+                values.append((loops, value))
             else:
-                values.append(run_value)
+                values.append(value)
 
             if args.verbose:
                 text = format_value(unit, value)

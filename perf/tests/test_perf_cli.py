@@ -283,8 +283,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - 2 loops: 45.0 ms
             - 4 loops: 89.9 ms
             - 8 loops: 179 ms
-            Run 2: raw warmup (1): 180 ms (8 loops); raw values (3): 182 ms, 180 ms, 181 ms
-            Run 3: raw warmup (1): 179 ms (8 loops); raw values (3): 178 ms, 179 ms, 179 ms
+            Run 2: raw warmups (1): 180 ms; raw values (3): 182 ms, 180 ms, 181 ms
+            Run 3: raw warmups (1): 179 ms; raw values (3): 178 ms, 179 ms, 179 ms
         """
         stdout = self.run_command('dump', '--raw', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
@@ -292,12 +292,12 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_dump(self):
         expected = """
             Run 1: calibrate
-            - 1 loop: 23.1 ms
-            - 2 loops: 45.0 ms
-            - 4 loops: 89.9 ms
-            - 8 loops: 179 ms
-            Run 2: warmup (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
-            Run 3: warmup (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
+            - 1 loop: 23.1 ms (raw: 23.1 ms)
+            - 2 loops: 22.5 ms (raw: 45.0 ms)
+            - 4 loops: 22.5 ms (raw: 89.9 ms)
+            - 8 loops: 22.4 ms (raw: 179 ms)
+            Run 2: warmups (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
+            Run 3: warmups (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
         """
         stdout = self.run_command('dump', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
@@ -312,32 +312,12 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump_verbose(self):
         expected = """
-            Metadata:
-              aslr: Full randomization
-              boot_time: 2016-10-19 01:10:08
-              cpu_affinity: 2-3
-              cpu_config: 2-3=driver:intel_pstate, intel_pstate:turbo, governor:performance, isolated; idle:intel_idle
-              cpu_count: 4
-              cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-              description: Telco decimal benchmark
-              hostname: selma
-              loops: 8
-              name: telco
-              perf_version: 0.8.2
-              performance_version: 0.3.3
-              platform: Linux-4.7.4-200.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
-              python_cflags: -Wno-unused-result -Wsign-compare -Wunreachable-code -DDYNAMIC_ANNOTATIONS_ENABLED=1 -DNDEBUG -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv
-              python_executable: /home/haypo/prog/python/performance/venv/cpython3.5-68b776ee7e79/bin/python
-              python_implementation: cpython
-              python_version: 3.5.1 (64-bit)
-              timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
-
             Run 1: calibrate
-            - 1 loop: 23.1 ms
-            - 2 loops: 45.0 ms
-            - 4 loops: 89.9 ms
-            - 8 loops: 179 ms
-            Run 2: warmup (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
+            - 1 loop: 23.1 ms (raw: 23.1 ms)
+            - 2 loops: 22.5 ms (raw: 45.0 ms)
+            - 4 loops: 22.5 ms (raw: 89.9 ms)
+            - 8 loops: 22.4 ms (raw: 179 ms)
+            Run 2: warmups (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
               cpu_freq: 2=3596 MHz, 3=2998 MHz
               cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
               date: 2016-10-21 03:14:20.496710
@@ -346,6 +326,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               mem_max_rss: 13.5 MB
               runnable_threads: 1
               uptime: 2 day 2 hour 4 min
+            Run 3: warmups (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
         """
         stdout = self.run_command('dump', '--verbose', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)

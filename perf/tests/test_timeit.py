@@ -25,10 +25,10 @@ COMPARE_BENCH = ('-l1', '-p1', '-w0', '-n3',
 SLEEP = 'time.sleep(1e-3)'
 # The perfect timing is 1 ms +- 0 ms, but tolerate large differences on busy
 # systems. The unit test doesn't test the system but more the output format.
-MIN_SAMPLE = 0.9  # ms
-MAX_SAMPLE = 50.0  # ms
-MIN_MEAN = MIN_SAMPLE
-MAX_MEAN = MAX_SAMPLE / 2
+MIN_VALUE = 0.9  # ms
+MAX_VALUE = 50.0  # ms
+MIN_MEAN = MIN_VALUE
+MAX_MEAN = MAX_VALUE / 2
 MAX_STD_DEV = 10.0  # ms
 
 
@@ -64,7 +64,7 @@ class TestTimeit(unittest.TestCase):
 
         values = [float(match.group(i)) for i in range(1, 4)]
         for value in values:
-            self.assertTrue(MIN_SAMPLE <= value <= MAX_SAMPLE,
+            self.assertTrue(MIN_VALUE <= value <= MAX_VALUE,
                             repr(value))
 
         mean = float(match.group('mean'))
@@ -152,7 +152,7 @@ class TestTimeit(unittest.TestCase):
             self.assertEqual(len(raw_values), 4)
             for raw_value in raw_values:
                 ms = (raw_value / loops) * 1e3
-                self.assertTrue(MIN_SAMPLE <= ms <= MAX_SAMPLE, ms)
+                self.assertTrue(MIN_VALUE <= ms <= MAX_VALUE, ms)
 
     def test_append(self):
         with tests.temporary_directory() as tmpdir:
