@@ -1,8 +1,16 @@
-+++++++++++
-Python perf
-+++++++++++
+++++++++++++++++++
+Python perf module
+++++++++++++++++++
 
 The Python ``perf`` module is a toolkit to write, run and analyze benchmarks.
+
+Documenation:
+
+.. toctree::
+   :maxdepth: 2
+
+   user_guide
+   developer_guide
 
 Features of the ``perf`` module:
 
@@ -40,15 +48,7 @@ Quick Links:
 * `Download latest perf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/perf>`_
 
-Table Of Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   user_guide
-   developer_guide
-
-See also:
+Other Python benchmark projects:
 
 * `performance <https://pypi.python.org/pypi/performance>`_: the Python
   benchmark suite which uses ``perf``

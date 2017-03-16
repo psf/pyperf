@@ -8,8 +8,8 @@ The module version can be read from ``perf.VERSION`` (tuple of int) or
 
 See :ref:`API examples <examples>`.
 
-Statistics
-----------
+Statistics functions
+--------------------
 
 .. function:: is_significant(sample1, sample2)
 
@@ -23,8 +23,8 @@ Statistics
     score from the two-sample T test.
 
 
-Clocks
-------
+Clock functions
+---------------
 
 .. function:: perf_counter()
 
@@ -54,8 +54,8 @@ Clocks
    functions <https://www.python.org/dev/peps/pep-0418/>`_.
 
 
-Run
----
+Run class
+---------
 
 .. class:: Run(values: Sequence[float], warmups: Sequence[float]=None, metadata: dict=None, collect_metadata=True)
 
@@ -108,8 +108,8 @@ Run
 
 
 
-Benchmark
----------
+Benchmark class
+---------------
 
 .. class:: Benchmark(runs)
 
@@ -333,8 +333,8 @@ Benchmark
       .. versionadded:: 0.7.5
 
 
-BenchmarkSuite
---------------
+BenchmarkSuite class
+--------------------
 
 .. class:: BenchmarkSuite(benchmarks, filename=None)
 
@@ -455,8 +455,8 @@ BenchmarkSuite
       It can be ``None``.
 
 
-Runner
-------
+Runner class
+------------
 
 .. class:: Runner(values=3, warmups=1, processes=20, loops=0, min_time=0.1, max_time=1.0, metadata=None, show_name=True, program_args=None, add_cmdline_args=None)
 
