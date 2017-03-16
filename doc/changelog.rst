@@ -10,6 +10,7 @@ Version 0.9.7
 * Remove ``format()`` and ``__str__()`` methods from Benchmark. These methods
   were too opiniated.
 * Rename ``--name=NAME`` option to ``--benchmark=NAME``
+* Remove ``perf.monotonic_clock()`` since it wasn't monotonic on Python 2.7.
 
 Version 0.9.6 (2017-03-15)
 --------------------------

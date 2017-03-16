@@ -23,8 +23,24 @@ Statistics functions
     score from the two-sample T test.
 
 
-Clock functions
----------------
+Functions
+---------
+
+.. function:: add_runs(filename: str, result)
+
+   Append a :class:`Benchmark` or :class:`BenchmarkSuite` to an existing
+   benchmark suite file, or create a new file.
+
+   If the file already exists, adds runs to existing benchmarks.
+
+   See :meth:`BenchmarkSuite.add_runs` method.
+
+
+.. function:: format_metadata(name: str, value)
+
+   Format a metadata value. The formatter depends on *name*.
+
+   See :ref:`Metadata <metadata>`.
 
 .. function:: perf_counter()
 
@@ -38,20 +54,34 @@ Clock functions
    it's :func:`time.clock` on Windows and :func:`time.time` on other
    platforms. See the PEP 418 for more information on Python clocks.
 
-.. function:: monotonic_clock()
+   See also `PEP 418 -- Add monotonic time, performance counter, and process
+   time functions <https://www.python.org/dev/peps/pep-0418/>`_.
 
-   Return the value (in fractional seconds) of a monotonic clock, i.e. a clock
-   that cannot go backwards.  The clock is not affected by system clock updates.
-   The reference point of the returned value is undefined, so that only the
-   difference between the results of consecutive calls is valid.
 
-   On Python 3.3 and newer, it's :func:`time.monotonic`. On older versions,
-   it's :func:`time.time` and so is not monotonic. See the PEP 418 for more
-   information on Python clocks.
+.. function:: python_implementation()
 
-.. seealso::
-   `PEP 418 -- Add monotonic time, performance counter, and process time
-   functions <https://www.python.org/dev/peps/pep-0418/>`_.
+   Name of the Python implementation in lower case.
+
+   Examples:
+
+   * ``cpython``
+   * ``ironpython``
+   * ``jython``
+   * ``pypy``
+
+   Use ``sys.implementation.name`` or ``platform.python_implementation()``.
+
+   See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
+
+   .. versionadded:: 0.7.4
+
+.. function:: python_has_jit()
+
+   Return ``True`` if Python has a Just In Time compiler (JIT).
+
+   For example, return ``True`` for PyPy but ``False`` for CPython.
+
+   .. versionadded:: 0.7.4
 
 
 Run class
@@ -613,52 +643,6 @@ Runner class
    .. attribute:: metadata
 
       Benchmark metadata (``dict``).
-
-
-Functions
----------
-
-.. function:: add_runs(filename: str, result)
-
-   Append a :class:`Benchmark` or :class:`BenchmarkSuite` to an existing
-   benchmark suite file, or create a new file.
-
-   If the file already exists, adds runs to existing benchmarks.
-
-   See :meth:`BenchmarkSuite.add_runs` method.
-
-
-.. function:: format_metadata(name: str, value)
-
-   Format a metadata value. The formatter depends on *name*.
-
-   See :ref:`Metadata <metadata>`.
-
-
-.. function:: python_implementation()
-
-   Name of the Python implementation in lower case.
-
-   Examples:
-
-   * ``cpython``
-   * ``ironpython``
-   * ``jython``
-   * ``pypy``
-
-   Use ``sys.implementation.name`` or ``platform.python_implementation()``.
-
-   See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
-
-   .. versionadded:: 0.7.4
-
-.. function:: python_has_jit()
-
-   Return ``True`` if Python has a Just In Time compiler (JIT).
-
-   For example, return ``True`` for PyPy but ``False`` for CPython.
-
-   .. versionadded:: 0.7.4
 
 
 .. _metadata:

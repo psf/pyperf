@@ -26,6 +26,13 @@ try:
 except ImportError:
     psutil = None
 
+try:
+    # Python 3.3 provides a real monotonic clock (PEP 418)
+    from time import monotonic as monotonic_clock
+except ImportError:
+    # time.time() can go backward on Python 2, but it's fine for Runner
+    from time import time as monotonic_clock
+
 
 def strictly_positive(value):
     value = int(value)
@@ -501,7 +508,7 @@ class Runner:
         metadata = dict(self.metadata, name=name)
         if func_metadata:
             metadata.update(func_metadata)
-        start_time = perf.monotonic_clock()
+        start_time = monotonic_clock()
 
         self._cpu_affinity()
 
@@ -509,7 +516,7 @@ class Runner:
                                                             time_func,
                                                             inner_loops)
 
-        duration = perf.monotonic_clock() - start_time
+        duration = monotonic_clock() - start_time
         metadata['duration'] = duration
         metadata['loops'] = loops
         if inner_loops is not None:

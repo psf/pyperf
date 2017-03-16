@@ -17,11 +17,6 @@ class TestClocks(unittest.TestCase):
         t2 = perf.perf_counter()
         self.assertGreaterEqual(t2, t1)
 
-    def test_monotonic_clock(self):
-        t1 = perf.monotonic_clock()
-        t2 = perf.monotonic_clock()
-        self.assertGreaterEqual(t2, t1)
-
 
 class TestStatistics(unittest.TestCase):
     def test_is_significant(self):

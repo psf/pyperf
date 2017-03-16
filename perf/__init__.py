@@ -6,19 +6,18 @@ __version__ = '.'.join(map(str, VERSION))
 # Clocks
 try:
     # Python 3.3+ (PEP 418)
-    from time import monotonic as monotonic_clock, perf_counter
+    from time import perf_counter
 except ImportError:
     import sys
     import time
 
-    monotonic_clock = time.time
     if sys.platform == "win32":
         perf_counter = time.clock
     else:
         perf_counter = time.time
 
     del sys, time
-__all__ = ['monotonic_clock', 'perf_counter']
+__all__ = ['perf_counter']
 
 
 from perf._utils import is_significant, python_implementation, python_has_jit  # noqa
