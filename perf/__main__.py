@@ -715,23 +715,24 @@ def main():
     parser, timeit_runner = create_parser()
     args = parser.parse_args()
     action = args.action
-    try:
-        dispatch = {
-            'show': functools.partial(cmd_show, args),
-            'compare': functools.partial(cmd_compare, args),
-            'compare_to': functools.partial(cmd_compare, args),
-            'hist': functools.partial(cmd_hist, args),
-            'stats': functools.partial(cmd_stats, args),
-            'metadata': functools.partial(cmd_metadata, args),
-            'check': functools.partial(cmd_check, args),
-            'collect_metadata': functools.partial(cmd_collect_metadata, args),
-            'timeit': functools.partial(cmd_timeit, args, timeit_runner),
-            'convert': functools.partial(cmd_convert, args),
-            'dump': functools.partial(cmd_dump, args),
-            'slowest': functools.partial(cmd_slowest, args),
-            'system': functools.partial(cmd_system, args),
-        }
 
+    dispatch = {
+        'show': functools.partial(cmd_show, args),
+        'compare': functools.partial(cmd_compare, args),
+        'compare_to': functools.partial(cmd_compare, args),
+        'hist': functools.partial(cmd_hist, args),
+        'stats': functools.partial(cmd_stats, args),
+        'metadata': functools.partial(cmd_metadata, args),
+        'check': functools.partial(cmd_check, args),
+        'collect_metadata': functools.partial(cmd_collect_metadata, args),
+        'timeit': functools.partial(cmd_timeit, args, timeit_runner),
+        'convert': functools.partial(cmd_convert, args),
+        'dump': functools.partial(cmd_dump, args),
+        'slowest': functools.partial(cmd_slowest, args),
+        'system': functools.partial(cmd_system, args),
+    }
+
+    try:
         try:
             func = dispatch[action]
         except KeyError:
@@ -739,6 +740,12 @@ def main():
             sys.exit(1)
         else:
             func()
+
+        # Flush standard streams to be able to catch a broken pipe error
+        # if the a stream was closed by the consumer (when redirected
+        # into a pipe)
+        sys.stdout.flush()
+        sys.stderr.flush()
     except IOError as exc:
         if exc.errno != errno.EPIPE:
             raise
