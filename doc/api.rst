@@ -221,7 +221,7 @@ Benchmark class
 
    .. method:: get_values()
 
-      Get values of all runs (values are average per loop iteration).
+      Get values of all runs.
 
       .. versionchanged:: 0.9.6
          Method renamed from ``get_samples()`` to ``get_values()``.
@@ -267,7 +267,7 @@ Benchmark class
 
    .. method:: mean()
 
-      Get the `arithmetic mean
+      Compute the `arithmetic mean
       <https://en.wikipedia.org/wiki/Arithmetic_mean>`_ of :meth:`get_values`.
 
       The mean is greater than zero: :meth:`add_run` raises an error
@@ -277,7 +277,7 @@ Benchmark class
 
    .. method:: median()
 
-      Get the `median <https://en.wikipedia.org/wiki/Median>`_ of
+      Compute the `median <https://en.wikipedia.org/wiki/Median>`_ of
       :meth:`get_values`.
 
       The median is greater than zero: :meth:`add_run` raises an error
@@ -287,7 +287,8 @@ Benchmark class
 
    .. method:: percentile(p)
 
-      Compute the p-th percentile of :meth:`get_values`.
+      Compute the p-th `percentile <https://en.wikipedia.org/wiki/Percentile>`_
+      of :meth:`get_values`.
 
       p must be in the range [0; 100]:
 
@@ -297,7 +298,7 @@ Benchmark class
 
    .. method:: stdev()
 
-      Get the `standard deviation
+      Compute the `standard deviation
       <https://en.wikipedia.org/wiki/Standard_deviation>`_ of
       :meth:`get_values`.
 
@@ -305,7 +306,7 @@ Benchmark class
 
    .. method:: median_abs_dev()
 
-      Get the `median absolute deviation (MAD)
+      Compute the `median absolute deviation (MAD)
       <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_ of
       :meth:`get_values`.
 
@@ -640,7 +641,7 @@ Functions
    * ``jython``
    * ``pypy``
 
-   Use ``sys.implementation.name`` and ``platform.python_implementation()``.
+   Use ``sys.implementation.name`` or ``platform.python_implementation()``.
 
    See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
 
@@ -653,6 +654,76 @@ Functions
    For example, return ``True`` for PyPy but ``False`` for CPython.
 
    .. versionadded:: 0.7.4
+
+
+.. _metadata:
+
+Metadata
+========
+
+The :class:`Run` class collects metadata by default.
+
+Benchmark:
+
+* ``date``: date when the benchmark run started, formatted as ISO 8601
+* ``duration``: total duration of the benchmark run in seconds (``float``)
+* ``name``: name of the benchmark
+* ``loops``: number of outer-loops per value (``int``)
+* ``inner_loops``: number of inner-loops of the benchmark (``int``)
+* ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
+  available
+
+Python metadata:
+
+* ``python_cflags``: Compiler flags used to compile Python.
+* ``python_executable``: path to the Python executable
+* ``python_hash_seed``: value of the ``PYTHONHASHSEED`` environment variable
+  (``random`` string or an ``int``)
+* ``python_implementation``: Python implementation. Examples: ``cpython``,
+  ``pypy``, etc.
+* ``python_version``: Python version, with the architecture (32 or 64 bits) if
+  available, ex: ``2.7.11 (64bit)``
+* ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
+  only set on Pyhon 2.7, Python 3.2 and older
+
+Memory metadata:
+
+* ``mem_max_rss``: Maximum resident set size in bytes (``int``). On Linux,
+  kernel 2.6.32 or newer is required.
+* ``mem_peak_pagefile_usage``: Get ``PeakPagefileUsage`` of
+  ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
+  Commit Charge during the lifetime of this process. Only available on Windows.
+
+CPU metadata:
+
+* ``cpu_affinity``: if set, the process is pinned to the specified list of
+  CPUs
+* ``cpu_config``: Configuration of CPUs (ex: scaling governor)
+* ``cpu_count``: number of logical CPUs (``int``)
+* ``cpu_freq``: Frequency of CPUs
+* ``cpu_machine``: CPU machine
+* ``cpu_model_name``: CPU model name
+* ``cpu_temp``: Temperature of CPUs
+
+System metadata:
+
+* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
+  ``disabled``
+* ``boot_time``: Datetime of the system boot
+* ``hostname``: Host name
+* ``platform``: short string describing the platform
+* ``load_avg_1min``: Load average figures giving the number of jobs in the run
+  queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
+  minute
+* ``runnable_threads``: number of currently runnable kernel scheduling entities
+  (processes, threads)
+* ``uptime``: Duration since the system boot (``float``, number of seconds
+  since ``boot_time``)
+
+Other:
+
+* ``perf_version``: Version of the ``perf`` module
+* ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
 
 
 .. _json:
