@@ -6,7 +6,7 @@ Version 0.9.6 (2017-03-15)
 
 Major change:
 
-* Display ``Median +- std dev`` instead of ``Median +- std dev``
+* Display ``Mean +- std dev`` instead of ``Median +- std dev``
 
 Enhancements:
 
