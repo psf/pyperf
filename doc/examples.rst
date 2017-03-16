@@ -1,8 +1,10 @@
 Examples
 ========
 
-bench_func()
-------------
+.. _bench_func_example:
+
+bench_func() method
+-------------------
 
 Benchmark using the :meth:`Runner.bench_func` method to
 measure the time elasped when sleeping 1 ms:
@@ -18,8 +20,10 @@ measure the time elasped when sleeping 1 ms:
    negligible overhead on microbenchmarks.
 
 
-bench_time_func()
------------------
+.. _bench_time_func_example:
+
+bench_time_func() method
+------------------------
 
 Microbenchmark using the :meth:`Runner.bench_time_func`
 method to measure the performance of ``dict[key]``:
@@ -39,10 +43,32 @@ takes less than 1 microsecond. In this case, the cost the outer loop is non
 negligible.
 
 
+.. _bench_timeit_example:
+
+timeit()
+--------
+
+Benchmark using the :meth:`Runner.bench_command` method to measure the time to
+run the ``python -c pass`` command:
+
+.. literalinclude:: examples/bench_command.py
+
+
+.. _timeit_example:
+
+timeit() method
+---------------
+
+Benchmark using the :meth:`Runner.timeit` method to performance of sorting a
+sorted list of 1000 numbers using a ``key`` function (which does nothing):
+
+.. literalinclude:: examples/bench_timeit.py
+
+
 .. _hist_scipy_cmd:
 
-hist_scipy
-----------
+hist_scipy script
+-----------------
 
 Example to render an histogram in graphical mode using the ``scipy`` module:
 

@@ -505,6 +505,8 @@ Runner
 
       Return a :class:`Benchmark` instance.
 
+      See the :ref:`bench_func() example <bench_func_example>`.
+
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
 
@@ -523,6 +525,8 @@ Runner
       ``functools.partial``.
 
       Return a :class:`Benchmark` instance.
+
+      See the :ref:`bench_time_func() example <bench_time_func_example>`.
 
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
@@ -555,6 +559,8 @@ Runner
       * *globals*: Namespace used to run *setup* and *stmt*. By default, an
         empty namespace is created. It can be used to pass variables.
 
+      See the :ref:`timeit() example <timeit_example>`.
+
       .. versionadded:: 0.9.2
 
    .. method:: bench_command(name, command)
@@ -573,6 +579,8 @@ Runner
 
       Use ``--inherit-environ`` and ``--no-locale`` :ref:`command line options
       <runner_cli>` to control environment variables.
+
+      See the :ref:`bench_command() example <bench_command_example>`.
 
    .. method:: parse_args(args=None)
 
