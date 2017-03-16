@@ -214,11 +214,18 @@ to Code Placement in IA
 <https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_
 by Zia Ansari (Intel), November 2016.
 
-See the :ref:`system command <system_cmd>`.
+Use the :ref:`perf system tune command <system_cmd>` to tune the system for
+benchmarks.
 
-See also: `SPEC CPU2000: Measuring CPU Performance in the New Millennium
-<https://open.spec.org/cpu2000/papers/COMPUTER_200007.JLH.pdf>`_ by John L.
-Henning (Compaq), 2000.
+
+See also:
+
+* `Microbenchmarks article
+  <http://haypo-notes.readthedocs.io/microbenchmark.html>`_ (by Victor Stinner)
+  contains misc information on how to run stable benchmarks.
+* `SPEC CPU2000: Measuring CPU Performance in the New Millennium
+  <https://open.spec.org/cpu2000/papers/COMPUTER_200007.JLH.pdf>`_ by John L.
+  Henning (Compaq), 2000.
 
 
 .. _pin-cpu:
@@ -244,11 +251,11 @@ On Python 2.7, the Python module ``psutil`` is required for
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.
 
-See the :ref:`system command <system_cmd>`.
+See also:
 
-See also the `Microbenchmarks article
-<http://haypo-notes.readthedocs.io/microbenchmark.html>`_ which contains misc
-information on running benchmarks.
+* `cset shield - easily configure cpusets
+  <http://skebanga.blogspot.it/2012/06/cset-shield-easily-configure-cpusets.html>`_
+* `cpuset <https://github.com/lpechacek/cpuset>`_
 
 
 JIT compilers

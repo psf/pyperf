@@ -1,8 +1,12 @@
+.. _api:
+
 API
 ===
 
 The module version can be read from ``perf.VERSION`` (tuple of int) or
 ``perf.__version__`` (str).
+
+See :ref:`API examples <examples>`.
 
 Statistics
 ----------
@@ -293,7 +297,7 @@ Benchmark
       p must be in the range [0; 100]:
 
       * p=0 computes the minimum
-      * p=50 computes the minimum
+      * p=50 computes the median (see also the :meth:`median` method)
       * p=100 computes the maximum
 
    .. method:: stdev()
@@ -484,6 +488,13 @@ Runner
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
    <pin-cpu>`.
 
+   Methods to run benchmarls:
+
+   * :meth:`bench_func`
+   * :meth:`timeit`
+   * :meth:`bench_command`
+   * :meth:`bench_time_func`
+
    Methods:
 
    .. method:: bench_func(name, func, \*args, inner_loops=None, metadata=None)
@@ -497,9 +508,9 @@ Runner
 
       The design of :meth:`bench_func` has a non negligible overhead on
       microbenchmarks: each loop iteration calls ``func(*args)`` but Python
-      function calls are expensive. The :meth:`bench_time_func` method is
-      recommended if ``func(*args)`` takes less than ``1`` millisecond
-      (``0.001`` second).
+      function calls are expensive. The :meth:`timeit` and
+      :meth:`bench_time_func` methods are recommended if ``func(*args)`` takes
+      less than ``1`` millisecond (``0.001`` second).
 
       To call ``func()`` with keyword arguments, use ``functools.partial``.
 
@@ -509,31 +520,6 @@ Runner
 
       .. versionchanged:: 0.9.2
          Added *metadata* parameter.
-
-   .. method:: bench_time_func(name, time_func, \*args, inner_loops=None, metadata=None)
-
-      Benchmark ``time_func(loops, *args)``. The *time_func* function must
-      return raw timings: the total elapsed time of all loops. Runner will
-      divide raw timings by ``loops x inner_loops`` (*loops* and *inner_loops*
-      parameters).
-
-      :func:`perf_counter` should be used to measure the elapsed time.
-
-      *name* is the benchmark name, it must be unique in the same script.
-
-      To call ``time_func()`` with keyword arguments, use
-      ``functools.partial``.
-
-      Return a :class:`Benchmark` instance.
-
-      See the :ref:`bench_time_func() example <bench_time_func_example>`.
-
-      .. versionchanged:: 0.9.2
-         Added *metadata* parameter.
-
-      .. versionchanged:: 0.9.6
-         The method was renamed from ``bench_sample_func()`` to
-         ``bench_time_func()``.
 
    .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
@@ -581,6 +567,31 @@ Runner
       <runner_cli>` to control environment variables.
 
       See the :ref:`bench_command() example <bench_command_example>`.
+
+   .. method:: bench_time_func(name, time_func, \*args, inner_loops=None, metadata=None)
+
+      Benchmark ``time_func(loops, *args)``. The *time_func* function must
+      return raw timings: the total elapsed time of all loops. Runner will
+      divide raw timings by ``loops x inner_loops`` (*loops* and *inner_loops*
+      parameters).
+
+      :func:`perf_counter` should be used to measure the elapsed time.
+
+      *name* is the benchmark name, it must be unique in the same script.
+
+      To call ``time_func()`` with keyword arguments, use
+      ``functools.partial``.
+
+      Return a :class:`Benchmark` instance.
+
+      See the :ref:`bench_time_func() example <bench_time_func_example>`.
+
+      .. versionchanged:: 0.9.2
+         Added *metadata* parameter.
+
+      .. versionchanged:: 0.9.6
+         The method was renamed from ``bench_sample_func()`` to
+         ``bench_time_func()``.
 
    .. method:: parse_args(args=None)
 

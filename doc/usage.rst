@@ -189,7 +189,7 @@ The :ref:`compare <compare_cmd>` command uses the fastest version as the referen
     $ python3 -m perf compare py2.json py3.json
     Median +- std dev: [py3] 5.25 us +- 0.11 us -> [py2] 6.27 us +- 0.20 us: 1.20x slower (+20%)
 
-Python 2 is slower than Python 3 on this benchmark. ::
+Python 2 is slower than Python 3 on this benchmark.
 
 The :ref:`compare_to <compare_cmd>` command always use the first file as the
 reference::

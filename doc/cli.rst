@@ -3,18 +3,18 @@ perf commands
 
 Commands:
 
-* :ref:`show <show_cmd>`
-* :ref:`compare and compare_to <compare_cmd>`
-* :ref:`stats <stats_cmd>`
-* :ref:`check <check_cmd>`
-* :ref:`dump <dump_cmd>`
-* :ref:`hist <hist_cmd>`
-* :ref:`metadata <metadata_cmd>`
-* :ref:`timeit <timeit_cmd>`
-* :ref:`system <system_cmd>`
-* :ref:`collect_metadata <collect_metadata_cmd>`
-* :ref:`slowest <slowest_cmd>`
-* :ref:`convert <convert_cmd>`
+* :ref:`perf show <show_cmd>`
+* :ref:`perf compare and compare_to <compare_cmd>`
+* :ref:`perf stats <stats_cmd>`
+* :ref:`perf check <check_cmd>`
+* :ref:`perf dump <dump_cmd>`
+* :ref:`perf hist <hist_cmd>`
+* :ref:`perf metadata <metadata_cmd>`
+* :ref:`perf timeit <timeit_cmd>`
+* :ref:`perf system <system_cmd>`
+* :ref:`perf collect_metadata <collect_metadata_cmd>`
+* :ref:`perf slowest <slowest_cmd>`
+* :ref:`perf convert <convert_cmd>`
 
 
 The Python perf module comes with a ``pyperf`` program which includes different
@@ -27,8 +27,8 @@ General note: if a filename is ``-``, read the JSON content from stdin.
 
 .. _show_cmd:
 
-show
-----
+perf show
+---------
 
 Show benchmarks of one or multiple benchmark suites::
 
@@ -73,8 +73,8 @@ Example with metadata::
 
 .. _compare_cmd:
 
-compare and compare_to
-----------------------
+perf compare and perf compare_to
+--------------------------------
 
 Compare benchmark suites, compute the minimum of each benchmark to use it as
 the reference::
@@ -112,8 +112,8 @@ On this example, py2 is faster and so used as the reference.
 
 .. _stats_cmd:
 
-stats
------
+perf stats
+----------
 
 Compute statistics on a benchmark result::
 
@@ -159,8 +159,8 @@ See also `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 
 .. _check_cmd:
 
-check
------
+perf check
+----------
 
 Check if benchmarks are stable::
 
@@ -172,12 +172,12 @@ Options:
 
 * ``--name NAME`` only check the benchmark called ``NAME``
 
-Example of stable benchmark::
+Example of a stable benchmark::
 
     $ python3 -m perf check telco.json
     The benchmark seem to be stable
 
-Example of unstable benchmark::
+Example of an unstable benchmark::
 
     $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json -q
     Mean +- std dev: 858 ns +- 118 ns
@@ -194,8 +194,8 @@ Example of unstable benchmark::
 
 .. _dump_cmd:
 
-dump
-----
+perf dump
+---------
 
 Display the benchmark run results::
 
@@ -244,8 +244,8 @@ Example in verbose mode::
 
 .. _hist_cmd:
 
-hist
-----
+perf hist
+---------
 
 Render an histogram in text mode::
 
@@ -298,8 +298,8 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 
 .. _metadata_cmd:
 
-metadata
---------
+perf metadata
+-------------
 
 Display metadata of benchmark files::
 
@@ -316,27 +316,29 @@ Example::
     $ python3 -m perf metadata telco.json
     Metadata:
     - aslr: Full randomization
-    - cpu_affinity: 1 (isolated)
-    - cpu_config: 1=driver:intel_pstate, intel_pstate:turbo, governor:performance
-    - cpu_count: 2
+    - boot_time: 2016-10-19 01:10:08
+    - cpu_affinity: 2-3
+    - cpu_config: 2-3=driver:intel_pstate, intel_pstate:turbo, governor:performance, isolated; idle:intel_idle
+    - cpu_count: 4
     - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - duration: 400 ms
+    - description: Telco decimal benchmark
     - hostname: selma
-    - inner_loops: 1
-    - loops: 4
+    - loops: 8
     - name: telco
-    - perf_version: 0.7
-    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
-    - python_executable: /usr/bin/python3
+    - perf_version: 0.8.2
+    - performance_version: 0.3.3
+    - platform: Linux-4.7.4-200.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
+    - python_cflags: -Wno-unused-result -Wsign-compare -Wunreachable-code -DDYNAMIC_ANNOTATIONS_ENABLED=1 -DNDEBUG -O2 -g -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-strong --param=ssp-buffer-size=4 -grecord-gcc-switches -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -m64 -mtune=generic -D_GNU_SOURCE -fPIC -fwrapv
+    - python_executable: /home/haypo/prog/python/performance/venv/cpython3.5-68b776ee7e79/bin/python
     - python_implementation: cpython
-    - python_version: 3.5.1 (64bit)
+    - python_version: 3.5.1 (64-bit)
     - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
 
 
 .. _timeit_cmd:
 
-timeit
-------
+perf timeit
+-----------
 
 Usage
 ^^^^^
@@ -459,8 +461,8 @@ See the :ref:`Minimum versus average and standard deviation <min>` section.
 
 .. _system_cmd:
 
-system
-------
+perf system
+-----------
 
 Get or set the system state for benchmarks::
 
@@ -468,17 +470,17 @@ Get or set the system state for benchmarks::
         [--affinity=CPU_LIST]
         [{show,tune,reset}]
 
+Commands:
+
+* ``perf system show`` (or just ``perf system``) shows the current state
+  of the system
+* ``perf system tune`` tunes the system to run benchmarks
+* ``perf system reset`` resets the system to the default state
+
 Options:
 
 * ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
   See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
-
-Commands:
-
-* ``system show`` (or ``system``) shows the current state of the system for
-  benchmarks
-* ``system tune`` tunes the system to run benchmarks
-* ``system reset`` resets the system to the default state
 
 Operations
 ^^^^^^^^^^
@@ -578,7 +580,6 @@ The following options were not tested by perf developers.
 
 * Disable HyperThreading in the BIOS
 * Disable Turbo Boost in the BIOS
-* CPU pinning on IRQ: /proc/irq/N/smp_affinity
 * writeback:
 
   * /sys/bus/workqueue/devices/writeback/cpumask
@@ -588,11 +589,9 @@ The following options were not tested by perf developers.
 * ``for i in $(pgrep rcu); do taskset -pc 0 $i ; done`` (is it useful if
   rcu_nocbs is already used?)
 * nohz_full=cpu_list: be careful of P-state/C-state bug (see below)
-* intel_pstate=disable: force the usage of the legacy CPU frequency driver
-* Non-maskable interrupts (NMI): ``nmi_watchdog=0 nowatchdog nosoftlockup``
-* `cset shield - easily configure cpusets
-  <http://skebanga.blogspot.it/2012/06/cset-shield-easily-configure-cpusets.html>`_
-* `cpuset <https://github.com/lpechacek/cpuset>`_
+* intel_pstate=disable: force the usage of the ACPI CPU driver
+* Non-maskable interrupts (NMI): add ``nmi_watchdog=0 nowatchdog nosoftlockup``
+  to the Linux kernel command line
 
 Misc::
 
@@ -621,8 +620,8 @@ Notes
 
 .. _collect_metadata_cmd:
 
-collect_metadata
-----------------
+perf collect_metadata
+---------------------
 
 Collect metadata::
 
@@ -659,8 +658,8 @@ Example::
 
 .. _slowest_cmd:
 
-slowest
--------
+perf slowest
+------------
 
 Display the 5 benchmarks which took the most time to be run. This command
 should not be used to compare performances, but only to find "slow" benchmarks
@@ -672,8 +671,8 @@ Options:
 
 .. _convert_cmd:
 
-convert
--------
+perf convert
+------------
 
 Convert or modify a benchmark suite::
 

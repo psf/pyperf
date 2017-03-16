@@ -10,18 +10,30 @@ perf
    :alt: Build status of perf on Travis CI
    :target: https://travis-ci.org/haypo/perf
 
-The Python ``perf`` module is a toolkit to write, run, analyze and modify
-benchmarks.
+The Python ``perf`` module is a toolkit to write, run and analyze benchmarks.
 
 Features:
 
-* JSON format to store benchmark results
-* ``pyperf`` (or ``python3 -m perf``) command line tool to display, compare,
-  analyze and modify benchmark results
-* Statistical tools to analyze the distribution of benchmark results
-* ``compare`` command supports comparison between multiple benchmark suites
-  (made of multiple benchmarks)
-* ``timeit`` command for quick but reliable Python microbenchmarks
+* Simple API to run reliable benchmarks
+* Automatically calibrate a benchmark for a time budget.
+* Spawn multiple worker processes.
+* Compute the mean and standard deviation on values.
+* Detect if a benchmark result seems unstable: see the check command.
+* ``perf stats`` command to analyze the distribution of benchmark
+  results (min/max, mean, median, percentiles, etc.).
+* ``perf compare`` command tests if a difference if
+  significant (see the ``is_significant()`` function). It supports comparison
+  between multiple benchmark suites (made of multiple benchmarks)
+* ``perf timeit`` command line tool for quick but reliable
+  Python microbenchmarks
+* ``perf system`` tune command to tune your system to run stable benchmarks.
+* Automatically collect metadata on the computer and the benchmark:
+  use the ``perf metadata`` command to display them, or the
+  ``perf collect_metadata`` command to manually collect them.
+* ``--track-memory`` and ``--tracemalloc`` options to track
+  the memory usage of a benchmark.
+* JSON format to store benchmark results.
+* Support multiple units: seconds, bytes and integer.
 
 Links:
 

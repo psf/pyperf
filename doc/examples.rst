@@ -1,3 +1,5 @@
+.. _examples:
+
 Examples
 ========
 
@@ -13,11 +15,27 @@ measure the time elasped when sleeping 1 ms:
 
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
-.. note::
 
-   The :meth:`Runner.bench_time_func` method is recommended if ``func()``
-   takes less than 1 ms. The :meth:`Runner.bench_func` method has a non
-   negligible overhead on microbenchmarks.
+.. _timeit_example:
+
+timeit() method
+---------------
+
+Benchmark using the :meth:`Runner.timeit` method to performance of sorting a
+sorted list of 1000 numbers using a ``key`` function (which does nothing):
+
+.. literalinclude:: examples/bench_timeit.py
+
+
+.. _bench_command_example:
+
+bench_command() method
+----------------------
+
+Benchmark using the :meth:`Runner.bench_command` method to measure the time to
+run the ``python -c pass`` command:
+
+.. literalinclude:: examples/bench_command.py
 
 
 .. _bench_time_func_example:
@@ -41,28 +59,6 @@ outer ``range(loops)`` loop. To adjust the final result,
 The repeatition is needed on such microbenchmark where the measured instruction
 takes less than 1 microsecond. In this case, the cost the outer loop is non
 negligible.
-
-
-.. _bench_timeit_example:
-
-timeit()
---------
-
-Benchmark using the :meth:`Runner.bench_command` method to measure the time to
-run the ``python -c pass`` command:
-
-.. literalinclude:: examples/bench_command.py
-
-
-.. _timeit_example:
-
-timeit() method
----------------
-
-Benchmark using the :meth:`Runner.timeit` method to performance of sorting a
-sorted list of 1000 numbers using a ``key`` function (which does nothing):
-
-.. literalinclude:: examples/bench_timeit.py
 
 
 .. _hist_scipy_cmd:
