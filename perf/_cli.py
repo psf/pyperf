@@ -416,14 +416,12 @@ def format_result_value(bench):
     if loops is not None:
         return '<calibration: %s>' % format_number(loops, 'loop')
 
+    mean = bench.mean()
     if bench.get_nvalue() >= 2:
-        numbers = [bench.mean()]
-        numbers.append(bench.stdev())
-        numbers = bench.format_values(numbers)
-        text = '%s +- %s' % numbers
+        args = bench.format_values((mean, bench.stdev()))
+        return '%s +- %s' % args
     else:
-        text = bench.format_value(bench.mean())
-    return text
+        return bench.format_value(mean)
 
 
 def format_result(bench, prefix=True):
