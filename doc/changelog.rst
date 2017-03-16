@@ -11,6 +11,7 @@ Version 0.9.7
   were too opiniated.
 * Rename ``--name=NAME`` option to ``--benchmark=NAME``
 * Remove ``perf.monotonic_clock()`` since it wasn't monotonic on Python 2.7.
+* Remove ``is_significant()`` from the public API
 
 Version 0.9.6 (2017-03-15)
 --------------------------

@@ -2,11 +2,11 @@ from __future__ import division, print_function, absolute_import
 
 import sys
 
-import perf
 from perf._cli import display_title, format_result_value
+from perf._utils import is_significant
 
 
-def is_significant(bench1, bench2):
+def is_significant_benchs(bench1, bench2):
     values1 = bench1.get_values()
     values2 = bench2.get_values()
 
@@ -16,7 +16,7 @@ def is_significant(bench1, bench2):
         return (True, None)
 
     try:
-        significant, t_score = perf.is_significant(values1, values2)
+        significant, t_score = is_significant(values1, values2)
         return (significant, t_score)
     except Exception:
         # FIXME: fix the root bug, don't work around it
@@ -67,7 +67,7 @@ class CompareResult(object):
     def _set_significant(self):
         bench1 = self.ref.benchmark
         bench2 = self.changed.benchmark
-        self._significant, self._t_score = is_significant(bench1, bench2)
+        self._significant, self._t_score = is_significant_benchs(bench1, bench2)
 
     @property
     def significant(self):
@@ -223,7 +223,7 @@ def compare_suites_table(grouped_by_name, by_speed, args):
                 if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
                     significant = False
                 else:
-                    significant = is_significant(ref, bench)[0]
+                    significant = is_significant_benchs(ref, bench)[0]
                 if significant:
                     if args.quiet:
                         text = format_speed(speed, percent)

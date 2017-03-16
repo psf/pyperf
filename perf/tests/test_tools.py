@@ -25,21 +25,21 @@ class TestStatistics(unittest.TestCase):
         DATA2 = [79.3, 78.3, 85.3, 79.3, 88.9, 91.2, 87.2, 89.2, 93.3, 79.9]
 
         # not significant
-        significant, tscore = perf.is_significant(DATA1, DATA2)
+        significant, tscore = utils.is_significant(DATA1, DATA2)
         self.assertFalse(significant)
         self.assertAlmostEqual(tscore, 1.0947229724603977, places=4)
 
-        significant, tscore2 = perf.is_significant(DATA2, DATA1)
+        significant, tscore2 = utils.is_significant(DATA2, DATA1)
         self.assertFalse(significant)
         self.assertEqual(tscore2, -tscore)
 
         # significant
         inflated = [x * 10 for x in DATA1]
-        significant, tscore = perf.is_significant(inflated, DATA1)
+        significant, tscore = utils.is_significant(inflated, DATA1)
         self.assertTrue(significant)
         self.assertAlmostEqual(tscore, 43.76839453227327, places=4)
 
-        significant, tscore2 = perf.is_significant(DATA1, inflated)
+        significant, tscore2 = utils.is_significant(DATA1, inflated)
         self.assertTrue(significant)
         self.assertEqual(tscore2, -tscore)
 
@@ -48,13 +48,13 @@ class TestStatistics(unittest.TestCase):
         # n = 100
         # values1 = (1.0,) * n
         # values2 = (2.0,) * n
-        # self.assertEqual(perf.is_significant(values1, values2),
+        # self.assertEqual(utils.is_significant(values1, values2),
         #                  (True, -141.4213562373095))
 
         # FIXME: same error
         # # same values
         # values = (1.0,) * 50
-        # self.assertEqual(perf.is_significant(values, values),
+        # self.assertEqual(utils.is_significant(values, values),
         #                  (True, -141.4213562373095))
         pass
 
