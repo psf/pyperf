@@ -546,6 +546,7 @@ def cmd_stats(args):
 
 
 def cmd_hist(args):
+    checks = not args.quiet
     data = load_benchmarks(args)
 
     ignored = list(data.group_by_name_ignored())
@@ -562,7 +563,8 @@ def cmd_hist(args):
                       for benchmark, title, filename in benchmarks]
 
         for line in format_histogram(benchmarks, bins=args.bins,
-                                     extend=args.extend):
+                                     extend=args.extend,
+                                     checks=checks):
             print(line)
 
         if not(is_last or ignored):
@@ -573,7 +575,8 @@ def cmd_hist(args):
             name = bench.get_name()
             print("[ %s ]" % name)
             for line in format_histogram([name], bins=args.bins,
-                                         extend=args.extend):
+                                         extend=args.extend,
+                                         checks=checks):
                 print(line)
 
 

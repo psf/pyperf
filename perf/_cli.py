@@ -272,7 +272,8 @@ def format_stats(bench, lines):
     return lines
 
 
-def format_histogram(benchmarks, bins=20, extend=False, lines=None):
+def format_histogram(benchmarks, bins=20, extend=False, lines=None,
+                     checks=False):
     import collections
     import shutil
 
@@ -335,6 +336,9 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None):
             line = ('#' * linelen) or '|'
             lines.append("{:>{}}: {:>{}} {}".format(text, value_width,
                                                     count, count_width, line))
+
+        if checks:
+            format_checks(bench, lines=lines)
 
     return lines
 
