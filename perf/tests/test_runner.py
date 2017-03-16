@@ -111,7 +111,7 @@ class TestRunner(unittest.TestCase):
                          r'\n'
                          r'(?:Warmup [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
                          r'\n'
-                         r'(?:Sample [0-9]+: 1\.00 sec\n)+'
+                         r'(?:Value [0-9]+: 1\.00 sec\n)+'
                          r'\n'
                          r'Metadata:\n'
                          r'(?:- .*\n)+'
@@ -186,7 +186,8 @@ class TestRunner(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             runner.bench_time_func('bench', time_func)
-        self.assertEqual(str(cm.exception), 'sample function returned zero')
+        self.assertEqual(str(cm.exception),
+                         'time_func function returned zero')
 
     def test_calibration_zero(self):
         runner = perf.Runner()
@@ -237,7 +238,7 @@ class TestRunner(unittest.TestCase):
                           (4, 0.0),
                           (8, 0.0),
 
-                          # first non-zero calibration sample
+                          # first non-zero calibration value
                           (16, 3.0 / 16),
 
                           # warmup 1, JIT triggered, 3.0 => 0.5 for loops=128

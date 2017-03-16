@@ -366,7 +366,7 @@ class Runner:
         elif is_warmup:
             value_name = 'Warmup'
         else:
-            value_name = 'Sample'
+            value_name = 'Value'
 
         values = []
         index = 1
@@ -381,7 +381,7 @@ class Runner:
             value = raw_value / (loops * inner_loops)
 
             if not value and not(is_calibrate or is_warmup):
-                raise ValueError("sample function returned zero")
+                raise ValueError("time_func function returned zero")
 
             if is_warmup:
                 values.append((loops, value))

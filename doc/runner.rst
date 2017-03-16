@@ -28,11 +28,11 @@ values), and 10 warmups.
   Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
   values per process (120 values).
 * ``--fast``: Get rough answers quickly. Divide the number of ``PROCESSES`` by
-  2 and multiply the number of ``SAMPLES`` by 2/3 (0.6). Default: 10 processes
+  2 and multiply the number of ``VALUES`` by 2/3 (0.6). Default: 10 processes
   and 2 values per process (total: 20 values).
 * ``PROCESSES``: number of processes used to run the benchmark
   (default: ``20``, or ``6`` with a JIT)
-* ``SAMPLES``: number of values per process
+* ``VALUES``: number of values per process
   (default: ``3``, or ``10`` with a JIT)
 * ``WARMUPS``: the number of ignored values used to warmup to benchmark
   (default: ``1``, or ``10`` with a JIT)

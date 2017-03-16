@@ -50,8 +50,8 @@ class TestTimeit(unittest.TestCase):
 
         match = re.search(r'Warmup 1: ([0-9.]+) ms \(1 loop: [0-9.]+ ms\)\n'
                           r'\n'
-                          r'Sample 1: ([0-9.]+) ms\n'
-                          r'Sample 2: ([0-9.]+) ms\n'
+                          r'Value 1: ([0-9.]+) ms\n'
+                          r'Value 2: ([0-9.]+) ms\n'
                           r'\n'
                           r'Metadata:\n'
                           r'(- .*\n)+'
