@@ -172,10 +172,8 @@ class BenchmarkTests(unittest.TestCase):
                           'name': 'mybench',
                           'loops': 20,
                           'inner_loops': 3})
-        self.assertEqual(bench.format(),
-                         '1.50 sec +- 0.50 sec')
-        self.assertEqual(str(bench),
-                         'Mean +- std dev: 1.50 sec +- 0.50 sec')
+        self.assertEqual(repr(bench),
+                         "<Benchmark 'mybench' with 3 runs>")
 
     def test_get_unit(self):
         run = perf.Run((1.0,),
@@ -372,15 +370,6 @@ class BenchmarkTests(unittest.TestCase):
         bench = perf.Benchmark([run])
         with self.assertRaises(ValueError):
             bench.update_metadata({'inner_loops': 8})
-
-    def test_calibration(self):
-        run = perf.Run([], warmups=[(100, 1.0)],
-                       metadata={'name': 'bench', 'loops': 100},
-                       collect_metadata=False)
-        bench = perf.Benchmark([run])
-        self.assertEqual(str(bench), 'Calibration: 100 loops')
-        self.assertEqual(bench.format(), '<calibration: 100 loops>')
-        self.assertRaises(ValueError, bench.median)
 
     def test_stats(self):
         values = [float(value) for value in range(1, 96)]

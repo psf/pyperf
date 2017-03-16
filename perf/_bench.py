@@ -13,7 +13,7 @@ import statistics
 from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info,
                             _exclude_common_metadata)
-from perf._formatter import format_number, DEFAULT_UNIT, format_values
+from perf._formatter import DEFAULT_UNIT, format_values
 from perf._utils import parse_iso8601, median_abs_dev
 
 
@@ -288,6 +288,10 @@ class Benchmark(object):
         for run in runs:
             self.add_run(run)
 
+    def __repr__(self):
+        return ('<Benchmark %r with %s runs>'
+                % (self.get_name(), len(self._runs)))
+
     def get_name(self):
         run = self._runs[0]
         return run._get_name()
@@ -467,31 +471,6 @@ class Benchmark(object):
                 return run._get_loops()
 
         return None
-
-    def format(self):
-        loops = self._only_calibration()
-        if loops is not None:
-            return '<calibration: %s>' % format_number(loops, 'loop')
-
-        if self.get_nvalue() >= 2:
-            numbers = [self.mean()]
-            numbers.append(self.stdev())
-            numbers = self.format_values(numbers)
-            text = '%s +- %s' % numbers
-        else:
-            text = self.format_value(self.mean())
-        return text
-
-    def __str__(self):
-        loops = self._only_calibration()
-        if loops is not None:
-            return 'Calibration: %s' % format_number(loops, 'loop')
-
-        text = self.format()
-        if self.get_nvalue() >= 2:
-            return 'Mean +- std dev: %s' % text
-        else:
-            return text
 
     @classmethod
     def _json_load(cls, version, data, suite_metadata):

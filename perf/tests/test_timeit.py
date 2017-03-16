@@ -220,17 +220,19 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(metadata['inner_loops'], inner_loops)
 
     def test_compare_to(self):
-        args = PERF_TIMEIT + ('--compare-to', sys.executable) + COMPARE_BENCH
+        args = ('--compare-to', sys.executable,
+                '--python-names=ref:changed')
+        args = PERF_TIMEIT + args + COMPARE_BENCH
         cmd = tests.get_output(args)
 
         # ".*" and DOTALL ignore stability warnings
         expected = textwrap.dedent(r'''
-            .*: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
+            ref: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
-            .*: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
+            changed: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
 
-            (?:Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
+            (?:Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)

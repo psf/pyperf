@@ -11,7 +11,7 @@ import six
 
 import perf
 from perf._cli import (format_run, format_benchmark, format_checks,
-                       multiline_output, display_title)
+                       multiline_output, display_title, format_result_value)
 from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
@@ -841,7 +841,7 @@ class Runner:
             if multiline:
                 self._display_result(bench)
             elif not args.quiet:
-                print(' ' + bench.format())
+                print(' ' + format_result_value(bench))
 
             if multiline:
                 print()

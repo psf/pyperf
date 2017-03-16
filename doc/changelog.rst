@@ -7,6 +7,8 @@ Version 0.9.7
 * Add ``Benchmark.percentile()`` method
 * ``stats`` command now displays percentiles
 * ``hist`` command now also checks the benchmark stability by default
+* Remove ``format()`` and ``__str__()`` methods from Benchmark. These methods
+  were too opiniated.
 
 Version 0.9.6 (2017-03-15)
 --------------------------

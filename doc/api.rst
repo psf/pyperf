@@ -163,11 +163,6 @@ Benchmark class
 
       See :ref:`perf JSON <json>`.
 
-   .. method:: format() -> str
-
-      Format the result as ``... +- ...`` (mean +- standard deviation) string
-      (``str``).
-
    .. method:: format_value(value) -> str
 
       Format a value including the unit.
@@ -315,11 +310,6 @@ Benchmark class
       :meth:`get_values`.
 
       Raise an exception if the benchmark has no values.
-
-   .. method:: __str__() -> str
-
-      Format the result as ``Mean +- std dev: ... +- ...`` (mean +-
-      standard deviation) string (``str``).
 
    .. method:: update_metadata(metadata: dict)
 

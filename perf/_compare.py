@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import sys
 
 import perf
-from perf._cli import display_title
+from perf._cli import display_title, format_result_value
 
 
 def is_significant(bench1, bench2):
@@ -101,8 +101,8 @@ class CompareResult(object):
         if check_significant and not self.significant:
             return "Not significant!"
 
-        ref_text = self.ref.benchmark.format()
-        chg_text = self.changed.benchmark.format()
+        ref_text = format_result_value(self.ref.benchmark)
+        chg_text = format_result_value(self.changed.benchmark)
         if verbose:
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)

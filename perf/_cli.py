@@ -411,6 +411,33 @@ def format_checks(bench, lines=None):
     return lines
 
 
+def format_result_value(bench):
+    loops = bench._only_calibration()
+    if loops is not None:
+        return '<calibration: %s>' % format_number(loops, 'loop')
+
+    if bench.get_nvalue() >= 2:
+        numbers = [bench.mean()]
+        numbers.append(bench.stdev())
+        numbers = bench.format_values(numbers)
+        text = '%s +- %s' % numbers
+    else:
+        text = bench.format_value(bench.mean())
+    return text
+
+
+def format_result(bench, prefix=True):
+    loops = bench._only_calibration()
+    if loops is not None:
+        return 'Calibration: %s' % format_number(loops, 'loop')
+
+    text = format_result_value(bench)
+    if bench.get_nvalue() >= 2:
+        return 'Mean +- std dev: %s' % text
+    else:
+        return text
+
+
 def format_benchmark(bench, checks=True, metadata=False,
                      dump=False, stats=False, hist=False, show_name=False,
                      result=True, display_runs_args=None):
@@ -437,11 +464,10 @@ def format_benchmark(bench, checks=True, metadata=False,
     if result:
         empty_line(lines)
 
+        text = format_result(bench)
         if show_name:
             name = bench.get_name()
-            text = "%s: %s" % (name, bench)
-        else:
-            text = str(bench)
+            text = "%s: %s" % (name, text)
         lines.append(text)
 
     return lines

@@ -10,7 +10,7 @@ import perf
 from perf._metadata import _common_metadata
 from perf._cli import (format_metadata, empty_line,
                        format_checks, format_histogram, format_title,
-                       format_benchmark, display_title)
+                       format_benchmark, display_title, format_result)
 from perf._formatter import format_timedelta, format_seconds, format_datetime
 from perf._cpu_utils import get_isolated_cpus, parse_cpu_list, set_cpu_affinity
 from perf._timeit_cli import TimeitRunner
@@ -500,7 +500,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                 suite = item.suite
                 display_title(item.filename, 1)
 
-            line = str(item.benchmark)
+            line = format_result(item.benchmark)
             if item.title:
                 line = '%s: %s' % (item.name, line)
             print(line)
