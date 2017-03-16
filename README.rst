@@ -17,13 +17,13 @@ Features:
 * Simple API to run reliable benchmarks
 * Automatically calibrate a benchmark for a time budget.
 * Spawn multiple worker processes.
-* Compute the mean and standard deviation on values.
-* Detect if a benchmark result seems unstable: see the check command.
+* Compute the mean and standard deviation.
+* Detect if a benchmark result seems unstable.
 * ``perf stats`` command to analyze the distribution of benchmark
   results (min/max, mean, median, percentiles, etc.).
 * ``perf compare`` command tests if a difference if
-  significant (see the ``is_significant()`` function). It supports comparison
-  between multiple benchmark suites (made of multiple benchmarks)
+  significant. It supports comparison between multiple benchmark suites (made
+  of multiple benchmarks)
 * ``perf timeit`` command line tool for quick but reliable
   Python microbenchmarks
 * ``perf system`` tune command to tune your system to run stable benchmarks.
@@ -35,16 +35,18 @@ Features:
 * JSON format to store benchmark results.
 * Support multiple units: seconds, bytes and integer.
 
-Links:
+Quick Links:
 
-* `perf project homepage at GitHub
-  <https://github.com/haypo/perf>`_ (code, bugs)
 * `perf documentation
   <https://perf.readthedocs.io/>`_
+* `perf project homepage at GitHub
+  <https://github.com/haypo/perf>`_ (code, bugs)
 * `Download latest perf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/perf>`_
-* License: MIT
 
-perf supports Python 2.7 and Python 3. Install perf on Python 3::
+Command to install perf on Python 3::
 
     python3 -m pip install perf
+
+perf supports Python 2.7 and Python 3. It is distributed under the MIT license.
+
