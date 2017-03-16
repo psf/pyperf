@@ -123,22 +123,30 @@ Compute statistics on a benchmark result::
 Example::
 
     $ python3 -m perf stats telco.json
-    Total duration: 16.0 sec
-    Start date: 2016-07-17 22:50:27
-    End date: 2016-07-17 22:50:46
-    Raw value minimum: 96.9 ms
-    Raw value maximum: 100 ms
+    Total duration: 29.2 sec
+    Start date: 2016-10-21 03:14:19
+    End date: 2016-10-21 03:14:53
+    Raw value minimum: 177 ms
+    Raw value maximum: 183 ms
 
-    Number of runs: 40
+    Number of runs: 41
     Total number of values: 120
     Number of values per run: 3
     Number of warmups per run: 1
-    Loop iterations per value: 4
+    Loop iterations per value: 8
 
-    Minimum: 24.2 ms (-1%)
-    Median +- std dev: 24.6 ms +- 0.2 ms
-    Mean +- std dev: 24.6 ms +- 0.2 ms
-    Maximum: 25.0 ms (+2%)
+    Minimum:         22.1 ms
+    Median +- MAD:   22.5 ms +- 0.1 ms
+    Mean +- std dev: 22.5 ms +- 0.2 ms
+    Maximum:         22.9 ms
+
+      0th percentile: 22.1 ms (-2% of the mean) -- minimum
+      5th percentile: 22.3 ms (-1% of the mean)
+     25th percentile: 22.4 ms (-1% of the mean)
+     50th percentile: 22.5 ms (-0% of the mean) -- median
+     75th percentile: 22.7 ms (+1% of the mean)
+     95th percentile: 22.9 ms (+2% of the mean)
+    100th percentile: 22.9 ms (+2% of the mean) -- maximum
 
 Values:
 

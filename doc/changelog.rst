@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.9.7
+-------------
+
+* Add ``Benchmark.percentile()`` method
+* ``stats`` command now displays percentiles
+
 Version 0.9.6 (2017-03-15)
 --------------------------
 

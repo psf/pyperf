@@ -261,10 +261,18 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Number of warmups per run: 1
             Loop iterations per value: 8
 
-            Minimum: 22.1 ms (-2% of the mean)
-            Median +- MAD: 22.5 ms +- 0.1 ms
+            Minimum:         22.1 ms
+            Median +- MAD:   22.5 ms +- 0.1 ms
             Mean +- std dev: 22.5 ms +- 0.2 ms
-            Maximum: 22.9 ms (+2% of the mean)
+            Maximum:         22.9 ms
+
+              0th percentile: 22.1 ms (-2% of the mean) -- minimum
+              5th percentile: 22.3 ms (-1% of the mean)
+             25th percentile: 22.4 ms (-1% of the mean)
+             50th percentile: 22.5 ms (-0% of the mean) -- median
+             75th percentile: 22.7 ms (+1% of the mean)
+             95th percentile: 22.9 ms (+2% of the mean)
+            100th percentile: 22.9 ms (+2% of the mean) -- maximum
         """)
         self.check_command(expected, 'stats', TELCO)
 

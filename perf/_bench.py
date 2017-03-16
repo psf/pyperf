@@ -373,6 +373,26 @@ class Benchmark(object):
             raise ValueError("MAD must be >= 0")
         return value
 
+    def percentile(self, p):
+        if not(0 <= p <= 100):
+            raise ValueError("p must be in the range [0; 100]")
+
+        values = sorted(self.get_values())
+        if not values:
+            raise ValueError("no value")
+
+        k = (len(values) - 1) * p / 100.0
+        # Python 3 returns integers: cast explicitly to int
+        # to get the same behaviour on Python 2
+        f = int(math.floor(k))
+        c = int(math.ceil(k))
+        if f != c:
+            d0 = values[f] * (c - k)
+            d1 = values[c] * (k - f)
+            return d0 + d1
+        else:
+            return values[int(k)]
+
     def add_run(self, run):
         if not isinstance(run, Run):
             raise TypeError("Run expected, got %s" % type(run).__name__)

@@ -286,6 +286,16 @@ Benchmark
 
       Raise an exception if the benchmark has no values.
 
+   .. method:: percentile(p)
+
+      Compute the p-th percentile of :meth:`get_values`.
+
+      p must be in the range [0; 100]:
+
+      * p=0 computes the minimum
+      * p=50 computes the minimum
+      * p=100 computes the maximum
+
    .. method:: stdev()
 
       Get the `standard deviation
