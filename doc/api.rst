@@ -63,11 +63,12 @@ Run class
 
    *values* must be a sequence of numbers (integer or float) greater
    than zero. Usually, *values* is a list of number of seconds. Samples must
-   be normalized per loop iteration (total of outer and inner loops).
+   be normalized per loop iteration.
 
-   *warmups* is an optional sequence of ``(loops: int, value: float)`` tuples
-   where *value* must be greater than or equal to zero. Warmup values are
-   "raw values", they must not be normalized per loop iteration.
+   *warmups* is an optional sequence of ``(loops: int, value)`` tuples
+   where *value* must be a number (integer or float) greater than or equal to
+   zero. Warmup values are "raw values", they must not be normalized per loop
+   iteration.
 
    *values* and/or *warmups* must be a non-empty sequence. If *values* is
    empty, the run is a calibration run.
@@ -161,7 +162,7 @@ Benchmark class
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-      See :ref:`perf JSON <json>`.
+      See the :ref:`perf JSON format <json>`.
 
    .. method:: format_value(value) -> str
 
@@ -254,16 +255,20 @@ Benchmark class
 
       Load a benchmark from a JSON file which was created by :meth:`dump`.
 
-      *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or a file object open to read.
 
-      See :ref:`perf JSON <json>`.
+      Raise an exception if the file contains more than one benchmark.
+
+      See the :ref:`perf JSON format <json>`.
 
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark from a JSON string.
 
-      See :ref:`perf JSON <json>`.
+      Raise an exception if JSON contains more than one benchmark.
+
+      See the :ref:`perf JSON format <json>`.
 
    .. method:: mean()
 
@@ -355,7 +360,7 @@ BenchmarkSuite class
 
       Dump the benchmark suite as JSON into *file*.
 
-      *file* can be: a filename, or a file object open for write.
+      *file* can be a filename, or a file object open for write.
 
       If *file* is a filename ending with ``.gz``, the file is compressed by
       gzip.
@@ -365,7 +370,7 @@ BenchmarkSuite class
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-      See :ref:`perf JSON <json>`.
+      See the :ref:`perf JSON format <json>`.
 
    .. method:: get_benchmark(name: str) -> Benchmark
 
@@ -427,16 +432,16 @@ BenchmarkSuite class
       Load a benchmark suite from a JSON file which was created by
       :meth:`dump`.
 
-      *file* can be: a filename, ``'-'`` string to load from :data:`sys.stdin`,
+      *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or a file object open to read.
 
-      See :ref:`perf JSON <json>`.
+      See the :ref:`perf JSON format <json>`.
 
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark suite from a JSON string.
 
-      See :ref:`perf JSON <json>`.
+      See the :ref:`perf JSON format <json>`.
 
    Attributes:
 
@@ -728,8 +733,8 @@ Other:
 
 .. _json:
 
-perf JSON file format
-=====================
+perf JSON format
+================
 
 perf stores benchmark results as JSON in files. By default, the JSON is
 formatted to produce small files. Use the ``python3 -m perf convert --indent
