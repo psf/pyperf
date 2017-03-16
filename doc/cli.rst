@@ -37,7 +37,7 @@ Show benchmarks of one or multiple benchmark suites::
         [-d/--dump]
         [-m/--metadata]
         |-g/--hist] [-t/--stats]
-        [-b NAME/--name NAME]
+        [-b NAME/--benchmark NAME]
         filename.json [filename2.json ...]
 
 * ``--quiet`` enables the quiet mode
@@ -49,7 +49,7 @@ Show benchmarks of one or multiple benchmark suites::
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
-* ``--name NAME`` only displays the benchmark called ``NAME``
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``
 
 .. _show_cmd_metadata:
 
@@ -165,12 +165,12 @@ perf check
 Check if benchmarks are stable::
 
     python3 -m perf check
-        [-b NAME/--name NAME]
+        [-b NAME/--benchmark NAME]
         filename [filename2 ...]
 
 Options:
 
-* ``--name NAME`` only check the benchmark called ``NAME``
+* ``--benchmark NAME`` only check the benchmark called ``NAME``
 
 Example of a stable benchmark::
 
@@ -304,12 +304,12 @@ perf metadata
 Display metadata of benchmark files::
 
     python3 -m perf metadata
-        [-b NAME/--name NAME]
+        [-b NAME/--benchmark NAME]
         filename [filename2 ...]
 
 Options:
 
-* ``--name NAME`` only displays the benchmark called ``NAME``
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``
 
 Example::
 
@@ -347,7 +347,7 @@ Usage
 
     python3 -m perf timeit
         [options]
-        [--name NAME]
+        [--benchmark NAME]
         [--python PYTHON]
         [--compare-to REF_PYTHON]
         [--inner-loops INNER_LOOPS]
@@ -362,7 +362,7 @@ Options:
   Multiple statements can be used.
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
   The option can be specified multiple times.
-* ``--name=NAME``: Benchmark name (default: ``timeit``).
+* ``--benchmark=NAME``: Benchmark name (default: ``timeit``).
 * ``--inner-loops=INNER_LOOPS``: Number of inner loops per value. For example,
   the number of times that the code is copied manually multiple times to reduce
   the overhead of the outer loop.

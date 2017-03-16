@@ -9,6 +9,7 @@ Version 0.9.7
 * ``hist`` command now also checks the benchmark stability by default
 * Remove ``format()`` and ``__str__()`` methods from Benchmark. These methods
   were too opiniated.
+* Rename ``--name=NAME`` option to ``--benchmark=NAME``
 
 Version 0.9.6 (2017-03-15)
 --------------------------

@@ -24,7 +24,7 @@ def create_parser():
 
     def input_filenames(cmd, name=True):
         if name:
-            cmd.add_argument('-b', '--name',
+            cmd.add_argument('-b', '--benchmark', metavar='NAME',
                              help='only display the benchmark called NAME')
         cmd.add_argument('filenames', metavar='file.json',
                          type=str, nargs='+',
@@ -321,8 +321,8 @@ class Benchmarks:
 def load_benchmarks(args, name=True):
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
-    if name and args.name:
-        data.include_benchmark(args.name)
+    if name and args.benchmark:
+        data.include_benchmark(args.benchmark)
     return data
 
 

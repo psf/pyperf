@@ -10,9 +10,9 @@ BUGS
 TODO
 ====
 
+* show: add --name option to always display benchmark names
 * warmups: normalized or not?
 * dump: show normalized and raw warmups
-* CLI: rename --name to --benchmarks
 * Compute duration in the main process, not in the worker process? Or replace
   the value in the main process?
 * Implement a few system operations on macOS
