@@ -663,3 +663,79 @@ Functions
    For example, return ``True`` for PyPy but ``False`` for CPython.
 
    .. versionadded:: 0.7.4
+
+
+.. _json:
+
+perf JSON file format
+=====================
+
+perf stores benchmark results as JSON in files. By default, the JSON is
+formatted to produce small files. Use the ``python3 -m perf convert --indent
+(...)`` command (see :ref:`perf convert <convert_cmd>`) to get readable
+(indented) JSON.
+
+perf supports JSON files compressed by gzip: use gzip if filename ends with
+``.gz``.
+
+Example of JSON, ``...`` is used in the example for readability::
+
+    {
+        "benchmarks": [
+            {
+                "runs": [
+                    {
+                        "metadata": {
+                            "date": "2016-10-21 03:14:19.670631",
+                            "duration": 0.33765527700597886,
+                            "load_avg_1min": 0.29,
+                            ...
+                        },
+                        "warmups": [
+                            [
+                                1,
+                                0.023075559991411865
+                            ],
+                            [
+                                2,
+                                0.04504403499595355
+                            ],
+                            ...
+                        ]
+                    },
+                    {
+                        "metadata": {
+                            ...
+                        },
+                        "values": [
+                            0.022752201875846367,
+                            0.022529058374857414,
+                            0.022569017250134493
+                        ],
+                        "warmups": [
+                            [
+                                8,
+                                0.1799866840010509
+                            ]
+                        ]
+                    },
+                    ...
+                ]
+            }
+        ],
+        "metadata": {
+            "cpu_count": 4,
+            "cpu_model_name": "Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz",
+            "description": "Telco decimal benchmark",
+            "hostname": "selma",
+            "loops": 8,
+            "name": "telco",
+            "perf_version": "0.8.2",
+            "performance_version": "0.3.3",
+            ...
+        },
+        "version": 6
+    }
+
+See also the `jq tool <https://stedolan.github.io/jq/>`_: "lightweight and
+flexible command-line JSON processor".
