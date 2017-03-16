@@ -1,5 +1,6 @@
 import perf
 
+
 def bench_dict(loops, mydict):
     range_it = range(loops)
     t0 = perf.perf_counter()
@@ -17,6 +18,7 @@ def bench_dict(loops, mydict):
         mydict['900']
 
     return perf.perf_counter() - t0
+
 
 runner = perf.Runner()
 mydict = {str(k): k for k in range(1000)}
