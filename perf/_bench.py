@@ -19,8 +19,8 @@ from perf._utils import parse_iso8601, median_abs_dev
 
 # JSON format history:
 #
-# 7 - (perf 0.9.7) warmup values are now per loop iteration,
-#      rather than raw values.
+# '1.0' - (perf 1.0) warmup values are now per loop iteration,
+#         rather than raw values.
 # 6 - (perf 0.9.6) add common_metadata to the root: metadata common to all
 #     benchmarks (common to all runs of all benchmarks); rename 'samples'
 #     to 'values' in runs
@@ -31,7 +31,8 @@ from perf._utils import parse_iso8601, median_abs_dev
 # 3 - (perf 0.7) add Run class
 # 2 - (perf 0.6) support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = 7
+_JSON_VERSION = '1.0'
+_JSON_MAP_VERSION = {5: (0, 8, 3), 6: (0, 9, 6), '1.0': (1, 0)}
 
 # Metadata checked by add_run(): all runs have must have the same
 # value for these metadata (or no run must have this metadata)
@@ -226,13 +227,13 @@ class Run(object):
 
         warmups = run_data.get('warmups', None)
         if warmups:
-            if version >= 7:
+            if version >= (1, 0):
                 warmups = [tuple(item) for item in warmups]
             else:
                 inner_loops = metadata.get('inner_loops', 1)
                 warmups = [(loops, raw_value / (loops * inner_loops))
                            for loops, raw_value in warmups]
-        if version >= 6:
+        if version >= (0, 9, 6):
             values = run_data.get('values', ())
         else:
             values = run_data['samples']
@@ -483,7 +484,7 @@ class Benchmark(object):
 
     @classmethod
     def _json_load(cls, version, data, suite_metadata):
-        if version >= 6:
+        if version >= (0, 9, 6):
             metadata = data.get('metadata', {})
         else:
             metadata = data.get('common_metadata', {})
@@ -684,11 +685,12 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, data):
         version = data.get('version')
-        if version not in (5, 6, _JSON_VERSION):
+        version_info = _JSON_MAP_VERSION.get(version)
+        if not version_info:
             raise ValueError("file format version %r not supported" % version)
         benchmarks_json = data['benchmarks']
 
-        if version >= 6:
+        if version_info >= (0, 9, 6):
             metadata = data.get('metadata', {})
             if metadata is not None:
                 metadata = parse_metadata(metadata)
@@ -697,7 +699,7 @@ class BenchmarkSuite(object):
 
         benchmarks = []
         for bench_data in benchmarks_json:
-            benchmark = Benchmark._json_load(version, bench_data, metadata)
+            benchmark = Benchmark._json_load(version_info, bench_data, metadata)
             benchmarks.append(benchmark)
         suite = cls(benchmarks, filename=filename)
 
