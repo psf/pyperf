@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.1
+-----------
+
+* Fix Windows 32bit issue on Python 2.7, fix by yattom.
+
 Version 1.0 (2017-03-17)
 ------------------------
 
