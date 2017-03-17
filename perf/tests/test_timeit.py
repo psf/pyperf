@@ -231,7 +231,6 @@ class TestTimeit(unittest.TestCase):
             .*
             changed: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
             .*
-
             (?:Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
