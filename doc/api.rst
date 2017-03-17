@@ -91,6 +91,14 @@ Run class
    loop iterations: see :ref:`Runs, values, warmups, outer and inner loops
    <loops>`.
 
+   *metadata* are metadata of the run, see :ref:`Metadata <metadata>`.
+   Important metadata:
+
+   * ``name`` (mandatory, non-empty str): benchmark name
+   * ``loops`` (``int >= 1``): number of outer-loops
+   * ``inner_loops`` (``int >= 1``): number of inner-loops
+   * ``unit`` (str): unit of values: ``'second'``, ``'byte'`` or ``'integer'``
+
    Set *collect_metadata* to false to not collect system metadata.
 
    .. versionchanged:: 0.9.6
@@ -638,11 +646,11 @@ The :class:`Run` class collects metadata by default.
 
 Benchmark:
 
-* ``date``: date when the benchmark run started, formatted as ISO 8601
-* ``duration``: total duration of the benchmark run in seconds (``float``)
-* ``name``: name of the benchmark
-* ``loops``: number of outer-loops per value (``int``)
-* ``inner_loops``: number of inner-loops of the benchmark (``int``)
+* ``date`` (str): date when the benchmark run started, formatted as ISO 8601
+* ``duration`` (int or float >= 0): total duration of the benchmark run in seconds (``float``)
+* ``name`` (non-empty str): benchmark name
+* ``loops`` (``int >= 1``): number of outer-loops per value (``int``)
+* ``inner_loops`` (``int >= 1``): number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
   available
 
@@ -661,9 +669,9 @@ Python metadata:
 
 Memory metadata:
 
-* ``mem_max_rss``: Maximum resident set size in bytes (``int``). On Linux,
+* ``mem_max_rss`` (int): Maximum resident set size in bytes (``int``). On Linux,
   kernel 2.6.32 or newer is required.
-* ``mem_peak_pagefile_usage``: Get ``PeakPagefileUsage`` of
+* ``mem_peak_pagefile_usage`` (int): Get ``PeakPagefileUsage`` of
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process. Only available on Windows.
 
@@ -680,17 +688,16 @@ CPU metadata:
 
 System metadata:
 
-* ``aslr``: Address Space Layout Randomization (ASLR), ``enabled`` or
-  ``disabled``
-* ``boot_time``: Datetime of the system boot
+* ``aslr``: Address Space Layout Randomization (ASLR)
+* ``boot_time`` (str): Date and time of the system boot
 * ``hostname``: Host name
 * ``platform``: short string describing the platform
-* ``load_avg_1min``: Load average figures giving the number of jobs in the run
+* ``load_avg_1min`` (int or float >= 0): Load average figures giving the number of jobs in the run
   queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
   minute
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
   (processes, threads)
-* ``uptime``: Duration since the system boot (``float``, number of seconds
+* ``uptime`` (int or float >= 0): Duration since the system boot (``float``, number of seconds
   since ``boot_time``)
 
 Other:
