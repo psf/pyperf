@@ -1,21 +1,29 @@
 Changelog
 =========
 
-Version 1.0
------------
+Version 1.0 (2017-03-17)
+------------------------
 
-* Add ``Benchmark.percentile()`` method
+Enhancements:
+
 * ``stats`` command now displays percentiles
 * ``hist`` command now also checks the benchmark stability by default
+* dump command now displays raw value of calibration runs.
+* Add ``Benchmark.percentile()`` method
+
+Backward incompatible changes:
+
+* Remove the ``compare`` command to only keep the ``compare_to`` command
+  which is better defined
+* Run warmup values must now be normalized per loop iteration.
 * Remove ``format()`` and ``__str__()`` methods from Benchmark. These methods
   were too opiniated.
 * Rename ``--name=NAME`` option to ``--benchmark=NAME``
 * Remove ``perf.monotonic_clock()`` since it wasn't monotonic on Python 2.7.
 * Remove ``is_significant()`` from the public API
-* Run warmup values must now be normalized per loop iteration.
-* dump command now displays raw value of calibration runs.
-* Remove the ``compare`` command to only keep the ``compare_to`` command
-  which is better defined
+
+Other changes:
+
 * check command now only complains if min/max is 50% smaller/larger than
   the mean, instead of 25%.
 
