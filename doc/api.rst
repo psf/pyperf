@@ -690,8 +690,6 @@ Example of JSON, ``...`` is used in the example for readability::
                         "metadata": {
                             "date": "2016-10-21 03:14:19.670631",
                             "duration": 0.33765527700597886,
-                            "load_avg_1min": 0.29,
-                            ...
                         },
                         "warmups": [
                             [
@@ -700,14 +698,22 @@ Example of JSON, ``...`` is used in the example for readability::
                             ],
                             [
                                 2,
-                                0.04504403499595355
+                                0.022522017497976776
                             ],
-                            ...
+                            [
+                                4,
+                                0.02247579424874857
+                            ],
+                            [
+                                8,
+                                0.02237467262420978
+                            ]
                         ]
                     },
                     {
                         "metadata": {
-                            ...
+                            "date": "2016-10-21 03:14:20.496710",
+                            "duration": 0.7234010050015058,
                         },
                         "values": [
                             0.022752201875846367,
@@ -717,11 +723,29 @@ Example of JSON, ``...`` is used in the example for readability::
                         "warmups": [
                             [
                                 8,
-                                0.1799866840010509
+                                0.02249833550013136
                             ]
                         ]
                     },
                     ...
+                    {
+                        "metadata": {
+                            "date": "2016-10-21 03:14:52.549713",
+                            "duration": 0.719920061994344,
+                            ...
+                        },
+                        "values": [
+                            0.022562820375242154,
+                            0.022442164625317673,
+                            0.02241712374961935
+                        ],
+                        "warmups": [
+                            [
+                                8,
+                                0.02249412499986647
+                            ]
+                        ]
+                    }
                 ]
             }
         ],
@@ -733,10 +757,9 @@ Example of JSON, ``...`` is used in the example for readability::
             "loops": 8,
             "name": "telco",
             "perf_version": "0.8.2",
-            "performance_version": "0.3.3",
             ...
         },
-        "version": 6
+        "version": "1.0"
     }
 
 See also the `jq tool <https://stedolan.github.io/jq/>`_: "lightweight and
