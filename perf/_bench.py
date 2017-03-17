@@ -684,7 +684,7 @@ class BenchmarkSuite(object):
     @classmethod
     def _json_load(cls, filename, data):
         version = data.get('version')
-        if version not in (4, 5, 6, _JSON_VERSION):
+        if version not in (5, 6, _JSON_VERSION):
             raise ValueError("file format version %r not supported" % version)
         benchmarks_json = data['benchmarks']
 

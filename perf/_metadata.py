@@ -33,12 +33,8 @@ def format_generic(value):
 
 
 def format_system_load(load):
-    # Formatter for system load read from /proc/loadavg on Linux (ex: 0.12)
-    if isinstance(load, (int, float)):
-        return '%.2f' % load
-    else:
-        # backward compatibility with perf 0.7.0 (load stored as string)
-        return load
+    # Format system load read from /proc/loadavg on Linux (ex: 0.12)
+    return '%.2f' % load
 
 
 def is_strictly_positive(value):
@@ -74,7 +70,7 @@ METADATA = {
 
     'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
     'uptime': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
-    'load_avg_1min': _MetadataInfo(format_system_load, six.string_types + NUMBER_TYPES, is_positive, None),
+    'load_avg_1min': _MetadataInfo(format_system_load, NUMBER_TYPES, is_positive, None),
 
     'mem_max_rss': BYTES,
     'mem_peak_pagefile_usage': BYTES,
