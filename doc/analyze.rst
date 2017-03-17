@@ -196,17 +196,16 @@ Let's use Python 2 and Python 3 to generate two different benchmark results::
 
     $ python2 -m perf timeit '[1,2]*1000' -o py2.json
     .....................
-    Median +- std dev: 6.27 us +- 0.20 us
-
+    Mean +- std dev: 4.70 us +- 0.18 us
     $ python3 -m perf timeit '[1,2]*1000' -o py3.json
     .....................
-    Median +- std dev: 5.25 us +- 0.11 us
+    Mean +- std dev: 4.22 us +- 0.08 us
 
 The :ref:`perf compare_to <compare_cmd>` command compares the second benchmark
 to the first benchmark::
 
     $ python3 -m perf compare_to py2.json py3.json
-    Median +- std dev: [py2] 6.27 us +- 0.20 us -> [py3] 5.25 us +- 0.11 us: 1.20x faster (-16%)
+    Mean +- std dev: [py2] 4.70 us +- 0.18 us -> [py3] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
 Python 3 is faster than Python 2 on this benchmark.
 
@@ -216,5 +215,5 @@ Variant: render a table::
     +-----------+---------+------------------------------+
     | Benchmark | py2     | py3                          |
     +===========+=========+==============================+
-    | timeit    | 6.27 us | 5.25 us: 1.20x faster (-16%) |
+    | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
     +-----------+---------+------------------------------+
