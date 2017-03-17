@@ -56,20 +56,24 @@ Show benchmarks of one or multiple benchmark suites::
 Example::
 
     $ python3 -m perf show telco.json
-    Median +- std dev: 24.6 ms +- 0.2 ms
+    Mean +- std dev: 22.5 ms +- 0.2 ms
 
 Example with metadata::
 
     $ python3 -m perf show telco.json --metadata
     Metadata:
-    - aslr: Full randomization
-    - cpu_affinity: 1 (isolated)
-    - cpu_count: 2
+    - boot_time: 2016-10-19 01:10:08
+    - cpu_count: 4
     - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - perf_version: 0.7
+    - description: Telco decimal benchmark
+    - hostname: selma
+    - loops: 8
+    - name: telco
+    - perf_version: 0.8.2
     ...
 
-    Median +- std dev: 24.6 ms +- 0.2 ms
+    Mean +- std dev: 22.5 ms +- 0.2 ms
+
 
 .. _compare_cmd:
 
@@ -369,58 +373,19 @@ Options:
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
    ``-n`` (runs) in perf timeit.
 
-Example
-^^^^^^^
-
 Example::
 
-    $ python3 -m perf timeit '" abc ".strip()'
+    $ python3 -m perf timeit '" abc ".strip()' --duplicate=1024
     .........................
-    Median +- std dev: 113 ns +- 2 ns
+    Mean +- std dev: 104 ns +- 1 ns
 
-Verbose example::
+Compare Python 3 to Python 2::
 
-    $ python3 -m perf timeit --rigorous --hist --dump --metadata '" abc ".strip()'
-    ........................................
-    Metadata:
-    - cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
-    - loops: 2^20
-    - platform: Linux-4.6.3-300.fc24.x86_64-x86_64-with-fedora-24-Twenty_Four
-    - python_version: 3.5.1 (64bit)
-    - timeit_setup: 'pass'
-    - timeit_stmt: '" abc ".strip()'
-    - timer: clock_gettime(CLOCK_MONOTONIC), resolution: 1.00 ns
-    ...
+    $ python3 -m perf timeit '" abc ".strip()' --duplicate=1024 --compare-to=python2
+    python2: ..................... 84.6 ns +- 4.4 ns
+    python3: ..................... 104 ns +- 0 ns
 
-    Run 1: warmup (1): 135 ns (+18%); values (3): 112 ns, 112 ns, 114 ns
-    Run 2: warmup (1): 122 ns (+7%); values (3): 121 ns (+6%), 112 ns, 112 ns
-    Run 3: warmup (1): 112 ns; values (3): 112 ns, 112 ns, 112 ns
-    ...
-    Run 40: warmup (1): 117 ns; values (3): 114 ns, 137 ns (+20%), 123 ns (+8%)
-
-    107 ns:  8 ###########
-    111 ns: 59 ###############################################################################
-    116 ns: 21 ############################
-    120 ns: 10 #############
-    125 ns:  9 ############
-    129 ns:  3 ####
-    133 ns:  4 #####
-    138 ns:  1 #
-    142 ns:  1 #
-    147 ns:  1 #
-    151 ns:  0 |
-    156 ns:  0 |
-    160 ns:  0 |
-    165 ns:  2 ###
-    169 ns:  0 |
-    174 ns:  0 |
-    178 ns:  0 |
-    182 ns:  0 |
-    187 ns:  0 |
-    191 ns:  0 |
-    196 ns:  1 #
-
-    Median +- std dev: 114 ns +- 12 ns
+    Mean +- std dev: [python2] 84.6 ns +- 4.4 ns -> [python3] 104 ns +- 0 ns: 1.23x slower (+23%)
 
 
 timeit versus perf timeit

@@ -10,7 +10,7 @@ the ``--output`` option (``-o``)::
 
     $ python3 -m perf timeit '[1,2]*1000' -o bench.json
     .....................
-    Median +- std dev: 5.22 us +- 0.22 us
+    Mean +- std dev: 4.22 us +- 0.08 us
 
 perf provides the following commands oo analyze benchmark results:
 
