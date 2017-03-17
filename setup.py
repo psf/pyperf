@@ -25,7 +25,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '1.0'
+VERSION = '1.1'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [
