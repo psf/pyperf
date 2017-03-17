@@ -184,20 +184,26 @@ def format_filename_func(suites):
     filenames = [suite.filename for suite in suites]
 
     # FIXME: reuse get_python_names()
-    base_filenames = {os.path.basename(filename) for filename in filenames}
+    base_filenames = set(map(os.path.basename, filenames))
     if len(base_filenames) != len(filenames):
         # FIXME: try harder: try to get differente names by keeping only
         # the parent directory?
         return format_filename_noop
 
-    noext_filenames = {os.path.splitext(filename)[0]
-                       for filename in base_filenames}
-    if len(noext_filenames) != len(base_filenames):
+    def strip_extension(filename):
+        name = os.path.splitext(filename)[0]
+        if name.endswith('.json'):
+            # replace "bench.json.gz" with "bench"
+            name = name[:-5]
+        return name
+
+    next_filenames = set(map(strip_extension, base_filenames))
+    if len(next_filenames) != len(base_filenames):
         return os.path.basename
 
     def format_filename(filename):
         filename = os.path.basename(filename)
-        filename = os.path.splitext(filename)[0]
+        filename = strip_extension(filename)
         return filename
 
     return format_filename
