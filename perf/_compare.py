@@ -325,31 +325,25 @@ def compare_suites_by_speed(all_results, show_name, args):
               % (len(not_significant), ', '.join(not_significant)))
 
 
-def bench_sort_key(item):
-    return (item.benchmark.mean(), item.filename or '')
-
-
-def compare_suites(benchmarks, sort_benchmarks, by_speed, args):
+def compare_suites(benchmarks, args):
     grouped_by_name = benchmarks.group_by_name()
     if not grouped_by_name:
         print("ERROR: Benchmark suites have no benchmark in common",
               file=sys.stderr)
         sys.exit(1)
 
-    if getattr(args, 'table', False):
-        compare_suites_table(grouped_by_name, by_speed, args)
+    if args.table:
+        compare_suites_table(grouped_by_name, args.group_by_speed, args)
     else:
         # List of CompareResults
         all_results = []
         for item in grouped_by_name:
             cmp_benchmarks = item.benchmarks
-            if sort_benchmarks:
-                cmp_benchmarks.sort(key=bench_sort_key)
             results = compare_benchmarks(item.name, cmp_benchmarks)
             all_results.append(results)
 
         show_name = (len(grouped_by_name) > 1)
-        if by_speed:
+        if args.group_by_speed:
             compare_suites_by_speed(all_results, show_name, args)
         else:
             compare_suites_list(all_results, show_name, args)

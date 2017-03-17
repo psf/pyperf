@@ -202,18 +202,13 @@ Let's use Python 2 and Python 3 to generate two different benchmark results::
     .....................
     Median +- std dev: 5.25 us +- 0.11 us
 
-The :ref:`compare <compare_cmd>` command uses the fastest version as the reference::
-
-    $ python3 -m perf compare py2.json py3.json
-    Median +- std dev: [py3] 5.25 us +- 0.11 us -> [py2] 6.27 us +- 0.20 us: 1.20x slower (+20%)
-
-Python 2 is slower than Python 3 on this benchmark.
-
-The :ref:`compare_to <compare_cmd>` command always use the first file as the
-reference::
+The :ref:`perf compare_to <compare_cmd>` command compares the second benchmark
+to the first benchmark::
 
     $ python3 -m perf compare_to py2.json py3.json
     Median +- std dev: [py2] 6.27 us +- 0.20 us -> [py3] 5.25 us +- 0.11 us: 1.20x faster (-16%)
+
+Python 3 is faster than Python 2 on this benchmark.
 
 Variant: render a table::
 

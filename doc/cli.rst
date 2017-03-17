@@ -4,7 +4,7 @@ perf commands
 Commands:
 
 * :ref:`perf show <show_cmd>`
-* :ref:`perf compare and compare_to <compare_cmd>`
+* :ref:`perf compare_to <compare_cmd>`
 * :ref:`perf stats <stats_cmd>`
 * :ref:`perf check <check_cmd>`
 * :ref:`perf dump <dump_cmd>`
@@ -73,15 +73,8 @@ Example with metadata::
 
 .. _compare_cmd:
 
-perf compare and perf compare_to
---------------------------------
-
-Compare benchmark suites, compute the minimum of each benchmark to use it as
-the reference::
-
-    python3 -m perf compare
-        [-v/--verbose] [-m/--metadata]
-        filename.json filename2.json [filename3.json ...]
+perf compare_to
+---------------
 
 Compare benchmark suites, use the first file as the reference::
 
@@ -101,10 +94,12 @@ Options:
 
 Example::
 
-    $ python3 -m perf compare py2.json py3.json
+    $ python3 -m perf compare_to py2.json py3.json
     Median +- std dev: [py2] 11.4 ms +- 2.1 ms -> [py3] 13.6 ms +- 1.3 ms: 1.19x slower (+19%)
 
 On this example, py2 is faster and so used as the reference.
+
+See also the ``--compare-to`` :ref:`option of the Runner CLI <runner_cli>`.
 
 
 .. _stats_cmd:

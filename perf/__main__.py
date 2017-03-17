@@ -71,23 +71,21 @@ def create_parser():
                           'depeding on the terminal size)')
     display_options(cmd)
 
-    # compare, compare_to
-    for command in ('compare', 'compare_to'):
-        cmd = subparsers.add_parser(command, help='Compare benchmarks')
-        cmd.add_argument('-q', '--quiet', action="store_true",
-                         help='enable quiet mode')
-        cmd.add_argument('-v', '--verbose', action="store_true",
-                         help='enable verbose mode')
-        if command == 'compare_to':
-            cmd.add_argument('-G', '--group-by-speed', action="store_true",
-                             help='group slower/faster/same speed')
-            cmd.add_argument('--min-speed', type=float,
-                             help='Absolute minimum of speed in percent to '
-                                  'consider that a benchmark is significant '
-                                  '(default: 0%%)')
-            cmd.add_argument('--table', action="store_true",
-                             help='Render a table')
-        input_filenames(cmd)
+    # compare_to
+    cmd = subparsers.add_parser('compare_to', help='Compare benchmarks')
+    cmd.add_argument('-q', '--quiet', action="store_true",
+                     help='enable quiet mode')
+    cmd.add_argument('-v', '--verbose', action="store_true",
+                     help='enable verbose mode')
+    cmd.add_argument('-G', '--group-by-speed', action="store_true",
+                     help='group slower/faster/same speed')
+    cmd.add_argument('--min-speed', type=float,
+                     help='Absolute minimum of speed in percent to '
+                          'consider that a benchmark is significant '
+                          '(default: 0%%)')
+    cmd.add_argument('--table', action="store_true",
+                     help='Render a table')
+    input_filenames(cmd)
 
     # stats
     cmd = subparsers.add_parser('stats', help='Compute statistics')
@@ -346,7 +344,7 @@ def _display_common_metadata(metadatas, lines):
             metadata.pop(key, None)
 
 
-def cmd_compare(args):
+def cmd_compare_to(args):
     from perf._compare import compare_suites
 
     data = load_benchmarks(args)
@@ -354,16 +352,12 @@ def cmd_compare(args):
         print("ERROR: need at least two benchmark files")
         sys.exit(1)
 
-    if args.action == 'compare_to':
-        by_speed = args.group_by_speed
-    else:
-        by_speed = False
-    if by_speed and data.get_nsuite() != 2:
-        print("ERROR: by_speed only works on two benchmark files",
+    if args.group_by_speed and data.get_nsuite() != 2:
+        print("ERROR: --by-speed only works on two benchmark files",
               file=sys.stderr)
         sys.exit(1)
 
-    compare_suites(data, args.action == 'compare', by_speed, args)
+    compare_suites(data, args)
 
 
 def cmd_collect_metadata(args):
@@ -718,8 +712,7 @@ def main():
 
     dispatch = {
         'show': functools.partial(cmd_show, args),
-        'compare': functools.partial(cmd_compare, args),
-        'compare_to': functools.partial(cmd_compare, args),
+        'compare_to': functools.partial(cmd_compare_to, args),
         'hist': functools.partial(cmd_hist, args),
         'stats': functools.partial(cmd_stats, args),
         'metadata': functools.partial(cmd_metadata, args),

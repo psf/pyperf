@@ -14,6 +14,8 @@ Version 1.0
 * Remove ``is_significant()`` from the public API
 * Run warmup values must now be normalized per loop iteration.
 * dump command now displays raw value of calibration runs.
+* Remove the ``compare`` command to only keep the ``compare_to`` command
+  which is better defined
 
 Version 0.9.6 (2017-03-15)
 --------------------------

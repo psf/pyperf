@@ -165,25 +165,25 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-    def test_compare_not_significant(self):
+    def test_compare_to_not_significant(self):
         ref_result = self.create_bench((1.0, 1.5, 2.0),
                                        metadata={'name': 'name'})
         changed_result = self.create_bench((1.5, 2.0, 2.5),
                                            metadata={'name': 'name'})
 
-        stdout = self.compare('compare', ref_result, changed_result)
+        stdout = self.compare('compare_to', ref_result, changed_result)
 
         expected = 'Benchmark hidden because not significant (1): name'
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-    def test_compare(self):
+    def test_compare_to_not_significant_verbose(self):
         ref_result = self.create_bench((1.0, 1.5, 2.0),
                                        metadata={'name': 'name'})
         changed_result = self.create_bench((1.5, 2.0, 2.5),
                                            metadata={'name': 'name'})
 
-        stdout = self.compare('compare', ref_result, changed_result, '-v')
+        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
         expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
                     '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
@@ -191,15 +191,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-    def test_compare_same(self):
+    def test_compare_to_same(self):
         values = (1.0, 1.5, 2.0)
         ref_result = self.create_bench(values, metadata={'name': 'name'})
         changed_result = self.create_bench(values, metadata={'name': 'name'})
 
-        stdout = self.compare('compare', ref_result, changed_result, '-v')
+        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
-        expected = ('Mean +- std dev: [changed] 1.50 sec +- 0.50 sec '
-                    '-> [ref] 1.50 sec +- 0.50 sec: no change\n'
+        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
+                    '-> [changed] 1.50 sec +- 0.50 sec: no change\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
