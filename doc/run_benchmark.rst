@@ -115,14 +115,19 @@ manually duplicated to limit the cost of Python loops. See the
 Example of unstable benchmark because the number of loops is too low::
 
     $ python3 -m perf timeit --loops=10 pass
-    .........................
-    WARNING: the benchmark seems unstable, the standard deviation is high (11%)
-    Try to rerun the benchmark with more runs, values and/or loops
+    ....................
+    WARNING: the benchmark result may be unstable
+    * the standard deviation (10.8 ns) is 19% of the mean (56.8 ns)
+    * the maximum (99.5 ns) is 75% greater than the mean (56.8 ns)
+    * the shortest raw value only took 451 ns
 
-    ERROR: the benchmark may be very unstable, the shortest value only took 310 ns
-    Try to rerun the benchmark with more loops or increase --min-time
+    Try to rerun the benchmark with more runs, values and/or loops.
+    Run 'python3 -m perf system tune' command to reduce the system jitter.
+    Use perf stats, perf dump and perf hist to analyze results.
+    Use --quiet option to hide these warnings.
 
-    Average: 36.9 ns +- 4.2 ns
+    Mean +- std dev: 56.8 ns +- 10.8 ns
+
 
 See also the :ref:`check command <check_cmd>`.
 

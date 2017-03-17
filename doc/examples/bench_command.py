@@ -1,5 +1,4 @@
 import sys
-
 import perf
 
 runner = perf.Runner()

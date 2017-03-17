@@ -1,10 +1,8 @@
 import argparse
-
 import matplotlib.pyplot as plt
+import perf
 import pylab
 import scipy.stats as stats
-
-import perf
 
 
 def display_histogram_scipy(bench, mean, bins):

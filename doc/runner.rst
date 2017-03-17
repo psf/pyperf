@@ -18,10 +18,10 @@ Options::
     -w WARMUPS/--warmups=WARMUPS
     --min-time=MIN_TIME
 
-Default (no JIT, ex: CPython): 20 processes, 3 values per process (total: 60
+Default without JIT (ex: CPython): 20 processes, 3 values per process (total: 60
 values), and 1 warmup.
 
-Default (with a JIT, ex: PyPy): 6 processes, 10 values per process (total: 60
+Default with a JIT (ex: PyPy): 6 processes, 10 values per process (total: 60
 values), and 10 warmups.
 
 * ``--rigorous``: Spend longer running tests to get more accurate results.
