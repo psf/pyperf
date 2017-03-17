@@ -850,8 +850,11 @@ class Runner:
                 print()
             elif not args.quiet:
                 warnings = format_checks(bench)
-                for line in warnings:
-                    print(line)
+                if warnings:
+                    print()
+                    for line in warnings:
+                        print(line)
+                    print()
 
         if multiline:
             display_title('Compare')
