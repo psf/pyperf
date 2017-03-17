@@ -367,7 +367,7 @@ def format_checks(bench, lines=None):
         ('maximum', max(values)),
     ):
         percent = (value - mean) * 100.0 / mean
-        if abs(percent) >= 25:
+        if abs(percent) >= 50:
             if percent >= 0:
                 text = "%.0f%% greater" % (percent)
             else:
@@ -379,7 +379,7 @@ def format_checks(bench, lines=None):
     if bench.get_unit() == 'second':
         shortest = min(bench._get_raw_values())
         if shortest < 1e-3:
-            warn("the shortest raw value only took %s"
+            warn("the shortest raw value is only %s"
                  % bench.format_value(shortest))
 
     if warnings:

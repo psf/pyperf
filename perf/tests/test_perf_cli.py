@@ -359,8 +359,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             WARNING: the benchmark result may be unstable
             * the standard deviation (500 ms) is 33% of the mean (1.50 sec)
-            * the minimum (1.00 sec) is 33% smaller than the mean (1.50 sec)
-            * the maximum (2.00 sec) is 33% greater than the mean (1.50 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
             Run '{0} -m perf system tune' command to reduce the system jitter.
@@ -372,8 +370,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             WARNING: the benchmark result may be unstable
             * the standard deviation (500 ms) is 25% of the mean (2.00 sec)
-            * the minimum (1.50 sec) is 25% smaller than the mean (2.00 sec)
-            * the maximum (2.50 sec) is 25% greater than the mean (2.00 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
             Run '{0} -m perf system tune' command to reduce the system jitter.

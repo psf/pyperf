@@ -16,6 +16,8 @@ Version 1.0
 * dump command now displays raw value of calibration runs.
 * Remove the ``compare`` command to only keep the ``compare_to`` command
   which is better defined
+* check command now only complains if min/max is 50% smaller/larger than
+  the mean, instead of 25%.
 
 Version 0.9.6 (2017-03-15)
 --------------------------
