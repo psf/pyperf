@@ -58,15 +58,11 @@ Functions
 
    See also the `PEP 421 <https://www.python.org/dev/peps/pep-0421/>`_.
 
-   .. versionadded:: 0.7.4
-
 .. function:: python_has_jit()
 
    Return ``True`` if Python has a Just In Time compiler (JIT).
 
    For example, return ``True`` for PyPy but ``False`` for CPython.
-
-   .. versionadded:: 0.7.4
 
 
 Run class
@@ -100,9 +96,6 @@ Run class
    * ``unit`` (str): unit of values: ``'second'``, ``'byte'`` or ``'integer'``
 
    Set *collect_metadata* to false to not collect system metadata.
-
-   .. versionchanged:: 0.9.6
-      The attribute ``samples`` was renamed to ``values``.
 
    Methods:
 
@@ -190,17 +183,9 @@ Benchmark class
 
       Format a value including the unit.
 
-      .. versionadded:: 0.7.8
-      .. versionchanged:: 0.9.6
-         Method renamed from ``format_sample()`` to ``format_value()``.
-
    .. method:: format_values(values) -> str
 
       Format values including the unit.
-
-      .. versionadded:: 0.7.8
-      .. versionchanged:: 0.9.6
-         Method renamed from ``format_samples()`` to ``format_values()``.
 
    .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
@@ -246,9 +231,6 @@ Benchmark class
 
       Get values of all runs.
 
-      .. versionchanged:: 0.9.6
-         Method renamed from ``get_samples()`` to ``get_values()``.
-
    .. method:: get_total_duration() -> float
 
       Get the total duration of the benchmark in seconds.
@@ -270,8 +252,6 @@ Benchmark class
       * ``'byte'``: File size in bytes
       * ``'integer'``: Integer number
       * ``'second'``: Duration in seconds
-
-      .. versionadded:: 0.7.9
 
    .. classmethod:: load(file) -> Benchmark
 
@@ -348,8 +328,6 @@ Benchmark class
 
       See :ref:`Metadata <metadata>`.
 
-      .. versionadded:: 0.7.5
-
 
 BenchmarkSuite class
 --------------------
@@ -410,9 +388,6 @@ BenchmarkSuite class
 
       Get the list of benchmarks.
 
-      .. versionadded:: 0.9.2
-         The list is no more sorted by name.
-
    .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
       Get the start date of the first benchmark and end date of the last
@@ -432,8 +407,6 @@ BenchmarkSuite class
 
       See the :meth:`Benchmark.get_metadata` method
       and :ref:`Metadata <metadata>`.
-
-      .. versionadded:: 0.7.9
 
    .. method:: get_total_duration() -> float
 
@@ -536,9 +509,6 @@ Runner class
 
       See the :ref:`bench_func() example <bench_func_example>`.
 
-      .. versionchanged:: 0.9.2
-         Added *metadata* parameter.
-
    .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
       Run a benchmark on ``timeit.Timer(stmt, setup, globals=globals)``.
@@ -564,8 +534,6 @@ Runner class
         empty namespace is created. It can be used to pass variables.
 
       See the :ref:`timeit() example <timeit_example>`.
-
-      .. versionadded:: 0.9.2
 
    .. method:: bench_command(name, command)
 
@@ -603,13 +571,6 @@ Runner class
       Return a :class:`Benchmark` instance.
 
       See the :ref:`bench_time_func() example <bench_time_func_example>`.
-
-      .. versionchanged:: 0.9.2
-         Added *metadata* parameter.
-
-      .. versionchanged:: 0.9.6
-         The method was renamed from ``bench_sample_func()`` to
-         ``bench_time_func()``.
 
    .. method:: parse_args(args=None)
 

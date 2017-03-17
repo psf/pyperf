@@ -148,15 +148,6 @@ Option::
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process.
 
-.. versionchanged:: 0.9.2
-
-   Added ``--no-locale`` and locale environment variables are now inherited by
-   default.
-
-.. versionchanged:: 0.7.8
-
-   Added ``--inherit-environ=VARS``.
-
 
 Internal usage only
 -------------------

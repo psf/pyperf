@@ -27,6 +27,7 @@ TODO
   * detect NUMA
 
 * compare: check also if benchmarks are unstable
+* compare: display metadata
 * External tool (?) to produce nice HTML reports:
 
   * https://magic.io/blog/uvloop-blazing-fast-python-networking/
@@ -44,5 +45,4 @@ TODO
     - enhance hist_scipy.py to support more than one benchmark
     - https://docs.scipy.org/doc/scipy/reference/tutorial/stats.html
 
-* compare: display metadata
 * fix hist if benchmark only contains one value

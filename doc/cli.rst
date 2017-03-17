@@ -106,9 +106,6 @@ Example::
 
 On this example, py2 is faster and so used as the reference.
 
-.. versionchanged:: 0.9.3
-   Added ``--table`` option.
-
 
 .. _stats_cmd:
 
