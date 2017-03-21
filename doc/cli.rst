@@ -4,7 +4,7 @@ perf commands
 Commands:
 
 * :ref:`perf show <show_cmd>`
-* :ref:`perf compare_to <compare_cmd>`
+* :ref:`perf compare_to <compare_to_cmd>`
 * :ref:`perf stats <stats_cmd>`
 * :ref:`perf check <check_cmd>`
 * :ref:`perf dump <dump_cmd>`
@@ -75,7 +75,7 @@ Example with metadata::
     Mean +- std dev: 22.5 ms +- 0.2 ms
 
 
-.. _compare_cmd:
+.. _compare_to_cmd:
 
 perf compare_to
 ---------------
@@ -95,6 +95,11 @@ Options:
 * ``--min-speed``: Absolute minimum of speed in percent to consider that a
   benchmark is significant (default: 0%)
 * ``--table``: Render a table.
+
+perf determines whether two samples differ significantly using a `Student's
+two-sample, two-tailed t-test
+<https://en.wikipedia.org/wiki/Student's_t-test>`_ with alpha equals to
+``0.95``.
 
 Example::
 

@@ -95,7 +95,7 @@ Version 0.9.4 (2017-03-01)
 New features:
 
 * Add ``--compare-to`` option to the :ref:`Runner CLI <runner_cli>`
-* :ref:`compare_to <compare_cmd>` command: Add ``--table`` option to render a table
+* :ref:`compare_to <compare_to_cmd>` command: Add ``--table`` option to render a table
 
 Bugfixes:
 

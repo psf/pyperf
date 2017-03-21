@@ -23,8 +23,8 @@ Features of the ``perf`` module:
   <check_cmd>`.
 * :ref:`perf stats command <stats_cmd>` to analyze the distribution of benchmark
   results (min/max, mean, median, percentiles, etc.).
-* :ref:`perf compare command <compare_cmd>` tests if a difference if
-  significant (see :func:`is_significant` function). It supports comparison
+* :ref:`perf compare_to command <compare_to_cmd>` tests if a difference if
+  significant. It supports comparison
   between multiple benchmark suites (made of multiple benchmarks)
 * :ref:`perf timeit command line tool <timeit_cmd>` for quick but reliable
   Python microbenchmarks

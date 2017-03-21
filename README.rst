@@ -21,7 +21,7 @@ Features:
 * Detect if a benchmark result seems unstable.
 * ``perf stats`` command to analyze the distribution of benchmark
   results (min/max, mean, median, percentiles, etc.).
-* ``perf compare`` command tests if a difference if
+* ``perf compare_to`` command tests if a difference if
   significant. It supports comparison between multiple benchmark suites (made
   of multiple benchmarks)
 * ``perf timeit`` command line tool for quick but reliable
