@@ -657,7 +657,9 @@ System metadata:
   queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
   minute
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
-  (processes, threads)
+  (processes, threads). The value comes from the 4th field of
+  ``/proc/loadavg``: ``1`` in ``0.20 0.22 0.24 1/596 10123`` for example
+  (``596`` is the total number of threads).
 * ``uptime`` (int or float >= 0): Duration since the system boot (``float``, number of seconds
   since ``boot_time``)
 

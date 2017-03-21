@@ -99,6 +99,10 @@ You can also check the number of context switches by reading
 ``/proc/pid/status``: read ``voluntary_ctxt_switches`` and
 ``nonvoluntary_ctxt_switches``. It must be low on a CPU-bound benchmark.
 
+On Linux, perf adds a ``runnable_threads`` metadata to runs: "number of
+currently runnable kernel scheduling entities (processes, threads)" (the value
+comes from the 4th field of ``/proc/loadavg``).
+
 See also the `Visualize the system noise using perf and CPU isolation
 <https://haypo.github.io/perf-visualize-system-noise-with-cpu-isolation.html>`_
 article (by Victor Stinner, June 2016).
