@@ -156,6 +156,20 @@ See also:
   <https://haypo.github.io/intel-cpus-part2.html>`_
   by Victor Stinner, September 2016
 
+If ``nohz_full`` kernel option is used, the CPU frequency must be fixed,
+otherwise the CPU frequency will be instable. See `Bug 1378529: intel_pstate
+driver doesn't support NOHZ_FULL
+<https://bugzilla.redhat.com/show_bug.cgi?id=1378529>`_.
+
+`Intel i7 cores
+<https://en.wikipedia.org/wiki/List_of_Intel_Core_i7_microprocessors>`_:
+
+* Skylake: 6th generation
+* Broadwell: 5th generation
+* Haswell: 4th generation
+* Ivy Bridge: 3rd
+* Sandy Bridge: 2nd
+* Nehalem: 1st
 
 .. _system_cmd_ops:
 
@@ -209,6 +223,7 @@ The :ref:`perf system command <system_cmd>` implements the following checks:
   ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
   CPUs.
 
+
 Linux documentation
 ===================
 
@@ -223,12 +238,17 @@ Linux documentation
   * `Intel P-State driver
     <https://www.kernel.org/doc/Documentation/cpu-freq/intel-pstate.txt>`_
 
+* `Power Management Quality Of Service Interface (PM QOS)
+  <https://kernel.org/doc/Documentation/power/pm_qos_interface.txt>`_
+  (``/dev/cpu_dma_latency`` device)
+
 * CPU pinning, real-time:
 
   * `SMP IRQ affinity
     <https://www.kernel.org/doc/Documentation/IRQ-affinity.txt>`_
   * `NO_HZ: Reducing Scheduling-Clock Ticks
     <https://www.kernel.org/doc/Documentation/timers/NO_HZ.txt>`_
+
 
 macOS
 =====
@@ -273,6 +293,14 @@ The following options were not tested by perf developers.
 * intel_pstate=disable: force the usage of the ACPI CPU driver
 * Non-maskable interrupts (NMI): add ``nmi_watchdog=0 nowatchdog nosoftlockup``
   to the Linux kernel command line
+* processor.max_cstate=1 idle=poll  https://access.redhat.com/articles/65410
+  "You can disable all c-states by booting with idle=poll or just the deep ones
+  with "processor.max_cstate=1"
+* ``/dev/cpu_dma_latency`` can be used to prevent the CPU from entering deep
+  C-states. Open the device, write a 32-bit ``0`` to it, then keep it open
+  while your tests runs, close when you're finished. See
+  `processor.max_cstate, intel_idle.max_cstate and /dev/cpu_dma_latency
+  <http://www.breakage.org/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/>`_.
 
 Misc (untested) Linux commands::
 
@@ -292,8 +320,4 @@ Misc (untested) Linux commands::
 Notes
 =====
 
-* If ``nohz_full`` kernel option is used, the CPU frequency must be fixed,
-  otherwise the CPU frequency will be instable. See `Bug 1378529: intel_pstate
-  driver doesn't support NOHZ_FULL
-  <https://bugzilla.redhat.com/show_bug.cgi?id=1378529>`_.
 * ASLR must *not* be disabled manually! (it's enabled by default on Linux)
