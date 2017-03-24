@@ -887,6 +887,9 @@ class Runner:
                                     stderr=subprocess.STDOUT,
                                     universal_newlines=True)
             output = popen_communicate(proc)[0]
+            if proc.returncode:
+                raise Exception("Command failed with exit code %s"
+                                % proc.returncode)
 
             max_rss = None
             try:
