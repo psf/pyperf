@@ -70,12 +70,24 @@ def parse_python_names(names):
 
 
 class _WorkerTask:
-    def __init__(self, args, metadata, task_func, inner_loops):
+    def __init__(self, runner, name, task_func, func_metadata):
+        args = runner.parse_args()
+
+        name = name.strip()
+        if not name:
+            raise ValueError("benchmark name must be a non-empty string")
+
+        self.name = name
         self.args = args
-        self.metadata = metadata
         self.task_func = task_func
+        self.metadata = dict(runner.metadata)
+        if func_metadata:
+            self.metadata.update(func_metadata)
+
         self.loops = args.loops
-        self.inner_loops = inner_loops
+        self.track_memory = args.track_memory
+        self.tracemalloc = args.tracemalloc
+        self.inner_loops = None
         self.warmups = None
         self.values = None
 
@@ -140,18 +152,18 @@ class _WorkerTask:
 
         return values
 
-    def calibrate(self):
+    def calibrate_loops(self):
         return self.run_bench(nvalue=1,
                               calibrate=True,
                               is_calibrate=True, is_warmup=True)
 
-    def _run(self):
+    def _compute_values(self):
         args = self.args
 
         calibrate = (not self.loops)
         if calibrate:
             self.loops = 1
-            calibrate_warmups = self.calibrate()
+            calibrate_warmups = self.calibrate_loops()
         else:
             if perf.python_has_jit():
                 # With a JIT, continue to calibrate during warmup
@@ -168,10 +180,8 @@ class _WorkerTask:
         self.warmups = warmups
         self.values = self.run_bench(nvalue=args.values)
 
-    def run(self):
-        args = self.args
-
-        if args.track_memory:
+    def compute_values(self):
+        if self.track_memory:
             if MS_WINDOWS:
                 from perf._win_memory import get_peak_pagefile_usage
             else:
@@ -179,13 +189,13 @@ class _WorkerTask:
                 mem_thread = PeakMemoryUsageThread()
                 mem_thread.start()
 
-        if args.tracemalloc:
+        if self.tracemalloc:
             import tracemalloc
             tracemalloc.start()
 
-        self._run()
+        self._compute_values()
 
-        if args.tracemalloc:
+        if self.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
             tracemalloc.stop()
 
@@ -198,7 +208,7 @@ class _WorkerTask:
             self.warmups = None
             self.values = (float(traced_peak),)
 
-        if args.track_memory:
+        if self.track_memory:
             if MS_WINDOWS:
                 mem_peak = get_peak_pagefile_usage()
             else:
@@ -212,6 +222,22 @@ class _WorkerTask:
             self.metadata['unit'] = 'byte'
             self.warmups = None
             self.values = (float(mem_peak),)
+
+    def create_run(self):
+        self.metadata['name'] = self.name
+        if self.inner_loops is not None:
+            self.metadata['inner_loops'] = self.inner_loops
+
+        start_time = monotonic_clock()
+        self.compute_values()
+        duration = monotonic_clock() - start_time
+
+        self.metadata['loops'] = self.loops
+        self.metadata['duration'] = duration
+
+        return perf.Run(self.values,
+                        warmups=self.warmups,
+                        metadata=self.metadata)
 
 
 class Runner:
@@ -509,24 +535,9 @@ class Runner:
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
-    def _worker(self, name, task_func, inner_loops, func_metadata):
-        metadata = dict(self.metadata, name=name)
-        if func_metadata:
-            metadata.update(func_metadata)
-        start_time = monotonic_clock()
-
+    def _worker(self, task):
         self._cpu_affinity()
-
-        task = _WorkerTask(self.args, metadata, task_func, inner_loops)
-        task.run()
-
-        duration = monotonic_clock() - start_time
-        metadata['duration'] = duration
-        metadata['loops'] = task.loops
-        if inner_loops is not None:
-            metadata['inner_loops'] = inner_loops
-
-        run = perf.Run(task.values, warmups=task.warmups, metadata=metadata)
+        run = task.create_run()
         bench = perf.Benchmark((run,))
         self._display_result(bench, checks=False)
         return bench
@@ -544,18 +555,15 @@ class Runner:
 
         return True
 
-    def _main(self, name, task_func, inner_loops, metadata):
-        name = name.strip()
-        if not name:
-            raise ValueError("name must be a non-empty string")
-        if name in self._bench_names:
-            raise ValueError("duplicated benchmark name: %r" % name)
-        self._bench_names.add(name)
+    def _main(self, task):
+        if task.name in self._bench_names:
+            raise ValueError("duplicated benchmark name: %r" % task.name)
+        self._bench_names.add(task.name)
 
         args = self.parse_args()
         try:
             if args.worker:
-                bench = self._worker(name, task_func, inner_loops, metadata)
+                bench = self._worker(task)
             elif args.compare_to:
                 self._compare_to()
                 bench = None
@@ -593,7 +601,9 @@ class Runner:
         def task_func(task, loops):
             return time_func(loops, *args)
 
-        return self._main(name, task_func, inner_loops, metadata)
+        task = _WorkerTask(self, name, task_func, metadata)
+        task.inner_loops = inner_loops
+        return self._main(task)
 
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
@@ -642,7 +652,9 @@ class Runner:
 
             return dt
 
-        return self._main(name, task_func, inner_loops, metadata)
+        task = _WorkerTask(self, name, task_func, metadata)
+        task.inner_loops = inner_loops
+        return self._main(task)
 
     def timeit(self, name, stmt, setup="pass", inner_loops=None,
                duplicate=None, metadata=None, globals=None):
@@ -904,4 +916,5 @@ class Runner:
                 task.metadata['command_max_rss'] = max_rss
             return timing
 
-        return self._main(name, task_func, None, metadata)
+        task = _WorkerTask(self, name, task_func, metadata)
+        return self._main(task)
