@@ -187,7 +187,7 @@ class TestRunner(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             runner.bench_time_func('bench', time_func)
         self.assertEqual(str(cm.exception),
-                         'time_func function returned zero')
+                         'benchmark function returned zero')
 
     def test_calibration_zero(self):
         runner = perf.Runner()

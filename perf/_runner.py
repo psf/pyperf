@@ -34,6 +34,9 @@ except ImportError:
     from time import time as monotonic_clock
 
 
+MAX_LOOPS = 2 ** 32
+
+
 def strictly_positive(value):
     value = int(value)
     if value <= 0:
@@ -64,6 +67,151 @@ def parse_python_names(names):
     if len(parts) != 2:
         raise ValueError("syntax is REF_NAME:CHANGED_NAME")
     return parts
+
+
+class _WorkerTask:
+    def __init__(self, args, metadata, task_func, inner_loops):
+        self.args = args
+        self.metadata = metadata
+        self.task_func = task_func
+        self.loops = args.loops
+        self.inner_loops = inner_loops
+        self.warmups = None
+        self.values = None
+
+    def run_bench(self, nvalue,
+                  is_warmup=False, is_calibrate=False, calibrate=False):
+        unit = self.metadata.get('unit')
+        args = self.args
+        if self.loops <= 0:
+            raise ValueError("loops must be >= 1")
+
+        if is_calibrate:
+            value_name = 'Calibration'
+        elif is_warmup:
+            value_name = 'Warmup'
+        else:
+            value_name = 'Value'
+
+        values = []
+        index = 1
+        inner_loops = self.inner_loops
+        if not inner_loops:
+            inner_loops = 1
+        while True:
+            if index > nvalue:
+                break
+
+            raw_value = self.task_func(self, self.loops)
+            raw_value = float(raw_value)
+            value = raw_value / (self.loops * inner_loops)
+
+            if not value and not(is_calibrate or is_warmup):
+                raise ValueError("benchmark function returned zero")
+
+            if is_warmup:
+                values.append((self.loops, value))
+            else:
+                values.append(value)
+
+            if args.verbose:
+                text = format_value(unit, value)
+                if is_warmup or is_calibrate:
+                    text = ('%s (%s: %s)'
+                            % (text,
+                               format_number(self.loops, 'loop'),
+                               format_value(unit, raw_value)))
+                print("%s %s: %s" % (value_name, index, text))
+
+            if calibrate and raw_value < args.min_time:
+                self.loops *= 2
+                if self.loops > MAX_LOOPS:
+                    raise ValueError("error in calibration, loops is "
+                                     "too big: %s" % self.loops)
+                # need more values for the calibration
+                nvalue += 1
+
+            index += 1
+
+        if args.verbose:
+            if is_calibrate:
+                print("Calibration: use %s loops" % format_number(self.loops))
+            print()
+
+        return values
+
+    def calibrate(self):
+        return self.run_bench(nvalue=1,
+                              calibrate=True,
+                              is_calibrate=True, is_warmup=True)
+
+    def _run(self):
+        args = self.args
+
+        calibrate = (not self.loops)
+        if calibrate:
+            self.loops = 1
+            calibrate_warmups = self.calibrate()
+        else:
+            if perf.python_has_jit():
+                # With a JIT, continue to calibrate during warmup
+                calibrate = True
+            calibrate_warmups = None
+
+        if args.warmups:
+            warmups = self.run_bench(nvalue=args.warmups,
+                                     is_warmup=True, calibrate=calibrate)
+        else:
+            warmups = []
+        if calibrate_warmups:
+            warmups = calibrate_warmups + warmups
+        self.warmups = warmups
+        self.values = self.run_bench(nvalue=args.values)
+
+    def run(self):
+        args = self.args
+
+        if args.track_memory:
+            if MS_WINDOWS:
+                from perf._win_memory import get_peak_pagefile_usage
+            else:
+                from perf._memory import PeakMemoryUsageThread
+                mem_thread = PeakMemoryUsageThread()
+                mem_thread.start()
+
+        if args.tracemalloc:
+            import tracemalloc
+            tracemalloc.start()
+
+        self._run()
+
+        if args.tracemalloc:
+            traced_peak = tracemalloc.get_traced_memory()[1]
+            tracemalloc.stop()
+
+            if not traced_peak:
+                raise RuntimeError("tracemalloc didn't trace any Python "
+                                   "memory allocation")
+
+            # drop timings, replace them with the memory peak
+            self.metadata['unit'] = 'byte'
+            self.warmups = None
+            self.values = (float(traced_peak),)
+
+        if args.track_memory:
+            if MS_WINDOWS:
+                mem_peak = get_peak_pagefile_usage()
+            else:
+                mem_thread.stop()
+                mem_peak = mem_thread.peak_usage
+
+            if not mem_peak:
+                raise RuntimeError("failed to get the memory peak usage")
+
+            # drop timings, replace them with the memory peak
+            self.metadata['unit'] = 'byte'
+            self.warmups = None
+            self.values = (float(mem_peak),)
 
 
 class Runner:
@@ -361,153 +509,7 @@ class Runner:
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
-    def _run_bench(self, metadata, time_func, inner_loops, loops, nvalue,
-                   is_warmup=False, is_calibrate=False, calibrate=False):
-        unit = metadata.get('unit')
-        args = self.args
-        if loops <= 0:
-            raise ValueError("loops must be >= 1")
-
-        if is_calibrate:
-            value_name = 'Calibration'
-        elif is_warmup:
-            value_name = 'Warmup'
-        else:
-            value_name = 'Value'
-
-        values = []
-        index = 1
-        if not inner_loops:
-            inner_loops = 1
-        while True:
-            if index > nvalue:
-                break
-
-            raw_value = time_func(loops)
-            raw_value = float(raw_value)
-            value = raw_value / (loops * inner_loops)
-
-            if not value and not(is_calibrate or is_warmup):
-                raise ValueError("time_func function returned zero")
-
-            if is_warmup:
-                values.append((loops, value))
-            else:
-                values.append(value)
-
-            if args.verbose:
-                text = format_value(unit, value)
-                if is_warmup or is_calibrate:
-                    text = ('%s (%s: %s)'
-                            % (text,
-                               format_number(loops, 'loop'),
-                               format_value(unit, raw_value)))
-                print("%s %s: %s" % (value_name, index, text))
-
-            if calibrate and raw_value < args.min_time:
-                loops *= 2
-                if loops > 2 ** 32:
-                    raise ValueError("error in calibration, loops is "
-                                     "too big: %s" % loops)
-                # need more values for the calibration
-                nvalue += 1
-
-            index += 1
-
-        if args.verbose:
-            if is_calibrate:
-                print("Calibration: use %s loops" % format_number(loops))
-            print()
-
-        # Run collects metadata
-        return (loops, values)
-
-    def _calibrate(self, time_func, metadata=None, inner_loops=None):
-        if metadata is None:
-            metadata = {}
-        return self._run_bench(metadata, time_func, inner_loops,
-                               loops=1, nvalue=1,
-                               calibrate=True,
-                               is_calibrate=True, is_warmup=True)
-
-    def _worker_run_bench(self, metadata, time_func, inner_loops):
-        args = self.args
-        loops = args.loops
-
-        calibrate = (not loops)
-        if calibrate:
-            loops, calibrate_warmups = self._calibrate(time_func, metadata,
-                                                       inner_loops)
-        else:
-            if perf.python_has_jit():
-                # With a JIT, continue to calibrate during warmup
-                calibrate = True
-            calibrate_warmups = None
-
-        if args.warmups:
-            loops, warmups = self._run_bench(metadata, time_func,
-                                             inner_loops=inner_loops,
-                                             loops=loops, nvalue=args.warmups,
-                                             is_warmup=True, calibrate=calibrate)
-        else:
-            warmups = []
-        if calibrate_warmups:
-            warmups = calibrate_warmups + warmups
-        loops, values = self._run_bench(metadata, time_func,
-                                        inner_loops=inner_loops,
-                                        loops=loops, nvalue=args.values)
-
-        return (loops, warmups, values)
-
-    def _worker_run_bench_mem(self, metadata, time_func, inner_loops):
-        args = self.args
-
-        if args.track_memory:
-            if MS_WINDOWS:
-                from perf._win_memory import get_peak_pagefile_usage
-            else:
-                from perf._memory import PeakMemoryUsageThread
-                mem_thread = PeakMemoryUsageThread()
-                mem_thread.start()
-
-        if args.tracemalloc:
-            import tracemalloc
-            tracemalloc.start()
-
-        loops, warmups, values = self._worker_run_bench(metadata, time_func,
-                                                        inner_loops)
-
-        if args.tracemalloc:
-            traced_peak = tracemalloc.get_traced_memory()[1]
-            tracemalloc.stop()
-
-            if not traced_peak:
-                raise RuntimeError("tracemalloc didn't trace any Python "
-                                   "memory allocation")
-
-            # drop timings, replace them with the memory peak
-            metadata['unit'] = 'byte'
-            warmups = None
-            values = (float(traced_peak),)
-
-        if args.track_memory:
-            if MS_WINDOWS:
-                mem_peak = get_peak_pagefile_usage()
-            else:
-                mem_thread.stop()
-                mem_peak = mem_thread.peak_usage
-
-            if not mem_peak:
-                raise RuntimeError("failed to get the memory peak usage")
-
-            # drop timings, replace them with the memory peak
-            metadata['unit'] = 'byte'
-            warmups = None
-            values = (float(mem_peak),)
-
-        return (loops, warmups, values)
-
-    def _worker(self, name, time_func, inner_loops, func_metadata):
+    def _worker(self, name, task_func, inner_loops, func_metadata):
         metadata = dict(self.metadata, name=name)
         if func_metadata:
             metadata.update(func_metadata)
@@ -515,17 +517,16 @@ class Runner:
 
         self._cpu_affinity()
 
-        loops, warmups, values = self._worker_run_bench_mem(metadata,
-                                                            time_func,
-                                                            inner_loops)
+        task = _WorkerTask(self.args, metadata, task_func, inner_loops)
+        task.run()
 
         duration = monotonic_clock() - start_time
         metadata['duration'] = duration
-        metadata['loops'] = loops
+        metadata['loops'] = task.loops
         if inner_loops is not None:
             metadata['inner_loops'] = inner_loops
 
-        run = perf.Run(values, warmups=warmups, metadata=metadata)
+        run = perf.Run(task.values, warmups=task.warmups, metadata=metadata)
         bench = perf.Benchmark((run,))
         self._display_result(bench, checks=False)
         return bench
@@ -543,7 +544,7 @@ class Runner:
 
         return True
 
-    def _main(self, name, time_func, inner_loops, metadata):
+    def _main(self, name, task_func, inner_loops, metadata):
         name = name.strip()
         if not name:
             raise ValueError("name must be a non-empty string")
@@ -554,7 +555,7 @@ class Runner:
         args = self.parse_args()
         try:
             if args.worker:
-                bench = self._worker(name, time_func, inner_loops, metadata)
+                bench = self._worker(name, task_func, inner_loops, metadata)
             elif args.compare_to:
                 self._compare_to()
                 bench = None
@@ -589,13 +590,10 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        if not args:
-            return self._main(name, time_func, inner_loops, metadata)
-
-        def wrap_time_func(loops):
+        def task_func(task, loops):
             return time_func(loops, *args)
 
-        return self._main(name, wrap_time_func, inner_loops, metadata)
+        return self._main(name, task_func, inner_loops, metadata)
 
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
@@ -607,9 +605,10 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        def time_func(loops):
+        def task_func(task, loops):
             # use fast local variables
             local_timer = perf.perf_counter
+            # FIXME: use functools.partial()?
             local_func = func
             local_args = args
 
@@ -643,7 +642,7 @@ class Runner:
 
             return dt
 
-        return self._main(name, time_func, inner_loops, metadata)
+        return self._main(name, task_func, inner_loops, metadata)
 
     def timeit(self, name, stmt, setup="pass", inner_loops=None,
                duplicate=None, metadata=None, globals=None):
@@ -871,7 +870,17 @@ class Runner:
         timeit_compare_benchs(name_ref, benchs[0], name_changed, benchs[1], args)
 
     def bench_command(self, name, command):
-        def time_func(loops, run_script, command):
+        if not self._check_worker_task():
+            return None
+
+        command_str = ' '.join(map(repr, command))
+        metadata = {'command': command_str}
+
+        path = os.path.dirname(__file__)
+        script = os.path.join(path, '_process_time.py')
+        run_script = [sys.executable, script]
+
+        def task_func(task, loops):
             args = run_script + [str(loops)] + command
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
@@ -885,12 +894,4 @@ class Runner:
 
             return timing
 
-        command_str = ' '.join(map(repr, command))
-        metadata = {'command': command_str}
-
-        path = os.path.dirname(__file__)
-        script = os.path.join(path, '_process_time.py')
-        run_script = [sys.executable, script]
-
-        return self.bench_time_func(name, time_func, run_script, command,
-                                    metadata=metadata)
+        return self._main(name, task_func, None, metadata)
