@@ -442,13 +442,16 @@ Usage
     python3 -m perf command
         [options]
         [--name NAME]
+        [--track-memory]
         program [arg1 arg2 ...]
 
 Options:
 
 * ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
+* ``--track-memory``: use the maximum RSS memory of the command instead of the
+  time.
 * ``--name=BENCHMARK_NAME``: Benchmark name (default: ``command``).
-* ``program [arg1 arg2 ...]``: tested command
+* ``program [arg1 arg2 ...]``: the tested command.
 
 .. _system_cmd:
 

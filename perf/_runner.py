@@ -71,7 +71,7 @@ def parse_python_names(names):
 
 class _WorkerTask:
     def __init__(self, runner, name, task_func, func_metadata):
-        args = runner.parse_args()
+        args = runner.args
 
         name = name.strip()
         if not name:
@@ -891,6 +891,9 @@ class Runner:
         path = os.path.dirname(__file__)
         script = os.path.join(path, '_process_time.py')
         run_script = [sys.executable, script]
+        track_memory = self.args.track_memory
+        if track_memory:
+            metadata['unit'] = 'byte'
 
         def task_func(task, loops):
             args = run_script + [str(loops)] + command
@@ -912,9 +915,16 @@ class Runner:
             except ValueError:
                 raise ValueError("failed to parse script output: %r" % output)
 
-            if max_rss:
-                task.metadata['command_max_rss'] = max_rss
-            return timing
+            if track_memory:
+                if not max_rss:
+                    raise ValueError("failed to get the command memory usage")
+                return max_rss
+            else:
+                if max_rss:
+                    task.metadata['command_max_rss'] = max_rss
+                return timing
 
         task = _WorkerTask(self, name, task_func, metadata)
+        task.track_memory = False
+        task.tracemalloc = False
         return self._main(task)

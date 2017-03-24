@@ -141,7 +141,7 @@ Option::
   (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
   See the `tracemalloc module
   <https://docs.python.org/dev/library/tracemalloc.html>`_.
-* ``--track-memory``: get the memory peak usage. It is less accurate than
+* ``--track-memory``: get the memory peak usage. it is less accurate than
   ``tracemalloc``, but has a lower overhead. On Linux, compute the sum of
   ``Private_Clean`` and ``Private_Dirty`` memory mappings of
   ``/proc/self/smaps``. On Windows, get ``PeakPagefileUsage`` of
