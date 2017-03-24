@@ -11,6 +11,7 @@ Commands:
 * :ref:`perf hist <hist_cmd>`
 * :ref:`perf metadata <metadata_cmd>`
 * :ref:`perf timeit <timeit_cmd>`
+* :ref:`perf command <command_cmd>`
 * :ref:`perf system <system_cmd>`
 * :ref:`perf collect_metadata <collect_metadata_cmd>`
 * :ref:`perf slowest <slowest_cmd>`
@@ -348,7 +349,7 @@ Usage
 
     python3 -m perf timeit
         [options]
-        [--benchmark NAME]
+        [--name BENCHMARK_NAME]
         [--python PYTHON]
         [--compare-to REF_PYTHON]
         [--inner-loops INNER_LOOPS]
@@ -363,7 +364,7 @@ Options:
   Multiple statements can be used.
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
   The option can be specified multiple times.
-* ``--benchmark=NAME``: Benchmark name (default: ``timeit``).
+* ``--name=BENCHMARK_NAME``: Benchmark name (default: ``timeit``).
 * ``--inner-loops=INNER_LOOPS``: Number of inner loops per value. For example,
   the number of times that the code is copied manually multiple times to reduce
   the overhead of the outer loop.
@@ -420,6 +421,27 @@ specific case, whereas many parameters are random:
 
 See the :ref:`Minimum versus average and standard deviation <min>` section.
 
+
+.. _command_cmd:
+
+perf command
+------------
+
+Usage
+^^^^^
+
+``perf command`` usage::
+
+    python3 -m perf command
+        [options]
+        [--name NAME]
+        program [arg1 arg2 ...]
+
+Options:
+
+* ``[options]``: see :ref:`Runner CLI <runner_cli>` for more options.
+* ``--name=BENCHMARK_NAME``: Benchmark name (default: ``command``).
+* ``program [arg1 arg2 ...]``: tested command
 
 .. _system_cmd:
 

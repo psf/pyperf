@@ -305,13 +305,20 @@ class Runner:
                           "with --compare-to option" % option)
                     sys.exit(1)
 
-    def parse_args(self, args=None):
-        if self.args is None:
-            self.args = self.argparser.parse_args(args)
-            self._process_args()
-        elif args is not None:
+    def _set_args(self, args):
+        if self.args is not None:
             raise RuntimeError("arguments already parsed")
-        return self.args
+
+        self.args = args
+        self._process_args()
+
+    def parse_args(self, args=None):
+        if self.args is not None and args is None:
+            return self.args
+
+        args = self.argparser.parse_args(args)
+        self._set_args(args)
+        return args
 
     def _range(self):
         for warmup in six.moves.xrange(self.args.warmups):
@@ -700,6 +707,7 @@ class Runner:
                     kw['close_fds'] = False
                 elif sys.version_info >= (3, 2):
                     kw['pass_fds'] = [wpipe.fd]
+
                 proc = subprocess.Popen(cmd, env=env, **kw)
 
             with popen_killer(proc):

@@ -17,6 +17,31 @@ from perf._timeit_cli import TimeitRunner
 from perf._utils import parse_run_list
 
 
+def add_cmdline_args(cmd, args):
+    cmd.extend(('--name', args.name))
+    cmd.append(args.program)
+    if args.program_args:
+        cmd.extend(args.program_args)
+
+
+class CommandRunner(perf.Runner):
+    def __init__(self, cmd):
+        def parse_name(name):
+            return name.strip()
+
+        perf.Runner.__init__(self,
+                             _argparser=cmd,
+                             add_cmdline_args=add_cmdline_args)
+        self._program_args = ('-m', 'perf', 'command')
+
+        cmd.add_argument('--name', type=parse_name, default='command',
+                         help='Benchmark name (default: command)')
+        cmd.add_argument('program',
+                         help='Program path')
+        cmd.add_argument('program_args', nargs=argparse.REMAINDER,
+                         help='Program arguments')
+
+
 def create_parser():
     parser = argparse.ArgumentParser(description='Display benchmark results.',
                                      prog='-m perf')
@@ -165,7 +190,12 @@ def create_parser():
                      help='Number of slow benchmarks to display (default: 5)')
     input_filenames(cmd, name=False)
 
-    return parser, timeit_runner
+    # command
+    cmd = subparsers.add_parser('command',
+                                help='Benchmark a command')
+    command_runner = CommandRunner(cmd)
+
+    return parser, timeit_runner, command_runner
 
 
 DataItem = collections.namedtuple('DataItem',
@@ -536,8 +566,7 @@ def cmd_dump(args):
 
 def cmd_timeit(args, timeit_runner):
     import perf._timeit_cli as timeit_cli
-    timeit_runner.args = args
-    timeit_runner._process_args()
+    timeit_runner._set_args(args)
     timeit_cli.main(timeit_runner)
 
 
@@ -711,8 +740,15 @@ def cmd_system(args):
     System().main(args.system_action, args)
 
 
+def cmd_bench_command(runner, args):
+    runner._set_args(args)
+    name = args.name
+    command = [args.program] + args.program_args
+    runner.bench_command(name, command)
+
+
 def main():
-    parser, timeit_runner = create_parser()
+    parser, timeit_runner, command_runner = create_parser()
     args = parser.parse_args()
     action = args.action
 
@@ -729,6 +765,7 @@ def main():
         'dump': functools.partial(cmd_dump, args),
         'slowest': functools.partial(cmd_slowest, args),
         'system': functools.partial(cmd_system, args),
+        'command': functools.partial(cmd_bench_command, command_runner, args),
     }
 
     try:

@@ -346,6 +346,12 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          'The benchmark seems to be stable')
 
+    def test_command(self):
+        command = [sys.executable, '-c', 'pass']
+        stdout = self.run_command('command', '--debug-single-value', *command)
+        self.assertRegex(stdout,
+                         r'^\.\ncommand: [0-9.]+ (?:ms|sec)$')
+
     def test_check_unstable(self):
         suite = self.create_suite()
 
