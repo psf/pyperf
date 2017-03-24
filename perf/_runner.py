@@ -20,7 +20,7 @@ from perf._formatter import format_timedelta, format_number
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
                          get_python_names, popen_communicate)
-from perf._worker import WorkerTask, WorkerProcessTask
+from perf._worker import WorkerProcessTask, BenchCommandTask
 
 try:
     # Optional dependency
@@ -696,9 +696,6 @@ class Runner:
         path = os.path.dirname(__file__)
         script = os.path.join(path, '_process_time.py')
         run_script = [sys.executable, script]
-        track_memory = self.args.track_memory
-        if track_memory:
-            metadata['unit'] = 'byte'
 
         def task_func(task, loops):
             args = run_script + [str(loops)] + command
@@ -711,25 +708,20 @@ class Runner:
                 raise Exception("Command failed with exit code %s"
                                 % proc.returncode)
 
-            max_rss = None
+            rss = None
             try:
                 lines = output.splitlines()
                 timing = float(lines[0])
                 if len(lines) >= 2:
-                    max_rss = int(lines[1])
+                    rss = int(lines[1])
             except ValueError:
                 raise ValueError("failed to parse script output: %r" % output)
 
-            if track_memory:
-                if not max_rss:
-                    raise ValueError("failed to get the command memory usage")
-                return max_rss
-            else:
-                if max_rss:
-                    task.metadata['command_max_rss'] = max_rss
-                return timing
+            if rss:
+                # store the maximum
+                max_rss = task.metadata.get('command_max_rss', 0)
+                task.metadata['command_max_rss'] = max(max_rss, rss)
+            return timing
 
-        task = WorkerTask(self, name, task_func, metadata)
-        task.track_memory = False
-        task.tracemalloc = False
+        task = BenchCommandTask(self, name, task_func, metadata)
         return self._main(task)

@@ -198,3 +198,16 @@ class WorkerProcessTask(WorkerTask):
     def collect_metadata(self):
         from perf._collect_metadata import collect_metadata
         return collect_metadata()
+
+
+class BenchCommandTask(WorkerTask):
+    def compute_values(self):
+        WorkerTask.compute_values(self)
+        if self.args.track_memory:
+            value = self.metadata.pop('command_max_rss', None)
+            if not value:
+                raise RuntimeError("failed to get the process RSS")
+
+            self.metadata['unit'] = 'byte'
+            self.warmups = None
+            self.values = (value,)
