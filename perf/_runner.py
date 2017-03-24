@@ -15,26 +15,17 @@ from perf._cli import (format_run, format_benchmark, format_checks,
 from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
-from perf._formatter import format_timedelta, format_number, format_value
+from perf._formatter import format_timedelta, format_number
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
                          get_python_names, popen_communicate)
+from perf._worker import WorkerTask, WorkerProcessTask
 
 try:
     # Optional dependency
     import psutil
 except ImportError:
     psutil = None
-
-try:
-    # Python 3.3 provides a real monotonic clock (PEP 418)
-    from time import monotonic as monotonic_clock
-except ImportError:
-    # time.time() can go backward on Python 2, but it's fine for Runner
-    from time import time as monotonic_clock
-
-
-MAX_LOOPS = 2 ** 32
 
 
 def strictly_positive(value):
@@ -67,186 +58,6 @@ def parse_python_names(names):
     if len(parts) != 2:
         raise ValueError("syntax is REF_NAME:CHANGED_NAME")
     return parts
-
-
-class _WorkerTask:
-    def __init__(self, runner, name, task_func, func_metadata):
-        args = runner.args
-
-        name = name.strip()
-        if not name:
-            raise ValueError("benchmark name must be a non-empty string")
-
-        self.name = name
-        self.args = args
-        self.task_func = task_func
-        self.metadata = dict(runner.metadata)
-        if func_metadata:
-            self.metadata.update(func_metadata)
-
-        self.loops = args.loops
-        self.track_memory = args.track_memory
-        self.tracemalloc = args.tracemalloc
-        self.collect_process_metadata = True
-        self.inner_loops = None
-        self.warmups = None
-        self.values = None
-
-    def run_bench(self, nvalue,
-                  is_warmup=False, is_calibrate=False, calibrate=False):
-        unit = self.metadata.get('unit')
-        args = self.args
-        if self.loops <= 0:
-            raise ValueError("loops must be >= 1")
-
-        if is_calibrate:
-            value_name = 'Calibration'
-        elif is_warmup:
-            value_name = 'Warmup'
-        else:
-            value_name = 'Value'
-
-        values = []
-        index = 1
-        inner_loops = self.inner_loops
-        if not inner_loops:
-            inner_loops = 1
-        while True:
-            if index > nvalue:
-                break
-
-            raw_value = self.task_func(self, self.loops)
-            raw_value = float(raw_value)
-            value = raw_value / (self.loops * inner_loops)
-
-            if not value and not(is_calibrate or is_warmup):
-                raise ValueError("benchmark function returned zero")
-
-            if is_warmup:
-                values.append((self.loops, value))
-            else:
-                values.append(value)
-
-            if args.verbose:
-                text = format_value(unit, value)
-                if is_warmup or is_calibrate:
-                    text = ('%s (%s: %s)'
-                            % (text,
-                               format_number(self.loops, 'loop'),
-                               format_value(unit, raw_value)))
-                print("%s %s: %s" % (value_name, index, text))
-
-            if calibrate and raw_value < args.min_time:
-                self.loops *= 2
-                if self.loops > MAX_LOOPS:
-                    raise ValueError("error in calibration, loops is "
-                                     "too big: %s" % self.loops)
-                # need more values for the calibration
-                nvalue += 1
-
-            index += 1
-
-        if args.verbose:
-            if is_calibrate:
-                print("Calibration: use %s loops" % format_number(self.loops))
-            print()
-
-        return values
-
-    def calibrate_loops(self):
-        return self.run_bench(nvalue=1,
-                              calibrate=True,
-                              is_calibrate=True, is_warmup=True)
-
-    def _compute_values(self):
-        args = self.args
-
-        calibrate = (not self.loops)
-        if calibrate:
-            self.loops = 1
-            calibrate_warmups = self.calibrate_loops()
-        else:
-            if perf.python_has_jit():
-                # With a JIT, continue to calibrate during warmup
-                calibrate = True
-            calibrate_warmups = None
-
-        if args.warmups:
-            warmups = self.run_bench(nvalue=args.warmups,
-                                     is_warmup=True, calibrate=calibrate)
-        else:
-            warmups = []
-        if calibrate_warmups:
-            warmups = calibrate_warmups + warmups
-        self.warmups = warmups
-        self.values = self.run_bench(nvalue=args.values)
-
-    def compute_values(self):
-        if self.track_memory:
-            if MS_WINDOWS:
-                from perf._win_memory import get_peak_pagefile_usage
-            else:
-                from perf._memory import PeakMemoryUsageThread
-                mem_thread = PeakMemoryUsageThread()
-                mem_thread.start()
-
-        if self.tracemalloc:
-            import tracemalloc
-            tracemalloc.start()
-
-        self._compute_values()
-
-        if self.tracemalloc:
-            traced_peak = tracemalloc.get_traced_memory()[1]
-            tracemalloc.stop()
-
-            if not traced_peak:
-                raise RuntimeError("tracemalloc didn't trace any Python "
-                                   "memory allocation")
-
-            # drop timings, replace them with the memory peak
-            self.metadata['unit'] = 'byte'
-            self.warmups = None
-            self.values = (float(traced_peak),)
-
-        if self.track_memory:
-            if MS_WINDOWS:
-                mem_peak = get_peak_pagefile_usage()
-            else:
-                mem_thread.stop()
-                mem_peak = mem_thread.peak_usage
-
-            if not mem_peak:
-                raise RuntimeError("failed to get the memory peak usage")
-
-            # drop timings, replace them with the memory peak
-            self.metadata['unit'] = 'byte'
-            self.warmups = None
-            self.values = (float(mem_peak),)
-
-    def create_run(self):
-        self.metadata['name'] = self.name
-        if self.inner_loops is not None:
-            self.metadata['inner_loops'] = self.inner_loops
-
-        start_time = monotonic_clock()
-        self.compute_values()
-        duration = monotonic_clock() - start_time
-
-        self.metadata['loops'] = self.loops
-        self.metadata['duration'] = duration
-
-        from perf._collect_metadata import collect_metadata
-
-        metadata = self.metadata
-        metadata2 = collect_metadata(process=self.collect_process_metadata)
-        metadata2.update(metadata)
-        metadata = metadata2
-
-        return perf.Run(self.values,
-                        warmups=self.warmups,
-                        metadata=metadata,
-                        collect_metadata=False)
 
 
 class Runner:
@@ -610,7 +421,7 @@ class Runner:
         def task_func(task, loops):
             return time_func(loops, *args)
 
-        task = _WorkerTask(self, name, task_func, metadata)
+        task = WorkerProcessTask(self, name, task_func, metadata)
         task.inner_loops = inner_loops
         return self._main(task)
 
@@ -661,7 +472,7 @@ class Runner:
 
             return dt
 
-        task = _WorkerTask(self, name, task_func, metadata)
+        task = WorkerProcessTask(self, name, task_func, metadata)
         task.inner_loops = inner_loops
         return self._main(task)
 
@@ -933,8 +744,7 @@ class Runner:
                     task.metadata['command_max_rss'] = max_rss
                 return timing
 
-        task = _WorkerTask(self, name, task_func, metadata)
+        task = WorkerTask(self, name, task_func, metadata)
         task.track_memory = False
         task.tracemalloc = False
-        task.collect_process_metadata = False
         return self._main(task)
