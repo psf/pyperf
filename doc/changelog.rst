@@ -11,6 +11,8 @@ Version 1.1
 * ``Runner.bench_func()`` now uses ``functools.partial()`` if the function
   has argument. Calling ``partial()`` is 1.07x faster (-6%) than calling
   ``func(*args)``.
+* Store memory values as integers, not float, when tracking memory usage
+  (``--track-memory`` and ``--tracemalloc`` options)
 
 Version 1.0 (2017-03-17)
 ------------------------

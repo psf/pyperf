@@ -178,7 +178,7 @@ class WorkerProcessTask(WorkerTask):
             # drop timings, replace them with the memory peak
             self.metadata['unit'] = 'byte'
             self.warmups = None
-            self.values = (float(traced_peak),)
+            self.values = (traced_peak,)
 
         if args.track_memory:
             if MS_WINDOWS:
@@ -193,7 +193,7 @@ class WorkerProcessTask(WorkerTask):
             # drop timings, replace them with the memory peak
             self.metadata['unit'] = 'byte'
             self.warmups = None
-            self.values = (float(mem_peak),)
+            self.values = (mem_peak,)
 
     def collect_metadata(self):
         from perf._collect_metadata import collect_metadata
