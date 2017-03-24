@@ -206,6 +206,9 @@ def collect_memory_metadata(metadata):
         if max_rss:
             metadata['mem_max_rss'] = max_rss * 1024
 
+    # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
+    # not accurate. See perf._memory for more accurate memory metrics.
+
     # On Windows, use GetProcessMemoryInfo() if available
     if MS_WINDOWS and not check_tracking_memory():
         usage = get_peak_pagefile_usage()
@@ -393,15 +396,15 @@ def collect_cpu_metadata(metadata):
     collect_cpu_temperatures(metadata)
 
 
-def collect_metadata(metadata):
+def collect_metadata(process=True):
+    metadata = {}
     metadata['perf_version'] = perf.__version__
-
     metadata['date'] = format_datetime(datetime.datetime.now())
 
-    collect_python_metadata(metadata)
     collect_system_metadata(metadata)
-    collect_memory_metadata(metadata)
     collect_cpu_metadata(metadata)
+    if process:
+        collect_python_metadata(metadata)
+        collect_memory_metadata(metadata)
 
-    # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
-    # not accurate. See perf._memory for more accurate memory metrics.
+    return metadata

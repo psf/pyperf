@@ -87,6 +87,7 @@ class _WorkerTask:
         self.loops = args.loops
         self.track_memory = args.track_memory
         self.tracemalloc = args.tracemalloc
+        self.collect_process_metadata = True
         self.inner_loops = None
         self.warmups = None
         self.values = None
@@ -235,9 +236,17 @@ class _WorkerTask:
         self.metadata['loops'] = self.loops
         self.metadata['duration'] = duration
 
+        from perf._collect_metadata import collect_metadata
+
+        metadata = self.metadata
+        metadata2 = collect_metadata(process=self.collect_process_metadata)
+        metadata2.update(metadata)
+        metadata = metadata2
+
         return perf.Run(self.values,
                         warmups=self.warmups,
-                        metadata=self.metadata)
+                        metadata=metadata,
+                        collect_metadata=False)
 
 
 class Runner:
@@ -927,4 +936,5 @@ class Runner:
         task = _WorkerTask(self, name, task_func, metadata)
         task.track_memory = False
         task.tracemalloc = False
+        task.collect_process_metadata = False
         return self._main(task)

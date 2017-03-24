@@ -118,9 +118,7 @@ class Run(object):
         if collect_metadata:
             from perf._collect_metadata import collect_metadata as collect_func
 
-            metadata2 = {}
-            collect_func(metadata2)
-
+            metadata2 = collect_func()
             if metadata is not None:
                 metadata2.update(metadata)
                 metadata = metadata2

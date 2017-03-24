@@ -19,8 +19,7 @@ if sys.platform.startswith('linux'):
 
 class TestMetadata(unittest.TestCase):
     def test_collect_metadata(self):
-        metadata = {}
-        perf_metadata.collect_metadata(metadata)
+        metadata = perf_metadata.collect_metadata()
 
         for key in MANDATORY_METADATA:
             self.assertIn(key, metadata)
