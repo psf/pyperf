@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import argparse
 import errno
+import functools
 import math
 import os
 import subprocess
@@ -435,40 +436,24 @@ class Runner:
         if not self._check_worker_task():
             return None
 
+        if args:
+            func = functools.partial(func, *args)
+
         def task_func(task, loops):
             # use fast local variables
             local_timer = perf.perf_counter
-            # FIXME: use functools.partial()?
             local_func = func
-            local_args = args
+            if loops != 1:
+                range_it = range(loops)
 
-            if local_args:
-                if loops != 1:
-                    range_it = range(loops)
-
-                    t0 = local_timer()
-                    for _ in range_it:
-                        local_func(*local_args)
-                    dt = local_timer() - t0
-                else:
-                    t0 = local_timer()
-                    local_func(*local_args)
-                    dt = local_timer() - t0
-            else:
-                # fast-path when func has no argument: avoid the expensive
-                # func(*args) argument unpacking
-
-                if loops != 1:
-                    range_it = range(loops)
-
-                    t0 = local_timer()
-                    for _ in range_it:
-                        local_func()
-                    dt = local_timer() - t0
-                else:
-                    t0 = local_timer()
+                t0 = local_timer()
+                for _ in range_it:
                     local_func()
-                    dt = local_timer() - t0
+                dt = local_timer() - t0
+            else:
+                t0 = local_timer()
+                local_func()
+                dt = local_timer() - t0
 
             return dt
 
