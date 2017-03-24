@@ -5,6 +5,8 @@ Version 1.1
 -----------
 
 * Add a new "command" command to measure the timing of a program
+* ``Runner.bench_command()`` now measures also the maximum RSS memory if
+  available.
 * Fix Windows 32bit issue on Python 2.7, fix by yattom.
 
 Version 1.0 (2017-03-17)

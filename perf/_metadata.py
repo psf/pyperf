@@ -74,6 +74,7 @@ METADATA = {
 
     'mem_max_rss': BYTES,
     'mem_peak_pagefile_usage': BYTES,
+    'command_max_rss': BYTES,
 
     'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
     'date': DATETIME,

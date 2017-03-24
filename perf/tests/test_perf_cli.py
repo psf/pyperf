@@ -350,7 +350,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         command = [sys.executable, '-c', 'pass']
         stdout = self.run_command('command', '--debug-single-value', *command)
         self.assertRegex(stdout,
-                         r'^\.\ncommand: [0-9.]+ (?:ms|sec)$')
+                         r'^\.\n'
+                         r'command: [0-9.]+ (?:ms|sec)'
+                         r'(?:\nCommand maximum RSS: [0-9.]+ .B)?'
+                         r'$')
 
     def test_check_unstable(self):
         suite = self.create_suite()

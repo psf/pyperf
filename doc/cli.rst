@@ -427,6 +427,13 @@ See the :ref:`Minimum versus average and standard deviation <min>` section.
 perf command
 ------------
 
+.. versionadded:: 1.1
+
+Measure the wall clock time to run a command.
+
+If the ``resource.getrusage()`` function is available, measure also the maximum
+RSS memory and stores it in ``command_max_rss`` metadata.
+
 Usage
 ^^^^^
 

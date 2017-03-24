@@ -887,11 +887,18 @@ class Runner:
                                     stderr=subprocess.STDOUT,
                                     universal_newlines=True)
             output = popen_communicate(proc)[0]
+
+            max_rss = None
             try:
-                timing = float(output.rstrip())
+                lines = output.splitlines()
+                timing = float(lines[0])
+                if len(lines) >= 2:
+                    max_rss = int(lines[1])
             except ValueError:
                 raise ValueError("failed to parse script output: %r" % output)
 
+            if max_rss:
+                task.metadata['command_max_rss'] = max_rss
             return timing
 
         return self._main(name, task_func, None, metadata)

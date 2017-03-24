@@ -4,7 +4,8 @@ import os.path
 import sys
 
 from perf._formatter import (format_seconds, format_number,
-                             format_timedelta, format_datetime)
+                             format_timedelta, format_datetime,
+                             format_filesize)
 from perf._metadata import format_metadata as _format_metadata
 
 
@@ -469,6 +470,13 @@ def format_benchmark(bench, checks=True, metadata=False,
             name = bench.get_name()
             text = "%s: %s" % (name, text)
         lines.append(text)
+
+        rss = [run._metadata.get('command_max_rss')
+               for run in bench._runs
+               if not run._is_calibration()]
+        if all(rss):
+            rss = max(rss)
+            lines.append("Command maximum RSS: %s" % format_filesize(rss))
 
     return lines
 

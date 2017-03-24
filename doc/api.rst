@@ -552,7 +552,13 @@ Runner class
       Use ``--inherit-environ`` and ``--no-locale`` :ref:`command line options
       <runner_cli>` to control environment variables.
 
+      If the ``resource.getrusage()`` function is available, measure also the
+      maximum RSS memory and stores it in ``command_max_rss`` metadata.
+
       See the :ref:`bench_command() example <bench_command_example>`.
+
+      .. versionchanged:: 1.1
+         Measure the maximum RSS memory (if available).
 
    .. method:: bench_time_func(name, time_func, \*args, inner_loops=None, metadata=None)
 
@@ -630,6 +636,8 @@ Python metadata:
 
 Memory metadata:
 
+* ``command_max_rss`` (int): Maximum resident set size in bytes (``int``)
+  measured by :meth:`Runner.bench_command`.
 * ``mem_max_rss`` (int): Maximum resident set size in bytes (``int``). On Linux,
   kernel 2.6.32 or newer is required.
 * ``mem_peak_pagefile_usage`` (int): Get ``PeakPagefileUsage`` of

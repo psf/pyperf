@@ -9,7 +9,10 @@ Python subprocess.Popen() is implemented with fork()+exec(). Minimize the
 Python imports to reduce the memory footprint, to reduce the cost of
 fork()+exec().
 
-Measure wall-time, not CPU time: resource.getrusage() is not used.
+Measure wall-time, not CPU time.
+
+If resource.getrusage() is available: compute the maximum RSS memory in bytes
+per process and writes it into stdout as a second line.
 """
 from __future__ import division, print_function, absolute_import
 
@@ -27,6 +30,19 @@ except ImportError:
     else:
         perf_counter = time.time
 
+try:
+    import resource
+except ImportError:
+    resource = None
+
+
+def get_max_rss():
+    if resource is not None:
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        return usage.ru_maxrss * 1024
+    else:
+        return 0
+
 
 PY3 = (sys.version_info >= (3,))
 if PY3:
@@ -34,10 +50,13 @@ if PY3:
 
 
 def bench_process(timer, loops, args, kw):
+    max_rss = 0
     range_it = xrange(loops)
-    start = timer()
+    start_time = timer()
 
     for loop in range_it:
+        start_rss = get_max_rss()
+
         proc = subprocess.Popen(args, **kw)
         if PY3:
             with proc:
@@ -53,8 +72,11 @@ def bench_process(timer, loops, args, kw):
 
         proc = None
 
-    dt = timer() - start
-    return dt
+        rss = get_max_rss() - start_rss
+        max_rss = max(max_rss, rss)
+
+    dt = timer() - start_time
+    return (dt, max_rss)
 
 
 def main():
@@ -65,7 +87,8 @@ def main():
         sys.exit(1)
 
     if len(sys.argv) < 3:
-        print("Usage: %s %s loops program [arg1 arg2 ...]")
+        print("Usage: %s %s loops program [arg1 arg2 ...]"
+              % (os.path.basename(sys.executable), __file__))
         sys.exit(1)
 
     loops = int(sys.argv[1])
@@ -83,13 +106,15 @@ def main():
         kw['stdout'] = devnull
     kw['stderr'] = subprocess.STDOUT
 
-    dt = bench_process(timer, loops, args, kw)
+    dt, max_rss = bench_process(timer, loops, args, kw)
 
     if devnull is not None:
         devnull.close()
 
     # Write timing in seconds into stdout
     print(dt)
+    if max_rss:
+        print(max_rss)
 
 
 if __name__ == "__main__":
