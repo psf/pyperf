@@ -6,6 +6,7 @@
 #  - update version in setup.py, perf/__init__.py and doc/conf.py
 #  - set release date in doc/changelog.rst
 #  - git commit -a -m "prepare release x.y"
+#  - Remove untracked files/dirs: git clean -fdx
 #  - run tests: tox
 #  - git push
 #  - check Travis CI status:
@@ -13,6 +14,7 @@
 #
 # Release a new version:
 #
+#  - Remove untracked files/dirs: git clean -fdx
 #  - git tag VERSION
 #  - git push --tags
 #  - rm -rf dist/
@@ -25,7 +27,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '1.1'
+VERSION = '1.2'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [
