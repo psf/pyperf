@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 1.1
------------
+Version 1.1 (2017-03-27)
+------------------------
 
 * Add a new "perf command" command to measure the timing of a program
 * ``Runner.bench_command()`` now measures also the maximum RSS memory if
