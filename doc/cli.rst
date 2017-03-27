@@ -429,10 +429,12 @@ perf command
 
 .. versionadded:: 1.1
 
-Measure the wall clock time to run a command.
+Measure the wall clock time to run a command, similar to Unix ``time`` command.
 
 If the ``resource.getrusage()`` function is available, measure also the maximum
-RSS memory and stores it in ``command_max_rss`` metadata.
+RSS memory and stores it in ``command_max_rss`` metadata. In that case,
+``--track-memory`` option can be used to use the RSS memory for benchmark
+values.
 
 Usage
 ^^^^^
@@ -452,6 +454,13 @@ Options:
   time.
 * ``--name=BENCHMARK_NAME``: Benchmark name (default: ``command``).
 * ``program [arg1 arg2 ...]``: the tested command.
+
+Example measuring Python 2 startup time::
+
+    $ python3 -m perf command -- python2 -c pass
+    .....................
+    command: Mean +- std dev: 21.2 ms +- 3.2 ms
+
 
 .. _system_cmd:
 

@@ -4,12 +4,12 @@ Changelog
 Version 1.1
 -----------
 
-* Add a new "command" command to measure the timing of a program
+* Add a new "perf command" command to measure the timing of a program
 * ``Runner.bench_command()`` now measures also the maximum RSS memory if
   available.
 * Fix Windows 32bit issue on Python 2.7, fix by yattom.
 * ``Runner.bench_func()`` now uses ``functools.partial()`` if the function
-  has argument. Calling ``partial()`` is 1.07x faster (-6%) than calling
+  has argument. Calling ``partial()`` is now 1.07x faster (-6%) than calling
   ``func(*args)``.
 * Store memory values as integers, not float, when tracking memory usage
   (``--track-memory`` and ``--tracemalloc`` options)
