@@ -156,6 +156,14 @@ See also:
 * `SPEC CPU2000: Measuring CPU Performance in the New Millennium
   <https://open.spec.org/cpu2000/papers/COMPUTER_200007.JLH.pdf>`_ by John L.
   Henning (Compaq), 2000.
+* `Stabilizer <https://emeryberger.com/research/stabilizer/>`_: "Stabilizer is a
+  compiler and runtime system that enables statistically rigorous performance
+  evaluation. Stabilizer eliminates measurement bias by comprehensively and
+  repeatedly randomizing the placement of functions, stack frames, and heap
+  objects in memory. Random placement makes anomalous layouts unlikely and
+  independent of the environment; re-randomization ensures they are short-lived
+  when they do occur." This project seems experimental and seems to be related
+  to performance issues with code placement.
 
 
 JIT compilers
