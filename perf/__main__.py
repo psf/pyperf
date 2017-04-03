@@ -50,6 +50,7 @@ def create_parser():
     def input_filenames(cmd, name=True):
         if name:
             cmd.add_argument('-b', '--benchmark', metavar='NAME',
+                             dest='benchmarks', nargs='*',
                              help='only display the benchmark called NAME')
         cmd.add_argument('filenames', metavar='file.json',
                          type=str, nargs='+',
@@ -154,8 +155,10 @@ def create_parser():
     output.add_argument('--stdout', action='store_true',
                         help='Write benchmark encoded to JSON into stdout')
     cmd.add_argument('--include-benchmark', metavar='NAME',
+                     dest='include_benchmarks', nargs='*',
                      help='Only keep benchmark called NAME')
     cmd.add_argument('--exclude-benchmark', metavar='NAME',
+                     dest='exclude_benchmarks', nargs='*',
                      help='Remove the benchmark called NAMED')
     cmd.add_argument('--include-runs', help='Only keep benchmark runs RUNS')
     cmd.add_argument('--exclude-runs', help='Remove specified benchmark runs')
@@ -259,12 +262,12 @@ class Benchmarks:
         return all(suite.get_benchmark_names() == names
                    for suite in self.suites[1:])
 
-    def include_benchmark(self, name):
+    def include_benchmarks(self, names):
         for suite in self.suites:
             try:
-                suite._convert_include_benchmark(name)
+                suite._convert_include_benchmark(names)
             except KeyError:
-                fatal_missing_benchmark(suite, name)
+                fatal_missing_benchmarks(suite, names)
 
     def get_nsuite(self):
         return len(self.suites)
@@ -355,8 +358,8 @@ class Benchmarks:
 def load_benchmarks(args, name=True):
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
-    if name and args.benchmark:
-        data.include_benchmark(args.benchmark)
+    if getattr(args, 'benchmarks', None):
+        data.include_benchmarks(args.benchmarks)
     return data
 
 
@@ -609,10 +612,10 @@ def cmd_hist(args):
                 print(line)
 
 
-def fatal_missing_benchmark(suite, name):
+def fatal_missing_benchmarks(suite, names):
     print("ERROR: The benchmark suite %s doesn't contain "
-          "a benchmark called %r"
-          % (suite.filename, name),
+          "with benchmark name in %r"
+          % (suite.filename, names),
           file=sys.stderr)
     sys.exit(1)
 
@@ -633,17 +636,17 @@ def cmd_convert(args):
         for bench in suite2.get_benchmarks():
             suite._add_benchmark_runs(bench)
 
-    if args.include_benchmark:
-        name = args.include_benchmark
+    if args.include_benchmarks:
+        names = args.include_benchmarks
         try:
-            suite._convert_include_benchmark(name)
+            suite._convert_include_benchmark(names)
         except KeyError:
-            fatal_missing_benchmark(suite, name)
+            fatal_missing_benchmarks(suite, names)
 
-    elif args.exclude_benchmark:
-        name = args.exclude_benchmark
+    elif args.exclude_benchmarks:
+        names = args.exclude_benchmarks
         try:
-            suite._convert_exclude_benchmark(name)
+            suite._convert_exclude_benchmark(names)
         except ValueError:
             fatal_no_more_benchmark(suite)
 

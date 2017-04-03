@@ -50,7 +50,11 @@ Show benchmarks of one or multiple benchmark suites::
   command
 * ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
   <stats_cmd>` command
-* ``--benchmark NAME`` only displays the benchmark called ``NAME``
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 .. _show_cmd_metadata:
 
@@ -88,6 +92,7 @@ Compare benchmark suites, use the first file as the reference::
         [-G/--group-by-speed]
         [--min-speed=MIN_SPEED]
         [--table]
+        [-b NAME/--benchmark NAME]
         reference.json changed.json [changed2.json ...]
 
 Options:
@@ -96,6 +101,11 @@ Options:
 * ``--min-speed``: Absolute minimum of speed in percent to consider that a
   benchmark is significant (default: 0%)
 * ``--table``: Render a table.
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 perf determines whether two samples differ significantly using a `Student's
 two-sample, two-tailed t-test
@@ -120,7 +130,16 @@ perf stats
 Compute statistics on a benchmark result::
 
     python3 -m perf stats
+        [-b NAME/--benchmark NAME]
         file.json [file2.json ...]
+
+Options:
+
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 Example::
 
@@ -172,7 +191,11 @@ Check if benchmarks are stable::
 
 Options:
 
-* ``--benchmark NAME`` only check the benchmark called ``NAME``
+* ``--benchmark NAME`` only check the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 Example of a stable benchmark::
 
@@ -205,6 +228,7 @@ Display the benchmark run results::
         [-q/--quiet]
         [-v/--verbose]
         [--raw]
+        [-b NAME/--benchmark NAME]
         file.json [file2.json ...]
 
 Options:
@@ -212,6 +236,11 @@ Options:
 * ``--quiet`` enables the quiet mode: hide warmup values
 * ``--verbose`` enables the verbose mode: show run metadata
 * ``--raw`` displays raw values rather than values
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 Example::
 
@@ -253,12 +282,18 @@ Render an histogram in text mode::
 
     python3 -m perf hist
         [-n BINS/--bins=BINS] [--extend]
+        [-b NAME/--benchmark NAME]
         filename.json [filename2.json ...]
 
 * ``--bins`` is the number of histogram bars. By default, it renders up to 25
   bars, or less depending on the terminal size.
 * ``--extend``: don't limit to 80 colums x 25 lines but fill the whole
   terminal if it is wider.
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 If multiple files are used, the histogram is normalized on the minimum and
 maximum of all files to be able to easily compare them.
@@ -311,7 +346,11 @@ Display metadata of benchmark files::
 
 Options:
 
-* ``--benchmark NAME`` only displays the benchmark called ``NAME``
+* ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
+  can be specified multiple times.
+
+.. versionchanged:: 1.2
+   The ``--benchmark`` option can now be specified multiple times.
 
 Example::
 
@@ -563,8 +602,10 @@ Convert or modify a benchmark suite::
 
 Operations:
 
-* ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``
-* ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``
+* ``--include-benchmark=NAME`` only keeps the benchmark called ``NAME``.
+  The option can be specified multiple times.
+* ``--exclude-benchmark=NAME`` removes the benchmark called ``NAME``.
+  The option can be specified multiple times.
 * ``--include-runs=RUNS`` only keeps benchmark runs ``RUNS``. ``RUNS`` is a
   list of runs separated by commas, it can include a range using format
   ``first-last`` which includes ``first`` and ``last`` values. Example:
@@ -582,4 +623,6 @@ Options:
 * ``--indent``: Indent JSON (rather using compact JSON)
 * ``--stdout`` writes the result encoded as JSON into stdout
 
-
+.. versionchanged:: 1.2
+   The ``--include-benchmark`` and ``--exclude-benchmark`` operations can now
+   be specified multiple times.

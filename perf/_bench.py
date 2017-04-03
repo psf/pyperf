@@ -807,20 +807,18 @@ class BenchmarkSuite(object):
             raise ValueError("empty benchmark suite")
         self._benchmarks[:] = benchmarks
 
-    def _convert_include_benchmark(self, name):
-        benchmarks = []
-        for bench in self:
-            if bench.get_name() == name:
-                benchmarks.append(bench)
+    def _convert_include_benchmark(self, names):
+        name_set = set(names)
+        benchmarks = [bench for bench in self
+                      if bench.get_name() in name_set]
         if not benchmarks:
-            raise KeyError("benchmark %r not found" % name)
+            raise KeyError("no benchmark found with name in %r" % names)
         self._replace_benchmarks(benchmarks)
 
-    def _convert_exclude_benchmark(self, name):
-        benchmarks = []
-        for bench in self:
-            if bench.get_name() != name:
-                benchmarks.append(bench)
+    def _convert_exclude_benchmark(self, names):
+        name_set = set(names)
+        benchmarks = [bench for bench in self
+                      if bench.get_name() not in name_set]
         self._replace_benchmarks(benchmarks)
 
     def get_total_duration(self):

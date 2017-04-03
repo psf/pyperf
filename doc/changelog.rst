@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 1.2
+-----------
+
+* Command line interface (CLI): the ``--benchmark``, ``--include-benchmark``
+  and ``--exclude-benchmark`` options can now be specified multiple times.
+
 Version 1.1 (2017-03-27)
 ------------------------
 
