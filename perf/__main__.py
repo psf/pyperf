@@ -50,7 +50,7 @@ def create_parser():
     def input_filenames(cmd, name=True):
         if name:
             cmd.add_argument('-b', '--benchmark', metavar='NAME',
-                             dest='benchmarks', nargs='*',
+                             dest='benchmarks', action='append',
                              help='only display the benchmark called NAME')
         cmd.add_argument('filenames', metavar='file.json',
                          type=str, nargs='+',
@@ -155,10 +155,10 @@ def create_parser():
     output.add_argument('--stdout', action='store_true',
                         help='Write benchmark encoded to JSON into stdout')
     cmd.add_argument('--include-benchmark', metavar='NAME',
-                     dest='include_benchmarks', nargs='*',
+                     dest='include_benchmarks', action='append',
                      help='Only keep benchmark called NAME')
     cmd.add_argument('--exclude-benchmark', metavar='NAME',
-                     dest='exclude_benchmarks', nargs='*',
+                     dest='exclude_benchmarks', action='append',
                      help='Remove the benchmark called NAMED')
     cmd.add_argument('--include-runs', help='Only keep benchmark runs RUNS')
     cmd.add_argument('--exclude-runs', help='Remove specified benchmark runs')
