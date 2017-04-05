@@ -597,36 +597,40 @@ class Runner:
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
 
-            benchmarks = suite.get_benchmarks()
+            # get the benchmark and its single run
+            benchmarks = suite._benchmarks
             if len(benchmarks) != 1:
                 raise ValueError("worker produced %s benchmarks instead of 1"
                                  % len(benchmarks))
             worker_bench = benchmarks[0]
+            if len(worker_bench._runs) != 1:
+                raise ValueError("worker produced %s runs, only 1 run expected"
+                                 % len(worker_bench._runs))
+            run = worker_bench._runs[0]
 
+            # display the run
             if verbose:
-                run = worker_bench.get_runs()[-1]
                 run_index = '%s/%s' % (process, nprocess)
                 for line in format_run(worker_bench, run_index, run):
                     print(line)
             elif not quiet:
                 print(".", end='')
+            sys.stdout.flush()
 
             if calibrate:
                 # Use the first worker to calibrate the benchmark. Use a worker
                 # process rather than the main process because worker is a
                 # little bit more isolated and so should be more reliable.
-                first_run = worker_bench.get_runs()[0]
-                args.loops = first_run._get_loops()
+                args.loops = run._get_loops()
                 if verbose:
-                    print("Calibration: use %s loops" % format_number(args.loops))
+                    print("Calibration: use %s loops"
+                          % format_number(args.loops))
             calibrate = False
 
             if bench is not None:
                 bench.add_runs(worker_bench)
             else:
                 bench = worker_bench
-
-            sys.stdout.flush()
 
         if not quiet and newline:
             print()
