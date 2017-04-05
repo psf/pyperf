@@ -29,6 +29,10 @@ except ImportError:
     psutil = None
 
 
+# Limit to 5 calibration processes
+MAX_CALIBRATION = 5
+
+
 def strictly_positive(value):
     value = int(value)
     if value <= 0:
@@ -176,6 +180,9 @@ class Runner:
         parser.add_argument('--calibrate', action="store_true",
                             help="only calibrate the benchmark, "
                                  "don't compute values")
+        parser.add_argument('--recalibrate', action="store_true",
+                            help="only compute warmup values to validate "
+                                 "the number of loops")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -260,6 +267,15 @@ class Runner:
             args.loops = 0
             # calibration values will be stored as warmup values
             args.warmups = 0
+            args.values = 0
+        elif args.recalibrate:
+            if not args.worker:
+                print("ERROR: Recalibration can only be done "
+                      "in a worker process")
+                sys.exit(1)
+
+            if not args.warmups:
+                args.warmups = 1
             args.values = 0
 
         filename = args.output
@@ -423,6 +439,7 @@ class Runner:
             return time_func(loops, *args)
 
         task = WorkerProcessTask(self, name, task_func, metadata)
+        task.calibrate_warmups = (self.args.calibrate or self.args.recalibrate)
         task.inner_loops = inner_loops
         return self._main(task)
 
@@ -487,7 +504,10 @@ class Runner:
                     '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))
         if calibrate:
-            cmd.append('--calibrate')
+            if calibrate > 1:
+                cmd.append('--recalibrate')
+            else:
+                cmd.append('--calibrate')
         if args.verbose:
             cmd.append('-' + 'v' * args.verbose)
         if args.affinity:
@@ -502,7 +522,7 @@ class Runner:
 
         return cmd
 
-    def _spawn_worker(self, python=None, calibrate=False):
+    def _spawn_worker(self, python=None, calibrate=0):
         if not python:
             python = self.args.python
 
@@ -584,15 +604,18 @@ class Runner:
         quiet = args.quiet
         nprocess = args.processes
         old_loops = self.args.loops
-        need_calibration = (not args.loops)
-        if need_calibration:
-            nprocess += 1
-        calibrate = need_calibration
+        if not args.loops:
+            calibrate = 1
+        else:
+            calibrate = 0
+        has_jit = perf.python_has_jit()
 
         if verbose and self._worker_task > 0:
             print()
 
-        for process in range(1, nprocess + 1):
+        nprocess_value = 0
+        nprocess_warmup = 0
+        while nprocess_value < nprocess:
             suite = self._spawn_worker(python, calibrate)
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
@@ -610,7 +633,7 @@ class Runner:
 
             # display the run
             if verbose:
-                run_index = '%s/%s' % (process, nprocess)
+                run_index = str(1 + nprocess_value + nprocess_warmup)
                 for line in format_run(worker_bench, run_index, run):
                     print(line)
             elif not quiet:
@@ -618,19 +641,50 @@ class Runner:
             sys.stdout.flush()
 
             if calibrate:
-                # Use the first worker to calibrate the benchmark. Use a worker
-                # process rather than the main process because worker is a
-                # little bit more isolated and so should be more reliable.
-                args.loops = run._get_loops()
+                if calibrate > 1:
+                    # Recalibration (JIT compiler only): get the number of
+                    # loops from the last warmup value
+                    old_loops = args.loops
+                    args.loops = run.warmups[-1][0]
+
+                    if args.loops != old_loops:
+                        # recalibrate
+                        calibrate += 1
+                    else:
+                        # calibration now seems stable
+                        calibrate = 0
+                else:
+                    # Use the first worker to calibrate the benchmark. Use a
+                    # worker process rather than the main process because
+                    # a worker process is more isolated and so should be more
+                    # reliable.
+                    args.loops = run._get_loops()
+
+                    if has_jit:
+                        # recalibrate
+                        calibrate += 1
+                    else:
+                        calibrate = 0
+
+                if calibrate > MAX_CALIBRATION:
+                    print("ERROR: calibration failed, the number of loops "
+                          "is not stable after %s calibrations"
+                          % (calibrate - 1))
+                    sys.exit(1)
+
                 if verbose:
                     print("Calibration: use %s loops"
                           % format_number(args.loops))
-            calibrate = False
 
             if bench is not None:
                 bench.add_runs(worker_bench)
             else:
                 bench = worker_bench
+
+            if not worker_bench._only_calibration():
+                nprocess_value += 1
+            else:
+                nprocess_warmup += 1
 
         if not quiet and newline:
             print()

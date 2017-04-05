@@ -4,6 +4,8 @@ Changelog
 Version 1.2
 -----------
 
+* Fix calibration on PyPy: recalibrate until the number of loops becomes
+  stable.
 * Command line interface (CLI): the ``--benchmark``, ``--include-benchmark``
   and ``--exclude-benchmark`` options can now be specified multiple times.
 

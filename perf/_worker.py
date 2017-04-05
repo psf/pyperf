@@ -34,6 +34,8 @@ class WorkerTask:
         self.inner_loops = None
         self.warmups = None
         self.values = None
+        # calibrate during warmup?
+        self.calibrate_warmups = perf.python_has_jit()
 
     def run_bench(self, nvalue,
                   is_warmup=False, is_calibrate=False, calibrate=False):
@@ -117,8 +119,7 @@ class WorkerTask:
             self.loops = 1
             calibrate_warmups = self.calibrate_loops()
         else:
-            if perf.python_has_jit():
-                # With a JIT, continue to calibrate during warmup
+            if self.calibrate_warmups:
                 calibrate = True
             calibrate_warmups = None
 

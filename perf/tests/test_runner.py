@@ -171,11 +171,6 @@ class TestRunner(unittest.TestCase):
             tests.compare_benchmarks(self, loaded, result.bench)
 
     def test_time_func_zero(self):
-        if perf.python_has_jit():
-            # If Python has a JIT, perf forces calibration which is already
-            # tested by test_calibration_zero()
-            self.skipTest("Python has a JIT")
-
         runner = perf.Runner()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None

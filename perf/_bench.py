@@ -106,6 +106,7 @@ class Run(object):
                              "where loops is a int >= 1 and value "
                              "is a float >= 0.0")
 
+        # tuple of (loops: int, value) items
         if warmups:
             self._warmups = tuple(warmups)
         else:
