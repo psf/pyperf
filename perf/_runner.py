@@ -65,6 +65,10 @@ def parse_python_names(names):
     return parts
 
 
+class CLIError(Exception):
+    pass
+
+
 class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
@@ -178,11 +182,9 @@ class Runner:
                             help='Identifier of the worker task: '
                                  'only execute the benchmark function TASK_ID')
         parser.add_argument('--calibrate-loops', action="store_true",
-                            help="only calibrate the number of loops, "
-                                 "don't compute values")
+                            help="calibrate the number of loops")
         parser.add_argument('--recalibrate-loops', action="store_true",
-                            help="only compute warmup values to validate "
-                                 "the number of loops")
+                            help="recalibrate the the number of loops")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -232,7 +234,11 @@ class Runner:
     def _multiline_output(self):
         return self.args.verbose or multiline_output(self.args)
 
-    def _process_args(self):
+    def _only_in_worker(self, option):
+        if not self.args.worker:
+            raise CLIError("option %s requires --worker" % option)
+
+    def _process_args_impl(self):
         args = self.args
 
         if args.pipe:
@@ -258,52 +264,40 @@ class Runner:
             args.loops = 1
             args.min_time = 1e-9
 
+        # calibration
         if args.calibrate_loops:
-            if not args.worker:
-                print("ERROR: Calibration can only be done "
-                      "in a worker process")
-                sys.exit(1)
+            self._only_in_worker("--calibrate-loops")
             if args.loops:
-                print("ERROR: --loops=N is incompatible with "
-                      "--calibration-loops")
-                sys.exit(1)
+                raise CLIError("--loops=N is incompatible with "
+                               "--calibration-loops")
 
             args.loops = 0
-            # calibration values will be stored as warmup values
             args.values = 0
         elif args.recalibrate_loops:
-            if not args.worker:
-                print("ERROR: Recalibration can only be done "
-                      "in a worker process")
-                sys.exit(1)
+            self._only_in_worker("--recalibrate-loops")
             if not args.loops:
-                print("ERROR: --recalibration-loops requires --loops=N")
-                sys.exit(1)
+                raise CLIError("--recalibration-loops requires --loops=N")
 
             args.values = 0
-        elif args.values < 1:
-            print("ERROR: need at least one value")
-            sys.exit(1)
-
-        if args.worker and not args.loops and args.values:
-            print("ERROR: --worker requires --loops=N or --calibrate-loops")
-            sys.exit(1)
+        else:
+            if args.worker and not args.loops:
+                raise CLIError("--worker requires --loops=N "
+                               "or --calibrate-loops")
+            if args.values < 1:
+                raise CLIError("--values must be >= 1")
 
         filename = args.output
         if filename and os.path.exists(filename):
-            print("ERROR: The JSON file %r already exists" % filename)
-            sys.exit(1)
+            raise CLIError("The JSON file %r already exists" % filename)
 
-        if args.worker_task and not args.worker:
-            print("ERROR: --worker-task can only be used with --worker")
-            sys.exit(1)
+        if args.worker_task:
+            self._only_in_worker("--worker-task")
 
         if args.tracemalloc:
             try:
                 import tracemalloc   # noqa
             except ImportError as exc:
-                print("ERROR: fail to import tracemalloc: %s" % exc)
-                sys.exit(1)
+                raise CLIError("fail to import tracemalloc: %s" % exc)
 
         if args.track_memory:
             if MS_WINDOWS:
@@ -312,9 +306,8 @@ class Runner:
                 from perf._memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
-                print("ERROR: unable to track the memory usage "
-                      "(--track-memory): %s" % err_msg)
-                sys.exit(1)
+                raise CLIError("unable to track the memory usage "
+                               "(--track-memory): %s" % err_msg)
 
         args.python = abs_executable(args.python)
         if args.compare_to:
@@ -323,9 +316,15 @@ class Runner:
         if args.compare_to:
             for option in ('output', 'append'):
                 if getattr(args, option):
-                    print("ERROR: --%s option is incompatible "
-                          "with --compare-to option" % option)
-                    sys.exit(1)
+                    raise CLIError("--%s option is incompatible "
+                                   "with --compare-to option" % option)
+
+    def _process_args(self):
+        try:
+            self._process_args_impl()
+        except CLIError as exc:
+            print("ERROR: %s" % str(exc))
+            sys.exit(1)
 
     def _set_args(self, args):
         if self.args is not None:
