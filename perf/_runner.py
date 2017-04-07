@@ -475,6 +475,7 @@ class Runner:
             return dt
 
         task = WorkerProcessTask(self, name, task_func, metadata)
+        task.calibrate_warmups = (self.args.calibrate or self.args.recalibrate)
         task.inner_loops = inner_loops
         return self._main(task)
 

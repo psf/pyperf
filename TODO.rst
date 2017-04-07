@@ -10,6 +10,8 @@ BUGS
 TODO
 ====
 
+* ERROR when running bench.py --worker --loops=0 on PyPy? calibration
+  needs multiple processes
 * check: warn if min/max is 25% smaller/larger than mean, instead of 50%?
 * show: add --name option to always display benchmark names
 * Implement a system-wide lock to prevent running two benchmarks at the same

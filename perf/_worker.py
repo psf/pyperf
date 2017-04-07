@@ -35,7 +35,7 @@ class WorkerTask:
         self.warmups = None
         self.values = None
         # calibrate during warmup?
-        self.calibrate_warmups = perf.python_has_jit()
+        self.calibrate_warmups = False
 
     def run_bench(self, nvalue,
                   is_warmup=False, is_calibrate=False, calibrate=False):
