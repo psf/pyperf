@@ -34,8 +34,6 @@ class WorkerTask:
         self.inner_loops = None
         self.warmups = None
         self.values = None
-        # calibrate during warmup?
-        self.calibrate_warmups = False
 
     def compute_values(self, values, nvalue,
                        is_warmup=False, is_calibrate=False, calibrate=False):
@@ -110,34 +108,24 @@ class WorkerTask:
         self.warmups = []
         self.values = []
 
-        # calibrate the number of loops if needed
-        calibrate_loops = (not self.loops)
-        if calibrate_loops:
-            if args.values:
-                raise ValueError("cannot calibrate number of loops "
-                                 "and compute values")
+        if args.values == 0:
+            # calibrate or recalibrate the number of loops
+            if not self.loops:
+                self.loops = 1
 
             nwarmup = args.warmups
             if not nwarmup:
                 nwarmup = 1
 
-            self.loops = 1
             self.compute_values(self.warmups, nwarmup,
-                                calibrate=True,
+                                is_warmup=True,
                                 is_calibrate=True,
-                                is_warmup=True)
+                                calibrate=True)
         else:
-            if self.calibrate_warmups:
-                calibrate_loops = True
-
-            # compute warmup values
+            # compute warmups and values
             if args.warmups:
-                self.compute_values(self.warmups, args.warmups,
-                                    is_warmup=True, calibrate=calibrate_loops)
-
-            # compute values
-            if args.values:
-                self.compute_values(self.values, args.values)
+                self.compute_values(self.warmups, args.warmups, is_warmup=True)
+            self.compute_values(self.values, args.values)
 
         # collect metatadata
         metadata2 = self.collect_metadata()

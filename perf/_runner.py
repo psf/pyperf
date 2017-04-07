@@ -450,8 +450,6 @@ class Runner:
             return time_func(loops, *args)
 
         task = WorkerProcessTask(self, name, task_func, metadata)
-        task.calibrate_warmups = (self.args.calibrate_loops
-                                  or self.args.recalibrate_loops)
         task.inner_loops = inner_loops
         return self._main(task)
 
@@ -487,8 +485,6 @@ class Runner:
             return dt
 
         task = WorkerProcessTask(self, name, task_func, metadata)
-        task.calibrate_warmups = (self.args.calibrate_loops
-                                  or self.args.recalibrate_loops)
         task.inner_loops = inner_loops
         return self._main(task)
 
