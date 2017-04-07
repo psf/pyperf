@@ -37,10 +37,12 @@ class WorkerTask:
         # calibrate during warmup?
         self.calibrate_warmups = False
 
-    def run_bench(self, nvalue,
-                  is_warmup=False, is_calibrate=False, calibrate=False):
+    def compute_values(self, values, nvalue,
+                       is_warmup=False, is_calibrate=False, calibrate=False):
         unit = self.metadata.get('unit')
         args = self.args
+        if nvalue < 1:
+            raise ValueError("nvalue must be >= 1")
         if self.loops <= 0:
             raise ValueError("loops must be >= 1")
 
@@ -51,7 +53,6 @@ class WorkerTask:
         else:
             value_name = 'Value'
 
-        values = []
         index = 1
         inner_loops = self.inner_loops
         if not inner_loops:
@@ -96,43 +97,49 @@ class WorkerTask:
                 print("Calibration: use %s loops" % format_number(self.loops))
             print()
 
-        return values
-
-    def calibrate_loops(self):
-        return self.run_bench(nvalue=1,
-                              calibrate=True,
-                              is_calibrate=True, is_warmup=True)
-
     def collect_metadata(self):
         from perf._collect_metadata import collect_metadata
         return collect_metadata(process=False)
 
-    def compute_values(self):
+    def compute(self):
         args = self.args
 
         self.metadata['name'] = self.name
         if self.inner_loops is not None:
             self.metadata['inner_loops'] = self.inner_loops
+        self.warmups = []
+        self.values = []
 
-        calibrate = (not self.loops)
-        if calibrate:
+        # calibrate the number of loops if needed
+        calibrate_loops = (not self.loops)
+        if calibrate_loops:
+            if args.values:
+                raise ValueError("cannot calibrate number of loops "
+                                 "and compute values")
+
+            nwarmup = args.warmups
+            if not nwarmup:
+                nwarmup = 1
+
             self.loops = 1
-            calibrate_warmups = self.calibrate_loops()
+            self.compute_values(self.warmups, nwarmup,
+                                calibrate=True,
+                                is_calibrate=True,
+                                is_warmup=True)
         else:
             if self.calibrate_warmups:
-                calibrate = True
-            calibrate_warmups = None
+                calibrate_loops = True
 
-        if args.warmups:
-            warmups = self.run_bench(nvalue=args.warmups,
-                                     is_warmup=True, calibrate=calibrate)
-        else:
-            warmups = []
-        if calibrate_warmups:
-            warmups = calibrate_warmups + warmups
-        self.warmups = warmups
-        self.values = self.run_bench(nvalue=args.values)
+            # compute warmup values
+            if args.warmups:
+                self.compute_values(self.warmups, args.warmups,
+                                    is_warmup=True, calibrate=calibrate_loops)
 
+            # compute values
+            if args.values:
+                self.compute_values(self.values, args.values)
+
+        # collect metatadata
         metadata2 = self.collect_metadata()
         metadata2.update(self.metadata)
         self.metadata = metadata2
@@ -141,7 +148,7 @@ class WorkerTask:
 
     def create_run(self):
         start_time = monotonic_clock()
-        self.compute_values()
+        self.compute()
         self.metadata['duration'] = monotonic_clock() - start_time
 
         return perf.Run(self.values,
@@ -151,7 +158,7 @@ class WorkerTask:
 
 
 class WorkerProcessTask(WorkerTask):
-    def compute_values(self):
+    def compute(self):
         args = self.args
 
         if args.track_memory:
@@ -166,7 +173,7 @@ class WorkerProcessTask(WorkerTask):
             import tracemalloc
             tracemalloc.start()
 
-        WorkerTask.compute_values(self)
+        WorkerTask.compute(self)
 
         if args.tracemalloc:
             traced_peak = tracemalloc.get_traced_memory()[1]
@@ -202,8 +209,8 @@ class WorkerProcessTask(WorkerTask):
 
 
 class BenchCommandTask(WorkerTask):
-    def compute_values(self):
-        WorkerTask.compute_values(self)
+    def compute(self):
+        WorkerTask.compute(self)
         if self.args.track_memory:
             value = self.metadata.pop('command_max_rss', None)
             if not value:

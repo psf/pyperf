@@ -245,31 +245,53 @@ Options:
 Example::
 
     $ python3 -m perf dump telco.json
-    Run 1/50: warmup (1): 24.9 ms; values (3): 24.6 ms, 24.6 ms, 24.6 ms
-    Run 2/50: warmup (1): 25.0 ms; values (3): 24.8 ms, 24.8 ms, 24.6 ms
-    Run 3/50: warmup (1): 24.6 ms; values (3): 24.6 ms, 24.5 ms, 24.3 ms
+    Run 1: calibrate the number of loops
+    - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
+    - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
+    - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
+    - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+    Run 2:
+    - warmup 1: 22.5 ms
+    - value 1: 22.8 ms
+    - value 2: 22.5 ms
+    - value 3: 22.6 ms
     (...)
-    Run 50/50: warmup (1): 24.8 ms; values (3): 24.6 ms, 24.8 ms, 24.8 ms
+    Run 41:
+    - warmup 1: 22.5 ms
+    - value 1: 22.6 ms
+    - value 2: 22.4 ms
+    - value 3: 22.4 ms
 
 Example in verbose mode::
 
     $ python3 -m perf dump telco.json -v
     Metadata:
-      cpu_count: 2
+      cpu_affinity: 2-3
+      cpu_config: 2-3=driver:intel_pstate, intel_pstate:turbo, governor:performance, isolated; idle:intel_idle
+      cpu_count: 4
       cpu_model_name: Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz
       hostname: selma
-      loops: 4
+      loops: 8
       name: telco
+      perf_version: 0.8.2
       ...
 
-    Run 1: warmup (1): 24.7 ms; values (3): 24.5 ms, 24.5 ms, 24.5 ms
-      cpu_freq: 1=3588 MHz
-      date: 2016-07-17T22:50:27
-      load_avg_1min: 0.12
-    Run 2: warmup (1): 25.0 ms; values (3): 24.8 ms, 24.6 ms, 24.8 ms
-      cpu_freq: 1=3586 MHz
-      date: 2016-07-17T22:50:27
-      load_avg_1min: 0.12
+    Run 1: calibrate the number of loops
+    - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
+    - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
+    - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
+    - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+    Run 2:
+    - warmup 1: 22.5 ms
+    - value 1: 22.8 ms
+    - value 2: 22.5 ms
+    - value 3: 22.6 ms
+    - Metadata:
+      cpu_freq: 2=3596 MHz, 3=2998 MHz
+      cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
+      date: 2016-10-21 03:14:20.496710
+      duration: 723 ms
+      load_avg_1min: 0.29
     ...
 
 

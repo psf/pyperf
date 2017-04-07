@@ -4,10 +4,15 @@ Changelog
 Version 1.2
 -----------
 
-* Fix calibration on PyPy: recalibrate until the number of loops becomes
-  stable.
+* Fix calibration on PyPy: spawn multiple worker processes until the number of
+  loops becomes stable.
+* Calibration now uses the number of warmups, instead of 1.
 * Command line interface (CLI): the ``--benchmark``, ``--include-benchmark``
   and ``--exclude-benchmark`` options can now be specified multiple times.
+* ``dump`` command now writes one value per line
+* A worker process cannot calibrate the loops number and compute values
+  anymore. The calibration of the loops number requires multiple processes
+  on PyPy.
 
 Version 1.1 (2017-03-27)
 ------------------------

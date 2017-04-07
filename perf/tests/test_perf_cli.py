@@ -278,46 +278,63 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump_raw(self):
         expected = """
-            Run 1: calibrate
-            - 1 loop: 23.1 ms
-            - 2 loops: 45.0 ms
-            - 4 loops: 89.9 ms
-            - 8 loops: 179 ms
-            Run 2: raw warmups (1): 180 ms; raw values (3): 182 ms, 180 ms, 181 ms
-            Run 3: raw warmups (1): 179 ms; raw values (3): 178 ms, 179 ms, 179 ms
+            Run 1: calibrate the number of loops
+            - raw calibrate 1: 23.1 ms (loops: 1)
+            - raw calibrate 2: 45.0 ms (loops: 2)
+            - raw calibrate 3: 89.9 ms (loops: 4)
+            - raw calibrate 4: 179 ms (loops: 8)
+            Run 2:
+            - raw warmup 1: 180 ms
+            - raw value 1: 182 ms
+            - raw value 2: 180 ms
+            - raw value 3: 181 ms
         """
         stdout = self.run_command('dump', '--raw', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump(self):
         expected = """
-            Run 1: calibrate
-            - 1 loop: 23.1 ms (raw: 23.1 ms)
-            - 2 loops: 22.5 ms (raw: 45.0 ms)
-            - 4 loops: 22.5 ms (raw: 89.9 ms)
-            - 8 loops: 22.4 ms (raw: 179 ms)
-            Run 2: warmups (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
-            Run 3: warmups (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
+            Run 1: calibrate the number of loops
+            - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
+            - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
+            - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
+            - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+            Run 2:
+            - warmup 1: 22.5 ms
+            - value 1: 22.8 ms
+            - value 2: 22.5 ms
+            - value 3: 22.6 ms
         """
         stdout = self.run_command('dump', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_quiet(self):
         expected = """
-            Run 2: values (3): 22.8 ms, 22.5 ms, 22.6 ms
-            Run 3: values (3): 22.3 ms, 22.4 ms, 22.3 ms
+            Run 2:
+            - value 1: 22.8 ms
+            - value 2: 22.5 ms
+            - value 3: 22.6 ms
+            Run 3:
+            - value 1: 22.3 ms
+            - value 2: 22.4 ms
+            - value 3: 22.3 ms
         """
         stdout = self.run_command('dump', '--quiet', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_verbose(self):
         expected = """
-            Run 1: calibrate
-            - 1 loop: 23.1 ms (raw: 23.1 ms)
-            - 2 loops: 22.5 ms (raw: 45.0 ms)
-            - 4 loops: 22.5 ms (raw: 89.9 ms)
-            - 8 loops: 22.4 ms (raw: 179 ms)
-            Run 2: warmups (1): 22.5 ms; values (3): 22.8 ms, 22.5 ms, 22.6 ms
+            Run 1: calibrate the number of loops
+            - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
+            - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
+            - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
+            - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+            Run 2:
+            - warmup 1: 22.5 ms
+            - value 1: 22.8 ms
+            - value 2: 22.5 ms
+            - value 3: 22.6 ms
+            - Metadata:
               cpu_freq: 2=3596 MHz, 3=2998 MHz
               cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
               date: 2016-10-21 03:14:20.496710
@@ -326,7 +343,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               mem_max_rss: 13.5 MB
               runnable_threads: 1
               uptime: 2 day 2 hour 4 min
-            Run 3: warmups (1): 22.4 ms; values (3): 22.3 ms, 22.4 ms, 22.3 ms
         """
         stdout = self.run_command('dump', '--verbose', TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)

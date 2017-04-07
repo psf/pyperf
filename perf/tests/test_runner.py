@@ -27,6 +27,13 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 
 
 class TestRunner(unittest.TestCase):
+    def create_runner(self, args, **kwargs):
+        runner = perf.Runner(**kwargs)
+        # disable CPU affinity to not pollute stdout
+        runner._cpu_affinity = lambda: None
+        runner.parse_args(args)
+        return runner
+
     def exec_runner(self, *args, **kwargs):
         def fake_timer():
             t = fake_timer.value
@@ -37,10 +44,7 @@ class TestRunner(unittest.TestCase):
         name = kwargs.pop('name', 'bench')
         time_func = kwargs.pop('time_func', None)
 
-        runner = perf.Runner(**kwargs)
-        # disable CPU affinity to not pollute stdout
-        runner._cpu_affinity = lambda: None
-        runner.parse_args(args)
+        runner = self.create_runner(args, **kwargs)
 
         with mock.patch('perf.perf_counter', fake_timer):
             with tests.capture_stdout() as stdout:
@@ -63,7 +67,7 @@ class TestRunner(unittest.TestCase):
         return Result(runner, bench, stdout)
 
     def test_worker(self):
-        result = self.exec_runner('--worker')
+        result = self.exec_runner('--worker', '-l1')
         self.assertRegex(result.stdout,
                          r'^bench: Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
@@ -80,7 +84,8 @@ class TestRunner(unittest.TestCase):
                 # the Runner class
                 wpipe._fd = None
 
-                result = self.exec_runner('--pipe', str(arg), '--worker')
+                result = self.exec_runner('--pipe', str(arg),
+                                          '--worker', '-l1')
 
             with rpipe.open_text() as rfile:
                 bench_json = rfile.read()
@@ -94,7 +99,8 @@ class TestRunner(unittest.TestCase):
             runner = perf.Runner()
             with tests.capture_stdout() as stdout:
                 try:
-                    runner.parse_args(['--worker', '--output', tmp.name])
+                    runner.parse_args(['--worker', '-l1',
+                                       '--output', tmp.name])
                 except SystemExit as exc:
                     self.assertEqual(exc.code, 1)
 
@@ -103,12 +109,9 @@ class TestRunner(unittest.TestCase):
                              stdout.getvalue().rstrip())
 
     def test_verbose_metadata(self):
-        result = self.exec_runner('--worker', '--verbose', '--metadata')
+        result = self.exec_runner('--worker', '-l1', '--verbose', '--metadata')
         self.assertRegex(result.stdout,
                          r'^'
-                         r'(?:Calibration [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
-                         r'Calibration: use [0-9^]+ loops\n'
-                         r'\n'
                          r'(?:Warmup [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
                          r'\n'
                          r'(?:Value [0-9]+: 1\.00 sec\n)+'
@@ -123,7 +126,8 @@ class TestRunner(unittest.TestCase):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
-        result = self.exec_runner('--worker', '-v', time_func=time_func)
+        result = self.exec_runner('--worker', '--calibrate-loops',
+                                  '-v', time_func=time_func)
 
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 17)
@@ -156,7 +160,8 @@ class TestRunner(unittest.TestCase):
             # number of iterations => number of microseconds
             return loops * 1e-6
 
-        result = self.exec_runner('--worker', '--min-time', '0.001',
+        result = self.exec_runner('--worker', '--calibrate-loops',
+                                  '--min-time', '0.001',
                                   time_func=time_func)
         for run in result.bench.get_runs():
             self.assertEqual(run.get_total_loops(), 2 ** 10)
@@ -165,16 +170,13 @@ class TestRunner(unittest.TestCase):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
 
-            result = self.exec_runner('--worker', '--output', filename)
+            result = self.exec_runner('--worker', '-l1', '--output', filename)
 
             loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
 
     def test_time_func_zero(self):
-        runner = perf.Runner()
-        # disable CPU affinity to not pollute stdout
-        runner._cpu_affinity = lambda: None
-        runner.parse_args(['--worker', '-l1'])
+        runner = self.create_runner(['--worker', '-l1'])
 
         def time_func(loops):
             return 0
@@ -185,10 +187,7 @@ class TestRunner(unittest.TestCase):
                          'benchmark function returned zero')
 
     def test_calibration_zero(self):
-        runner = perf.Runner()
-        # disable CPU affinity to not pollute stdout
-        runner._cpu_affinity = lambda: None
-        runner.parse_args(['--worker'])
+        runner = self.create_runner(['--worker', '--calibrate-loops'])
 
         def time_func(loops):
             return 0
@@ -198,11 +197,43 @@ class TestRunner(unittest.TestCase):
         self.assertIn('error in calibration, loops is too big:',
                       str(cm.exception))
 
-    def test_calibration(self):
-        runner = perf.Runner()
-        # disable CPU affinity to not pollute stdout
-        runner._cpu_affinity = lambda: None
-        runner.parse_args(['--worker', '-w2', '-n1', '--min-time=1.0'])
+    def check_calibrate_loops(self, runner, time_func, warmups):
+        with tests.capture_stdout():
+            bench = runner.bench_time_func('bench', time_func)
+
+        runs = bench.get_runs()
+        self.assertEqual(len(runs), 1)
+        run = runs[0]
+
+        self.assertEqual(run.warmups, warmups)
+
+    def test_calibrate_loops(self):
+        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+                '--calibrate-loops']
+        runner = self.create_runner(args)
+
+        def time_func(loops):
+            if loops < 8:
+                return 0.5
+            else:
+                return 1.0
+        time_func.step = 0
+
+        warmups = (
+            (1, 0.5),
+            (2, 0.5 / 2),
+            (4, 0.5 / 4),
+
+            # warmup 1: dt >= min_time
+            (8, 1.0 / 8),
+            # warmup 2
+            (8, 1.0 / 8))
+        self.check_calibrate_loops(runner, time_func, warmups)
+
+    def test_calibrate_loops_jit(self):
+        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+                '--calibrate-loops']
+        runner = self.create_runner(args)
 
         # Simulate PyPy JIT: running the same function becomes faster
         # after 2 values while running warmup values
@@ -219,42 +250,60 @@ class TestRunner(unittest.TestCase):
                 return 1.0
         time_func.step = 0
 
-        with tests.capture_stdout():
-            bench = runner.bench_time_func('bench', time_func)
+        warmups = (
+            # first calibration values are zero
+            (1, 0.0),
+            (2, 0.0),
+            (4, 0.0),
+            (8, 0.0),
 
-        runs = bench.get_runs()
-        self.assertEqual(len(runs), 1)
+            # warmup 1: first non-zero calibration value
+            (16, 3.0 / 16),
 
-        run = runs[0]
-        self.assertEqual(run.warmups,
-                         # first calibration values are zero
-                         ((1, 0.0),
-                          (2, 0.0),
-                          (4, 0.0),
-                          (8, 0.0),
+            # warmup 2: JIT triggered, dt < min_time,
+            # double number of loops
+            (16, 0.5 / 16),
+            # warmup 3
+            (32, 1.0 / 32))
+        self.check_calibrate_loops(runner, time_func, warmups)
 
-                          # first non-zero calibration value
-                          (16, 3.0 / 16),
+    def test_recalibrate_loops_jit(self):
+        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+                '--recalibrate-loops', '--loops=16']
+        runner = self.create_runner(args)
 
-                          # warmup 1, JIT triggered, 3.0 => 0.5 for loops=128
-                          (16, 0.5 / 16),
-                          # warmup 1, new try with loops x 2
-                          (32, 1.0 / 32),
+        # Simulate PyPy JIT: running the same function becomes faster
+        # after 2 values while running warmup values
+        def time_func(loops):
+            time_func.step += 1
+            if time_func.step == 1:
+                return 1.0
+            elif time_func.step == 2:
+                return 0.5
+            else:
+                return 1.0
+        time_func.step = 0
 
-                          # warmup 2
-                          (32, 1.0 / 32)))
+        warmups = (
+            # warmup 1
+            (16, 1.0 / 16),
+            # warmup 2: JIT optimized code, dt < min_time
+            # double the number of loops
+            (16, 0.5 / 16),
+            # warmup 3, new try with loops x 2
+            (32, 1.0 / 32))
+        self.check_calibrate_loops(runner, time_func, warmups)
 
     def test_loops_power(self):
-        runner = perf.Runner()
-        runner.parse_args(['--loops', '2^8'])
+        # test 'x^y' syntax for loops
+        runner = self.create_runner(['--loops', '2^8'])
         self.assertEqual(runner.args.loops, 256)
 
     def check_two_benchmarks(self, task=None):
-        runner = perf.Runner()
         args = ['--worker', '--loops=1', '-w0', '-n3']
         if task is not None:
             args.append('--worker-task=%s' % task)
-        runner.parse_args(args)
+        runner = self.create_runner(args)
 
         def time_func(loops):
             return 1.0
@@ -292,11 +341,11 @@ class TestRunner(unittest.TestCase):
         self.assertIs(bench2, None)
 
     def test_show_name(self):
-        result = self.exec_runner('--worker', name='NAME')
+        result = self.exec_runner('--worker', '-l1', name='NAME')
         self.assertRegex(result.stdout,
                          r'^NAME: Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
-        result = self.exec_runner('--worker', name='NAME', show_name=False)
+        result = self.exec_runner('--worker', '-l1', name='NAME', show_name=False)
         self.assertRegex(result.stdout,
                          r'^Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
@@ -327,11 +376,9 @@ class TestRunner(unittest.TestCase):
             cm.enter_context(mock.patch('perf._runner._load_suite_from_pipe',
                                         return_value=suite))
 
-            runner = perf.Runner()
-
             args = ["--python=python1", "--compare-to=python2", "--min-time=5",
                     "-p1", "-w3", "-n7", "-l11"]
-            runner.parse_args(args)
+            runner = self.create_runner(args)
             with tests.capture_stdout():
                 runner.bench_time_func('name', time_func)
 
@@ -352,7 +399,7 @@ class TestRunner(unittest.TestCase):
             mock_subprocess.Popen.assert_has_calls([call1, call2])
 
     def test_parse_args_twice_error(self):
-        args = ["--worker"]
+        args = ["--worker", '-l1']
         runner = perf.Runner()
         runner.parse_args(args)
         with self.assertRaises(RuntimeError):
@@ -362,8 +409,7 @@ class TestRunner(unittest.TestCase):
         def time_func(loops):
             return 1.0
 
-        runner = perf.Runner()
-        runner.parse_args('-l1 -w0 -n1 --worker'.split())
+        runner = self.create_runner('-l1 -w0 -n1 --worker'.split())
         with tests.capture_stdout():
             runner.bench_time_func('optim', time_func)
             with self.assertRaises(ValueError) as cm:
@@ -375,8 +421,7 @@ class TestRunner(unittest.TestCase):
     def test_bench_command(self):
         args = [sys.executable, '-c', 'pass']
 
-        runner = perf.Runner()
-        runner.parse_args('-l1 -w0 -n1 --worker'.split())
+        runner = self.create_runner('-l1 -w0 -n1 --worker'.split())
         with tests.capture_stdout():
             bench = runner.bench_command('bench', args)
 

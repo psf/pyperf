@@ -51,18 +51,26 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     inner_loops = run._get_inner_loops()
 
     if run._is_calibration():
-        lines.append("Run %s: calibrate" % (run_index,))
-        for loops, value in run.warmups:
+        lines.append("Run %s: calibrate the number of loops" % (run_index,))
+        if raw:
+            name = 'raw calibrate'
+        else:
+            name = 'calibrate'
+        for index, warmup in enumerate(run.warmups, 1):
+            loops, value = warmup
             raw_value = value * (loops * inner_loops)
             if raw:
-                lines.append("- %s: %s"
-                             % (format_number(loops, 'loop'),
-                                format_timedelta(raw_value)))
+                text = format_timedelta(raw_value)
+                text = ("%s (loops: %s)"
+                        % (format_timedelta(raw_value),
+                           format_number(loops)))
             else:
-                lines.append("- %s: %s (raw: %s)"
-                             % (format_number(loops, 'loop'),
-                                format_timedelta(value),
-                                format_timedelta(raw_value)))
+                text = ("%s (loops: %s, raw: %s)"
+                        % (format_timedelta(value),
+                           format_number(loops),
+                           format_timedelta(raw_value)))
+            lines.append("- %s %s: %s"
+                         % (name, index, text))
         return lines
 
     show_warmup = (verbose >= 0)
@@ -81,6 +89,8 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
                 values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
         return values_str
 
+    lines.append("Run %s:" % (run_index,))
+
     values = run.values
     if raw:
         warmups = [bench.format_value(value * (loops * inner_loops))
@@ -93,30 +103,30 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             warmups = format_values(warmups)
     values = format_values(values)
 
-    if raw:
-        name = 'raw values'
-    else:
-        name = 'values'
-    text = '%s (%s): %s' % (name, len(values), ', '.join(values))
     if warmups and show_warmup:
         if raw:
-            name = 'raw warmups'
+            name = 'raw warmup'
         else:
-            name = 'warmups'
-        text = ('%s (%s): %s; %s'
-                % (name, len(warmups), ', '.join(warmups), text))
+            name = 'warmup'
+        for index, warmup in enumerate(warmups, 1):
+            lines.append('- %s %s: %s' % (name, index, warmup))
 
-    text = "Run %s: %s" % (run_index, text)
-    lines.append(text)
+    if raw:
+        name = 'raw value'
+    else:
+        name = 'value'
+    for index, value in enumerate(values, 1):
+        lines.append('- %s %s: %s' % (name, index, value))
 
     if verbose > 0:
-        prefix = '  '
         metadata = run.get_metadata()
-        for name, value in sorted(metadata.items()):
-            if common_metadata and name in common_metadata:
-                continue
-            value = _format_metadata(name, value)
-            lines.append('%s%s: %s' % (prefix, name, value))
+        if metadata:
+            lines.append('- Metadata:')
+            for name, value in sorted(metadata.items()):
+                if common_metadata and name in common_metadata:
+                    continue
+                value = _format_metadata(name, value)
+                lines.append('  %s: %s' % (name, value))
 
     return lines
 
