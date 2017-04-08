@@ -159,12 +159,14 @@ explicitly::
     --worker-task=TASK_ID
     --calibrate-loops
     --recalibrate-loops
+    --calibrate-warmups
     --debug-single-value
 
 * ``--worker``: a worker process, run the benchmark in the running processs
 * ``--worker-task``: Identifier of the worker task, only execute the benchmark
   function number ``TASK_ID``.
-* ``--calibrate-loops``: only calibrate the benchmark, don't compute values
-* ``--recalibrate-loops``: only compute warmup values to validate the number of
-  loops. Option used with JIT compilers to validate the number of loops.
+* ``--calibrate-loops``: calibrate the number of loops
+* ``--recalibrate-loops``: recalibrate the number of loops. Option used with
+  JIT compilers to validate the number of loops.
+* ``--calibrate-warmups``: calibrate the number of warmups
 * ``--debug-single-value``: Debug mode, only produce a single value

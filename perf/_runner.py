@@ -185,6 +185,8 @@ class Runner:
                             help="calibrate the number of loops")
         parser.add_argument('--recalibrate-loops', action="store_true",
                             help="recalibrate the the number of loops")
+        parser.add_argument('--calibrate-warmups', action="store_true",
+                            help="calibrate the number of warmups")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -278,6 +280,13 @@ class Runner:
             if not args.loops:
                 raise CLIError("--recalibration-loops requires --loops=N")
 
+            args.values = 0
+        elif args.calibrate_warmups:
+            self._only_in_worker("--calibrate-warmups")
+            if not args.loops:
+                raise CLIError("--recalibration-loops requires --loops=N")
+
+            args.warmups = -1
             args.values = 0
         else:
             if args.worker and not args.loops:
