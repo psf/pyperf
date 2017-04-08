@@ -160,6 +160,7 @@ explicitly::
     --calibrate-loops
     --recalibrate-loops
     --calibrate-warmups
+    --recalibrate-warmups
     --debug-single-value
 
 * ``--worker``: a worker process, run the benchmark in the running processs
@@ -169,4 +170,5 @@ explicitly::
 * ``--recalibrate-loops``: recalibrate the number of loops. Option used with
   JIT compilers to validate the number of loops.
 * ``--calibrate-warmups``: calibrate the number of warmups
+* ``--recalibrate-warmups``: recalibrate the number of warmups
 * ``--debug-single-value``: Debug mode, only produce a single value

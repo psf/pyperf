@@ -23,9 +23,9 @@ MAX_LOOPS = 2 ** 32
 
 # Maximum difference in percent of the first value
 # and the mean the second sample
-MAX_WARMUP_VALUE_DIFF = 20.0
+MAX_WARMUP_VALUE_DIFF = 25.0
 # Maximum difference in percent of the mean of two samples
-MAX_WARMUP_MEAN_DIFF = 10.0
+MAX_WARMUP_MEAN_DIFF = 15.0
 # Considering that min_time=100 ms, limit warmup to 30 seconds
 MAX_WARMUP_VALUES = 300
 
@@ -147,7 +147,6 @@ class WorkerTask:
         first_value = self.warmups[nwarmup][1]
         sample1 = [value for loops, value in self.warmups[nwarmup:half]]
         sample2 = [value for loops, value in self.warmups[half:]]
-        #print("COUNT: warmups: %s, sample1: %s, sample2: %s, total: %s" % (nwarmup, len(sample1), len(sample2), len(self.warmups)))
         mean1 = warmup_mean(sample1)
         mean2 = warmup_mean(sample2)
 
@@ -157,7 +156,7 @@ class WorkerTask:
             print("Calibration: warmups: %s, "
                   "first value: %s (%.1f%% of mean2), "
                   "sample1(%s): %s, "
-                  "sample2(%s): %s (%.1f%% of sample1)"
+                  "sample2(%s): %s (%.1f%% of mean1)"
                   % (format_number(nwarmup),
                      format_value(unit, first_value),
                      value_diff,
@@ -176,11 +175,15 @@ class WorkerTask:
         if self.loops < 1:
             raise ValueError("loops must be >= 1")
 
-        self.metadata['calibrate_warmups'] = True
+        if self.args.calibrate_warmups:
+            nwarmup = 1
+            self.metadata['calibrate_warmups'] = True
+        else:
+            nwarmup = self.args.warmups
+            self.metadata['recalibrate_warmups'] = True
 
         unit = self.metadata.get('unit')
         start = 0
-        nwarmup = 1
         min_sample_size = 5
         total = nwarmup + min_sample_size * 2
         while True:
@@ -204,7 +207,7 @@ class WorkerTask:
 
             total = max(total, nwarmup * 3)
             sample_size = max((nvalue - nwarmup) // 2, min_sample_size)
-            total = max(total, nwarmup + min_sample_size * 2)
+            total = max(total, nwarmup + sample_size * 2)
 
         if self.args.verbose:
             print("Calibration: use %s warmups" % format_number(nwarmup))
@@ -220,9 +223,9 @@ class WorkerTask:
         self.warmups = []
         self.values = []
 
-        if args.warmups < 0:
+        if args.calibrate_warmups or args.recalibrate_warmups:
             self.calibrate_warmups()
-        elif args.values == 0:
+        elif args.calibrate_loops or args.recalibrate_loops:
             # calibrate or recalibrate the number of loops
             if not self.loops:
                 self.loops = 1

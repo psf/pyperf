@@ -29,8 +29,10 @@ except ImportError:
     psutil = None
 
 
-# Limit to 5 calibration processes
-MAX_CALIBRATION = 5
+# Limit to 5 calibration loops processes
+MAX_CALIBRATION_LOOPS = 5
+# Limit to 5 calibration warmups processes
+MAX_CALIBRATION_WARMUPS = 5
 
 
 def strictly_positive(value):
@@ -187,6 +189,8 @@ class Runner:
                             help="recalibrate the the number of loops")
         parser.add_argument('--calibrate-warmups', action="store_true",
                             help="calibrate the number of warmups")
+        parser.add_argument('--recalibrate-warmups', action="store_true",
+                            help="recalibrate the number of warmups")
         parser.add_argument('-d', '--dump', action="store_true",
                             help='display benchmark run results')
         parser.add_argument('--metadata', '-m', action="store_true",
@@ -279,7 +283,7 @@ class Runner:
                 args.warmups = 1
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
-            if not args.loops:
+            if args.loops < 1:
                 raise CLIError("--recalibration-loops requires --loops=N")
 
             args.values = 0
@@ -287,13 +291,20 @@ class Runner:
                 args.warmups = 1
         elif args.calibrate_warmups:
             self._only_in_worker("--calibrate-warmups")
-            if not args.loops:
+            if args.loops < 1:
                 raise CLIError("--recalibration-loops requires --loops=N")
 
             args.warmups = -1
             args.values = 0
+        elif args.recalibrate_warmups:
+            self._only_in_worker("--recalibrate-warmups")
+            if args.loops < 1 or args.warmups < 0:
+                raise CLIError("--recalibration-warmups requires "
+                               "--loops=N and --warmups=N")
+
+            args.values = 0
         else:
-            if args.worker and not args.loops:
+            if args.worker and args.loops < 1:
                 raise CLIError("--worker requires --loops=N "
                                "or --calibrate-loops")
             if args.worker and args.warmups < 0:
@@ -641,6 +652,10 @@ class Runner:
             calibrate_loops = 1
         else:
             calibrate_loops = 0
+        if args.warmups < 0:
+            calibrate_warmups = 1
+        else:
+            calibrate_warmups = 0
         has_jit = perf.python_has_jit()
 
         if verbose and self._worker_task > 0:
@@ -649,13 +664,8 @@ class Runner:
         nprocess_value = 0
         nprocess_warmup = 0
         while nprocess_value < nprocess:
-            if not calibrate_loops:
-                calibrate_warmups = (args.warmups < 0)
-            else:
-                calibrate_warmups = False
-
             suite = self._spawn_worker(python, calibrate_loops,
-                                       calibrate_warmups)
+                                       0 if calibrate_loops else calibrate_warmups)
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
 
@@ -705,7 +715,7 @@ class Runner:
                     else:
                         calibrate_loops = 0
 
-                if calibrate_loops > MAX_CALIBRATION:
+                if calibrate_loops > MAX_CALIBRATION_LOOPS:
                     print("ERROR: calibration failed, the number of loops "
                           "is not stable after %s calibrations"
                           % (calibrate_loops - 1))
@@ -715,9 +725,33 @@ class Runner:
                     print("Calibration: use %s loops"
                           % format_number(args.loops))
 
-            if calibrate_warmups:
-                args.warmups = get_calibrate_warmups(worker_bench)
-                if verbose:
+            elif calibrate_warmups:
+                if calibrate_warmups > 1:
+                    # Recalibrate the number of warmups
+                    old_warmups = args.warmups
+                    args.warmups = get_calibrate_warmups(worker_bench)
+
+                    if args.warmups != old_warmups:
+                        # recalibrate
+                        calibrate_warmups += 1
+                    else:
+                        # calibration now seems stable
+                        calibrate_warmups = 0
+                else:
+                    args.warmups = get_calibrate_warmups(worker_bench)
+                    if has_jit:
+                        # JIT compiler requires recalibration
+                        calibrate_warmups += 1
+                    else:
+                        calibrate_warmups = 0
+
+                if calibrate_warmups > MAX_CALIBRATION_WARMUPS:
+                    print("ERROR: calibration failed, the number of warmups "
+                          "is not stable after %s calibrations"
+                          % (calibrate_warmups - 1))
+                    sys.exit(1)
+
+                if verbose and not calibrate_warmups:
                     print("Calibration: use %s warmups"
                           % format_number(args.warmups))
 

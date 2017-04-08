@@ -20,8 +20,8 @@ class CLITests(unittest.TestCase):
                        metadata={'name': 'bench', 'loops': 100},
                        collect_metadata=False)
         bench = perf.Benchmark([run])
-        self.assertEqual(cli.format_result_value(bench), '<calibration: 100 loops>')
-        self.assertEqual(cli.format_result(bench), 'Calibration: 100 loops')
+        self.assertEqual(cli.format_result_value(bench), '<calibration only>')
+        self.assertEqual(cli.format_result(bench), 'Calibration only')
         self.assertRaises(ValueError, bench.median)
 
 

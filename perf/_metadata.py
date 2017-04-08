@@ -88,6 +88,7 @@ METADATA = {
     'calibrate_loops': BOOL_TRUE_ONLY,
     'recalibrate_loops': BOOL_TRUE_ONLY,
     'calibrate_warmups': BOOL_TRUE_ONLY,
+    'recalibrate_warmups': BOOL_TRUE_ONLY,
 }
 
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)

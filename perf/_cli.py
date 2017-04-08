@@ -53,6 +53,8 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if run._is_calibration():
         if run._is_calibration_warmups():
             action = 'calibrate the number of warmups'
+        elif run._is_recalibration_warmups():
+            action = 'recalibrate the number of warmups'
         elif run._is_recalibration_loops():
             action = 'recalibrate the number of loops'
         else:
@@ -160,7 +162,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
 
     empty_line_written = False
     for run_index, run in enumerate(runs, 1):
-        if quiet and run._is_calibration_loops():
+        if quiet and run._is_calibration():
             continue
         if not empty_line_written:
             empty_line_written = True

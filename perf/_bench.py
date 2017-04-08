@@ -160,6 +160,9 @@ class Run(object):
     def _is_calibration_warmups(self):
         return self._is_calibration() and self._has_metadata('calibrate_warmups')
 
+    def _is_recalibration_warmups(self):
+        return self._is_calibration() and self._has_metadata('recalibrate_warmups')
+
     def _has_metadata(self, name):
         return (name in self._metadata)
 
@@ -332,7 +335,7 @@ class Benchmark(object):
     def _get_run_property(self, get_property):
         # ignore calibration runs
         values = [get_property(run) for run in self._runs
-                  if not run._is_calibration_loops()]
+                  if not run._is_calibration()]
         if len(set(values)) == 1:
             return values[0]
 
