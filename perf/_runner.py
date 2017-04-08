@@ -711,7 +711,7 @@ class Runner:
                           % (calibrate_loops - 1))
                     sys.exit(1)
 
-                if verbose:
+                if verbose and not calibrate_loops:
                     print("Calibration: use %s loops"
                           % format_number(args.loops))
 

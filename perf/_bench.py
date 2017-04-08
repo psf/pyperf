@@ -147,7 +147,18 @@ class Run(object):
         return run
 
     def _is_calibration(self):
+        # Run used to calibrate or recalibration the number of loops,
+        # or to calibrate the number of warmups
         return (not self._values)
+
+    def _is_calibration_loops(self):
+        return self._is_calibration() and self._has_metadata('calibrate_loops')
+
+    def _is_recalibration_loops(self):
+        return self._is_calibration() and self._has_metadata('recalibrate_loops')
+
+    def _is_calibration_warmups(self):
+        return self._is_calibration() and self._has_metadata('calibrate_warmups')
 
     def _has_metadata(self, name):
         return (name in self._metadata)
@@ -321,7 +332,7 @@ class Benchmark(object):
     def _get_run_property(self, get_property):
         # ignore calibration runs
         values = [get_property(run) for run in self._runs
-                  if not run._is_calibration()]
+                  if not run._is_calibration_loops()]
         if len(set(values)) == 1:
             return values[0]
 
@@ -472,14 +483,7 @@ class Benchmark(object):
         return raw_values
 
     def _only_calibration(self):
-        # If the benchmark only contains a single run which is a calibration
-        # run: return the number of loops, otherwise return None
-        if len(self._runs) == 1:
-            run = self._runs[0]
-            if run._is_calibration():
-                return run._get_loops()
-
-        return None
+        return all(run._is_calibration() for run in self._runs)
 
     @classmethod
     def _json_load(cls, version, data, suite_metadata):

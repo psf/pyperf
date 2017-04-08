@@ -171,12 +171,13 @@ class WorkerTask:
         return True
 
     def calibrate_warmups(self):
-        unit = self.metadata.get('unit')
-
         # calibrate the number of warmups
         if self.loops < 1:
             raise ValueError("loops must be >= 1")
 
+        self.metadata['calibrate_warmups'] = True
+
+        unit = self.metadata.get('unit')
         start = 0
         nwarmup = 1
         while True:
@@ -216,10 +217,14 @@ class WorkerTask:
             # calibrate or recalibrate the number of loops
             if not self.loops:
                 self.loops = 1
+                self.metadata['calibrate_loops'] = True
+            else:
+                self.metadata['recalibrate_loops'] = True
 
             self.compute_values(self.warmups, args.warmups,
                                 is_warmup=True,
                                 calibrate_loops=True)
+
             if args.verbose:
                 print()
                 print("Calibration: use %s loops" % format_number(self.loops))

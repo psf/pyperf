@@ -51,7 +51,13 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     inner_loops = run._get_inner_loops()
 
     if run._is_calibration():
-        lines.append("Run %s: calibrate the number of loops" % (run_index,))
+        if run._is_calibration_warmups():
+            action = 'calibrate the number of warmups'
+        elif run._is_recalibration_loops():
+            action = 'recalibrate the number of loops'
+        else:
+            action = 'calibrate the number of loops'
+        lines.append("Run %s: %s" % (run_index, action))
         if raw:
             name = 'raw calibrate'
         else:
@@ -154,7 +160,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
 
     empty_line_written = False
     for run_index, run in enumerate(runs, 1):
-        if quiet and run._is_calibration():
+        if quiet and run._is_calibration_loops():
             continue
         if not empty_line_written:
             empty_line_written = True
@@ -358,6 +364,11 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
 def format_checks(bench, lines=None):
     if lines is None:
         lines = []
+
+    if bench._only_calibration():
+        # Benchmark only contains calibration runs
+        return lines
+
     values = bench.get_values()
     mean = bench.mean()
     warnings = []
@@ -424,9 +435,8 @@ def format_checks(bench, lines=None):
 
 
 def format_result_value(bench):
-    loops = bench._only_calibration()
-    if loops is not None:
-        return '<calibration: %s>' % format_number(loops, 'loop')
+    if bench._only_calibration():
+        return '<calibration only>'
 
     mean = bench.mean()
     if bench.get_nvalue() >= 2:
@@ -437,9 +447,8 @@ def format_result_value(bench):
 
 
 def format_result(bench, prefix=True):
-    loops = bench._only_calibration()
-    if loops is not None:
-        return 'Calibration: %s' % format_number(loops, 'loop')
+    if bench._only_calibration():
+        return 'Calibration only'
 
     text = format_result_value(bench)
     if bench.get_nvalue() >= 2:

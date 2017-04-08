@@ -675,6 +675,13 @@ Other:
 
 * ``perf_version``: Version of the ``perf`` module
 * ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
+* ``calibrate_loops`` (bool): True for runs used to calibrate the number of
+  loops
+* ``recalibrate_loops`` (bool): True for runs used to recalibrate the number
+  of loops
+* ``calibrate_warmups`` (bool): True for runs used to calibrate the number of
+  warmups
+
 
 
 .. _json:

@@ -57,11 +57,16 @@ def format_noop(value):
     return value
 
 
+def check_bool_true_only(value):
+    return (value is True)
+
+
 # types: accepted types
 _MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
 BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte')
 DATETIME = _MetadataInfo(format_noop, six.string_types, None, None)
+BOOL_TRUE_ONLY = _MetadataInfo(format_generic, bool, check_bool_true_only, None)
 
 # Registry of metadata keys
 METADATA = {
@@ -79,6 +84,10 @@ METADATA = {
     'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
     'date': DATETIME,
     'boot_time': DATETIME,
+
+    'calibrate_loops': BOOL_TRUE_ONLY,
+    'recalibrate_loops': BOOL_TRUE_ONLY,
+    'calibrate_warmups': BOOL_TRUE_ONLY,
 }
 
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)
