@@ -10,6 +10,9 @@ BUGS
 TODO
 ====
 
+* Runner: also require --warmups or --calibrate-warmups for worker on CPython,
+  not only on PyPy
+* write an unit test for calibrate_warmups()
 * check: warn if min/max is 25% smaller/larger than mean, instead of 50%?
 * show: add --name option to always display benchmark names
 * Implement a system-wide lock to prevent running two benchmarks at the same

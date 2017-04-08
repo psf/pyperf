@@ -67,7 +67,7 @@ class TestRunner(unittest.TestCase):
         return Result(runner, bench, stdout)
 
     def test_worker(self):
-        result = self.exec_runner('--worker', '-l1')
+        result = self.exec_runner('--worker', '-l1', '-w1')
         self.assertRegex(result.stdout,
                          r'^bench: Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
@@ -85,7 +85,7 @@ class TestRunner(unittest.TestCase):
                 wpipe._fd = None
 
                 result = self.exec_runner('--pipe', str(arg),
-                                          '--worker', '-l1')
+                                          '--worker', '-l1', '-w1')
 
             with rpipe.open_text() as rfile:
                 bench_json = rfile.read()
@@ -99,7 +99,7 @@ class TestRunner(unittest.TestCase):
             runner = perf.Runner()
             with tests.capture_stdout() as stdout:
                 try:
-                    runner.parse_args(['--worker', '-l1',
+                    runner.parse_args(['--worker', '-l1', '-w1',
                                        '--output', tmp.name])
                 except SystemExit as exc:
                     self.assertEqual(exc.code, 1)
@@ -109,10 +109,11 @@ class TestRunner(unittest.TestCase):
                              stdout.getvalue().rstrip())
 
     def test_verbose_metadata(self):
-        result = self.exec_runner('--worker', '-l1', '--verbose', '--metadata')
+        result = self.exec_runner('--worker', '-l1', '-w1',
+                                  '--verbose', '--metadata')
         self.assertRegex(result.stdout,
                          r'^'
-                         r'(?:Warmup [0-9]+: 1\.00 sec \(1 loop: 1\.00 sec\)\n)+'
+                         r'(?:Warmup [0-9]+: 1\.00 sec \(loops: [0-9]+, raw: 1\.00 sec\)\n)+'
                          r'\n'
                          r'(?:Value [0-9]+: 1\.00 sec\n)+'
                          r'\n'
@@ -133,24 +134,24 @@ class TestRunner(unittest.TestCase):
             self.assertEqual(run.get_total_loops(), 2 ** 17)
 
         expected = textwrap.dedent('''
-            Calibration 1: 1.00 us (1 loop: 1.00 us)
-            Calibration 2: 1.00 us (2 loops: 2.00 us)
-            Calibration 3: 1.00 us (4 loops: 4.00 us)
-            Calibration 4: 1.00 us (8 loops: 8.00 us)
-            Calibration 5: 1.00 us (16 loops: 16.0 us)
-            Calibration 6: 1.00 us (32 loops: 32.0 us)
-            Calibration 7: 1.00 us (64 loops: 64.0 us)
-            Calibration 8: 1.00 us (128 loops: 128 us)
-            Calibration 9: 1.00 us (256 loops: 256 us)
-            Calibration 10: 1.00 us (512 loops: 512 us)
-            Calibration 11: 1.00 us (1024 loops: 1.02 ms)
-            Calibration 12: 1.00 us (2048 loops: 2.05 ms)
-            Calibration 13: 1.00 us (4096 loops: 4.10 ms)
-            Calibration 14: 1.00 us (8192 loops: 8.19 ms)
-            Calibration 15: 1.00 us (2^14 loops: 16.4 ms)
-            Calibration 16: 1.00 us (2^15 loops: 32.8 ms)
-            Calibration 17: 1.00 us (2^16 loops: 65.5 ms)
-            Calibration 18: 1.00 us (2^17 loops: 131 ms)
+            Warmup 1: 1.00 us (loops: 1, raw: 1.00 us)
+            Warmup 2: 1.00 us (loops: 2, raw: 2.00 us)
+            Warmup 3: 1.00 us (loops: 4, raw: 4.00 us)
+            Warmup 4: 1.00 us (loops: 8, raw: 8.00 us)
+            Warmup 5: 1.00 us (loops: 16, raw: 16.0 us)
+            Warmup 6: 1.00 us (loops: 32, raw: 32.0 us)
+            Warmup 7: 1.00 us (loops: 64, raw: 64.0 us)
+            Warmup 8: 1.00 us (loops: 128, raw: 128 us)
+            Warmup 9: 1.00 us (loops: 256, raw: 256 us)
+            Warmup 10: 1.00 us (loops: 512, raw: 512 us)
+            Warmup 11: 1.00 us (loops: 1024, raw: 1.02 ms)
+            Warmup 12: 1.00 us (loops: 2048, raw: 2.05 ms)
+            Warmup 13: 1.00 us (loops: 4096, raw: 4.10 ms)
+            Warmup 14: 1.00 us (loops: 8192, raw: 8.19 ms)
+            Warmup 15: 1.00 us (loops: 2^14, raw: 16.4 ms)
+            Warmup 16: 1.00 us (loops: 2^15, raw: 32.8 ms)
+            Warmup 17: 1.00 us (loops: 2^16, raw: 65.5 ms)
+            Warmup 18: 1.00 us (loops: 2^17, raw: 131 ms)
 
         ''').strip()
         self.assertIn(expected, result.stdout)
@@ -170,13 +171,14 @@ class TestRunner(unittest.TestCase):
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
 
-            result = self.exec_runner('--worker', '-l1', '--output', filename)
+            result = self.exec_runner('--worker', '-l1', '-w1',
+                                      '--output', filename)
 
             loaded = perf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
 
     def test_time_func_zero(self):
-        runner = self.create_runner(['--worker', '-l1'])
+        runner = self.create_runner(['--worker', '-l1', '-w1'])
 
         def time_func(loops):
             return 0
@@ -192,10 +194,11 @@ class TestRunner(unittest.TestCase):
         def time_func(loops):
             return 0
 
-        with self.assertRaises(ValueError) as cm:
-            runner.bench_time_func('bench', time_func)
-        self.assertIn('error in calibration, loops is too big:',
-                      str(cm.exception))
+        with self.assertRaises(SystemExit):
+            with tests.capture_stdout() as stdout:
+                runner.bench_time_func('bench', time_func)
+        self.assertIn('ERROR: failed to calibrate the number of loops',
+                      stdout.getvalue())
 
     def check_calibrate_loops(self, runner, time_func, warmups):
         with tests.capture_stdout():
@@ -341,11 +344,11 @@ class TestRunner(unittest.TestCase):
         self.assertIs(bench2, None)
 
     def test_show_name(self):
-        result = self.exec_runner('--worker', '-l1', name='NAME')
+        result = self.exec_runner('--worker', '-l1', '-w1', name='NAME')
         self.assertRegex(result.stdout,
                          r'^NAME: Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
-        result = self.exec_runner('--worker', '-l1', name='NAME', show_name=False)
+        result = self.exec_runner('--worker', '-l1', '-w1', name='NAME', show_name=False)
         self.assertRegex(result.stdout,
                          r'^Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
 
@@ -385,8 +388,8 @@ class TestRunner(unittest.TestCase):
             def popen_call(python):
                 args = [python, mock.ANY, '--worker',
                         '--pipe', mock.ANY, '--worker-task=0',
-                        '--values', '7', '--warmups', '3',
-                        '--loops', '11', '--min-time', '5.0']
+                        '--values', '7', '--loops', '11',
+                        '--min-time', '5.0', '--warmups', '3']
                 kw = {}
                 if MS_WINDOWS:
                     kw['close_fds'] = False
@@ -399,7 +402,7 @@ class TestRunner(unittest.TestCase):
             mock_subprocess.Popen.assert_has_calls([call1, call2])
 
     def test_parse_args_twice_error(self):
-        args = ["--worker", '-l1']
+        args = ["--worker", '-l1', '-w1']
         runner = perf.Runner()
         runner.parse_args(args)
         with self.assertRaises(RuntimeError):

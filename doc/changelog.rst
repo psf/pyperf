@@ -4,6 +4,7 @@ Changelog
 Version 1.2
 -----------
 
+* On PyPy, calibrate the number of warmups.
 * Fix calibration on PyPy: spawn multiple worker processes until the number of
   loops becomes stable.
 * Calibration now uses the number of warmups, instead of 1.

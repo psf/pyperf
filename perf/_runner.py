@@ -3,7 +3,6 @@ from __future__ import division, print_function, absolute_import
 import argparse
 import errno
 import functools
-import math
 import os
 import subprocess
 import sys
@@ -20,7 +19,8 @@ from perf._formatter import format_timedelta, format_number
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
                          get_python_names, popen_communicate)
-from perf._worker import WorkerProcessTask, BenchCommandTask
+from perf._worker import (WorkerProcessTask, BenchCommandTask,
+                          get_calibrate_warmups)
 
 try:
     # Optional dependency
@@ -88,7 +88,7 @@ class Runner:
         if not warmups:
             if has_jit:
                 # PyPy JIT needs a longer warmup (at least 1 second)
-                warmups = int(math.ceil(1.0 / min_time))
+                warmups = -1
             else:
                 warmups = 1
         if not processes:
@@ -275,12 +275,16 @@ class Runner:
 
             args.loops = 0
             args.values = 0
+            if args.warmups <= 0:
+                args.warmups = 1
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
             if not args.loops:
                 raise CLIError("--recalibration-loops requires --loops=N")
 
             args.values = 0
+            if args.warmups <= 0:
+                args.warmups = 1
         elif args.calibrate_warmups:
             self._only_in_worker("--calibrate-warmups")
             if not args.loops:
@@ -292,6 +296,10 @@ class Runner:
             if args.worker and not args.loops:
                 raise CLIError("--worker requires --loops=N "
                                "or --calibrate-loops")
+            if args.worker and args.warmups < 0:
+                raise CLIError("--worker requires --warmups=N "
+                               "or --calibrate-warmups")
+
             if args.values < 1:
                 raise CLIError("--values must be >= 1")
 
@@ -510,7 +518,7 @@ class Runner:
                             func_metadata=metadata,
                             globals=globals)
 
-    def _worker_cmd(self, python, calibrate_loops, wpipe):
+    def _worker_cmd(self, python, calibrate_loops, calibrate_warmups, wpipe):
         args = self.args
 
         cmd = [python]
@@ -518,7 +526,6 @@ class Runner:
         cmd.extend(('--worker', '--pipe', str(wpipe),
                     '--worker-task=%s' % self._worker_task,
                     '--values', str(args.values),
-                    '--warmups', str(args.warmups),
                     '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))
         if calibrate_loops:
@@ -526,6 +533,13 @@ class Runner:
                 cmd.append('--recalibrate-loops')
             else:
                 cmd.append('--calibrate-loops')
+        if calibrate_warmups:
+            cmd.append('--calibrate-warmups')
+        else:
+            nwarmup = args.warmups
+            if calibrate_loops and nwarmup < 0:
+                nwarmup = 1
+            cmd.extend(('--warmups', str(nwarmup)))
         if args.verbose:
             cmd.append('-' + 'v' * args.verbose)
         if args.affinity:
@@ -540,7 +554,7 @@ class Runner:
 
         return cmd
 
-    def _spawn_worker(self, python=None, calibrate_loops=0):
+    def _spawn_worker(self, python, calibrate_loops, calibrate_warmups):
         if not python:
             python = self.args.python
 
@@ -551,7 +565,8 @@ class Runner:
         with rpipe:
             with wpipe:
                 warg = wpipe.to_subprocess()
-                cmd = self._worker_cmd(python, calibrate_loops, warg)
+                cmd = self._worker_cmd(python, calibrate_loops,
+                                       calibrate_warmups, warg)
 
                 kw = {}
                 if MS_WINDOWS:
@@ -634,7 +649,13 @@ class Runner:
         nprocess_value = 0
         nprocess_warmup = 0
         while nprocess_value < nprocess:
-            suite = self._spawn_worker(python, calibrate_loops)
+            if not calibrate_loops:
+                calibrate_warmups = (args.warmups < 0)
+            else:
+                calibrate_warmups = False
+
+            suite = self._spawn_worker(python, calibrate_loops,
+                                       calibrate_warmups)
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
 
@@ -693,6 +714,12 @@ class Runner:
                 if verbose:
                     print("Calibration: use %s loops"
                           % format_number(args.loops))
+
+            if calibrate_warmups:
+                args.warmups = get_calibrate_warmups(worker_bench)
+                if verbose:
+                    print("Calibration: use %s warmups"
+                          % format_number(args.warmups))
 
             if bench is not None:
                 bench.add_runs(worker_bench)

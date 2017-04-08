@@ -18,8 +18,6 @@ except ImportError:
 
 
 MAX_LOOPS = 2 ** 32
-# Considering that min_time=100 ms, limit warmup to 30 seconds
-MAX_WARMUPS = 300
 
 # Parameters to calibrate warmups
 
@@ -28,6 +26,8 @@ MAX_WARMUPS = 300
 MAX_WARMUP_VALUE_DIFF = 25.0
 # Maximum difference in percent of the mean of two samples
 MAX_WARMUP_MEAN_DIFF = 25.0
+# Considering that min_time=100 ms, limit warmup to 30 seconds
+MAX_WARMUP_VALUES = 300
 
 
 def warmup_mean(values):
@@ -44,6 +44,18 @@ def format_warmup_sample(sample, unit):
         return "%s +- %s" % format_values(unit, (mean, stdev))
     else:
         return format_value(unit, sample[0])
+
+
+def get_calibrate_warmups(bench):
+    run = bench._runs[0]
+    metadata = run._metadata
+    try:
+        warmups = metadata['warmups']
+    except KeyError:
+        raise ValueError("first run has no warmups metadata")
+    if not(isinstance(warmups, int) and warmups >= 0):
+        raise ValueError("warmups metadata is not an integer >= 0")
+    return warmups
 
 
 class WorkerTask:
@@ -105,9 +117,9 @@ class WorkerTask:
             if args.verbose:
                 text = format_value(unit, value)
                 if is_warmup:
-                    text = ('%s (%s: %s)'
+                    text = ('%s (loops: %s, raw: %s)'
                             % (text,
-                               format_number(self.loops, 'loop'),
+                               format_number(self.loops),
                                format_value(unit, raw_value)))
                 print("%s %s: %s" % (value_name, start + index, text))
 
@@ -176,21 +188,18 @@ class WorkerTask:
             if self.test_calibrate_warmups(nwarmup, unit):
                 break
 
-            nwarmup += 1
-            if nwarmup > MAX_WARMUPS:
-                print("ERROR: failed to calibrate the number of warmups "
-                      "(warmups: %s, total values: %s)"
-                      % (nwarmup, len(self.warmups)))
-                print("Sample 1: : The mean of two samples is still more different "
-                      "than %.1f%% after %s values"
-                      % (MAX_WARMUP_MEAN_DIFF, len(self.warmups)))
-                print("mean(sample1)=%s, mean(sample2)=%s"
-                      % (format_value(unit, mean1), format_value(unit, mean2)))
+            if len(self.warmups) >= MAX_WARMUP_VALUES:
+                print("ERROR: failed to calibrate the number of warmups")
+                values = [format_value(unit, value)
+                          for loops, value in self.warmups]
+                print("Values (%s): %s" % (len(values), ', '.join(values)))
                 sys.exit(1)
+            nwarmup += 1
 
         if self.args.verbose:
             print("Calibration: use %s warmups" % format_number(nwarmup))
             print()
+        self.metadata['warmups'] = nwarmup
 
     def compute(self):
         args = self.args
@@ -208,20 +217,23 @@ class WorkerTask:
             if not self.loops:
                 self.loops = 1
 
-            nwarmup = max(args.warmups, 1)
-            self.compute_values(self.warmups, nwarmup,
+            self.compute_values(self.warmups, args.warmups,
                                 is_warmup=True,
                                 calibrate_loops=True)
             if args.verbose:
                 print()
                 print("Calibration: use %s loops" % format_number(self.loops))
+                print()
         else:
             # compute warmups and values
             if args.warmups:
                 self.compute_values(self.warmups, args.warmups, is_warmup=True)
             if args.verbose:
                 print()
+
             self.compute_values(self.values, args.values)
+            if args.verbose:
+                print()
 
         # collect metatadata
         metadata2 = self.collect_metadata()

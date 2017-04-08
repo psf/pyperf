@@ -48,7 +48,7 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(cmd.returncode, 0)
         self.assertEqual(cmd.stderr, '')
 
-        match = re.search(r'Warmup 1: ([0-9.]+) ms \(1 loop: [0-9.]+ ms\)\n'
+        match = re.search(r'Warmup 1: ([0-9.]+) ms \(loops: 1, raw: [0-9.]+ ms\)\n'
                           r'\n'
                           r'Value 1: ([0-9.]+) ms\n'
                           r'Value 2: ([0-9.]+) ms\n'
