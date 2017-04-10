@@ -217,20 +217,26 @@ def format_stats(bench, lines):
     lines.append('')
 
     # Number of values
-    lines.append("Number of runs: %s" % format_number(nrun))
-    lines.append("Total number of values: %s" % format_number(nvalue))
+    ncalibration_runs = sum(run._is_calibration() for run in bench._runs)
+    lines.append("Number of calibration run: %s"
+                 % format_number(ncalibration_runs))
+    lines.append("Number of run with values: %s"
+                 % (format_number(nrun - ncalibration_runs)))
+    lines.append("Total number of run: %s" % format_number(nrun))
+    lines.append('')
+
+    # Number of values
+    nwarmup = bench._get_nwarmup()
+    text = format_number(nwarmup)
+    if isinstance(nwarmup, float):
+        text += ' (average)'
+    lines.append('Number of warmup per run: %s' % text)
 
     nvalue_per_run = bench._get_nvalue_per_run()
     text = format_number(nvalue_per_run)
     if isinstance(nvalue_per_run, float):
         text += ' (average)'
     lines.append('Number of values per run: %s' % text)
-
-    nwarmup = bench._get_nwarmup()
-    text = format_number(nwarmup)
-    if isinstance(nwarmup, float):
-        text += ' (average)'
-    lines.append('Number of warmups per run: %s' % text)
 
     # Loop iterations per value
     loops = bench._get_loops()
@@ -255,6 +261,7 @@ def format_stats(bench, lines):
         text = '%s (%s x %s)' % (text, loops, inner_loops)
 
     lines.append("Loop iterations per value: %s" % text)
+    lines.append("Total number of values: %s" % format_number(nvalue))
     lines.append('')
 
     # Minimum

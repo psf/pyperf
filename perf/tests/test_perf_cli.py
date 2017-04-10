@@ -255,11 +255,14 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Raw value minimum: 177 ms
             Raw value maximum: 183 ms
 
-            Number of runs: 41
-            Total number of values: 120
+            Number of calibration run: 1
+            Number of run with values: 40
+            Total number of run: 41
+
+            Number of warmup per run: 1
             Number of values per run: 3
-            Number of warmups per run: 1
             Loop iterations per value: 8
+            Total number of values: 120
 
             Minimum:         22.1 ms
             Median +- MAD:   22.5 ms +- 0.1 ms

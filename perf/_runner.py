@@ -715,10 +715,6 @@ class Runner:
                           % (calibrate_loops - 1))
                     sys.exit(1)
 
-                if verbose and not calibrate_loops:
-                    print("Calibration: use %s loops"
-                          % format_number(args.loops))
-
             elif run._is_calibration_warmups() or run._is_recalibration_warmups():
                 if calibrate_warmups > 1:
                     # Recalibrate the number of warmups
@@ -747,10 +743,6 @@ class Runner:
                           "is not stable after %s calibrations"
                           % (calibrate_warmups - 1))
                     sys.exit(1)
-
-                if verbose and not calibrate_warmups:
-                    print("Calibration: use %s warmups"
-                          % format_number(args.warmups))
 
             if bench is not None:
                 bench.add_runs(worker_bench)
