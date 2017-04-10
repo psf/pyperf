@@ -236,7 +236,7 @@ def format_stats(bench, lines):
     text = format_number(nvalue_per_run)
     if isinstance(nvalue_per_run, float):
         text += ' (average)'
-    lines.append('Number of values per run: %s' % text)
+    lines.append('Number of value per run: %s' % text)
 
     # Loop iterations per value
     loops = bench._get_loops()

@@ -15,7 +15,7 @@ from perf._cli import (format_run, format_benchmark, format_checks,
 from perf._bench import _load_suite_from_pipe
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
-from perf._formatter import format_timedelta, format_number
+from perf._formatter import format_timedelta
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
                          get_python_names, popen_communicate)

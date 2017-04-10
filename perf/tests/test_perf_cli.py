@@ -260,7 +260,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Total number of run: 41
 
             Number of warmup per run: 1
-            Number of values per run: 3
+            Number of value per run: 3
             Loop iterations per value: 8
             Total number of values: 120
 
@@ -271,11 +271,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
               0th percentile: 22.1 ms (-2% of the mean) -- minimum
               5th percentile: 22.3 ms (-1% of the mean)
-             25th percentile: 22.4 ms (-1% of the mean)
+             25th percentile: 22.4 ms (-1% of the mean) -- Q1
              50th percentile: 22.5 ms (-0% of the mean) -- median
-             75th percentile: 22.7 ms (+1% of the mean)
+             75th percentile: 22.7 ms (+1% of the mean) -- Q3
              95th percentile: 22.9 ms (+2% of the mean)
             100th percentile: 22.9 ms (+2% of the mean) -- maximum
+
+            Number of outlier (out of 22.0 ms..23.0 ms): 0
         """)
         self.check_command(expected, 'stats', TELCO)
 

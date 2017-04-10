@@ -167,7 +167,7 @@ Example::
     Total number of run: 41
 
     Number of warmup per run: 1
-    Number of values per run: 3
+    Number of value per run: 3
     Loop iterations per value: 8
     Total number of values: 120
 

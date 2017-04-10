@@ -82,8 +82,8 @@ Runs, values, warmups, outer and inner loops
 The ``perf`` module uses 5 options to configure benchmarks:
 
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
-* "values": Number of values per run,  ``-n/--values`` command line option
-* "warmups": Number of values per run used to warmup the benchmark,
+* "values": Number of value per run,  ``-n/--values`` command line option
+* "warmups": Number of warmup per run used to warmup the benchmark,
   ``-w/--warmups`` command line option
 * "loops": Number of outer-loop iterations per value,  ``-l/--loops`` command
   line option

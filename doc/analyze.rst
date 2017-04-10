@@ -69,7 +69,7 @@ outliers (9 on this example)::
     Total number of run: 21
 
     Number of warmup per run: 1
-    Number of values per run: 3
+    Number of value per run: 3
     Loop iterations per value: 2^15
     Total number of values: 60
 
