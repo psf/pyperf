@@ -14,7 +14,7 @@ from perf._metadata import (NUMBER_TYPES, parse_metadata,
                             _common_metadata, get_metadata_info,
                             _exclude_common_metadata)
 from perf._formatter import DEFAULT_UNIT, format_values
-from perf._utils import parse_iso8601, median_abs_dev
+from perf._utils import parse_iso8601, median_abs_dev, percentile
 
 
 # JSON format history:
@@ -426,22 +426,7 @@ class Benchmark(object):
     def percentile(self, p):
         if not(0 <= p <= 100):
             raise ValueError("p must be in the range [0; 100]")
-
-        values = sorted(self.get_values())
-        if not values:
-            raise ValueError("no value")
-
-        k = (len(values) - 1) * p / 100.0
-        # Python 3 returns integers: cast explicitly to int
-        # to get the same behaviour on Python 2
-        f = int(math.floor(k))
-        c = int(math.ceil(k))
-        if f != c:
-            d0 = values[f] * (c - k)
-            d1 = values[c] * (k - f)
-            return d0 + d1
-        else:
-            return values[int(k)]
+        return percentile(self.get_values(), p / 100.0)
 
     def add_run(self, run):
         if not isinstance(run, Run):

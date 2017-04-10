@@ -7,7 +7,7 @@ import statistics
 import perf
 from perf._formatter import (format_number, format_value, format_values,
                              format_timedelta)
-from perf._utils import MS_WINDOWS
+from perf._utils import MS_WINDOWS, percentile
 
 try:
     # Python 3.3 provides a real monotonic clock (PEP 418)
@@ -19,31 +19,12 @@ except ImportError:
 
 MAX_LOOPS = 2 ** 32
 
-# Parameters to calibrate warmups
+# Parameters to calibrate and recalibrate warmups
 
-# Maximum difference in percent of the first value
-# and the mean the second sample
-MAX_WARMUP_VALUE_DIFF = 25.0
 # Maximum difference in percent of the mean of two samples
-MAX_WARMUP_MEAN_DIFF = 15.0
+MAX_WARMUP_MEAN_DIFF = 10.0
 # Considering that min_time=100 ms, limit warmup to 30 seconds
 MAX_WARMUP_VALUES = 300
-
-
-def warmup_mean(values):
-    if len(values) != 1:
-        return statistics.mean(values)
-    else:
-        return values[0]
-
-
-def format_warmup_sample(sample, unit):
-    if len(sample) != 1:
-        mean = statistics.mean(sample)
-        stdev = statistics.stdev(sample)
-        return "%s +- %s" % format_values(unit, (mean, stdev))
-    else:
-        return format_value(unit, sample[0])
 
 
 class WorkerTask:
@@ -135,24 +116,52 @@ class WorkerTask:
         first_value = self.warmups[nwarmup][1]
         sample1 = [value for loops, value in self.warmups[nwarmup:half]]
         sample2 = [value for loops, value in self.warmups[half:]]
-        mean1 = warmup_mean(sample1)
-        mean2 = warmup_mean(sample2)
+        mean1 = statistics.mean(sample1)
+        mean2 = statistics.mean(sample2)
 
-        value_diff = abs(mean2 - first_value) * 100.0 / first_value
-        mean_diff = abs(mean2 - mean1) * 100.0 / mean1
+        # test if the first value is an outlier
+        values = sample1 + sample2
+        q1 = percentile(values, 0.25)
+        q3 = percentile(values, 0.75)
+        iqr = q3 - q1
+        outlier_left = (q1 - 1.5 * iqr)
+        outlier_right = (q3 + 1.5 * iqr)
+        outlier = not(outlier_left <= first_value <= outlier_right)
+
+        if mean2 >= mean1:
+            mean_diff = (mean2 - mean1) * 100.0 / mean1
+        else:
+            mean_diff = (mean1 - mean2) * 100.0 / mean2
+
         if self.args.verbose:
+            stdev1 = statistics.stdev(sample1)
+            stdev2 = statistics.stdev(sample2)
+
+            outlier_bounds = ("%s..%s"
+                              % format_values(unit, (outlier_left,
+                                                     outlier_right)))
+            if outlier:
+                in_range = "outlier: not in %s" % outlier_bounds
+            else:
+                in_range = "good: in %s" % outlier_bounds
+            sample1_str = format_values(unit, (mean1, stdev1))
+            sample2_str = format_values(unit, (mean2, stdev2))
             print("Calibration: warmups: %s, "
-                  "first value: %s (%.1f%% of mean2), "
-                  "sample1(%s): %s, "
-                  "sample2(%s): %s (%.1f%% of mean1)"
+                  "first value: %s (%s), "
+                  "sample1(%s): %s +- %s, "
+                  "sample2(%s): %s (%.0f%%) +- %s"
                   % (format_number(nwarmup),
                      format_value(unit, first_value),
-                     value_diff,
-                     len(sample1), format_warmup_sample(sample1, unit),
-                     len(sample2), format_warmup_sample(sample2, unit),
-                     mean_diff))
+                     in_range,
+                     len(sample1),
+                     sample1_str[0],
+                     sample1_str[1],
+                     len(sample2),
+                     sample2_str[0],
+                     mean_diff,
+                     sample2_str[1]))
 
-        if value_diff > MAX_WARMUP_VALUE_DIFF:
+        if outlier:
             return False
         if mean_diff > MAX_WARMUP_MEAN_DIFF:
             return False
@@ -172,6 +181,7 @@ class WorkerTask:
 
         unit = self.metadata.get('unit')
         start = 0
+        # test_calibrate_warmups() requires at least 2 values per sample
         min_sample_size = 5
         total = nwarmup + min_sample_size * 2
         while True:

@@ -479,3 +479,24 @@ def median_abs_dev(values):
     # Median Absolute Deviation
     median = float(statistics.median(values))
     return statistics.median([abs(median - sample) for sample in values])
+
+
+def percentile(values, p):
+    if not isinstance(p, float) or not(0.0 <= p <= 1.0):
+        raise ValueError("p must be a float in the range [0.0; 1.0]")
+
+    values = sorted(values)
+    if not values:
+        raise ValueError("no value")
+
+    k = (len(values) - 1) * p
+    # Python 3 returns integers: cast explicitly to int
+    # to get the same behaviour on Python 2
+    f = int(math.floor(k))
+    c = int(math.ceil(k))
+    if f != c:
+        d0 = values[f] * (c - k)
+        d1 = values[c] * (k - f)
+        return d0 + d1
+    else:
+        return values[int(k)]

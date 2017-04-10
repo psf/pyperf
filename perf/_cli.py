@@ -53,7 +53,6 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if run._is_calibration():
         if run._is_calibration_warmups():
             warmups = run._get_calibration_warmups()
-            loops = run._get_calibration_loops()
             action = 'calibrate the number of warmups: %s' % format_number(warmups)
         elif run._is_recalibration_warmups():
             warmups = run._get_calibration_warmups()
@@ -457,8 +456,36 @@ def format_result_value(bench):
 
 
 def format_result(bench, prefix=True):
-    if bench._only_calibration():
-        return 'Calibration only'
+    loops = None
+    warmups = None
+    for run in bench._runs:
+        if run._is_calibration_warmups():
+            warmups = run._get_calibration_warmups()
+            action = 'calibrate the number of warmups: %s' % format_number(warmups)
+        elif run._is_recalibration_warmups():
+            warmups = run._get_calibration_warmups()
+            action = 'recalibrate the number of warmups: %s' % format_number(warmups)
+        elif run._is_recalibration_loops():
+            loops = run._get_calibration_loops()
+            action = 'recalibrate the number of loops: %s' % format_number(loops)
+        elif run._is_calibration_warmups():
+            loops = run._get_calibration_loops()
+            action = 'calibrate the number of loops: %s' % format_number(loops)
+        elif run._is_calibration_loops():
+            loops = run._get_calibration_loops()
+            action = 'calibrate the number of loops: %s' % format_number(loops)
+        else:
+            loops = None
+            warmups = None
+            break
+
+    info = []
+    if loops is not None:
+        info.append(format_number(loops, 'loop'))
+    if warmups is not None:
+        info.append(format_number(warmups, 'warmup'))
+    if info:
+        return 'Calibration: %s' % ', '.join(info)
 
     text = format_result_value(bench)
     if bench.get_nvalue() >= 2:

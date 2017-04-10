@@ -715,6 +715,10 @@ class Runner:
                     if args.loops != old_loops:
                         # recalibrate
                         calibrate_loops += 1
+                        if calibrate_warmups > 1:
+                            # need to restart warmup calibration
+                            # if the number of loops changes
+                            calibrate_warmups = 1
                     else:
                         # calibration now seems stable
                         calibrate_loops = 0
