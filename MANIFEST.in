@@ -8,5 +8,5 @@ include .travis.yml
 include perf/tests/*.json
 
 include doc/conf.py doc/make.bat doc/Makefile
-include doc/*.rst doc/*.png doc/*.jpg
+include doc/*.rst doc/*.png doc/*.jpg doc/*.json.gz
 include doc/examples/*.py
