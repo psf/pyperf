@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 1.2.1
+-------------
+
+* Rewrite warmup calibration:
+
+  - Use Q1, Q3 and stdev, rather than mean and checking if the first value
+    is an outlier
+  - Always use a sample of 10 values, rather than using a sample of a variable
+    size starting with 3 values
+
 Version 1.2 (2017-04-10)
 ------------------------
 

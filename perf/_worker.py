@@ -21,11 +21,8 @@ MAX_LOOPS = 2 ** 32
 
 # Parameters to calibrate and recalibrate warmups
 
-# Maximum absolute difference of the mean of sample 1
-# compared to the mean of the sample 2
-MAX_WARMUP_MEAN_DIFF = 0.10
-# Considering that min_time=100 ms, limit warmup to 30 seconds
 MAX_WARMUP_VALUES = 300
+WARMUP_SAMPLE_SIZE = 10
 
 
 class WorkerTask:
@@ -116,51 +113,44 @@ class WorkerTask:
         half = nwarmup + (len(self.warmups) - nwarmup) // 2
         sample1 = [value for loops, value in self.warmups[nwarmup:half]]
         sample2 = [value for loops, value in self.warmups[half:]]
-        mean1 = statistics.mean(sample1)
-        mean2 = statistics.mean(sample2)
-        first_value = sample1[0]
 
-        # test if the first value is an outlier
-        values = sample1[1:] + sample2
-        q1 = percentile(values, 0.25)
-        q3 = percentile(values, 0.75)
-        iqr = q3 - q1
-        outlier_max = (q3 + 1.5 * iqr)
-        # only check maximum, not minimum
-        outlier = not(first_value <= outlier_max)
+        stdev1 = statistics.stdev(sample1)
+        stdev2 = statistics.stdev(sample2)
+        stdev_diff = (stdev1 - stdev2) / float(stdev2)
 
-        # Consider that sample 2 is more stable than sample 1, so
-        # use it as reference
-        mean_diff = abs(mean1 - mean2) / float(mean2)
+        s1_q1 = percentile(sample1, 0.25)
+        s2_q1 = percentile(sample2, 0.25)
+        s1_q3 = percentile(sample1, 0.75)
+        s2_q3 = percentile(sample2, 0.75)
+        q1_diff = (s1_q1 - s2_q1) / float(s2_q1)
+        q3_diff = (s1_q3 - s2_q3) / float(s2_q3)
 
         if self.args.verbose:
-            if outlier:
-                in_range = "outlier: > %s" % format_value(unit, outlier_max)
-            else:
-                in_range = "good: <= %s" % format_value(unit, outlier_max)
-
-            stdev1 = statistics.stdev(sample1)
-            stdev2 = statistics.stdev(sample2)
-            sample1_str = format_values(unit, (mean1, stdev1))
-            sample2_str = format_values(unit, (mean2, stdev2))
-            print("Calibration: warmups: %s, "
-                  "first value: %s (%s), "
-                  "sample1(%s): %s (%+.0f%%) +- %s, "
-                  "sample2(%s): %s +- %s"
+            sample1_str = format_values(unit, (s1_q1, s1_q3, stdev1))
+            sample2_str = format_values(unit, (s2_q1, s2_q3, stdev2))
+            print("Calibration: warmups=%s, "
+                  "sample1(%s): Q1=%s (%+.2f%%) Q3=%s (%+.2f%%) stdev=%s (%+.2f%%), "
+                  "sample2(%s): Q1=%s Q3=%s stdev=%s"
                   % (format_number(nwarmup),
-                     format_value(unit, first_value),
-                     in_range,
                      len(sample1),
                      sample1_str[0],
-                     mean_diff * 100,
+                     q1_diff * 100,
                      sample1_str[1],
+                     q3_diff * 100,
+                     sample1_str[2],
+                     stdev_diff * 100,
                      len(sample2),
                      sample2_str[0],
-                     sample2_str[1]))
+                     sample2_str[1],
+                     sample2_str[2]))
 
-        if outlier:
+        if not(-0.5 <= stdev_diff <= 0.25):
             return False
-        return (mean_diff <= MAX_WARMUP_MEAN_DIFF)
+        if abs(q1_diff) > 0.05:
+            return False
+        if abs(q3_diff) > 0.10:
+            return False
+        return True
 
     def calibrate_warmups(self):
         # calibrate the number of warmups
@@ -175,9 +165,8 @@ class WorkerTask:
         unit = self.metadata.get('unit')
         start = 0
         # test_calibrate_warmups() requires at least 2 values per sample
-        min_sample_size = 3
-        total = nwarmup + min_sample_size * 2
         while True:
+            total = nwarmup + WARMUP_SAMPLE_SIZE * 2
             nvalue = total - len(self.warmups)
             if nvalue:
                 self._compute_values(self.warmups, nvalue,
@@ -195,10 +184,6 @@ class WorkerTask:
                 print("Values (%s): %s" % (len(values), ', '.join(values)))
                 sys.exit(1)
             nwarmup += 1
-
-            total = max(total, nwarmup * 3)
-            sample_size = max((nvalue - nwarmup) // 2, min_sample_size)
-            total = max(total, nwarmup + sample_size * 2)
 
         if self.args.verbose:
             print("Calibration: use %s warmups" % format_number(nwarmup))
