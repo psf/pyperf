@@ -43,6 +43,19 @@ def format_metadata(metadata, prefix='- ', lines=None):
     return lines
 
 
+def _format_values_diff(bench, values, raw, total_loops):
+    values_str = [bench.format_value(value) for value in values]
+    mean = bench.mean()
+    max_delta = mean * 0.05
+    for index, value in enumerate(values):
+        if raw:
+            value = float(value) / total_loops
+        delta = float(value) - mean
+        if abs(delta) > max_delta:
+            values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
+    return values_str
+
+
 def format_run(bench, run_index, run, common_metadata=None, raw=False,
                verbose=0, lines=None):
     if lines is None:
@@ -83,60 +96,47 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
                            format_timedelta(raw_value)))
             lines.append("- %s %s: %s"
                          % (name, index, text))
-        return lines
-
-    show_warmup = (verbose >= 0)
-
-    total_loops = run.get_total_loops()
-
-    def format_values(values):
-        values_str = [bench.format_value(value) for value in values]
-        mean = bench.mean()
-        max_delta = mean * 0.05
-        for index, value in enumerate(values):
-            if raw:
-                value = float(value) / total_loops
-            delta = float(value) - mean
-            if abs(delta) > max_delta:
-                values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
-        return values_str
-
-    values = run.values
-    if raw:
-        warmups = [bench.format_value(value * (loops * inner_loops))
-                   for loops, value in run.warmups]
-        values = [value * total_loops for value in values]
     else:
-        warmups = run.warmups
-        if warmups:
-            warmups = [value for loops, value in warmups]
-            warmups = format_values(warmups)
-    values = format_values(values)
+        show_warmup = (verbose >= 0)
 
-    if verbose >= 0:
-        loops = run._get_loops()
-        lines.append("Run %s: %s, %s, %s"
-                     % (run_index,
-                        format_number(len(warmups), 'warmup'),
-                        format_number(len(values), 'value'),
-                        format_number(loops, 'loop')))
-    else:
-        lines.append("Run %s:" % run_index)
+        total_loops = run.get_total_loops()
 
-    if warmups and show_warmup:
+        values = run.values
         if raw:
-            name = 'raw warmup'
+            warmups = [bench.format_value(value * (loops * inner_loops))
+                       for loops, value in run.warmups]
+            values = [value * total_loops for value in values]
         else:
-            name = 'warmup'
-        for index, warmup in enumerate(warmups, 1):
-            lines.append('- %s %s: %s' % (name, index, warmup))
+            warmups = run.warmups
+            if warmups:
+                warmups = [value for loops, value in warmups]
+                warmups = _format_values_diff(bench, warmups, raw, total_loops)
+        values = _format_values_diff(bench, values, raw, total_loops)
 
-    if raw:
-        name = 'raw value'
-    else:
-        name = 'value'
-    for index, value in enumerate(values, 1):
-        lines.append('- %s %s: %s' % (name, index, value))
+        if verbose >= 0:
+            loops = run._get_loops()
+            lines.append("Run %s: %s, %s, %s"
+                         % (run_index,
+                            format_number(len(warmups), 'warmup'),
+                            format_number(len(values), 'value'),
+                            format_number(loops, 'loop')))
+        else:
+            lines.append("Run %s:" % run_index)
+
+        if warmups and show_warmup:
+            if raw:
+                name = 'raw warmup'
+            else:
+                name = 'warmup'
+            for index, warmup in enumerate(warmups, 1):
+                lines.append('- %s %s: %s' % (name, index, warmup))
+
+        if raw:
+            name = 'raw value'
+        else:
+            name = 'value'
+        for index, value in enumerate(values, 1):
+            lines.append('- %s %s: %s' % (name, index, value))
 
     if verbose > 0:
         metadata = run.get_metadata()

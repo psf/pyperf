@@ -329,6 +329,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
             - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
             - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+            - Metadata:
+              cpu_freq: 2=3596 MHz, 3=1352 MHz
+              cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
+              date: 2016-10-21 03:14:19.670631
+              duration: 338 ms
+              load_avg_1min: 0.29
+              mem_max_rss: 13.4 MB
+              runnable_threads: 1
+              uptime: 2 day 2 hour 4 min
             Run 2: 1 warmup, 3 values, 8 loops
             - warmup 1: 22.5 ms
             - value 1: 22.8 ms
