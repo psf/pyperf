@@ -570,13 +570,14 @@ class Runner:
 
         benchs = []
         for python, name in ((python_ref, name_ref), (python_changed, name_changed)):
+            if self._worker_task > 0:
+                print()
+
             if multiline:
                 display_title('Benchmark %s' % name)
             elif not args.quiet:
                 print(name, end=': ')
 
-            if args.verbose and self._worker_task > 0:
-                print()
             bench = Master(self, python=python).create_bench()
             benchs.append(bench)
 
