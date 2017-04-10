@@ -214,10 +214,11 @@ class WorkerTask:
         if not args.recalibrate_loops:
             self.loops = 1
 
-        if args.warmups >= 0:
-            nvalue = args.warmups + args.values
+        if args.warmups is not None:
+            nvalue = args.warmups
         else:
-            nvalue = 1 + args.values
+            nvalue = 1
+        nvalue += args.values
         self._compute_values(self.warmups, nvalue,
                              is_warmup=True,
                              calibrate_loops=True)

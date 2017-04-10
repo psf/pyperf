@@ -88,7 +88,7 @@ class Runner:
         if not warmups:
             if has_jit:
                 # PyPy JIT needs a longer warmup (at least 1 second)
-                warmups = -1
+                warmups = None
             else:
                 warmups = 1
         if not processes:
@@ -284,14 +284,14 @@ class Runner:
                 raise CLIError("--recalibration-loops requires --loops=N")
         elif args.recalibrate_warmups:
             self._only_in_worker("--recalibrate-warmups")
-            if args.loops < 1 or args.warmups < 0:
+            if args.loops < 1 or args.warmups is None:
                 raise CLIError("--recalibration-warmups requires "
                                "--loops=N and --warmups=N")
         else:
             if args.worker and args.loops < 1:
                 raise CLIError("--worker requires --loops=N "
                                "or --calibrate-loops")
-            if args.worker and args.warmups < 0:
+            if args.worker and args.warmups is None:
                 raise CLIError("--worker requires --warmups=N "
                                "or --calibrate-warmups")
 
@@ -628,7 +628,6 @@ class Runner:
                 bench.dump(args.output)
 
     def _spawn_workers(self, python=None, newline=True):
-        has_jit = perf.python_has_jit()
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
@@ -636,9 +635,8 @@ class Runner:
         old_loops = self.args.loops
 
         calibrate_loops = int(not args.loops)
-        calibrate_warmups = int(args.warmups < 0)
-        if args.warmups < 0:
-            args.warmups = 1
+        calibrate_warmups = int(args.warmups is None)
+        next_run = 'loops'
 
         if verbose and self._worker_task > 0:
             print()
@@ -647,16 +645,23 @@ class Runner:
         nprocess_warmup = 0
         nprocess_value = 0
         while nprocess_value < nprocess:
-            if calibrate_loops and (not calibrate_warmups or calibrate_loops <= calibrate_warmups):
+            # decide which kind of run must be computed
+            if next_run == 'loops' and not calibrate_loops:
+                next_run = 'warmups'
+            if next_run == 'warmups' and not calibrate_warmups:
+                next_run = 'values'
+
+            # compute the run
+            if next_run == 'loops':
                 suite = self._spawn_worker(python, calibrate_loops, 0)
-            elif calibrate_warmups:
+            elif next_run == 'warmups':
                 suite = self._spawn_worker(python, 0, calibrate_warmups)
             else:
                 suite = self._spawn_worker(python, 0, 0)
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
 
-            # get the benchmark and its single run
+            # get the run
             benchmarks = suite._benchmarks
             if len(benchmarks) != 1:
                 raise ValueError("worker produced %s benchmarks instead of 1"
@@ -667,6 +672,12 @@ class Runner:
                                  % len(worker_bench._runs))
             run = worker_bench._runs[0]
 
+            # save the run into bench
+            if bench is not None:
+                bench.add_runs(worker_bench)
+            else:
+                bench = worker_bench
+
             # display the run
             if verbose:
                 run_index = str(1 + nprocess_value + nprocess_warmup)
@@ -676,38 +687,21 @@ class Runner:
                 print(".", end='')
             sys.stdout.flush()
 
+            # Handle calibration
             if run._is_calibration_loops() or run._is_recalibration_loops():
-                if calibrate_loops > 1:
-                    # Recalibration (JIT compiler only): get the number of
-                    # loops from the last warmup value
-                    old_calibraton_loops = args.loops
-                    args.loops = run._get_calibration_loops()
+                old_calibraton_loops = args.loops
+                args.loops = run._get_calibration_loops()
+                calibrate_loops += 1
 
-                    if args.loops != old_calibraton_loops:
-                        # recalibrate
-                        calibrate_loops += 1
-                        if calibrate_warmups > 1:
-                            # need to restart warmup calibration
-                            # if the number of loops changes
-                            calibrate_warmups = 1
-                    elif calibrate_warmups:
-                        calibrate_loops += 1
-                    else:
-                        # loops calibration now seems stable
-                        # (and no warmup calibration needed)
-                        calibrate_loops = 0
-                else:
-                    # Use the first worker to calibrate the number of loops.
-                    # Use a worker process rather than the main process because
-                    # a worker process is more isolated and so should be more
-                    # reliable.
-                    args.loops = run._get_calibration_loops()
+                if (args.loops != old_calibraton_loops
+                   and calibrate_warmups > 1):
+                    # number of loops increased and warmup already
+                    # calibrated: need to restart the warmup calibration
+                    # (less warmup may be needed with more loops)
+                    calibrate_warmups = 1
 
-                    if has_jit:
-                        # recalibrate
-                        calibrate_loops += 1
-                    else:
-                        calibrate_loops = 0
+                if calibrate_loops and not calibrate_warmups:
+                    calibrate_loops = 0
 
                 if calibrate_loops > MAX_CALIBRATION:
                     print("ERROR: calibration failed, the number of loops "
@@ -716,27 +710,19 @@ class Runner:
                     sys.exit(1)
 
             elif run._is_calibration_warmups() or run._is_recalibration_warmups():
-                if calibrate_warmups > 1:
-                    # Recalibrate the number of warmups
-                    old_warmups = args.warmups
-                    args.warmups = run._get_calibration_warmups()
+                old_warmups = args.warmups
+                args.warmups = run._get_calibration_warmups()
+                calibrate_warmups += 1
 
-                    if args.warmups != old_warmups:
-                        # recalibrate
-                        calibrate_warmups += 1
-                    else:
-                        # number of loop and number of warmup are stable:
-                        # the calibration is done
-                        calibrate_warmups = 0
-                        calibrate_loops = 0
-                else:
-                    args.warmups = run._get_calibration_warmups()
-                    if has_jit:
-                        # JIT compiler requires recalibration
-                        calibrate_warmups += 1
-                    else:
-                        calibrate_warmups = 0
-                        calibrate_loops = 0
+                if old_warmups is not None and args.warmups <= old_warmups:
+                    # loops calibrated with old_warmups > warmups, no
+                    # need to recalibrate
+                    calibrate_loops = 0
+                    calibrate_warmups = 0
+                elif args.warmups == old_warmups:
+                    # the number of warmup is stable: the calibration is done
+                    calibrate_loops = 0
+                    calibrate_warmups = 0
 
                 if calibrate_warmups > MAX_CALIBRATION:
                     print("ERROR: calibration failed, the number of warmups "
@@ -744,10 +730,11 @@ class Runner:
                           % (calibrate_warmups - 1))
                     sys.exit(1)
 
-            if bench is not None:
-                bench.add_runs(worker_bench)
-            else:
-                bench = worker_bench
+            if next_run == 'loops':
+                next_run = 'warmups'
+            elif next_run == 'warmups':
+                next_run = 'loops'
+            # else: keep action 'values'
 
             if not worker_bench._only_calibration():
                 nprocess_value += 1
