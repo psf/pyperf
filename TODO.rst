@@ -10,6 +10,8 @@ BUGS
 TODO
 ====
 
+* check: error if psutil is not installed? if isolated CPUs are detected,
+  but pef failed to pin worker processes.
 * Runner: also require --warmups or --calibrate-warmups for worker on CPython,
   not only on PyPy
 * write an unit test for calibrate_warmups()
