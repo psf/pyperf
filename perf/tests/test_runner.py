@@ -388,8 +388,8 @@ class TestRunner(unittest.TestCase):
             def popen_call(python):
                 args = [python, mock.ANY, '--worker',
                         '--pipe', mock.ANY, '--worker-task=0',
-                        '--values', '7', '--loops', '11',
-                        '--min-time', '5.0', '--warmups', '3']
+                        '--values', '7', '--min-time', '5.0',
+                        '--loops', '11', '--warmups', '3']
                 kw = {}
                 if MS_WINDOWS:
                     kw['close_fds'] = False

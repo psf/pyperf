@@ -19,8 +19,7 @@ from perf._formatter import format_timedelta, format_number
 from perf._utils import (MS_WINDOWS, popen_killer, abs_executable,
                          create_environ, create_pipe, WritePipe,
                          get_python_names, popen_communicate)
-from perf._worker import (WorkerProcessTask, BenchCommandTask,
-                          get_calibrate_warmups)
+from perf._worker import WorkerProcessTask, BenchCommandTask
 
 try:
     # Optional dependency
@@ -537,20 +536,22 @@ class Runner:
         cmd.extend(('--worker', '--pipe', str(wpipe),
                     '--worker-task=%s' % self._worker_task,
                     '--values', str(args.values),
-                    '--loops', str(args.loops),
                     '--min-time', str(args.min_time)))
-        if calibrate_loops:
+        if calibrate_loops == 1:
+            cmd.append('--calibrate-loops')
+        else:
+            cmd.extend(('--loops', str(args.loops)))
             if calibrate_loops > 1:
                 cmd.append('--recalibrate-loops')
-            else:
-                cmd.append('--calibrate-loops')
-        if calibrate_warmups:
+        if calibrate_warmups == 1:
             cmd.append('--calibrate-warmups')
         else:
             nwarmup = args.warmups
             if calibrate_loops and nwarmup < 0:
                 nwarmup = 1
             cmd.extend(('--warmups', str(nwarmup)))
+            if calibrate_warmups > 1:
+                cmd.append('--recalibrate-warmups')
         if args.verbose:
             cmd.append('-' + 'v' * args.verbose)
         if args.affinity:
@@ -661,11 +662,26 @@ class Runner:
         if verbose and self._worker_task > 0:
             print()
 
-        nprocess_value = 0
         nprocess_warmup = 0
+        nprocess_value = 0
         while nprocess_value < nprocess:
-            suite = self._spawn_worker(python, calibrate_loops,
-                                       0 if calibrate_loops else calibrate_warmups)
+            # Organize calibrations:
+            # 1) calibrate loops
+            # 2) calibrate warmups
+            # 3) recalibrate loops
+            # 4) recalibrate warmups
+            #
+            # When all calibrations are done: compute values
+            if calibrate_loops == 1:
+                suite = self._spawn_worker(python, 1, 0)
+            elif calibrate_warmups == 1:
+                suite = self._spawn_worker(python, 0, 1)
+            elif calibrate_loops:
+                suite = self._spawn_worker(python, calibrate_loops, 0)
+            elif calibrate_warmups:
+                suite = self._spawn_worker(python, 0, calibrate_warmups)
+            else:
+                suite = self._spawn_worker(python, 0, 0)
             if suite is None:
                 raise RuntimeError("perf worker process didn't produce JSON result")
 
@@ -689,12 +705,12 @@ class Runner:
                 print(".", end='')
             sys.stdout.flush()
 
-            if calibrate_loops:
+            if run._is_calibration_loops() or run._is_recalibration_loops():
                 if calibrate_loops > 1:
                     # Recalibration (JIT compiler only): get the number of
                     # loops from the last warmup value
                     old_loops = args.loops
-                    args.loops = run.warmups[-1][0]
+                    args.loops = run._get_calibration_loops()
 
                     if args.loops != old_loops:
                         # recalibrate
@@ -707,7 +723,7 @@ class Runner:
                     # Use a worker process rather than the main process because
                     # a worker process is more isolated and so should be more
                     # reliable.
-                    args.loops = run._get_loops()
+                    args.loops = run._get_calibration_loops()
 
                     if has_jit:
                         # recalibrate
@@ -725,11 +741,11 @@ class Runner:
                     print("Calibration: use %s loops"
                           % format_number(args.loops))
 
-            elif calibrate_warmups:
+            elif run._is_calibration_warmups() or run._is_recalibration_warmups():
                 if calibrate_warmups > 1:
                     # Recalibrate the number of warmups
                     old_warmups = args.warmups
-                    args.warmups = get_calibrate_warmups(worker_bench)
+                    args.warmups = run._get_calibration_warmups()
 
                     if args.warmups != old_warmups:
                         # recalibrate
@@ -738,7 +754,7 @@ class Runner:
                         # calibration now seems stable
                         calibrate_warmups = 0
                 else:
-                    args.warmups = get_calibrate_warmups(worker_bench)
+                    args.warmups = run._get_calibration_warmups()
                     if has_jit:
                         # JIT compiler requires recalibration
                         calibrate_warmups += 1

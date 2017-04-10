@@ -278,7 +278,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump_raw(self):
         expected = """
-            Run 1: calibrate the number of loops
+            Run 1: calibrate the number of loops: 8
             - raw calibrate 1: 23.1 ms (loops: 1)
             - raw calibrate 2: 45.0 ms (loops: 2)
             - raw calibrate 3: 89.9 ms (loops: 4)
@@ -294,7 +294,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump(self):
         expected = """
-            Run 1: calibrate the number of loops
+            Run 1: calibrate the number of loops: 8
             - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
             - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
             - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
@@ -324,7 +324,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_dump_verbose(self):
         expected = """
-            Run 1: calibrate the number of loops
+            Run 1: calibrate the number of loops: 8
             - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
             - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
             - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)

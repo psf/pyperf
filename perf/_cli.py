@@ -52,13 +52,18 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
 
     if run._is_calibration():
         if run._is_calibration_warmups():
-            action = 'calibrate the number of warmups'
+            warmups = run._get_calibration_warmups()
+            loops = run._get_calibration_loops()
+            action = 'calibrate the number of warmups: %s' % format_number(warmups)
         elif run._is_recalibration_warmups():
-            action = 'recalibrate the number of warmups'
+            warmups = run._get_calibration_warmups()
+            action = 'recalibrate the number of warmups: %s' % format_number(warmups)
         elif run._is_recalibration_loops():
-            action = 'recalibrate the number of loops'
+            loops = run._get_calibration_loops()
+            action = 'recalibrate the number of loops: %s' % format_number(loops)
         else:
-            action = 'calibrate the number of loops'
+            loops = run._get_calibration_loops()
+            action = 'calibrate the number of loops: %s' % format_number(loops)
         lines.append("Run %s: %s" % (run_index, action))
         if raw:
             name = 'raw calibrate'
@@ -97,8 +102,6 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
                 values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
         return values_str
 
-    lines.append("Run %s:" % (run_index,))
-
     values = run.values
     if raw:
         warmups = [bench.format_value(value * (loops * inner_loops))
@@ -110,6 +113,11 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             warmups = [value for loops, value in warmups]
             warmups = format_values(warmups)
     values = format_values(values)
+
+    lines.append("Run %s: %s warmups, %s values"
+                 % (run_index,
+                    format_number(len(warmups)),
+                    format_number(len(values))))
 
     if warmups and show_warmup:
         if raw:

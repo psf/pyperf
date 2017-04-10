@@ -46,18 +46,6 @@ def format_warmup_sample(sample, unit):
         return format_value(unit, sample[0])
 
 
-def get_calibrate_warmups(bench):
-    run = bench._runs[0]
-    metadata = run._metadata
-    try:
-        warmups = metadata['warmups']
-    except KeyError:
-        raise ValueError("first run has no warmups metadata")
-    if not(isinstance(warmups, int) and warmups >= 0):
-        raise ValueError("warmups metadata is not an integer >= 0")
-    return warmups
-
-
 class WorkerTask:
     def __init__(self, runner, name, task_func, func_metadata):
         args = runner.args
