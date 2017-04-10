@@ -28,10 +28,9 @@ except ImportError:
     psutil = None
 
 
-# Limit to 5 calibration loops processes
-MAX_CALIBRATION_LOOPS = 5
-# Limit to 5 calibration warmups processes
-MAX_CALIBRATION_WARMUPS = 5
+# Limit to 5 calibration processes
+# (10 if calibration is needed for loops and warmups)
+MAX_CALIBRATION = 5
 
 
 def strictly_positive(value):
@@ -276,32 +275,21 @@ class Runner:
                 raise CLIError("--loops=N is incompatible with "
                                "--calibration-loops")
 
-            args.loops = 0
-            args.values = 0
             if args.warmups <= 0:
                 args.warmups = 1
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
             if args.loops < 1:
                 raise CLIError("--recalibration-loops requires --loops=N")
-
-            args.values = 0
-            if args.warmups <= 0:
-                args.warmups = 1
         elif args.calibrate_warmups:
             self._only_in_worker("--calibrate-warmups")
             if args.loops < 1:
                 raise CLIError("--recalibration-loops requires --loops=N")
-
-            args.warmups = -1
-            args.values = 0
         elif args.recalibrate_warmups:
             self._only_in_worker("--recalibrate-warmups")
             if args.loops < 1 or args.warmups < 0:
                 raise CLIError("--recalibration-warmups requires "
                                "--loops=N and --warmups=N")
-
-            args.values = 0
         else:
             if args.worker and args.loops < 1:
                 raise CLIError("--worker requires --loops=N "
@@ -643,40 +631,26 @@ class Runner:
                 bench.dump(args.output)
 
     def _spawn_workers(self, python=None, newline=True):
-        bench = None
+        has_jit = perf.python_has_jit()
         args = self.args
         verbose = args.verbose
         quiet = args.quiet
         nprocess = args.processes
         old_loops = self.args.loops
-        if not args.loops:
-            calibrate_loops = 1
-        else:
-            calibrate_loops = 0
+
+        calibrate_loops = int(not args.loops)
+        calibrate_warmups = int(args.warmups < 0)
         if args.warmups < 0:
-            calibrate_warmups = 1
-        else:
-            calibrate_warmups = 0
-        has_jit = perf.python_has_jit()
+            args.warmups = 1
 
         if verbose and self._worker_task > 0:
             print()
 
+        bench = None
         nprocess_warmup = 0
         nprocess_value = 0
         while nprocess_value < nprocess:
-            # Organize calibrations:
-            # 1) calibrate loops
-            # 2) calibrate warmups
-            # 3) recalibrate loops
-            # 4) recalibrate warmups
-            #
-            # When all calibrations are done: compute values
-            if calibrate_loops == 1:
-                suite = self._spawn_worker(python, 1, 0)
-            elif calibrate_warmups == 1:
-                suite = self._spawn_worker(python, 0, 1)
-            elif calibrate_loops:
+            if calibrate_loops and (not calibrate_warmups or calibrate_loops <= calibrate_warmups):
                 suite = self._spawn_worker(python, calibrate_loops, 0)
             elif calibrate_warmups:
                 suite = self._spawn_worker(python, 0, calibrate_warmups)
@@ -709,18 +683,21 @@ class Runner:
                 if calibrate_loops > 1:
                     # Recalibration (JIT compiler only): get the number of
                     # loops from the last warmup value
-                    old_loops = args.loops
+                    old_calibraton_loops = args.loops
                     args.loops = run._get_calibration_loops()
 
-                    if args.loops != old_loops:
+                    if args.loops != old_calibraton_loops:
                         # recalibrate
                         calibrate_loops += 1
                         if calibrate_warmups > 1:
                             # need to restart warmup calibration
                             # if the number of loops changes
                             calibrate_warmups = 1
+                    elif calibrate_warmups:
+                        calibrate_loops += 1
                     else:
-                        # calibration now seems stable
+                        # loops calibration now seems stable
+                        # (and no warmup calibration needed)
                         calibrate_loops = 0
                 else:
                     # Use the first worker to calibrate the number of loops.
@@ -735,7 +712,7 @@ class Runner:
                     else:
                         calibrate_loops = 0
 
-                if calibrate_loops > MAX_CALIBRATION_LOOPS:
+                if calibrate_loops > MAX_CALIBRATION:
                     print("ERROR: calibration failed, the number of loops "
                           "is not stable after %s calibrations"
                           % (calibrate_loops - 1))
@@ -755,8 +732,10 @@ class Runner:
                         # recalibrate
                         calibrate_warmups += 1
                     else:
-                        # calibration now seems stable
+                        # number of loop and number of warmup are stable:
+                        # the calibration is done
                         calibrate_warmups = 0
+                        calibrate_loops = 0
                 else:
                     args.warmups = run._get_calibration_warmups()
                     if has_jit:
@@ -764,8 +743,9 @@ class Runner:
                         calibrate_warmups += 1
                     else:
                         calibrate_warmups = 0
+                        calibrate_loops = 0
 
-                if calibrate_warmups > MAX_CALIBRATION_WARMUPS:
+                if calibrate_warmups > MAX_CALIBRATION:
                     print("ERROR: calibration failed, the number of warmups "
                           "is not stable after %s calibrations"
                           % (calibrate_warmups - 1))

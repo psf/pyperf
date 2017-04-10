@@ -48,10 +48,10 @@ class WorkerTask:
         self.warmups = None
         self.values = None
 
-    def compute_values(self, values, nvalue,
-                       is_warmup=False,
-                       calibrate_loops=False,
-                       start=0):
+    def _compute_values(self, values, nvalue,
+                        is_warmup=False,
+                        calibrate_loops=False,
+                        start=0):
         unit = self.metadata.get('unit')
         args = self.args
         if nvalue < 1:
@@ -185,9 +185,9 @@ class WorkerTask:
         while True:
             nvalue = total - len(self.warmups)
             if nvalue:
-                self.compute_values(self.warmups, nvalue,
-                                    is_warmup=True,
-                                    start=start)
+                self._compute_values(self.warmups, nvalue,
+                                     is_warmup=True,
+                                     start=start)
                 start += nvalue
 
             if self.test_calibrate_warmups(nwarmup, unit):
@@ -210,6 +210,38 @@ class WorkerTask:
             print()
         self.metadata['warmups'] = nwarmup
 
+    def calibrate_loops(self):
+        args = self.args
+        if args.calibrate_loops:
+            self.metadata['calibrate_loops'] = True
+            self.loops = 1
+        else:
+            self.metadata['recalibrate_loops'] = True
+
+        if args.warmups >= 0:
+            nvalue = args.warmups + args.values
+        else:
+            nvalue = 1 + args.values
+        self._compute_values(self.warmups, nvalue,
+                             is_warmup=True,
+                             calibrate_loops=True)
+
+        if args.verbose:
+            print()
+            print("Calibration: use %s loops" % format_number(self.loops))
+            print()
+
+    def compute_warmups_values(self):
+        args = self.args
+        if args.warmups:
+            self._compute_values(self.warmups, args.warmups, is_warmup=True)
+            if args.verbose:
+                print()
+
+        self._compute_values(self.values, args.values)
+        if args.verbose:
+            print()
+
     def compute(self):
         args = self.args
 
@@ -222,31 +254,9 @@ class WorkerTask:
         if args.calibrate_warmups or args.recalibrate_warmups:
             self.calibrate_warmups()
         elif args.calibrate_loops or args.recalibrate_loops:
-            # calibrate or recalibrate the number of loops
-            if not self.loops:
-                self.loops = 1
-                self.metadata['calibrate_loops'] = True
-            else:
-                self.metadata['recalibrate_loops'] = True
-
-            self.compute_values(self.warmups, args.warmups,
-                                is_warmup=True,
-                                calibrate_loops=True)
-
-            if args.verbose:
-                print()
-                print("Calibration: use %s loops" % format_number(self.loops))
-                print()
+            self.calibrate_loops()
         else:
-            # compute warmups and values
-            if args.warmups:
-                self.compute_values(self.warmups, args.warmups, is_warmup=True)
-            if args.verbose:
-                print()
-
-            self.compute_values(self.values, args.values)
-            if args.verbose:
-                print()
+            self.compute_warmups_values()
 
         # collect metatadata
         metadata2 = self.collect_metadata()
