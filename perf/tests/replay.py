@@ -26,6 +26,7 @@ class Replay(object):
 
     def init(self):
         args = runner.args
+        self.run_id = self.args.first_run - 1
         if args.worker:
             self.read_session()
 
@@ -36,17 +37,20 @@ class Replay(object):
             self.write_session()
         else:
             args.session_filename = tempfile.mktemp()
-            self.run_id = self.args.first_run - 1
             self.write_session()
 
     def read_session(self):
         filename = self.args.session_filename
+        if not filename:
+            return
         with open(filename, "r") as fp:
             line = fp.readline()
         self.run_id = int(line.rstrip())
 
     def write_session(self):
         filename = self.args.session_filename
+        if not filename:
+            return
         with open(filename, "w") as fp:
             print(self.run_id, file=fp)
             fp.flush()
@@ -65,7 +69,7 @@ def add_cmdline_args(cmd, args):
 
 runner = perf.Runner(add_cmdline_args=add_cmdline_args)
 runner.argparser.add_argument('filename')
-runner.argparser.add_argument('--session-filename')
+runner.argparser.add_argument('--session-filename', default=None)
 runner.argparser.add_argument('--first-run', type=int, default=1)
 
 args = runner.parse_args()
