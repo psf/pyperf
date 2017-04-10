@@ -113,10 +113,13 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             warmups = format_values(warmups)
     values = format_values(values)
 
-    lines.append("Run %s: %s warmups, %s values"
-                 % (run_index,
-                    format_number(len(warmups)),
-                    format_number(len(values))))
+    if verbose >= 0:
+        lines.append("Run %s: %s, %s"
+                     % (run_index,
+                        format_number(len(warmups), 'warmup'),
+                        format_number(len(values), 'value')))
+    else:
+        lines.append("Run %s:" % run_index)
 
     if warmups and show_warmup:
         if raw:
@@ -443,16 +446,43 @@ def format_checks(bench, lines=None):
     return lines
 
 
-def format_result_value(bench):
-    if bench._only_calibration():
-        return '<calibration only>'
-
+def _format_result_value(bench):
     mean = bench.mean()
     if bench.get_nvalue() >= 2:
         args = bench.format_values((mean, bench.stdev()))
         return '%s +- %s' % args
     else:
         return bench.format_value(mean)
+
+
+def format_result_value(bench):
+    loops = None
+    warmups = None
+    for run in bench._runs:
+        if run._is_calibration_warmups():
+            warmups = run._get_calibration_warmups()
+        elif run._is_recalibration_warmups():
+            warmups = run._get_calibration_warmups()
+        elif run._is_recalibration_loops():
+            loops = run._get_calibration_loops()
+        elif run._is_calibration_warmups():
+            loops = run._get_calibration_loops()
+        elif run._is_calibration_loops():
+            loops = run._get_calibration_loops()
+        else:
+            loops = None
+            warmups = None
+            break
+
+    info = []
+    if loops is not None:
+        info.append(format_number(loops, 'loop'))
+    if warmups is not None:
+        info.append(format_number(warmups, 'warmup'))
+    if info:
+        return '<calibration: %s>' % ', '.join(info)
+
+    return _format_result_value(bench)
 
 
 def format_result(bench, prefix=True):
@@ -482,7 +512,7 @@ def format_result(bench, prefix=True):
     if info:
         return 'Calibration: %s' % ', '.join(info)
 
-    text = format_result_value(bench)
+    text = _format_result_value(bench)
     if bench.get_nvalue() >= 2:
         return 'Mean +- std dev: %s' % text
     else:
