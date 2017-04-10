@@ -186,7 +186,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
     return lines
 
 
-PERCENTILE_NAMES = {0: 'minimum', 50: 'median', 100: 'maximum'}
+PERCENTILE_NAMES = {0: 'minimum', 25: 'Q1', 50: 'median', 75: 'Q3', 100: 'maximum'}
 
 
 def format_stats(bench, lines):
@@ -308,6 +308,20 @@ def format_stats(bench, lines):
         if name:
             text = '%s -- %s' % (text, name)
         lines.append(text)
+    lines.append('')
+
+    # Outliers
+    q1 = bench.percentile(25)
+    q3 = bench.percentile(75)
+    iqr = q3 - q1
+    outlier_min = (q1 - 1.5 * iqr)
+    outlier_max = (q3 + 1.5 * iqr)
+    noutlier = sum(not(outlier_min <= value <= outlier_max)
+                   for value in values)
+    bounds = bench.format_values((outlier_min, outlier_max))
+    lines.append('Number of outlier (out of %s..%s): %s'
+                 % (bounds[0], bounds[1], format_number(noutlier)))
+
     return lines
 
 
@@ -395,7 +409,8 @@ def format_checks(bench, lines=None):
     warnings = []
     warn = warnings.append
 
-    # Display a warning if the standard deviation is larger than 10%
+    # Display a warning if the standard deviation is greater than 10%
+    # of the mean
     if len(values) >= 2:
         stdev = bench.stdev()
         percent = stdev * 100.0 / mean
@@ -417,7 +432,7 @@ def format_checks(bench, lines=None):
             warn("the %s (%s) is %s than the mean (%s)"
                  % (minimum, bench.format_value(value), text, bench.format_value(mean)))
 
-    # Check that the shortest value took at least 1 ms
+    # Check that the shortest raw value took at least 1 ms
     if bench.get_unit() == 'second':
         shortest = min(bench._get_raw_values())
         if shortest < 1e-3:

@@ -4,6 +4,7 @@ Changelog
 Version 1.2
 -----------
 
+* ``stats`` command: count the number of outliers
 * Rewrite the calibration code to support PyPy:
 
   - On PyPy, calibrate also the number of warmups

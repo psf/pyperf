@@ -139,7 +139,19 @@ Options:
   can be specified multiple times.
 
 .. versionchanged:: 1.2
-   The ``--benchmark`` option can now be specified multiple times.
+   Count the number of outlier values. The ``--benchmark`` option can now be
+   specified multiple times.
+
+Computed values:
+
+* Mean and standard deviation: see :meth:`Benchmark.mean`
+  and :meth:`Benchmark.stdev`
+* Median and median absolute deviation (MAD): see :meth:`Benchmark.median` and
+  :meth:`Benchmark.median_abs_dev`
+* Percentiles: see :meth:`Benchmark.percentile`
+* Outliers: number of values out of the range ``[Q1 - 1.5*IQR; Q3 + 1.5*IQR]``
+  where IQR stands for the `interquartile range
+  <https://en.wikipedia.org/wiki/Interquartile_range>`_.
 
 Example::
 
@@ -166,11 +178,13 @@ Example::
 
       0th percentile: 22.1 ms (-2% of the mean) -- minimum
       5th percentile: 22.3 ms (-1% of the mean)
-     25th percentile: 22.4 ms (-1% of the mean)
+     25th percentile: 22.4 ms (-1% of the mean) -- Q1
      50th percentile: 22.5 ms (-0% of the mean) -- median
-     75th percentile: 22.7 ms (+1% of the mean)
+     75th percentile: 22.7 ms (+1% of the mean) -- Q3
      95th percentile: 22.9 ms (+2% of the mean)
     100th percentile: 22.9 ms (+2% of the mean) -- maximum
+
+    Number of outlier (out of 22.0 ms..23.0 ms): 0
 
 Values:
 
@@ -200,6 +214,14 @@ Options:
 .. versionchanged:: 1.2
    The ``--benchmark`` option can now be specified multiple times.
 
+Checks:
+
+* Warn if the standard deviation is greater than 10% of the mean
+* Warn if the minimum or the maximum is 50% smaller or greater than the mean
+* Warn if the shortest raw value took less than 1 millisecond
+* Warn if ``nohz_full`` Linux kernel option and the Linux ``intel_pstate`` CPU
+  driver if found in the ``cpu_config`` metadata
+
 Example of a stable benchmark::
 
     $ python3 -m perf check telco.json
@@ -207,17 +229,18 @@ Example of a stable benchmark::
 
 Example of an unstable benchmark::
 
-    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o json -q
-    Mean +- std dev: 858 ns +- 118 ns
+    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o timeit_strip.json -q
+    Mean +- std dev: 750 ns +- 89 ns
 
-    $ python3 -m perf check json
+    $ python3 -m perf check timeit_strip.json
     WARNING: the benchmark result may be unstable
-    * the standard deviation (118 ns) is 14% of the mean (858 ns)
-    * the shortest raw value only took 721 ns
+    * the standard deviation (89.4 ns) is 12% of the mean (750 ns)
+    * the shortest raw value is only 636 ns
 
     Try to rerun the benchmark with more runs, values and/or loops.
     Run 'python3 -m perf system tune' command to reduce the system jitter.
-    Use perf stats to analyze results, or --quiet to hide warnings.
+    Use perf stats, perf dump and perf hist to analyze results.
+    Use --quiet option to hide these warnings.
 
 
 .. _dump_cmd:

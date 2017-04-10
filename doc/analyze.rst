@@ -54,7 +54,8 @@ Example::
 
     Mean +- std dev: 4.34 us +- 0.31 us
 
-Statistics::
+Use the :ref:`perf stats <stats_cmd>`_ command to count the number of
+outliers (9 on this example)::
 
     $ python3 -m perf stats outliers.json -q
     Total duration: 11.6 sec
@@ -79,11 +80,13 @@ Statistics::
 
       0th percentile: 4.12 us (-5% of the mean) -- minimum
       5th percentile: 4.15 us (-4% of the mean)
-     25th percentile: 4.21 us (-3% of the mean)
+     25th percentile: 4.21 us (-3% of the mean) -- Q1
      50th percentile: 4.25 us (-2% of the mean) -- median
-     75th percentile: 4.30 us (-1% of the mean)
+     75th percentile: 4.30 us (-1% of the mean) -- Q3
      95th percentile: 4.84 us (+12% of the mean)
     100th percentile: 6.02 us (+39% of the mean) -- maximum
+
+    Number of outlier (out of 4.07 us..4.44 us): 9
 
 Histogram::
 
@@ -111,7 +114,7 @@ Histogram::
 
 Using an histogram, it's easy to see that most values (57 values) are in the
 range [4.12 us; 4.84 us], but 3 values are in the range [5.17 us; 6.02 us us]:
-39% slower for the maximum (6.02 us). These 3 values at the bottom are caller "outliers"
+39% slower for the maximum (6.02 us).
 
 See :ref:`How to get reproductible benchmark results <stable_bench>` to avoid
 outliers.

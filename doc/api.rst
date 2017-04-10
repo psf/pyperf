@@ -300,7 +300,9 @@ Benchmark class
       p must be in the range [0; 100]:
 
       * p=0 computes the minimum
+      * p=25 computes Q1
       * p=50 computes the median (see also the :meth:`median` method)
+      * p=75 computes Q3
       * p=100 computes the maximum
 
    .. method:: stdev()
