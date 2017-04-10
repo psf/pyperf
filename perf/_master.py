@@ -22,9 +22,8 @@ class Master(object):
         else:
             self.python = self.args.python
         self.bench = None
-        self.nprocess = self.args.processes
-        self.nprocess_warmup = 0
-        self.nprocess_value = 0
+        self.need_nprocess = self.args.processes
+        self.nprocess = 0
         self.next_run = 'loops'
         self.calibrate_loops = int(not self.args.loops)
         self.calibrate_warmups = int(self.args.warmups is None)
@@ -139,16 +138,13 @@ class Master(object):
         else:
             self.bench = worker_bench
         if not worker_bench._only_calibration():
-            self.nprocess_value += 1
-        else:
-            self.nprocess_warmup += 1
+            self.nprocess += 1
 
         return (worker_bench, run)
 
     def display_run(self, bench, run):
         if self.args.verbose:
-            run_index = str(1 + self.nprocess_value + self.nprocess_warmup)
-            for line in format_run(bench, run_index, run):
+            for line in format_run(bench, len(self.bench._runs), run):
                 print(line)
             sys.stdout.flush()
         elif not self.args.quiet:
@@ -200,7 +196,7 @@ class Master(object):
                       % (self.calibrate_warmups - 1))
                 sys.exit(1)
 
-    def next(self):
+    def choose_next_run(self):
         if self.next_run == 'loops':
             self.next_run = 'warmups'
         elif self.next_run == 'warmups':
@@ -210,11 +206,11 @@ class Master(object):
     def create_bench(self):
         old_loops = self.args.loops
 
-        while self.nprocess_value < self.nprocess:
+        while self.nprocess < self.need_nprocess:
             worker_bench, run = self.create_worker_bench()
             self.display_run(worker_bench, run)
             self.handle_calibration(run)
-            self.next()
+            self.choose_next_run()
 
         # restore the old value of loops, to recalibrate for the next
         # benchmark function if loops=0
