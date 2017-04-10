@@ -5,6 +5,7 @@ import subprocess
 
 from perf._bench import _load_suite_from_pipe
 from perf._cli import format_run
+from perf._formatter import format_number
 from perf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
 
 
@@ -46,10 +47,7 @@ class Master(object):
         if calibrate_warmups == 1:
             cmd.append('--calibrate-warmups')
         else:
-            nwarmup = args.warmups
-            if calibrate_loops and nwarmup < 0:
-                nwarmup = 1
-            cmd.extend(('--warmups', str(nwarmup)))
+            cmd.extend(('--warmups', str(args.warmups)))
             if calibrate_warmups > 1:
                 cmd.append('--recalibrate-warmups')
         if args.verbose:
@@ -151,23 +149,32 @@ class Master(object):
             print(".", end='')
             sys.stdout.flush()
 
+    def calibration_done(self):
+        if self.args.verbose:
+            print("Calibration: %s, %s"
+                  % (format_number(self.args.warmups, 'warmup'),
+                     format_number(self.args.loops, 'loop')))
+        self.calibrate_loops = 0
+        self.calibrate_warmups = 0
+
     def handle_calibration(self, run):
         args = self.args
 
         if run._is_calibration_loops() or run._is_recalibration_loops():
-            old_calibraton_loops = args.loops
+            old_loops = args.loops
             args.loops = run._get_calibration_loops()
             self.calibrate_loops += 1
 
-            if (args.loops != old_calibraton_loops
-               and self.calibrate_warmups > 1):
+            if args.loops == old_loops and args.warmups is not None:
+                self.calibration_done()
+            elif args.loops != old_loops and self.calibrate_warmups > 1:
                 # number of loops increased and warmup already
                 # calibrated: need to restart the warmup calibration
                 # (less warmup may be needed with more loops)
                 self.calibrate_warmups = 1
 
             if self.calibrate_loops and not self.calibrate_warmups:
-                self.calibrate_loops = 0
+                self.calibration_done()
 
             if self.calibrate_loops > MAX_CALIBRATION:
                 print("ERROR: calibration failed, the number of loops "
@@ -183,12 +190,13 @@ class Master(object):
             if old_warmups is not None and args.warmups <= old_warmups:
                 # loops calibrated with old_warmups > warmups, no
                 # need to recalibrate
-                self.calibrate_loops = 0
-                self.calibrate_warmups = 0
+                self.calibration_done()
             elif args.warmups == old_warmups:
                 # the number of warmup is stable: the calibration is done
-                self.calibrate_loops = 0
-                self.calibrate_warmups = 0
+                self.calibration_done()
+
+            if self.calibrate_warmups and not self.calibrate_loops:
+                self.calibration_done()
 
             if self.calibrate_warmups > MAX_CALIBRATION:
                 print("ERROR: calibration failed, the number of warmups "
@@ -204,7 +212,10 @@ class Master(object):
         # else: keep action 'values'
 
     def create_bench(self):
+        old_warmups = self.args.warmups
         old_loops = self.args.loops
+        if self.args.warmups is None:
+            self.args.warmups = 1
 
         while self.nprocess < self.need_nprocess:
             worker_bench, run = self.create_worker_bench()
@@ -212,7 +223,8 @@ class Master(object):
             self.handle_calibration(run)
             self.choose_next_run()
 
-        # restore the old value of loops, to recalibrate for the next
-        # benchmark function if loops=0
+        # restore the old value of warmups and loops, to recalibrate
+        # the next benchmark function if needed
+        self.args.warmups = old_warmups
         self.args.loops = old_loops
         return self.bench
