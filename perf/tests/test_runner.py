@@ -211,7 +211,7 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(run.warmups, warmups)
 
     def test_calibrate_loops(self):
-        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+        args = ['--worker', '-w0', '-n2', '--min-time=1.0',
                 '--calibrate-loops']
         runner = self.create_runner(args)
 
@@ -234,7 +234,7 @@ class TestRunner(unittest.TestCase):
         self.check_calibrate_loops(runner, time_func, warmups)
 
     def test_calibrate_loops_jit(self):
-        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+        args = ['--worker', '-w0', '-n2', '--min-time=1.0',
                 '--calibrate-loops']
         runner = self.create_runner(args)
 
@@ -271,7 +271,7 @@ class TestRunner(unittest.TestCase):
         self.check_calibrate_loops(runner, time_func, warmups)
 
     def test_recalibrate_loops_jit(self):
-        args = ['--worker', '-w2', '-n1', '--min-time=1.0',
+        args = ['--worker', '-w0', '-n2', '--min-time=1.0',
                 '--recalibrate-loops', '--loops=16']
         runner = self.create_runner(args)
 

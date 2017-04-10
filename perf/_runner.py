@@ -274,9 +274,6 @@ class Runner:
             if args.loops:
                 raise CLIError("--loops=N is incompatible with "
                                "--calibration-loops")
-
-            if args.warmups <= 0:
-                args.warmups = 1
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
             if args.loops < 1:

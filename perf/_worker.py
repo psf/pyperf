@@ -23,7 +23,7 @@ MAX_LOOPS = 2 ** 32
 
 # Maximum absolute difference of the mean of sample 1
 # compared to the mean of the sample 2
-MAX_WARMUP_MEAN_DIFF = 0.05
+MAX_WARMUP_MEAN_DIFF = 0.10
 # Considering that min_time=100 ms, limit warmup to 30 seconds
 MAX_WARMUP_VALUES = 300
 
@@ -125,25 +125,22 @@ class WorkerTask:
         q1 = percentile(values, 0.25)
         q3 = percentile(values, 0.75)
         iqr = q3 - q1
-        outlier_left = (q1 - 1.5 * iqr)
-        outlier_right = (q3 + 1.5 * iqr)
-        outlier = not(outlier_left <= first_value <= outlier_right)
+        outlier_max = (q3 + 1.5 * iqr)
+        # only check maximum, not minimum
+        outlier = not(first_value <= outlier_max)
 
         # Consider that sample 2 is more stable than sample 1, so
         # use it as reference
         mean_diff = abs(mean1 - mean2) / float(mean2)
 
         if self.args.verbose:
+            if outlier:
+                in_range = "outlier: > %s" % format_value(unit, outlier_max)
+            else:
+                in_range = "good: <= %s" % format_value(unit, outlier_max)
+
             stdev1 = statistics.stdev(sample1)
             stdev2 = statistics.stdev(sample2)
-
-            outlier_bounds = ("%s..%s"
-                              % format_values(unit, (outlier_left,
-                                                     outlier_right)))
-            if outlier:
-                in_range = "outlier: not in %s" % outlier_bounds
-            else:
-                in_range = "good: in %s" % outlier_bounds
             sample1_str = format_values(unit, (mean1, stdev1))
             sample2_str = format_values(unit, (mean2, stdev2))
             print("Calibration: warmups: %s, "
@@ -178,7 +175,7 @@ class WorkerTask:
         unit = self.metadata.get('unit')
         start = 0
         # test_calibrate_warmups() requires at least 2 values per sample
-        min_sample_size = 5
+        min_sample_size = 3
         total = nwarmup + min_sample_size * 2
         while True:
             nvalue = total - len(self.warmups)
