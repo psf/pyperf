@@ -174,20 +174,25 @@ class Run(object):
         return (name in self._metadata)
 
     def _get_calibration_loops(self):
-        # FIXME: store a number of loops in metadata, 'calibrate_loops'?
-        last_warmup = self._warmups[-1]
-        return last_warmup[0]
+        metadata = self._metadata
+        if 'calibrate_loops' in metadata:
+            return metadata['calibrate_loops']
+        if 'recalibrate_loops' in metadata:
+            return metadata['recalibrate_loops']
+
+        if self._is_calibration_loops():
+            # backward compatibility with perf 1.1 and older
+            return self._get_loops()
+
+        raise ValueError("run is not a loop calibration")
 
     def _get_calibration_warmups(self):
-        # FIXME: store a number of warmup in 'calibrate_warmups' metadata?
-        try:
-            warmups = self._metadata['warmups']
-        except KeyError:
-            raise ValueError("first run has no warmups metadata")
-        if not(isinstance(warmups, int) and warmups >= 0):
-            # FIXME: validate in _metadata.py
-            raise ValueError("warmups metadata is not an integer >= 0")
-        return warmups
+        metadata = self._metadata
+        if 'calibrate_warmups' in metadata:
+            return metadata['calibrate_warmups']
+        if 'recalibrate_warmups' in metadata:
+            return metadata['recalibrate_warmups']
+        raise ValueError("run is not a warmup calibration")
 
     def _get_name(self):
         return self._metadata.get('name', None)

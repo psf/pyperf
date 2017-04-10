@@ -675,12 +675,14 @@ Other:
 
 * ``perf_version``: Version of the ``perf`` module
 * ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
-* ``calibrate_loops`` (bool): True for runs used to calibrate the number of
-  loops
-* ``recalibrate_loops`` (bool): True for runs used to recalibrate the number
-  of loops
+* ``calibrate_loops`` (``int >= 1``): number of loops computed in a loops
+  calibration run
+* ``recalibrate_loops`` (``int >= 1``): number of loops computed in a loops
+  recalibration run
 * ``calibrate_warmups`` (bool): True for runs used to calibrate the number of
   warmups
+* ``recalibrate_warmups`` (bool): True for runs used to recalibrate the number
+  of warmups
 
 
 

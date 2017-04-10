@@ -4,16 +4,30 @@ Changelog
 Version 1.2
 -----------
 
-* On PyPy, calibrate the number of warmups.
-* Fix calibration on PyPy: spawn multiple worker processes until the number of
-  loops becomes stable.
-* Calibration now uses the number of warmups, instead of 1.
+* Rewrite the calibration code to support PyPy:
+
+  - On PyPy, calibrate also the number of warmups
+  - On PyPy, recalibrate the number of loops and warmups
+  - Loop calibration now uses the number of warmups and values instead
+    of 1 to compute warmup values
+  - A worker process cannot calibrate the number of loops and compute values.
+    These two operations now require two worker processes.
+
 * Command line interface (CLI): the ``--benchmark``, ``--include-benchmark``
   and ``--exclude-benchmark`` options can now be specified multiple times.
-* ``dump`` command now writes one value per line
-* A worker process cannot calibrate the loops number and compute values
-  anymore. The calibration of the loops number requires multiple processes
-  on PyPy.
+* Rewrite ``dump`` command:
+
+  - Writes one value per line
+  - Now display also metadata of calibration runs
+  - Enhance formatting of calibration runs
+  - Display number of warmup, value and loop
+
+* Add new run metadata:
+
+  - ``calibrate_loops``, ``recalibrate_loops``: number of loops
+    of loop calibration/recalibration runs
+  - ``calibrate_warmups``, ``recalibrate_warmups``: number of warmups
+    of warmup calibration/recalibration runs
 
 Version 1.1 (2017-03-27)
 ------------------------

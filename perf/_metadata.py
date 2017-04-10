@@ -57,20 +57,17 @@ def format_noop(value):
     return value
 
 
-def check_bool_true_only(value):
-    return (value is True)
-
-
 # types: accepted types
 _MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
 BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte')
 DATETIME = _MetadataInfo(format_noop, six.string_types, None, None)
-BOOL_TRUE_ONLY = _MetadataInfo(format_generic, bool, check_bool_true_only, None)
+LOOPS = _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer')
+WARMUPS = _MetadataInfo(format_number, six.integer_types, is_positive, 'integer')
 
 # Registry of metadata keys
 METADATA = {
-    'loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
+    'loops': LOOPS,
     'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
 
     'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
@@ -85,10 +82,10 @@ METADATA = {
     'date': DATETIME,
     'boot_time': DATETIME,
 
-    'calibrate_loops': BOOL_TRUE_ONLY,
-    'recalibrate_loops': BOOL_TRUE_ONLY,
-    'calibrate_warmups': BOOL_TRUE_ONLY,
-    'recalibrate_warmups': BOOL_TRUE_ONLY,
+    'calibrate_loops': LOOPS,
+    'recalibrate_loops': LOOPS,
+    'calibrate_warmups': WARMUPS,
+    'recalibrate_warmups': WARMUPS,
 }
 
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)
