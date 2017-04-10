@@ -14,10 +14,9 @@
 #
 # Release a new version:
 #
-#  - Remove untracked files/dirs: git clean -fdx
 #  - git tag VERSION
 #  - git push --tags
-#  - rm -rf dist/
+#  - Remove untracked files/dirs: git clean -fdx
 #  - python3 setup.py sdist bdist_wheel
 #  - twine upload dist/*
 #
@@ -27,7 +26,7 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '1.2'
+VERSION = '1.3'
 
 DESCRIPTION = 'Python module to generate and modify perf'
 CLASSIFIERS = [
