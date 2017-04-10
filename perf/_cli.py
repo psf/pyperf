@@ -114,10 +114,12 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     values = format_values(values)
 
     if verbose >= 0:
-        lines.append("Run %s: %s, %s"
+        loops = run._get_loops()
+        lines.append("Run %s: %s, %s, %s"
                      % (run_index,
                         format_number(len(warmups), 'warmup'),
-                        format_number(len(values), 'value')))
+                        format_number(len(values), 'value'),
+                        format_number(loops, 'loop')))
     else:
         lines.append("Run %s:" % run_index)
 

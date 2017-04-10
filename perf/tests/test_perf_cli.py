@@ -283,7 +283,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - raw calibrate 2: 45.0 ms (loops: 2)
             - raw calibrate 3: 89.9 ms (loops: 4)
             - raw calibrate 4: 179 ms (loops: 8)
-            Run 2: 1 warmup, 3 values
+            Run 2: 1 warmup, 3 values, 8 loops
             - raw warmup 1: 180 ms
             - raw value 1: 182 ms
             - raw value 2: 180 ms
@@ -299,7 +299,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
             - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
             - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
-            Run 2: 1 warmup, 3 values
+            Run 2: 1 warmup, 3 values, 8 loops
             - warmup 1: 22.5 ms
             - value 1: 22.8 ms
             - value 2: 22.5 ms
@@ -329,7 +329,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
             - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
             - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
-            Run 2: 1 warmup, 3 values
+            Run 2: 1 warmup, 3 values, 8 loops
             - warmup 1: 22.5 ms
             - value 1: 22.8 ms
             - value 2: 22.5 ms
