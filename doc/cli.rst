@@ -150,11 +150,14 @@ Example::
     Raw value minimum: 177 ms
     Raw value maximum: 183 ms
 
-    Number of runs: 41
-    Total number of values: 120
+    Number of calibration run: 1
+    Number of run with values: 40
+    Total number of run: 41
+
+    Number of warmup per run: 1
     Number of values per run: 3
-    Number of warmups per run: 1
     Loop iterations per value: 8
+    Total number of values: 120
 
     Minimum:         22.1 ms
     Median +- MAD:   22.5 ms +- 0.1 ms
@@ -245,18 +248,18 @@ Options:
 Example::
 
     $ python3 -m perf dump telco.json
-    Run 1: calibrate the number of loops
+    Run 1: calibrate the number of loops: 8
     - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
     - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
     - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
     - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
-    Run 2:
+    Run 2: 1 warmup, 3 values, 8 loops
     - warmup 1: 22.5 ms
     - value 1: 22.8 ms
     - value 2: 22.5 ms
     - value 3: 22.6 ms
     (...)
-    Run 41:
+    Run 41: 1 warmup, 3 values, 8 loops
     - warmup 1: 22.5 ms
     - value 1: 22.6 ms
     - value 2: 22.4 ms
@@ -281,6 +284,13 @@ Example in verbose mode::
     - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
     - calibrate 3: 22.5 ms (loops: 4, raw: 89.9 ms)
     - calibrate 4: 22.4 ms (loops: 8, raw: 179 ms)
+    - Metadata:
+      cpu_freq: 2=3596 MHz, 3=1352 MHz
+      cpu_temp: coretemp:Physical id 0=67 C, coretemp:Core 0=51 C, coretemp:Core 1=67 C
+      date: 2016-10-21 03:14:19.670631
+      duration: 338 ms
+      load_avg_1min: 0.29
+      ...
     Run 2:
     - warmup 1: 22.5 ms
     - value 1: 22.8 ms
@@ -292,6 +302,7 @@ Example in verbose mode::
       date: 2016-10-21 03:14:20.496710
       duration: 723 ms
       load_avg_1min: 0.29
+      ...
     ...
 
 

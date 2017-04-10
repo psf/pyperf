@@ -63,11 +63,14 @@ Statistics::
     Raw value minimum: 135 ms
     Raw value maximum: 197 ms
 
-    Number of runs: 21
-    Total number of values: 60
+    Number of calibration run: 1
+    Number of run with values: 20
+    Total number of run: 21
+
+    Number of warmup per run: 1
     Number of values per run: 3
-    Number of warmups per run: 1
     Loop iterations per value: 2^15
+    Total number of values: 60
 
     Minimum:         4.12 us
     Median +- MAD:   4.25 us +- 0.05 us
