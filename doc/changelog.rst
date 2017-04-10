@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 1.2
------------
+Version 1.2 (2017-04-10)
+------------------------
 
 * ``stats`` command: count the number of outliers
 * Rewrite the calibration code to support PyPy:
