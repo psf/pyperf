@@ -21,8 +21,9 @@ MAX_LOOPS = 2 ** 32
 
 # Parameters to calibrate and recalibrate warmups
 
-# Maximum difference in percent of the mean of two samples
-MAX_WARMUP_MEAN_DIFF = 10.0
+# Maximum absolute difference of the mean of sample 1
+# compared to the mean of the sample 2
+MAX_WARMUP_MEAN_DIFF = 0.05
 # Considering that min_time=100 ms, limit warmup to 30 seconds
 MAX_WARMUP_VALUES = 300
 
@@ -113,14 +114,14 @@ class WorkerTask:
 
     def test_calibrate_warmups(self, nwarmup, unit):
         half = nwarmup + (len(self.warmups) - nwarmup) // 2
-        first_value = self.warmups[nwarmup][1]
         sample1 = [value for loops, value in self.warmups[nwarmup:half]]
         sample2 = [value for loops, value in self.warmups[half:]]
         mean1 = statistics.mean(sample1)
         mean2 = statistics.mean(sample2)
+        first_value = sample1[0]
 
         # test if the first value is an outlier
-        values = sample1 + sample2
+        values = sample1[1:] + sample2
         q1 = percentile(values, 0.25)
         q3 = percentile(values, 0.75)
         iqr = q3 - q1
@@ -128,10 +129,9 @@ class WorkerTask:
         outlier_right = (q3 + 1.5 * iqr)
         outlier = not(outlier_left <= first_value <= outlier_right)
 
-        if mean2 >= mean1:
-            mean_diff = (mean2 - mean1) * 100.0 / mean1
-        else:
-            mean_diff = (mean1 - mean2) * 100.0 / mean2
+        # Consider that sample 2 is more stable than sample 1, so
+        # use it as reference
+        mean_diff = abs(mean1 - mean2) / float(mean2)
 
         if self.args.verbose:
             stdev1 = statistics.stdev(sample1)
@@ -148,24 +148,22 @@ class WorkerTask:
             sample2_str = format_values(unit, (mean2, stdev2))
             print("Calibration: warmups: %s, "
                   "first value: %s (%s), "
-                  "sample1(%s): %s +- %s, "
-                  "sample2(%s): %s (%.0f%%) +- %s"
+                  "sample1(%s): %s (%+.0f%%) +- %s, "
+                  "sample2(%s): %s +- %s"
                   % (format_number(nwarmup),
                      format_value(unit, first_value),
                      in_range,
                      len(sample1),
                      sample1_str[0],
+                     mean_diff * 100,
                      sample1_str[1],
                      len(sample2),
                      sample2_str[0],
-                     mean_diff,
                      sample2_str[1]))
 
         if outlier:
             return False
-        if mean_diff > MAX_WARMUP_MEAN_DIFF:
-            return False
-        return True
+        return (mean_diff <= MAX_WARMUP_MEAN_DIFF)
 
     def calibrate_warmups(self):
         # calibrate the number of warmups

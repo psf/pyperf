@@ -461,19 +461,14 @@ def format_result(bench, prefix=True):
     for run in bench._runs:
         if run._is_calibration_warmups():
             warmups = run._get_calibration_warmups()
-            action = 'calibrate the number of warmups: %s' % format_number(warmups)
         elif run._is_recalibration_warmups():
             warmups = run._get_calibration_warmups()
-            action = 'recalibrate the number of warmups: %s' % format_number(warmups)
         elif run._is_recalibration_loops():
             loops = run._get_calibration_loops()
-            action = 'recalibrate the number of loops: %s' % format_number(loops)
         elif run._is_calibration_warmups():
             loops = run._get_calibration_loops()
-            action = 'calibrate the number of loops: %s' % format_number(loops)
         elif run._is_calibration_loops():
             loops = run._get_calibration_loops()
-            action = 'calibrate the number of loops: %s' % format_number(loops)
         else:
             loops = None
             warmups = None
