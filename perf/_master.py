@@ -1,0 +1,222 @@
+from __future__ import division, print_function, absolute_import
+
+import sys
+import subprocess
+
+from perf._bench import _load_suite_from_pipe
+from perf._cli import format_run
+from perf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
+
+
+# Limit to 5 calibration processes
+# (10 if calibration is needed for loops and warmups)
+MAX_CALIBRATION = 5
+
+
+class Master(object):
+    def __init__(self, runner, python=None):
+        self.runner = runner
+        self.args = runner.args
+        if python:
+            self.python = python
+        else:
+            self.python = self.args.python
+        self.bench = None
+        self.nprocess = self.args.processes
+        self.nprocess_warmup = 0
+        self.nprocess_value = 0
+        self.next_run = 'loops'
+        self.calibrate_loops = int(not self.args.loops)
+        self.calibrate_warmups = int(self.args.warmups is None)
+
+    def worker_cmd(self, calibrate_loops, calibrate_warmups, wpipe):
+        args = self.args
+
+        cmd = [self.python]
+        cmd.extend(self.runner._program_args)
+        cmd.extend(('--worker', '--pipe', str(wpipe),
+                    '--worker-task=%s' % self.runner._worker_task,
+                    '--values', str(args.values),
+                    '--min-time', str(args.min_time)))
+        if calibrate_loops == 1:
+            cmd.append('--calibrate-loops')
+        else:
+            cmd.extend(('--loops', str(args.loops)))
+            if calibrate_loops > 1:
+                cmd.append('--recalibrate-loops')
+        if calibrate_warmups == 1:
+            cmd.append('--calibrate-warmups')
+        else:
+            nwarmup = args.warmups
+            if calibrate_loops and nwarmup < 0:
+                nwarmup = 1
+            cmd.extend(('--warmups', str(nwarmup)))
+            if calibrate_warmups > 1:
+                cmd.append('--recalibrate-warmups')
+        if args.verbose:
+            cmd.append('-' + 'v' * args.verbose)
+        if args.affinity:
+            cmd.append('--affinity=%s' % args.affinity)
+        if args.tracemalloc:
+            cmd.append('--tracemalloc')
+        if args.track_memory:
+            cmd.append('--track-memory')
+
+        if self.runner._add_cmdline_args:
+            self.runner._add_cmdline_args(cmd, args)
+
+        return cmd
+
+    def spawn_worker(self, calibrate_loops, calibrate_warmups):
+        env = create_environ(self.args.inherit_environ,
+                             self.args.locale)
+
+        rpipe, wpipe = create_pipe()
+        with rpipe:
+            with wpipe:
+                warg = wpipe.to_subprocess()
+                cmd = self.worker_cmd(calibrate_loops,
+                                      calibrate_warmups, warg)
+
+                kw = {}
+                if MS_WINDOWS:
+                    # Set close_fds to False to call CreateProcess() with
+                    # bInheritHandles=True. For pass_handles, see
+                    # http://bugs.python.org/issue19764
+                    kw['close_fds'] = False
+                elif sys.version_info >= (3, 2):
+                    kw['pass_fds'] = [wpipe.fd]
+
+                proc = subprocess.Popen(cmd, env=env, **kw)
+
+            with popen_killer(proc):
+                with rpipe.open_text() as rfile:
+                    bench_json = rfile.read()
+
+                exitcode = proc.wait()
+
+        if exitcode:
+            raise RuntimeError("%s failed with exit code %s"
+                               % (cmd[0], exitcode))
+
+        return _load_suite_from_pipe(bench_json)
+
+    def create_suite(self):
+        # decide which kind of run must be computed
+        if self.next_run == 'loops' and not self.calibrate_loops:
+            self.next_run = 'warmups'
+        if self.next_run == 'warmups' and not self.calibrate_warmups:
+            self.next_run = 'values'
+
+        # compute the run
+        if self.next_run == 'loops':
+            suite = self.spawn_worker(self.calibrate_loops, 0)
+        elif self.next_run == 'warmups':
+            suite = self.spawn_worker(0, self.calibrate_warmups)
+        else:
+            suite = self.spawn_worker(0, 0)
+        if suite is None:
+            raise RuntimeError("perf worker process didn't produce JSON result")
+        return suite
+
+    def create_worker_bench(self):
+        suite = self.create_suite()
+
+        # get the run
+        benchmarks = suite._benchmarks
+        if len(benchmarks) != 1:
+            raise ValueError("worker produced %s benchmarks instead of 1"
+                             % len(benchmarks))
+        worker_bench = benchmarks[0]
+        if len(worker_bench._runs) != 1:
+            raise ValueError("worker produced %s runs, only 1 run expected"
+                             % len(worker_bench._runs))
+        run = worker_bench._runs[0]
+
+        # save the run into bench
+        if self.bench is not None:
+            self.bench.add_runs(worker_bench)
+        else:
+            self.bench = worker_bench
+        if not worker_bench._only_calibration():
+            self.nprocess_value += 1
+        else:
+            self.nprocess_warmup += 1
+
+        return (worker_bench, run)
+
+    def display_run(self, bench, run):
+        if self.args.verbose:
+            run_index = str(1 + self.nprocess_value + self.nprocess_warmup)
+            for line in format_run(bench, run_index, run):
+                print(line)
+            sys.stdout.flush()
+        elif not self.args.quiet:
+            print(".", end='')
+            sys.stdout.flush()
+
+    def handle_calibration(self, run):
+        args = self.args
+
+        if run._is_calibration_loops() or run._is_recalibration_loops():
+            old_calibraton_loops = args.loops
+            args.loops = run._get_calibration_loops()
+            self.calibrate_loops += 1
+
+            if (args.loops != old_calibraton_loops
+               and self.calibrate_warmups > 1):
+                # number of loops increased and warmup already
+                # calibrated: need to restart the warmup calibration
+                # (less warmup may be needed with more loops)
+                self.calibrate_warmups = 1
+
+            if self.calibrate_loops and not self.calibrate_warmups:
+                self.calibrate_loops = 0
+
+            if self.calibrate_loops > MAX_CALIBRATION:
+                print("ERROR: calibration failed, the number of loops "
+                      "is not stable after %s calibrations"
+                      % (self.calibrate_loops - 1))
+                sys.exit(1)
+
+        elif run._is_calibration_warmups() or run._is_recalibration_warmups():
+            old_warmups = args.warmups
+            args.warmups = run._get_calibration_warmups()
+            self.calibrate_warmups += 1
+
+            if old_warmups is not None and args.warmups <= old_warmups:
+                # loops calibrated with old_warmups > warmups, no
+                # need to recalibrate
+                self.calibrate_loops = 0
+                self.calibrate_warmups = 0
+            elif args.warmups == old_warmups:
+                # the number of warmup is stable: the calibration is done
+                self.calibrate_loops = 0
+                self.calibrate_warmups = 0
+
+            if self.calibrate_warmups > MAX_CALIBRATION:
+                print("ERROR: calibration failed, the number of warmups "
+                      "is not stable after %s calibrations"
+                      % (self.calibrate_warmups - 1))
+                sys.exit(1)
+
+    def next(self):
+        if self.next_run == 'loops':
+            self.next_run = 'warmups'
+        elif self.next_run == 'warmups':
+            self.next_run = 'loops'
+        # else: keep action 'values'
+
+    def create_bench(self):
+        old_loops = self.args.loops
+
+        while self.nprocess_value < self.nprocess:
+            worker_bench, run = self.create_worker_bench()
+            self.display_run(worker_bench, run)
+            self.handle_calibration(run)
+            self.next()
+
+        # restore the old value of loops, to recalibrate for the next
+        # benchmark function if loops=0
+        self.args.loops = old_loops
+        return self.bench

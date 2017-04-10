@@ -371,12 +371,12 @@ class TestRunner(unittest.TestCase):
                 mock_popen.wait.return_value = 0
                 return mock_popen
 
-            mock_subprocess = cm.enter_context(mock.patch('perf._runner.subprocess'))
+            mock_subprocess = cm.enter_context(mock.patch('perf._master.subprocess'))
             mock_subprocess.Popen.side_effect = popen
 
             cm.enter_context(mock.patch('perf._runner.abs_executable',
                              side_effect=abs_executable))
-            cm.enter_context(mock.patch('perf._runner._load_suite_from_pipe',
+            cm.enter_context(mock.patch('perf._master._load_suite_from_pipe',
                                         return_value=suite))
 
             args = ["--python=python1", "--compare-to=python2", "--min-time=5",
