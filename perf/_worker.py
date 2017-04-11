@@ -7,7 +7,7 @@ import statistics
 import perf
 from perf._formatter import (format_number, format_value, format_values,
                              format_timedelta)
-from perf._utils import MS_WINDOWS, percentile
+from perf._utils import MS_WINDOWS, percentile, median_abs_dev
 
 try:
     # Python 3.3 provides a real monotonic clock (PEP 418)
@@ -22,7 +22,7 @@ MAX_LOOPS = 2 ** 32
 # Parameters to calibrate and recalibrate warmups
 
 MAX_WARMUP_VALUES = 300
-WARMUP_SAMPLE_SIZE = 10
+WARMUP_SAMPLE_SIZE = 20
 
 
 class WorkerTask:
@@ -135,37 +135,47 @@ class WorkerTask:
         q1_diff = (s1_q1 - s2_q1) / float(s2_q1)
         q3_diff = (s1_q3 - s2_q3) / float(s2_q3)
 
+        mad1 = median_abs_dev(sample1)
+        mad2 = median_abs_dev(sample2)
+        mad_diff = (mad1 - mad2) / float(mad2)
+
         if self.args.verbose:
             stdev1 = statistics.stdev(sample1)
             stdev2 = statistics.stdev(sample2)
             stdev_diff = (stdev1 - stdev2) / float(stdev2)
 
-            sample1_str = format_values(unit, (s1_q1, mean1, s1_q3, stdev1))
-            sample2_str = format_values(unit, (s2_q1, mean2, s2_q3, stdev2))
+            sample1_str = format_values(unit, (s1_q1, mean1, s1_q3, stdev1, mad1))
+            sample2_str = format_values(unit, (s2_q1, mean2, s2_q3, stdev2, mad2))
             print("Calibration: warmups=%s" % format_number(nwarmup))
             print("  first value: %s, outlier? %s (max: %s)"
                   % (format_value(unit, first_value), outlier,
                      format_value(unit, outlier_max)))
-            print("  sample1(%s): Q1=%s (%+.0f%%) mean=%s (%+.0f%%) Q3=%s (%+.0f%%) stdev=%s (%+.0f%%)"
+            print("  sample1(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
                   % (len(sample1),
                      sample1_str[0],
-                     q1_diff * 100,
                      sample1_str[1],
-                     mean_diff * 100,
                      sample1_str[2],
-                     q3_diff * 100,
                      sample1_str[3],
-                     stdev_diff * 100))
-            print("  sample2(%s): Q1=%s mean=%s Q3=%s stdev=%s"
+                     sample1_str[4]))
+            print("  sample2(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
                   % (len(sample2),
                      sample2_str[0],
                      sample2_str[1],
                      sample2_str[2],
-                     sample2_str[3]))
+                     sample2_str[3],
+                     sample2_str[4]))
+            print("  diff: Q1=%+.0f%% mean=%+.0f%% Q3=%+.0f%% stdev=%+.0f%% MAD=%+.0f%%"
+                  % (q1_diff * 100,
+                     mean_diff * 100,
+                     q3_diff * 100,
+                     stdev_diff * 100,
+                     mad_diff * 100))
 
         if outlier:
             return False
         if not(-0.5 <= mean_diff <= 0.10):
+            return False
+        if abs(mad_diff) > 0.10:
             return False
         if abs(q1_diff) > 0.05:
             return False
