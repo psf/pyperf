@@ -113,10 +113,20 @@ class WorkerTask:
         half = nwarmup + (len(self.warmups) - nwarmup) // 2
         sample1 = [value for loops, value in self.warmups[nwarmup:half]]
         sample2 = [value for loops, value in self.warmups[half:]]
+        first_value = sample1[0]
 
-        stdev1 = statistics.stdev(sample1)
-        stdev2 = statistics.stdev(sample2)
-        stdev_diff = (stdev1 - stdev2) / float(stdev2)
+        # test if the first value is an outlier
+        values = sample1[1:] + sample2
+        q1 = percentile(values, 0.25)
+        q3 = percentile(values, 0.75)
+        iqr = q3 - q1
+        outlier_max = (q3 + 1.5 * iqr)
+        # only check maximum, not minimum
+        outlier = not(first_value <= outlier_max)
+
+        mean1 = statistics.mean(sample1)
+        mean2 = statistics.mean(sample2)
+        mean_diff = (mean1 - mean2) / float(mean2)
 
         s1_q1 = percentile(sample1, 0.25)
         s2_q1 = percentile(sample2, 0.25)
@@ -126,29 +136,40 @@ class WorkerTask:
         q3_diff = (s1_q3 - s2_q3) / float(s2_q3)
 
         if self.args.verbose:
-            sample1_str = format_values(unit, (s1_q1, s1_q3, stdev1))
-            sample2_str = format_values(unit, (s2_q1, s2_q3, stdev2))
-            print("Calibration: warmups=%s, "
-                  "sample1(%s): Q1=%s (%+.2f%%) Q3=%s (%+.2f%%) stdev=%s (%+.2f%%), "
-                  "sample2(%s): Q1=%s Q3=%s stdev=%s"
-                  % (format_number(nwarmup),
-                     len(sample1),
+            stdev1 = statistics.stdev(sample1)
+            stdev2 = statistics.stdev(sample2)
+            stdev_diff = (stdev1 - stdev2) / float(stdev2)
+
+            sample1_str = format_values(unit, (s1_q1, mean1, s1_q3, stdev1))
+            sample2_str = format_values(unit, (s2_q1, mean2, s2_q3, stdev2))
+            print("Calibration: warmups=%s" % format_number(nwarmup))
+            print("  first value: %s, outlier? %s (max: %s)"
+                  % (format_value(unit, first_value), outlier,
+                     format_value(unit, outlier_max)))
+            print("  sample1(%s): Q1=%s (%+.0f%%) mean=%s (%+.0f%%) Q3=%s (%+.0f%%) stdev=%s (%+.0f%%)"
+                  % (len(sample1),
                      sample1_str[0],
                      q1_diff * 100,
                      sample1_str[1],
-                     q3_diff * 100,
+                     mean_diff * 100,
                      sample1_str[2],
-                     stdev_diff * 100,
-                     len(sample2),
+                     q3_diff * 100,
+                     sample1_str[3],
+                     stdev_diff * 100))
+            print("  sample2(%s): Q1=%s mean=%s Q3=%s stdev=%s"
+                  % (len(sample2),
                      sample2_str[0],
                      sample2_str[1],
-                     sample2_str[2]))
+                     sample2_str[2],
+                     sample2_str[3]))
 
-        if not(-0.5 <= stdev_diff <= 0.25):
+        if outlier:
+            return False
+        if not(-0.5 <= mean_diff <= 0.10):
             return False
         if abs(q1_diff) > 0.05:
             return False
-        if abs(q3_diff) > 0.10:
+        if abs(q3_diff) > 0.05:
             return False
         return True
 
