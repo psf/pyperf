@@ -31,7 +31,10 @@ class Replay(object):
             self.read_session()
 
             run, self.raw_values = get_raw_values(self.filename, self.run_id)
+            old_loops = args.loops
             args.loops = run._get_loops()
+            if args.loops != old_loops:
+                print("Set loops to %s: value from the JSON" % args.loops)
             # FIXME: handle inner_loops
             self.run_id += 1
             self.write_session()
