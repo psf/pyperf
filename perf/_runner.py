@@ -267,19 +267,19 @@ class Runner:
             self._only_in_worker("--calibrate-loops")
             if args.loops:
                 raise CLIError("--loops=N is incompatible with "
-                               "--calibration-loops")
+                               "--calibrate-loops")
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
             if args.loops < 1:
-                raise CLIError("--recalibration-loops requires --loops=N")
+                raise CLIError("--recalibrate-loops requires --loops=N")
         elif args.calibrate_warmups:
             self._only_in_worker("--calibrate-warmups")
             if args.loops < 1:
-                raise CLIError("--recalibration-loops requires --loops=N")
+                raise CLIError("--calibrate-warmups requires --loops=N")
         elif args.recalibrate_warmups:
             self._only_in_worker("--recalibrate-warmups")
             if args.loops < 1 or args.warmups is None:
-                raise CLIError("--recalibration-warmups requires "
+                raise CLIError("--recalibrate-warmups requires "
                                "--loops=N and --warmups=N")
         else:
             if args.worker and args.loops < 1:
