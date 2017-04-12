@@ -27,10 +27,16 @@ def main():
                         help="Number of histogram bars (default: 25)")
     parser.add_argument('--mean', action="store_true",
                         help="Use mean-stdev, instead of median-mad")
+    parser.add_argument('-b', '--benchmark')
     parser.add_argument('filename')
     args = parser.parse_args()
 
-    bench = perf.Benchmark.load(args.filename)
+    if args.benchmark:
+        suite = perf.BenchmarkSuite.load(args.filename)
+        bench = suite.get_benchmark(args.benchmark)
+    else:
+        bench = perf.Benchmark.load(args.filename)
+
     display_histogram_scipy(bench, args.mean, args.bins)
 
 
