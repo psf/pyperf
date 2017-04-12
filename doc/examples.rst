@@ -80,11 +80,22 @@ This command requires the ``scipy`` dependency.
 
 Example::
 
-    $ python3 -m perf hist_scipy telco.json
+    $ python3 hist_scipy telco.json
 
 Output:
 
 .. image:: hist_scipy_telco.png
 
 
+plot
+----
+
+Script using ``matplotlib`` to plot values:
+
+.. literalinclude:: examples/plot.py
+
+Usage::
+
+    $ python3 plot.py telco.json
+    $ python3 plot.py -b telco suite.json   # only render telco benchmark
 

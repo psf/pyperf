@@ -13,7 +13,7 @@ EXAMPLES_DIR = os.path.join(ROOT_DIR, 'doc', 'examples')
 class ExampleTests(unittest.TestCase):
     TESTED = set()
     # It's not easy to test a GUI
-    IGNORED = {'hist_scipy.py'}
+    IGNORED = {'hist_scipy.py', 'plot.py'}
 
     @classmethod
     def tearDownClass(cls):
