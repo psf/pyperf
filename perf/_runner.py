@@ -15,7 +15,6 @@ from perf._formatter import format_timedelta
 from perf._utils import (MS_WINDOWS, abs_executable,
                          WritePipe, get_python_names)
 from perf._worker import WorkerProcessTask
-from perf._master import Master
 
 
 def strictly_positive(value):
@@ -484,6 +483,8 @@ class Runner:
         if not self._check_worker_task():
             return None
 
+        # Use lazy import to limit imports on 'import perf' and reduce
+        # the general overhead of benchmarking in a worker process
         from perf._timeit import bench_timeit
         return bench_timeit(self, name, stmt,
                             setup=setup,
@@ -532,6 +533,10 @@ class Runner:
                 bench.dump(args.output)
 
     def _master(self):
+        # Use lazy import to limit imports on 'import perf' and reduce
+        # the general overhead of benchmarking in a worker process
+        from perf._master import Master
+
         if self.args.verbose and self._worker_task > 0:
             print()
         bench = Master(self).create_bench()
@@ -541,7 +546,10 @@ class Runner:
         return bench
 
     def _compare_to(self):
+        # Use lazy import to limit imports on 'import perf' and reduce
+        # the general overhead of benchmarking in a worker process
         from perf._compare import timeit_compare_benchs
+        from perf._master import Master
 
         args = self.args
         python_ref = args.compare_to
@@ -591,6 +599,8 @@ class Runner:
         if not self._check_worker_task():
             return None
 
+        # Use lazy import to limit imports on 'import perf' and reduce
+        # the general overhead of benchmarking in a worker process
         from perf._command import BenchCommandTask
         task = BenchCommandTask(self, name, command)
         return self._main(task)
