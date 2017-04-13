@@ -4,7 +4,6 @@ import contextlib
 import datetime
 import math
 import os
-import platform
 import sys
 
 import six
@@ -209,7 +208,17 @@ def python_implementation():
         # PEP 421, Python 3.3
         name = sys.implementation.name
     else:
-        name = platform.python_implementation()
+        # Code extracted from platform.python_implementation().
+        # Don't import platform to avoid the subprocess import.
+        sys_version = sys.version
+        if 'IronPython' in sys_version:
+            name = 'IronPython'
+        elif sys.platform.startswith('java'):
+            name = 'Jython'
+        elif "PyPy" in sys_version:
+            name = "PyPy"
+        else:
+            name = 'CPython'
     return name.lower()
 
 

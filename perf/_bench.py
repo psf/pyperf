@@ -735,6 +735,7 @@ class BenchmarkSuite(object):
             suffix = u'.gz'
 
         if filename.endswith(suffix):
+            # Use lazy import to limit imports on 'import perf'
             import gzip
             if six.PY3:
                 return gzip.open(filename, "rt", encoding="utf-8")
@@ -780,6 +781,7 @@ class BenchmarkSuite(object):
             raise OSError(errno.EEXIST, "File already exists")
 
         if filename.endswith(suffix):
+            # Use lazy import to limit imports on 'import perf'
             import gzip
 
             if six.PY3:
