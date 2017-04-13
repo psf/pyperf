@@ -1,15 +1,18 @@
 import argparse
 import matplotlib.pyplot as plt
 import perf
+import statistics
 
 
 def plot_bench(args, bench):
     if not args.split_runs:
         values = bench.get_values()
+        if args.skip:
+            values = values[args.skip:]
         values = [value for value in values]
         plt.plot(values, label='values')
 
-        mean = bench.mean()
+        mean = statistics.mean(values)
         plt.plot([mean] * len(values), label='mean')
 
         plt.legend(loc='upper right', shadow=True, fontsize='x-large')
@@ -18,7 +21,10 @@ def plot_bench(args, bench):
             index = 0
             x = []
             y = []
-            for value in run.values:
+            values = run.values
+            if args.skip:
+                values = values[args.skip:]
+            for value in values:
                 x.append(index)
                 y.append(value)
                 index += 1
@@ -42,6 +48,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--benchmark')
     parser.add_argument('--split-runs', action='store_true')
+    parser.add_argument('--skip', type=int, help='skip first SKIP values')
     parser.add_argument('--warmups', action='store_true')
     parser.add_argument('filename')
     return parser.parse_args()
