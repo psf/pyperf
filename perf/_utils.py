@@ -16,6 +16,12 @@ if sys.version_info < (3, 4):
     except ImportError:
         fcntl = None
 
+try:
+    from shlex import quote as shell_quote   # noqa
+except ImportError:
+    # Python 2
+    from pipes import quote as shell_quote   # noqa
+
 
 MS_WINDOWS = (sys.platform == 'win32')
 

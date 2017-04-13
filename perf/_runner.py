@@ -4,7 +4,6 @@ import argparse
 import errno
 import functools
 import os
-import subprocess
 import sys
 
 import six
@@ -16,8 +15,8 @@ from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta
 from perf._utils import (MS_WINDOWS, abs_executable,
-                         WritePipe, get_python_names, popen_communicate)
-from perf._worker import WorkerProcessTask, BenchCommandTask
+                         WritePipe, get_python_names)
+from perf._worker import WorkerProcessTask
 from perf._master import Master
 
 try:
@@ -606,38 +605,6 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        command_str = ' '.join(map(repr, command))
-        metadata = {'command': command_str}
-
-        path = os.path.dirname(__file__)
-        script = os.path.join(path, '_process_time.py')
-        run_script = [sys.executable, script]
-
-        def task_func(task, loops):
-            args = run_script + [str(loops)] + command
-            proc = subprocess.Popen(args,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.STDOUT,
-                                    universal_newlines=True)
-            output = popen_communicate(proc)[0]
-            if proc.returncode:
-                raise Exception("Command failed with exit code %s"
-                                % proc.returncode)
-
-            rss = None
-            try:
-                lines = output.splitlines()
-                timing = float(lines[0])
-                if len(lines) >= 2:
-                    rss = int(lines[1])
-            except ValueError:
-                raise ValueError("failed to parse script output: %r" % output)
-
-            if rss:
-                # store the maximum
-                max_rss = task.metadata.get('command_max_rss', 0)
-                task.metadata['command_max_rss'] = max(max_rss, rss)
-            return timing
-
-        task = BenchCommandTask(self, name, task_func, metadata)
+        from perf._command import BenchCommandTask
+        task = BenchCommandTask(self, name, command)
         return self._main(task)

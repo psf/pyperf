@@ -8,7 +8,7 @@ import six
 
 import perf
 from perf import tests
-from perf._utils import create_pipe, MS_WINDOWS
+from perf._utils import create_pipe, MS_WINDOWS, shell_quote
 from perf.tests import mock
 from perf.tests import unittest
 from perf.tests import ExitStack
@@ -429,7 +429,7 @@ class TestRunner(unittest.TestCase):
             bench = runner.bench_command('bench', args)
 
         self.assertEqual(bench.get_metadata()['command'],
-                         ' '.join(map(repr, args)))
+                         ' '.join(map(shell_quote, args)))
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):
