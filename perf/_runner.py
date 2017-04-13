@@ -1,6 +1,5 @@
 from __future__ import division, print_function, absolute_import
 
-import argparse
 import errno
 import functools
 import os
@@ -61,6 +60,9 @@ class Runner:
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
+        # Use lazy import to limit imports on 'import perf'
+        import argparse
+
         has_jit = perf.python_has_jit()
         if not values:
             if has_jit:
@@ -483,8 +485,7 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        # Use lazy import to limit imports on 'import perf' and reduce
-        # the general overhead of benchmarking in a worker process
+        # Use lazy import to limit imports on 'import perf'
         from perf._timeit import bench_timeit
         return bench_timeit(self, name, stmt,
                             setup=setup,
@@ -533,8 +534,7 @@ class Runner:
                 bench.dump(args.output)
 
     def _master(self):
-        # Use lazy import to limit imports on 'import perf' and reduce
-        # the general overhead of benchmarking in a worker process
+        # Use lazy import to limit imports on 'import perf'
         from perf._master import Master
 
         if self.args.verbose and self._worker_task > 0:
@@ -546,8 +546,7 @@ class Runner:
         return bench
 
     def _compare_to(self):
-        # Use lazy import to limit imports on 'import perf' and reduce
-        # the general overhead of benchmarking in a worker process
+        # Use lazy import to limit imports on 'import perf'
         from perf._compare import timeit_compare_benchs
         from perf._master import Master
 
@@ -599,8 +598,7 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        # Use lazy import to limit imports on 'import perf' and reduce
-        # the general overhead of benchmarking in a worker process
+        # Use lazy import to limit imports on 'import perf'
         from perf._command import BenchCommandTask
         task = BenchCommandTask(self, name, command)
         return self._main(task)
