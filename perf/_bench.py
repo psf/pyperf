@@ -2,7 +2,6 @@ from __future__ import division, print_function, absolute_import
 
 import datetime
 import errno
-import json
 import math
 import os.path
 import sys
@@ -749,6 +748,9 @@ class BenchmarkSuite(object):
 
     @classmethod
     def load(cls, file):
+        # Use lazy import to limit imports on 'import perf'
+        import json
+
         if isinstance(file, (bytes, six.text_type)):
             if file != '-':
                 filename = file
@@ -767,6 +769,9 @@ class BenchmarkSuite(object):
 
     @classmethod
     def loads(cls, string):
+        # Use lazy import to limit imports on 'import perf'
+        import json
+
         data = json.loads(string)
         return cls._json_load(None, data)
 
@@ -804,6 +809,9 @@ class BenchmarkSuite(object):
         return data
 
     def dump(self, file, compact=True, replace=False):
+        # Use lazy import to limit imports on 'import perf'
+        import json
+
         data = self._as_json()
 
         def dump(data, fp, compact):
