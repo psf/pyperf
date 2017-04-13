@@ -10,6 +10,8 @@ BUGS
 TODO
 ====
 
+* bench_command(): see
+  http://benchmarksgame.alioth.debian.org/how-programs-are-measured.html
 * Always or never to default unit to 'second'
 * Calibrate also number of warmups on CPython
 * check: error if psutil is not installed? if isolated CPUs are detected,
