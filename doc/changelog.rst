@@ -11,6 +11,9 @@ Version 1.2.1
   - Always use a sample of 10 values, rather than using a sample of a variable
     size starting with 3 values
 
+* Use lazy import for most imports of the largest modules to reduce the
+  number of imported module on 'import perf'.
+
 Version 1.2 (2017-04-10)
 ------------------------
 
