@@ -6,8 +6,6 @@ import functools
 import os
 import sys
 
-import six
-
 import perf
 from perf._cli import (format_benchmark, format_checks,
                        multiline_output, display_title, format_result_value)
@@ -18,12 +16,6 @@ from perf._utils import (MS_WINDOWS, abs_executable,
                          WritePipe, get_python_names)
 from perf._worker import WorkerProcessTask
 from perf._master import Master
-
-try:
-    # Optional dependency
-    import psutil
-except ImportError:
-    psutil = None
 
 
 def strictly_positive(value):
@@ -345,12 +337,6 @@ class Runner:
         args = self.argparser.parse_args(args)
         self._set_args(args)
         return args
-
-    def _range(self):
-        for warmup in six.moves.xrange(self.args.warmups):
-            yield (True, 1 + warmup)
-        for run in six.moves.xrange(self.args.values):
-            yield (False, 1 + run)
 
     def _cpu_affinity(self):
         cpus = self.args.affinity
