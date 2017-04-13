@@ -12,7 +12,7 @@ from perf._cli import (format_metadata, empty_line,
                        format_checks, format_histogram, format_title,
                        format_benchmark, display_title, format_result)
 from perf._formatter import format_timedelta, format_seconds, format_datetime
-from perf._cpu_utils import get_isolated_cpus, parse_cpu_list, set_cpu_affinity
+from perf._cpu_utils import parse_cpu_list
 from perf._timeit_cli import TimeitRunner
 from perf._utils import parse_run_list
 
@@ -400,33 +400,8 @@ def cmd_compare_to(args):
 
 
 def cmd_collect_metadata(args):
-    filename = args.output
-    if filename and os.path.exists(filename):
-        print("ERROR: The JSON file %r already exists" % filename)
-        sys.exit(1)
-
-    cpus = args.affinity
-    if cpus:
-        if not set_cpu_affinity(cpus):
-            print("ERROR: failed to set the CPU affinity")
-            sys.exit(1)
-    else:
-        cpus = get_isolated_cpus()
-        if cpus:
-            set_cpu_affinity(cpus)
-            # ignore if set_cpu_affinity() failed
-
-    run = perf.Run([1.0])
-    metadata = run.get_metadata()
-    if metadata:
-        print("Metadata:")
-        for line in format_metadata(metadata):
-            print(line)
-
-    if filename:
-        run = run._update_metadata({'name': 'metadata'})
-        bench = perf.Benchmark([run])
-        bench.dump(filename)
+    from perf._collect_metadata import cmd_collect_metadata as func
+    func(args)
 
 
 def display_benchmarks(args, show_metadata=False, hist=False, stats=False,

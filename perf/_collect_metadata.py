@@ -19,9 +19,11 @@ except ImportError:
     psutil = None
 
 import perf
+from perf._cli import format_metadata
 from perf._cpu_utils import (format_cpu_list,
                              parse_cpu_list, get_isolated_cpus,
-                             get_logical_cpu_count, format_cpu_infos)
+                             get_logical_cpu_count, format_cpu_infos,
+                             set_cpu_affinity)
 from perf._formatter import format_timedelta, format_datetime
 from perf._utils import (MS_WINDOWS,
                          open_text, read_first_line, sysfs_path, proc_path)
@@ -408,3 +410,33 @@ def collect_metadata(process=True):
         collect_memory_metadata(metadata)
 
     return metadata
+
+
+def cmd_collect_metadata(args):
+    filename = args.output
+    if filename and os.path.exists(filename):
+        print("ERROR: The JSON file %r already exists" % filename)
+        sys.exit(1)
+
+    cpus = args.affinity
+    if cpus:
+        if not set_cpu_affinity(cpus):
+            print("ERROR: failed to set the CPU affinity")
+            sys.exit(1)
+    else:
+        cpus = get_isolated_cpus()
+        if cpus:
+            set_cpu_affinity(cpus)
+            # ignore if set_cpu_affinity() failed
+
+    run = perf.Run([1.0])
+    metadata = run.get_metadata()
+    if metadata:
+        print("Metadata:")
+        for line in format_metadata(metadata):
+            print(line)
+
+    if filename:
+        run = run._update_metadata({'name': 'metadata'})
+        bench = perf.Benchmark([run])
+        bench.dump(filename)
