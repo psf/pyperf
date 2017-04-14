@@ -2,7 +2,6 @@ from __future__ import print_function
 import argparse
 import collections
 import functools
-import errno
 import os.path
 import sys
 
@@ -10,7 +9,8 @@ import perf
 from perf._metadata import _common_metadata
 from perf._cli import (format_metadata, empty_line,
                        format_checks, format_histogram, format_title,
-                       format_benchmark, display_title, format_result)
+                       format_benchmark, display_title, format_result,
+                       catch_broken_pipe_error)
 from perf._formatter import format_timedelta, format_seconds, format_datetime
 from perf._cpu_utils import parse_cpu_list
 from perf._timeit_cli import TimeitRunner
@@ -746,7 +746,7 @@ def main():
         'command': functools.partial(cmd_bench_command, command_runner, args),
     }
 
-    try:
+    with catch_broken_pipe_error():
         try:
             func = dispatch[action]
         except KeyError:
@@ -754,16 +754,6 @@ def main():
             sys.exit(1)
         else:
             func()
-
-        # Flush standard streams to be able to catch a broken pipe error
-        # if the a stream was closed by the consumer (when redirected
-        # into a pipe)
-        sys.stdout.flush()
-        sys.stderr.flush()
-    except IOError as exc:
-        if exc.errno != errno.EPIPE:
-            raise
-        # ignore broken pipe error
 
 
 if __name__ == "__main__":

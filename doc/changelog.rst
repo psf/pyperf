@@ -13,6 +13,8 @@ Version 1.2.1
 
 * Use lazy import for most imports of the largest modules to reduce the
   number of imported module on 'import perf'.
+* Fix handling of broken pipe error to prevent logging "Exception ignored in:
+  ... BrokenPipeError: ..." error
 
 Version 1.2 (2017-04-10)
 ------------------------

@@ -1,5 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
+import contextlib
+import errno
 import os.path
 import sys
 
@@ -581,3 +583,35 @@ def format_benchmark(bench, checks=True, metadata=False,
 # FIXME: remove this function?
 def multiline_output(args):
     return (args.hist or args.stats or args.dump or args.metadata)
+
+
+@contextlib.contextmanager
+def catch_broken_pipe_error(file=None):
+    if file is None:
+        files = [sys.stdout, sys.stderr]
+    else:
+        files = [file]
+
+    try:
+        for file in files:
+            file.flush()
+
+        yield
+
+        # Flush files to be able to catch a broken pipe error if the pipe
+        # was closed by the consumer
+        for file in files:
+            file.flush()
+    except IOError as exc:
+        if exc.errno != errno.EPIPE:
+            raise
+        # got a broken pipe error: ignore it
+
+        # explicitly close files to prevent broken pipe error on implicit
+        # close at exit which would log the error:
+        # "Exception ignored in: ... BrokenPipeError: ..."
+        for file in files:
+            try:
+                file.close()
+            except IOError:
+                pass

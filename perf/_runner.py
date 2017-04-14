@@ -1,13 +1,13 @@
 from __future__ import division, print_function, absolute_import
 
-import errno
 import functools
 import os
 import sys
 
 import perf
 from perf._cli import (format_benchmark, format_checks,
-                       multiline_output, display_title, format_result_value)
+                       multiline_output, display_title, format_result_value,
+                       catch_broken_pipe_error)
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
                              get_isolated_cpus, set_cpu_affinity)
 from perf._formatter import format_timedelta
@@ -505,12 +505,8 @@ class Runner:
             wpipe = WritePipe.from_subprocess(args.pipe)
 
             with wpipe.open_text() as wfile:
-                try:
+                with catch_broken_pipe_error(wfile):
                     bench.dump(wfile)
-                except IOError as exc:
-                    if exc.errno != errno.EPIPE:
-                        raise
-                    # ignore broken pipe error
         else:
             lines = format_benchmark(bench,
                                      checks=checks,
