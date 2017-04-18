@@ -36,11 +36,15 @@ class WorkerTask:
         self.name = name
         self.args = args
         self.task_func = task_func
+        self.loops = args.loops
+
         self.metadata = dict(runner.metadata)
         if func_metadata:
             self.metadata.update(func_metadata)
+        if 'unit' not in self.metadata:
+            # Set default unit to seconds
+            self.metadata['unit'] = 'second'
 
-        self.loops = args.loops
         self.inner_loops = None
         self.warmups = None
         self.values = None

@@ -11,7 +11,6 @@ TODO
 ====
 
 * system: don't complain on nohz_full if min_frequency=max_frequency?
-* Always or never to default unit to 'second'
 * Calibrate also number of warmups on CPython
 * check: error if psutil is not installed? if isolated CPUs are detected,
   but pef failed to pin worker processes.
