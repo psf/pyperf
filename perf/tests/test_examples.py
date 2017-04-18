@@ -61,6 +61,26 @@ class ExampleTests(unittest.TestCase):
         args = ['-p2', '-w1', '--min-time=0.001']
         self.check_command(script, args)
 
+    def test_export_csv(self):
+        script = 'export_csv.py'
+        self.TESTED.add(script)
+
+        script = os.path.join(EXAMPLES_DIR, script)
+        json = os.path.join(os.path.dirname(__file__), 'telco.json')
+        with tests.temporary_file() as tmpname:
+            cmd = [sys.executable, script, json, tmpname]
+            exitcode = tests.run_command(cmd)
+            self.assertEqual(exitcode, 0)
+
+            with open(tmpname, 'r') as fp:
+                lines = fp.readlines()
+
+        lines = [line.rstrip() for line in lines]
+        expected = ['0.02263077381239782',
+                    '0.022488519346734393',
+                    '0.02247294420317303']
+        self.assertEqual(lines, expected)
+
 
 if __name__ == "__main__":
     unittest.main()

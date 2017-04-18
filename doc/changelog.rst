@@ -4,6 +4,7 @@ Changelog
 Version 1.2.1
 -------------
 
+* Documentation: add export_csv.py and plot.py examples
 * Rewrite warmup calibration:
 
   - Use Q1, Q3 and stdev, rather than mean and checking if the first value

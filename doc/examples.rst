@@ -99,3 +99,16 @@ Usage::
     $ python3 plot.py telco.json
     $ python3 plot.py -b telco suite.json   # only render telco benchmark
 
+
+export_csv
+----------
+
+Script exporting the average of run values as CSV:
+
+.. literalinclude:: examples/export_csv.py
+
+Usage::
+
+    $ python3 plot.py telco.json telco.csv
+    $ python3 plot.py result.json -b telco telco.csv
+

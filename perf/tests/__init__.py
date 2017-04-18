@@ -25,7 +25,7 @@ except ImportError:
     # Python 2.7: use contextlib2 backport
     from contextlib2 import ExitStack   # noqa
 
-from perf._utils import popen_communicate
+from perf._utils import popen_communicate, popen_killer
 
 
 @contextlib.contextmanager
@@ -96,3 +96,10 @@ def get_output(cmd, **kw):
                             **kw)
     stdout, stderr = popen_communicate(proc)
     return ProcResult(proc.returncode, stdout, stderr)
+
+
+def run_command(cmd, **kw):
+    proc = subprocess.Popen(cmd, **kw)
+    with popen_killer(proc):
+        proc.wait()
+    return proc.returncode
