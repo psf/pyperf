@@ -8,7 +8,7 @@ import tempfile
 def get_raw_values(filename, run_id):
     bench = perf.Benchmark.load(filename)
     run = bench.get_runs()[run_id]
-    inner_loops = run._get_inner_loops()
+    inner_loops = run.get_inner_loops()
     raw_values = [value * (loops * inner_loops)
                   for loops, value in run.warmups]
     total_loops = run.get_total_loops()
@@ -32,7 +32,7 @@ class Replay(object):
 
             run, self.raw_values = get_raw_values(self.filename, self.run_id)
             old_loops = args.loops
-            args.loops = run._get_loops()
+            args.loops = run.get_loops()
             if args.loops != old_loops:
                 print("Set loops to %s: value from the JSON" % args.loops)
             # FIXME: handle inner_loops

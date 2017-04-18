@@ -63,7 +63,7 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if lines is None:
         lines = []
 
-    inner_loops = run._get_inner_loops()
+    inner_loops = run.get_inner_loops()
 
     if run._is_calibration():
         if run._is_calibration_warmups():
@@ -116,7 +116,7 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
         values = _format_values_diff(bench, values, raw, total_loops)
 
         if verbose >= 0:
-            loops = run._get_loops()
+            loops = run.get_loops()
             lines.append("Run %s: %s, %s, %s"
                          % (run_index,
                             format_number(len(warmups), 'warmup'),
@@ -241,8 +241,8 @@ def format_stats(bench, lines):
     lines.append('Number of value per run: %s' % text)
 
     # Loop iterations per value
-    loops = bench._get_loops()
-    inner_loops = bench._get_inner_loops()
+    loops = bench.get_loops()
+    inner_loops = bench.get_inner_loops()
     total_loops = loops * inner_loops
     if isinstance(total_loops, int):
         text = format_number(total_loops)

@@ -30,8 +30,8 @@ class RunTests(unittest.TestCase):
                        warmups=((4, 0.5),),
                        metadata={'loops': 2, 'inner_loops': 5},
                        collect_metadata=False)
-        self.assertEqual(run._get_loops(), 2)
-        self.assertEqual(run._get_inner_loops(), 5)
+        self.assertEqual(run.get_loops(), 2)
+        self.assertEqual(run.get_inner_loops(), 5)
         self.assertEqual(run.get_total_loops(), 2 * 5)
         self.assertEqual(run.values,
                          (2.0, 3.0))
@@ -41,8 +41,8 @@ class RunTests(unittest.TestCase):
                          [10.0, 20.0, 30.0])
 
         run = perf.Run((2.0, 3.0), warmups=((1, 1.0),))
-        self.assertEqual(run._get_loops(), 1)
-        self.assertEqual(run._get_inner_loops(), 1)
+        self.assertEqual(run.get_loops(), 1)
+        self.assertEqual(run.get_inner_loops(), 1)
         self.assertEqual(run.get_total_loops(), 1)
 
     def test_constructor(self):
@@ -161,8 +161,8 @@ class BenchmarkTests(unittest.TestCase):
         for run in runs:
             self.assertIsInstance(run, perf.Run)
             self.assertEqual(len(run._get_raw_values(True)), 2)
-            self.assertEqual(run._get_loops(), 20)
-            self.assertEqual(run._get_inner_loops(), 3)
+            self.assertEqual(run.get_loops(), 20)
+            self.assertEqual(run.get_inner_loops(), 3)
 
         self.check_runs(bench, [(1, 3.0)], values)
 

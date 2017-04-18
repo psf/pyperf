@@ -1,9 +1,11 @@
 Changelog
 =========
 
-Version 1.2.1
--------------
+Version 1.3
+-----------
 
+* Add ``get_loops()`` and ``get_inner_loops()`` methods to Run and Benchmark
+  classes
 * Documentation: add export_csv.py and plot.py examples
 * Rewrite warmup calibration:
 

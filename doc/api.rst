@@ -107,10 +107,26 @@ Run class
 
       See :ref:`Metadata <metadata>`.
 
+   .. method:: get_loops() -> int
+
+      Get the number of outer loop iterations from metadata.
+
+      Return 1 if metadata have no ``'loops'`` entry.
+
+      .. versionadded:: 1.3
+
+   .. method:: get_inner_loops() -> int
+
+      Get the number of inner loop iterations from metadata.
+
+      Return 1 if metadata have no ``'inner_loops'`` entry.
+
+      .. versionadded:: 1.3
+
    .. method:: get_total_loops() -> int
 
       Get the total number of loops of the benchmark run:
-      outer-loops x inner-loops.
+      get_loops() x get_inner_loops().
 
    Attributes:
 
@@ -238,9 +254,27 @@ Benchmark class
       Use the ``duration`` metadata of runs, or compute the sum of their
       raw values including warmup values.
 
+   .. method:: get_loops() -> int or float
+
+      Get the number of outer loop iterations of runs.
+
+      Return an ``int`` if all runs have the same number of
+      outer loops, return the average as a ``float`` otherwise.
+
+      .. versionadded:: 1.3
+
+   .. method:: get_inner_loops() -> int or float
+
+      Get the number of inner loop iterations of runs.
+
+      Return an ``int`` if all runs have the same number of
+      outer loops, return the average as a ``float`` otherwise.
+
+      .. versionadded:: 1.3
+
    .. method:: get_total_loops() -> int or float
 
-      Get the total number of loops per value (loops x inner-loops).
+      Get the total number of loops per value (outer-loops x inner-loops).
 
       Return an ``int`` if all runs have the same number of
       loops, return the average as a ``float`` otherwise.

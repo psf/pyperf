@@ -181,7 +181,7 @@ class Run(object):
 
         if self._is_calibration_loops():
             # backward compatibility with perf 1.1 and older
-            return self._get_loops()
+            return self.get_loops()
 
         raise ValueError("run is not a loop calibration")
 
@@ -210,20 +210,20 @@ class Run(object):
     def values(self):
         return self._values
 
-    def _get_loops(self):
+    def get_loops(self):
         return self._metadata.get('loops', 1)
 
-    def _get_inner_loops(self):
+    def get_inner_loops(self):
         return self._metadata.get('inner_loops', 1)
 
     def get_total_loops(self):
-        return self._get_loops() * self._get_inner_loops()
+        return self.get_loops() * self.get_inner_loops()
 
     def _get_raw_values(self, warmups=False):
         raw_values = []
 
         if warmups and self._warmups:
-            inner_loops = self._get_inner_loops()
+            inner_loops = self.get_inner_loops()
             raw_values.extend(value * (loops * inner_loops)
                               for loops, value in self._warmups)
 
@@ -375,14 +375,14 @@ class Benchmark(object):
     def _get_nvalue_per_run(self):
         return self._get_run_property(lambda run: len(run.values))
 
-    def _get_loops(self):
-        return self._get_run_property(lambda run: run._get_loops())
+    def get_loops(self):
+        return self._get_run_property(lambda run: run.get_loops())
+
+    def get_inner_loops(self):
+        return self._get_run_property(lambda run: run.get_inner_loops())
 
     def get_total_loops(self):
         return self._get_run_property(lambda run: run.get_total_loops())
-
-    def _get_inner_loops(self):
-        return self._get_run_property(lambda run: run._get_inner_loops())
 
     def _clear_runs_cache(self, keep_common_metadata=False):
         self._values = None
