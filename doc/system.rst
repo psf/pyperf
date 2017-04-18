@@ -66,19 +66,6 @@ Reboot, enter GRUB and modify the Linux command line to add::
 
     isolcpus=2,3,6,7
 
-If available on your kernel (CONFIG_NO_HZ=y and CONFIG_NO_HZ_FULL=y), you may
-also enable tickness kernel on these nodes. Add the following option to the
-command line::
-
-    nohz_full=2,3,6,7
-
-Check that the Linux command line works::
-
-    $ cat /sys/devices/system/cpu/isolated
-    2-3,6-7
-    $ cat /sys/devices/system/cpu/nohz_full
-    2-3,6-7
-
 
 Check stability of a benchmark
 ------------------------------
@@ -316,6 +303,20 @@ Misc (untested) Linux commands::
     echo "Reduce vmstat polling"
     echo 20 > /proc/sys/vm/stat_interval
 
+If available on your kernel (CONFIG_NO_HZ=y and CONFIG_NO_HZ_FULL=y), you may
+also enable tickness kernel on these nodes. Add the following option to the
+command line::
+
+    nohz_full=2,3,6,7
+
+Check that the Linux command line works::
+
+    $ cat /sys/devices/system/cpu/isolated
+    2-3,6-7
+    $ cat /sys/devices/system/cpu/nohz_full
+    2-3,6-7
+
+Be careful of nohz_full using the intel_pstate CPU driver.
 
 Notes
 =====

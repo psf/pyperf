@@ -10,6 +10,7 @@ BUGS
 TODO
 ====
 
+* system: don't complain on nohz_full if min_frequency=max_frequency?
 * Add bench.get_loops(): 'loops' metadata of non-calibration runs
 * bench_command(): see
   http://benchmarksgame.alioth.debian.org/how-programs-are-measured.html
