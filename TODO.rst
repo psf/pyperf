@@ -10,6 +10,7 @@ BUGS
 TODO
 ====
 
+* Add bench.get_loops(): 'loops' metadata of non-calibration runs
 * bench_command(): see
   http://benchmarksgame.alioth.debian.org/how-programs-are-measured.html
 * Always or never to default unit to 'second'
