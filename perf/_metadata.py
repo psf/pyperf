@@ -64,14 +64,15 @@ BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 
 DATETIME = _MetadataInfo(format_noop, six.string_types, None, None)
 LOOPS = _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer')
 WARMUPS = _MetadataInfo(format_number, six.integer_types, is_positive, 'integer')
+SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second')
 
 # Registry of metadata keys
 METADATA = {
     'loops': LOOPS,
-    'inner_loops': _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer'),
+    'inner_loops': LOOPS,
 
-    'duration': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
-    'uptime': _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second'),
+    'duration': SECONDS,
+    'uptime': SECONDS,
     'load_avg_1min': _MetadataInfo(format_system_load, NUMBER_TYPES, is_positive, None),
 
     'mem_max_rss': BYTES,
