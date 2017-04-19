@@ -71,12 +71,6 @@ class Runner:
                 values = 10
             else:
                 values = 3
-        if not warmups:
-            if has_jit:
-                # PyPy JIT needs a longer warmup (at least 1 second)
-                warmups = None
-            else:
-                warmups = 1
         if not processes:
             if has_jit:
                 # Use less processes than non-JIT, because JIT requires more
@@ -136,11 +130,10 @@ class Runner:
                             type=strictly_positive, default=values,
                             help='number of values per process (default: %s)'
                                  % values)
-        parser.add_argument('-w', '--warmups', dest="warmups",
-                            type=positive_or_nul, default=warmups,
+        parser.add_argument('-w', '--warmups',
+                            type=positive_or_nul,
                             help='number of skipped values per run used '
-                                 'to warmup the benchmark (default: %s)'
-                                 % warmups)
+                                 'to warmup the benchmark')
         parser.add_argument('-l', '--loops',
                             type=positive_or_nul, default=loops,
                             help='number of loops per value, 0 means '
@@ -236,6 +229,10 @@ class Runner:
             args.verbose = False
         elif args.quiet:
             args.verbose = False
+
+        has_jit = perf.python_has_jit()
+        if args.warmups is None and not args.worker and not has_jit:
+            args.warmups = 1
 
         nprocess = self.argparser.get_default('processes')
         nvalues = self.argparser.get_default('values')

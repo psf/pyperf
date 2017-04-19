@@ -141,6 +141,7 @@ class WorkerTask:
 
         mad1 = median_abs_dev(sample1)
         mad2 = median_abs_dev(sample2)
+        # FIXME: handle division by zero
         mad_diff = (mad1 - mad2) / float(mad2)
 
         if self.args.verbose:

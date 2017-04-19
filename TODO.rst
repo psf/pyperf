@@ -11,17 +11,13 @@ TODO
 ====
 
 * system: don't complain on nohz_full if min_frequency=max_frequency?
-* Calibrate also number of warmups on CPython
 * check: error if psutil is not installed? if isolated CPUs are detected,
-  but pef failed to pin worker processes.
-* Runner: also require --warmups or --calibrate-warmups for worker on CPython,
-  not only on PyPy
+  but perf failed to pin worker processes.
 * write an unit test for calibrate_warmups()
 * check: warn if min/max is 25% smaller/larger than mean, instead of 50%?
 * show: add --name option to always display benchmark names
 * Implement a system-wide lock to prevent running two benchmarks at the same
   time, especially using CPU pinning
-* Calibration run: display time per iteration and total duration
 * system:
 
   * Implement a few system operations on macOS
@@ -54,3 +50,5 @@ TODO
     - https://docs.scipy.org/doc/scipy/reference/tutorial/stats.html
 
 * fix hist if benchmark only contains one value
+* Calibrate also number of warmups on CPython. Only do that once warmup
+  calibration is reliable!
