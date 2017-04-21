@@ -185,7 +185,7 @@ def collect_system_metadata(metadata):
             runnable_threads = int(runnable_threads)
             metadata['runnable_threads'] = runnable_threads
 
-    if not 'load_avg_1min' in metadata and hasattr(os, 'getloadavg'):
+    if 'load_avg_1min' not in metadata and hasattr(os, 'getloadavg'):
         metadata['load_avg_1min'] = os.getloadavg()[0]
 
     # Hostname
