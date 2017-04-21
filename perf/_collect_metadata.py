@@ -194,14 +194,20 @@ def collect_system_metadata(metadata):
         metadata['hostname'] = hostname
 
     # Boot time
+    boot_time = None
     for line in read_proc("stat"):
         if not line.startswith("btime "):
             continue
-        seconds = int(line[6:])
-        btime = datetime.datetime.fromtimestamp(seconds)
-        metadata['boot_time'] = format_datetime(btime)
-        metadata['uptime'] = time.time() - seconds
+        boot_time = int(line[6:])
         break
+
+    if boot_time is None and psutil:
+        boot_time = psutil.boot_time()
+
+    if boot_time is not None:
+        btime = datetime.datetime.fromtimestamp(boot_time)
+        metadata['boot_time'] = format_datetime(btime)
+        metadata['uptime'] = time.time() - boot_time
 
 
 def collect_memory_metadata(metadata):

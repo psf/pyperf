@@ -18,8 +18,11 @@ Version 1.3
   number of imported module on 'import perf'.
 * Fix handling of broken pipe error to prevent logging "Exception ignored in:
   ... BrokenPipeError: ..." error
-* ``collect_metadata``: use ``os.getloadavg()`` if ``/proc/loadavg`` is not
-  available (ex: FreeBSD)
+* ``collect_metadata``:
+
+  - use ``os.getloadavg()`` if ``/proc/loadavg`` is not available (ex: FreeBSD)
+  - use ``psutil.boot_time()`` if ``/proc/stat`` is not available (ex: FreeBSD)
+    to get ``boot_time`` and ``uptime`` metadata
 
 Version 1.2 (2017-04-10)
 ------------------------
