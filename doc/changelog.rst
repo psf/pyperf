@@ -18,6 +18,8 @@ Version 1.3
   number of imported module on 'import perf'.
 * Fix handling of broken pipe error to prevent logging "Exception ignored in:
   ... BrokenPipeError: ..." error
+* ``collect_metadata``: use ``os.getloadavg()`` if ``/proc/loadavg`` is not
+  available (ex: FreeBSD)
 
 Version 1.2 (2017-04-10)
 ------------------------
