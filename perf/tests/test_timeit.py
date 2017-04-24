@@ -227,11 +227,9 @@ class TestTimeit(unittest.TestCase):
 
         # ".*" and DOTALL ignore stability warnings
         expected = textwrap.dedent(r'''
-            ref: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
-            .*
-            changed: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us)
-            .*
-            (?:Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)
+            ref: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us).*
+            changed: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us).*
+            Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
