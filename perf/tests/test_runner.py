@@ -28,9 +28,10 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 
 class TestRunner(unittest.TestCase):
     def create_runner(self, args, **kwargs):
-        runner = perf.Runner(**kwargs)
         # hack to be able to create multiple instances per process
         perf.Runner._created.clear()
+
+        runner = perf.Runner(**kwargs)
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -431,12 +432,17 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(bench.get_metadata()['command'],
                          ' '.join(map(shell_quote, args)))
 
+    def test_single_instance(self):
+        runner1 = self.create_runner([])   # noqa
+        with self.assertRaises(RuntimeError):
+            runner2 = perf.Runner()   # noqa
+
 
 class TestRunnerCPUAffinity(unittest.TestCase):
     def create_runner(self, args, **kwargs):
-        runner = perf.Runner(**kwargs)
         # hack to be able to create multiple instances per process
         perf.Runner._created.clear()
+        runner = perf.Runner(**kwargs)
         runner.parse_args(args)
         return runner
 

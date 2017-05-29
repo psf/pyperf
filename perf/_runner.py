@@ -68,8 +68,9 @@ class Runner:
         cls = self.__class__
         key = id(cls)
         if key in cls._created:
-            raise Exception("only one %s instance must be created "
-                            "per process" % cls.__name__)
+            raise RuntimeError("only one %s instance must be created "
+                               "per process: use the same instance to run "
+                               "all benchmarks" % cls.__name__)
         cls._created.add(key)
 
         # Use lazy import to limit imports on 'import perf'
