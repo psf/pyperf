@@ -1,13 +1,13 @@
 Changelog
 =========
 
-Version 1.3
------------
+Version 1.3 (2017-05-29)
+------------------------
 
 * Add ``get_loops()`` and ``get_inner_loops()`` methods to Run and Benchmark
   classes
 * Documentation: add export_csv.py and plot.py examples
-* Rewrite warmup calibration:
+* Rewrite warmup calibration for PyPy:
 
   - Use Q1, Q3 and stdev, rather than mean and checking if the first value
     is an outlier
@@ -16,15 +16,16 @@ Version 1.3
 
 * Use lazy import for most imports of the largest modules to reduce the
   number of imported module on 'import perf'.
-* Fix handling of broken pipe error to prevent logging "Exception ignored in:
-  ... BrokenPipeError: ..." error
-* ``collect_metadata``:
+* Fix handling of broken pipe error to prevent logging the error:
+  "Exception ignored in: ... BrokenPipeError: ..."
+* ``collect_metadata`` gets more metadata on FreeBSD:
 
   - use ``os.getloadavg()`` if ``/proc/loadavg`` is not available (ex: FreeBSD)
   - use ``psutil.boot_time()`` if ``/proc/stat`` is not available (ex: FreeBSD)
     to get ``boot_time`` and ``uptime`` metadata
 
-* Runner constructor raises an exception if more than one instance is created.
+* The Runner constructor now raises an exception if more than one instance is
+  created.
 
 Version 1.2 (2017-04-10)
 ------------------------
