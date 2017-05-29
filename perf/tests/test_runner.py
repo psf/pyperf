@@ -29,6 +29,8 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 class TestRunner(unittest.TestCase):
     def create_runner(self, args, **kwargs):
         runner = perf.Runner(**kwargs)
+        # hack to be able to create multiple instances per process
+        perf.Runner._created.clear()
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -96,11 +98,10 @@ class TestRunner(unittest.TestCase):
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
 
-            runner = perf.Runner()
             with tests.capture_stdout() as stdout:
                 try:
-                    runner.parse_args(['--worker', '-l1', '-w1',
-                                       '--output', tmp.name])
+                    self.create_runner(['--worker', '-l1', '-w1',
+                                        '--output', tmp.name])
                 except SystemExit as exc:
                     self.assertEqual(exc.code, 1)
 
@@ -403,8 +404,7 @@ class TestRunner(unittest.TestCase):
 
     def test_parse_args_twice_error(self):
         args = ["--worker", '-l1', '-w1']
-        runner = perf.Runner()
-        runner.parse_args(args)
+        runner = self.create_runner(args)
         with self.assertRaises(RuntimeError):
             runner.parse_args(args)
 
@@ -433,9 +433,15 @@ class TestRunner(unittest.TestCase):
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):
+    def create_runner(self, args, **kwargs):
+        runner = perf.Runner(**kwargs)
+        # hack to be able to create multiple instances per process
+        perf.Runner._created.clear()
+        runner.parse_args(args)
+        return runner
+
     def test_cpu_affinity_args(self):
-        runner = perf.Runner()
-        runner.parse_args(['-v', '--affinity=3,7'])
+        runner = self.create_runner(['-v', '--affinity=3,7'])
 
         with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
             with tests.capture_stdout() as stdout:
@@ -447,8 +453,7 @@ class TestRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([3, 7])
 
     def test_cpu_affinity_isolcpus(self):
-        runner = perf.Runner()
-        runner.parse_args(['-v'])
+        runner = self.create_runner(['-v'])
 
         with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
             with mock.patch('perf._runner.get_isolated_cpus', return_value=[1, 2]):
@@ -461,8 +466,7 @@ class TestRunnerCPUAffinity(unittest.TestCase):
         mock_setaffinity.assert_called_once_with([1, 2])
 
     def test_cpu_affinity_no_isolcpus(self):
-        runner = perf.Runner()
-        runner.parse_args(['-v'])
+        runner = self.create_runner(['-v'])
 
         with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
             with mock.patch('perf._runner.get_isolated_cpus', return_value=None):

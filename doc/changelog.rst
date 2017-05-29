@@ -24,6 +24,8 @@ Version 1.3
   - use ``psutil.boot_time()`` if ``/proc/stat`` is not available (ex: FreeBSD)
     to get ``boot_time`` and ``uptime`` metadata
 
+* Runner constructor raises an exception if more than one instance is created.
+
 Version 1.2 (2017-04-10)
 ------------------------
 

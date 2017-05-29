@@ -522,6 +522,9 @@ Runner class
    * :meth:`bench_command`
    * :meth:`bench_time_func`
 
+   Only once instance of Runner must be created. Use the same instance to run
+   all benchmarks.
+
    Methods:
 
    .. method:: bench_func(name, func, \*args, inner_loops=None, metadata=None)

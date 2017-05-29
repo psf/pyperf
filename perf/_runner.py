@@ -53,6 +53,8 @@ class CLIError(Exception):
 
 
 class Runner:
+    _created = set()
+
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
     def __init__(self, values=None, warmups=None, processes=None,
@@ -60,6 +62,16 @@ class Runner:
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
+
+        # Watchdog: ensure that only once instance of Runner (or a Runner
+        # subclass) is created per process to prevent bad suprises
+        cls = self.__class__
+        key = id(cls)
+        if key in cls._created:
+            raise Exception("only one %s instance must be created "
+                            "per process" % cls.__name__)
+        cls._created.add(key)
+
         # Use lazy import to limit imports on 'import perf'
         import argparse
 
