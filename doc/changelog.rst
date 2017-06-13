@@ -5,6 +5,7 @@ Version 1.4
 -----------
 
 * Fix parse_cpu_list(): strip also NUL characters
+* Add examples to the README file. Contributed by **Alex Willmer**.
 
 Version 1.3 (2017-05-29)
 ------------------------
