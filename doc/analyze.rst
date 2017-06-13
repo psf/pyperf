@@ -12,7 +12,7 @@ the ``--output`` option (``-o``)::
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
-perf provides the following commands oo analyze benchmark results:
+perf provides the following commands to analyze benchmark results:
 
 * :ref:`perf show <show_cmd>`: single line summary, mean and standard deviation
 * :ref:`perf check <check_cmd>`: check if benchmark results stability
