@@ -13,7 +13,7 @@ perf
 The Python ``perf`` module is a toolkit to write, run and analyze benchmarks.
 
 Features
---------
+========
 
 * Simple API to run reliable benchmarks
 * Automatically calibrate a benchmark for a time budget.
@@ -23,35 +23,36 @@ Features
 * JSON format to store benchmark results.
 * Support multiple units: seconds, bytes and integer.
 
-Usage
------
 
-To `run a benchmark`_ use the ``perf timeit`` command::
+Usage
+=====
+
+To `run a benchmark`_ use the ``perf timeit`` command (result written into
+``bench.json``)::
 
     $ python3 -m perf timeit '[1,2]*1000' -o bench.json
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
-or write a benchmark script:
+Or write a benchmark script ``bench.py``:
 
 .. code:: python
 
     #!/usr/bin/env python3
     import perf
-    import time
-
-
-    def func():
-        time.sleep(0.001)
-
 
     runner = perf.Runner()
-    benchmark = runner.bench_func('sleep', func)
-    benchmark.dump('sleep.json', replace=True)
+    runner.timeit("sorted(list(range(1000)), key=lambda x: x)",
+                  stmt="sorted(s, key=f)",
+                  setup="f = lambda x: x; s = list(range(1000))")
+
+Run the script using (result written into ``bench.json``)::
+
+    $ python3 bench.py -o bench.json
 
 To `analyze benchmark results`_ use the ``perf stats`` command::
 
-    $ python3 -m perf stats telco.json
+    $ python3 -m perf stats bench.json
     Total duration: 29.2 sec
     Start date: 2016-10-21 03:14:19
     End date: 2016-10-21 03:14:53
@@ -82,7 +83,7 @@ To `analyze benchmark results`_ use the ``perf stats`` command::
 
     Number of outlier (out of 22.0 ms..23.0 ms): 0
 
-There's also
+There's also:
 
 * ``perf compare_to`` command tests if a difference is
   significant. It supports comparison between multiple benchmark suites (made
@@ -96,15 +97,17 @@ There's also
     | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
     +-----------+---------+------------------------------+
 
-* ``perf system`` tune command to tune your system to run stable benchmarks.
+* ``perf system tune`` command to tune your system to run stable benchmarks.
 * Automatically collect metadata on the computer and the benchmark:
   use the ``perf metadata`` command to display them, or the
   ``perf collect_metadata`` command to manually collect them.
 * ``--track-memory`` and ``--tracemalloc`` options to track
   the memory usage of a benchmark.
 
+
 Quick Links
------------
+===========
+
 * `perf documentation
   <https://perf.readthedocs.io/>`_
 * `perf project homepage at GitHub
