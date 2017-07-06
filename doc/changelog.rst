@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 1.4
------------
+Version 1.4 (2017-07-06)
+------------------------
 
 * Fix parse_cpu_list(): strip also NUL characters
 * Add examples to the README file. Contributed by **Alex Willmer**.
