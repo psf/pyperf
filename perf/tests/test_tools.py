@@ -165,6 +165,7 @@ class CPUToolsTests(unittest.TestCase):
         parse_cpu_list = cpu_utils.parse_cpu_list
 
         self.assertIsNone(parse_cpu_list(''))
+        self.assertIsNone(parse_cpu_list('\x00'))
         self.assertEqual(parse_cpu_list('0'),
                          [0])
         self.assertEqual(parse_cpu_list('0-1,5-6'),

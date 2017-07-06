@@ -75,7 +75,7 @@ def format_cpu_infos(infos):
 
 
 def parse_cpu_list(cpu_list):
-    cpu_list = cpu_list.strip()
+    cpu_list = cpu_list.strip(' \x00')
     # /sys/devices/system/cpu/nohz_full returns ' (null)\n' when NOHZ full
     # is not used
     if cpu_list == '(null)':
