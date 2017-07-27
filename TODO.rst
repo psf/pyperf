@@ -10,6 +10,7 @@ BUGS
 TODO
 ====
 
+* Runner ignores the warmups parameter passed to the constructor
 * system: don't complain on nohz_full if min_frequency=max_frequency?
 * check: error if psutil is not installed? if isolated CPUs are detected,
   but perf failed to pin worker processes.
