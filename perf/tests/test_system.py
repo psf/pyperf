@@ -16,7 +16,7 @@ class SystemTests(unittest.TestCase):
                  % os.path.basename(sys.executable))
         self.assertRegex(proc.stdout, regex, msg=proc)
 
-        self.assertEqual(proc.returncode, 0, msg=proc)
+        self.assertEqual(proc.returncode, 2, msg=proc)
 
 
 if __name__ == "__main__":
