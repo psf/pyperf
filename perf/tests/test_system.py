@@ -16,7 +16,9 @@ class SystemTests(unittest.TestCase):
                  % os.path.basename(sys.executable))
         self.assertRegex(proc.stdout, regex, msg=proc)
 
-        self.assertEqual(proc.returncode, 2, msg=proc)
+        # The return code is either 0 if the system is tuned or 2 if the
+        # system isn't
+        self.assertIn(proc.returncode, (0, 2), msg=proc)
 
 
 if __name__ == "__main__":
