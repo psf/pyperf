@@ -1070,5 +1070,5 @@ class System:
         self.render_messages(action)
         if self.errors:
             sys.exit(1)
-        if self.tuned is False:
+        if not self.tuned:
             sys.exit(2)
