@@ -958,6 +958,8 @@ class System:
         self.warnings = []
         self.errors = []
 
+        self.tuned = True
+
         self.logical_cpu_count = None
         # CPUs used for benchmarking: tuple of CPU identifiers
         self.cpus = None
@@ -1052,10 +1054,10 @@ class System:
         self.write_messages("Errors", self.errors)
 
         if action == 'show':
-            tuned = all(operation.tuned_for_benchmarks in (True, None)
-                        for operation in self.operations)
+            self.tuned = all(operation.tuned_for_benchmarks in (True, None)
+                             for operation in self.operations)
             print()
-            if tuned and not self.errors:
+            if self.tuned and not self.errors:
                 print("OK! System ready for benchmarking")
             else:
                 print('Run "%s -m perf system tune" to tune the system '
@@ -1068,3 +1070,5 @@ class System:
         self.render_messages(action)
         if self.errors:
             sys.exit(1)
+        if self.tuned is False:
+            sys.exit(2)
