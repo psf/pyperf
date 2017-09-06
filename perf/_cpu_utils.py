@@ -177,5 +177,5 @@ def set_highest_priority():
         return
 
     # Want to set realtime on Windows; 20 on anything els.
-    proc.nice(getattr(psutil, 'REALTIME_PRIORITY_CLASS', 20))
+    proc.nice(getattr(psutil, 'REALTIME_PRIORITY_CLASS', -20))
     return True
