@@ -164,3 +164,17 @@ def set_cpu_affinity(cpus):
 
     proc.cpu_affinity(cpus)
     return True
+
+def set_highest_priority():
+    try:
+        import psutil
+    except ImportError:
+        return
+
+    proc = psutil.Process()
+    if not hasattr(proc, 'nice'):
+        return
+
+    # Want to set realtime on Windows; 20 on anything els.
+    proc.nice(getattr(psutil, 'REALTIME_PRIORITY_CLASS', 20))
+    return True
