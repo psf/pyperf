@@ -165,6 +165,7 @@ def set_cpu_affinity(cpus):
     proc.cpu_affinity(cpus)
     return True
 
+
 def set_highest_priority():
     try:
         import psutil
