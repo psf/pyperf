@@ -9,7 +9,8 @@ from perf._cli import (format_benchmark, format_checks,
                        multiline_output, display_title, format_result_value,
                        catch_broken_pipe_error)
 from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
-                             get_isolated_cpus, set_cpu_affinity)
+                             get_isolated_cpus, set_cpu_affinity,
+                             set_highest_priority)
 from perf._formatter import format_timedelta
 from perf._utils import (MS_WINDOWS, abs_executable,
                          WritePipe, get_python_names)
@@ -384,8 +385,13 @@ class Runner:
                       "isolated CPUs, CPU affinity not available")
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
+    def _process_priority(self):
+        if not set_highest_priority():
+            print("WARNING: unable to increase process priority")
+
     def _worker(self, task):
         self._cpu_affinity()
+        self._process_priority()
         run = task.create_run()
         bench = perf.Benchmark((run,))
         self._display_result(bench, checks=False)
