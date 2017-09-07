@@ -386,6 +386,8 @@ class Runner:
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
     def _process_priority(self):
+        if not MS_WINDOWS:
+            return
         if not set_highest_priority():
             print("WARNING: unable to increase process priority")
 
