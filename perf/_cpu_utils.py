@@ -176,9 +176,11 @@ def set_highest_priority():
     if not hasattr(proc, 'nice'):
         return
 
-    # Want to set realtime on Windows; 20 on anything els.
+    # Want to set realtime on Windows.
+    # Fail hard for anything else right now, so it is obvious what to fix
+    # when adding other OS support.
     try:
-        proc.nice(getattr(psutil, 'REALTIME_PRIORITY_CLASS', -20))
+        proc.nice(psutil.REALTIME_PRIORITY_CLASS)
+        return True
     except psutil.AccessDenied:
-        return
-    return True
+        pass
