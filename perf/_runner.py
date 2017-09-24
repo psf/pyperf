@@ -59,7 +59,7 @@ class Runner:
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
     def __init__(self, values=None, warmups=None, processes=None,
-                 loops=0, min_time=0.1, max_time=1.0, metadata=None,
+                 loops=0, min_time=0.1, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
