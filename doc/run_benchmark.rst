@@ -104,8 +104,8 @@ Usually, skipping the first value is enough to warmup the benchmark.
 Sometimes, more values should be skipped to warmup the benchmark.
 
 By default, the number of outer-loops is automatically computed by calibrating
-the benchmark: a value should take betwen 100 ms and 1 sec (values
-configurable using ``--min-time`` and ``--max-time`` command line options).
+the benchmark: a value takes 100 ms by default (value is configurable using
+``--min-time`` command line option).
 
 The number of inner-loops microbenchmarks when the tested instruction is
 manually duplicated to limit the cost of Python loops. See the

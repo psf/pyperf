@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.5
+-----------
+
+* Remove ``--max-time`` option of Runner
+
 Version 1.4 (2017-07-06)
 ------------------------
 
