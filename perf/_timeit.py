@@ -203,6 +203,6 @@ def bench_timeit(runner, name, stmt, setup,
         runner.bench_time_func(name, timer.time_func, **kwargs)
     except SystemExit:
         raise
-    except:
+    except:   # noqa: E722
         display_error(timer, orig_stmt, setup)
         sys.exit(1)

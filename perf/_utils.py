@@ -233,7 +233,7 @@ def python_has_jit():
 def popen_killer(proc):
     try:
         yield
-    except:
+    except:   # noqa: E722
         # Close pipes
         if proc.stdin:
             proc.stdin.close()
