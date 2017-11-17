@@ -183,7 +183,7 @@ threshold=1,function_threshold=1`` is a bad idea:
   parameters are not used in production.
 * It probably increases the pressure on the garbage collector.
 
-See the `perf issue #14 <https://github.com/haypo/perf/issues/14>`_ for more
+See the `perf issue #14 <https://github.com/vstinner/perf/issues/14>`_ for more
 information.
 
 perf does not implement a function to warmup the benchmark until results seem

@@ -44,7 +44,7 @@ Quick Links:
 * `perf documentation
   <https://perf.readthedocs.io/>`_ (this documentation)
 * `perf project homepage at GitHub
-  <https://github.com/haypo/perf>`_ (code, bugs)
+  <https://github.com/vstinner/perf>`_ (code, bugs)
 * `Download latest perf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/perf>`_
 
