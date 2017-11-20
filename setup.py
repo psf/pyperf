@@ -10,7 +10,7 @@
 #  - run tests: tox
 #  - git push
 #  - check Travis CI status:
-#    https://travis-ci.org/haypo/perf
+#    https://travis-ci.org/vstinner/perf
 #
 # Release a new version:
 #

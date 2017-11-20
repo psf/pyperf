@@ -140,7 +140,7 @@ Links:
   <http://blog.kevmod.com/2016/06/benchmarking-minimum-vs-average/>`_
   (June 2016) by Kevin Modzelewski
 * `My journey to stable benchmark, part 3 (average)
-  <https://haypo.github.io/journey-to-stable-benchmark-average.html>`_
+  <https://vstinner.github.io/journey-to-stable-benchmark-average.html>`_
   (May 2016) by Victor Stinner
 * Median versus Mean: `perf issue #1: Use a better measures than average and
   standard <https://github.com/vstinner/perf/issues/1>`_

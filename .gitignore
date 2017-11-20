@@ -8,5 +8,5 @@ dist
 .tox/
 perf.egg-info/
 
-# Sometimes I (haypo) copy six.py for practical reasons
+# Sometimes I (vstinner) copy six.py for practical reasons
 six.py

@@ -12,7 +12,7 @@ CPU pinning and CPU isolation
 
 On Linux with a multicore CPU, isolating at least 1 core has a significant impact
 on the stability of benchmarks. The `My journey to stable benchmark, part 1
-(system) <https://haypo.github.io/journey-to-stable-benchmark-system.html>`_
+(system) <https://vstinner.github.io/journey-to-stable-benchmark-system.html>`_
 article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
@@ -91,7 +91,7 @@ currently runnable kernel scheduling entities (processes, threads)" (the value
 comes from the 4th field of ``/proc/loadavg``).
 
 See also the `Visualize the system noise using perf and CPU isolation
-<https://haypo.github.io/perf-visualize-system-noise-with-cpu-isolation.html>`_
+<https://vstinner.github.io/perf-visualize-system-noise-with-cpu-isolation.html>`_
 article (by Victor Stinner, June 2016).
 
 
@@ -138,9 +138,9 @@ See also:
   <https://llvmdevelopersmeetingbay2016.sched.org/event/8YzY/causes-of-performance-instability-due-to-code-placement-in-x86>`_
   by Zia Ansari (Intel), November 2016.
 * `Intel CPUs: P-state, C-state, Turbo Boost, CPU frequency, etc.
-  <https://haypo.github.io/intel-cpus.html>`_ by Victor Stinner, July 2016
+  <https://vstinner.github.io/intel-cpus.html>`_ by Victor Stinner, July 2016
 * `Intel CPUs (part 2): Turbo Boost, temperature, frequency and Pstate C0 bug
-  <https://haypo.github.io/intel-cpus-part2.html>`_
+  <https://vstinner.github.io/intel-cpus-part2.html>`_
   by Victor Stinner, September 2016
 
 If ``nohz_full`` kernel option is used, the CPU frequency must be fixed,
