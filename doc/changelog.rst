@@ -4,6 +4,8 @@ Changelog
 Version 1.5
 -----------
 
+* Fix ``--track-memory`` and ``--tracemalloc`` options.
+  Add non regression tests.
 * Remove ``--max-time`` option of Runner
 
 Version 1.4 (2017-07-06)

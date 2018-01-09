@@ -54,7 +54,7 @@ Example::
 
     Mean +- std dev: 4.34 us +- 0.31 us
 
-Use the :ref:`perf stats <stats_cmd>`_ command to count the number of
+Use the :ref:`perf stats <stats_cmd>` command to count the number of
 outliers (9 on this example)::
 
     $ python3 -m perf stats outliers.json -q

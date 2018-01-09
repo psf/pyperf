@@ -6,7 +6,7 @@ import os.path
 import sys
 
 from perf._formatter import (format_seconds, format_number,
-                             format_timedelta, format_datetime)
+                             format_datetime)
 from perf._metadata import format_metadata as _format_metadata
 
 
@@ -83,19 +83,27 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             name = 'raw calibrate'
         else:
             name = 'calibrate'
+        unit = bench.get_unit()
+        format_value = bench.format_value
         for index, warmup in enumerate(run.warmups, 1):
             loops, value = warmup
             raw_value = value * (loops * inner_loops)
             if raw:
-                text = format_timedelta(raw_value)
+                text = format_value(raw_value)
                 text = ("%s (loops: %s)"
-                        % (format_timedelta(raw_value),
+                        % (format_value(raw_value),
                            format_number(loops)))
-            else:
+            # when using --track-memory, displaying value * loops doesn't make
+            # sense, so only display raw value if the unit is seconds
+            elif unit == 'second':
                 text = ("%s (loops: %s, raw: %s)"
-                        % (format_timedelta(value),
+                        % (format_value(value),
                            format_number(loops),
-                           format_timedelta(raw_value)))
+                           format_value(raw_value)))
+            else:
+                text = ("%s (loops: %s)"
+                        % (format_value(value),
+                           format_number(loops)))
             lines.append("- %s %s: %s"
                          % (name, index, text))
     else:
