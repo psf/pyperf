@@ -1,12 +1,19 @@
 Changelog
 =========
 
-Version 1.5
------------
+Version 1.5 (2018-01-09)
+------------------------
 
 * Fix ``--track-memory`` and ``--tracemalloc`` options.
   Add non regression tests.
-* Remove ``--max-time`` option of Runner
+* Remove the ``--max-time`` option of Runner, it was ignored.
+* Project moved from https://github.com/haypo/perf to https://github.com/vstinner/perf
+* system command: In case the system is not ready for benchmarking, makes
+  system show exits with return code 2 so bash scripts could put
+  'python -m perf system show' directly without greping for the output.
+  Contributed by Boris Feld.
+* On Windows: Enables high priority for processes when benchmarking
+  (``REALTIME_PRIORITY_CLASS``). Contributed by Steve Dower.
 
 Version 1.4 (2017-07-06)
 ------------------------

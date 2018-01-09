@@ -39,6 +39,14 @@ See also:
 * `cpuset <https://github.com/lpechacek/cpuset>`_
 
 
+Process priority
+================
+
+On Windows, worker process are set to the highest priority:
+``REALTIME_PRIORITY_CLASS``. See the `SetPriorityClass function
+<https://msdn.microsoft.com/en-us/library/windows/desktop/ms686219(v=vs.85).aspx>`_.
+
+
 Isolate CPUs on Linux
 =====================
 
