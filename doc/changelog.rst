@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 1.5.1
--------------
+Version 1.5.1 (2018-01-10)
+--------------------------
 
 * Fix ``--track-memory`` option of the ``Runner.bench_command()`` command.
 
