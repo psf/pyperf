@@ -298,13 +298,11 @@ class WorkerTask:
                         metadata=self.metadata,
                         collect_metadata=False)
 
-
-class WorkerProcessTask(WorkerTask):
-    def _replace_values(self, value, prefix):
+    def _set_memory_value(self, value):
         is_calibration = (not self.values)
         self.metadata['unit'] = 'byte'
-        self.metadata[prefix + 'warmups'] = len(self.warmups)
-        self.metadata[prefix + 'values'] = len(self.values)
+        self.metadata['warmups'] = len(self.warmups)
+        self.metadata['values'] = len(self.values)
         if is_calibration:
             values = ((self.loops, value),)
             self.warmups = values
@@ -313,6 +311,8 @@ class WorkerProcessTask(WorkerTask):
             self.warmups = None
             self.values = (value,)
 
+
+class WorkerProcessTask(WorkerTask):
     def compute(self):
         args = self.args
 
@@ -339,7 +339,7 @@ class WorkerProcessTask(WorkerTask):
                                    "memory allocation")
 
             # drop timings, replace them with the memory peak
-            self._replace_values(traced_peak, 'tracemalloc_')
+            self._set_memory_value(traced_peak)
 
         if args.track_memory:
             if MS_WINDOWS:
@@ -352,7 +352,7 @@ class WorkerProcessTask(WorkerTask):
                 raise RuntimeError("failed to get the memory peak usage")
 
             # drop timings, replace them with the memory peak
-            self._replace_values(mem_peak, 'track_memory_')
+            self._set_memory_value(mem_peak)
 
     def collect_metadata(self):
         from perf._collect_metadata import collect_metadata

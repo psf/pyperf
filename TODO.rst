@@ -2,6 +2,7 @@ BUGS
 ====
 
 * Repair PyPy on Travis
+* Reject --tracemalloc in bench_command()
 * BUG: "python perf timeit --compare-to=pypy" doesn't tune correctly the runner
   for pypy. pypy requires more warmup values (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion

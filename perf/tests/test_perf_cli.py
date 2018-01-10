@@ -430,6 +430,53 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         expected = expected.format(os.path.basename(sys.executable))
         self.assertEqual(stdout.rstrip(), expected)
 
+    def _check_track_memory_bench(self, bench, loops):
+        self.assertEqual(bench.get_nrun(), 2)
+        for run in bench.get_runs():
+            self.assertEqual(run.warmups, ())
+            self.assertEqual(len(run.values), 1)
+            self.assertIsInstance(run.values[0], int)
+            self.assertEqual(run.get_loops(), loops)
+            metadata = run.get_metadata()
+            self.assertEqual(metadata['warmups'], 1)
+            self.assertEqual(metadata['values'], 3)
+
+    def _check_track_memory(self, track_option):
+        with tests.temporary_file() as tmp_name:
+            self.run_command('timeit',
+                             track_option,
+                             '-p2', '-w1', '-l5', '-n3',
+                             '[1,2]*1000',
+                             '-o', tmp_name)
+            bench = perf.Benchmark.load(tmp_name)
+
+        self._check_track_memory_bench(bench, loops=5)
+
+    def test_track_memory(self):
+        self._check_track_memory('--track-memory')
+
+    def test_tracemalloc(self):
+        try:
+            import tracemalloc   # noqa
+        except ImportError:
+            self.skipTest('tracemalloc module not available')
+
+        self._check_track_memory('--tracemalloc')
+
+    def test_command_track_memory(self):
+        cmd = (sys.executable, '-c', 'pass')
+        with tests.temporary_file() as tmp_name:
+            args = ('command',
+                    '--track-memory',
+                    '-p2', '-w1', '-l2', '-n3',
+                    '-o', tmp_name,
+                    '--')
+            args += cmd
+            self.run_command(*args)
+            bench = perf.Benchmark.load(tmp_name)
+
+        self._check_track_memory_bench(bench, loops=2)
+
 
 class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):
@@ -538,33 +585,6 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         self.assertEqual(bench2.get_values(), (4.0,))
         self.assertEqual(bench3.get_values(), (1.0, 2.0, 3.0, 5.0))
         self.assertEqual(bench4.get_values(), (1.0, 3.0, 5.0))
-
-    def _check_track_memory(self, track_option):
-        with tests.temporary_file() as tmp_name:
-            self.run_command('timeit',
-                             track_option,
-                             '-p3', '-w0', '-l5', '-n3',
-                             '[1,2]*1000',
-                             '-o', tmp_name)
-            bench = perf.Benchmark.load(tmp_name)
-
-        self.assertEqual(bench.get_nrun(), 3)
-        for run in bench.get_runs():
-            self.assertEqual(run.warmups, ())
-            self.assertEqual(len(run.values), 1)
-            self.assertIsInstance(run.values[0], int)
-            self.assertEqual(run.get_loops(), 5)
-
-    def test_track_memory(self):
-        self._check_track_memory('--track-memory')
-
-    def test_tracemalloc(self):
-        try:
-            import tracemalloc   # noqa
-        except ImportError:
-            self.skipTest('tracemalloc module not available')
-
-        self._check_track_memory('--tracemalloc')
 
 
 if __name__ == "__main__":

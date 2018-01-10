@@ -54,6 +54,4 @@ class BenchCommandTask(WorkerTask):
             if not value:
                 raise RuntimeError("failed to get the process RSS")
 
-            self.metadata['unit'] = 'byte'
-            self.warmups = None
-            self.values = (value,)
+            self._set_memory_value(value)
