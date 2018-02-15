@@ -143,8 +143,11 @@ class TurboBoostMSR(Operation):
         try:
             fd = os.open(path, os.O_RDONLY)
             try:
-                os.lseek(fd, reg_num, os.SEEK_SET)
-                data = os.read(fd, size)
+                if hasattr(os, 'pread'):
+                    data = os.pread(fd, size, reg_num)
+                else:
+                    os.lseek(fd, reg_num, os.SEEK_SET)
+                    data = os.read(fd, size)
             finally:
                 os.close(fd)
         except OSError as exc:
@@ -212,8 +215,11 @@ class TurboBoostMSR(Operation):
         try:
             fd = os.open(path, os.O_WRONLY)
             try:
-                os.lseek(fd, reg_num, os.SEEK_SET)
-                os.write(fd, data)
+                if hasattr(os, 'pwrite'):
+                    data = os.pwrite(fd, data, reg_num)
+                else:
+                    os.lseek(fd, reg_num, os.SEEK_SET)
+                    os.write(fd, data)
             finally:
                 os.close(fd)
         except IOError as exc:
