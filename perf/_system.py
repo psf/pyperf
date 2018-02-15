@@ -143,7 +143,8 @@ class TurboBoostMSR(Operation):
         try:
             fd = os.open(path, os.O_RDONLY)
             try:
-                data = os.pread(fd, size, reg_num)
+                os.lseek(fd, reg_num, os.SEEK_SET)
+                data = os.read(fd, size)
             finally:
                 os.close(fd)
         except OSError as exc:
@@ -211,7 +212,8 @@ class TurboBoostMSR(Operation):
         try:
             fd = os.open(path, os.O_WRONLY)
             try:
-                data = os.pwrite(fd, data, reg_num)
+                os.lseek(fd, reg_num, os.SEEK_SET)
+                os.write(fd, data)
             finally:
                 os.close(fd)
         except IOError as exc:
