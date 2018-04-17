@@ -163,7 +163,7 @@ explicitly::
     --recalibrate-warmups
     --debug-single-value
 
-* ``--worker``: a worker process, run the benchmark in the running processs
+* ``--worker``: a worker process, run the benchmark in the running process
 * ``--worker-task``: Identifier of the worker task, only execute the benchmark
   function number ``TASK_ID``.
 * ``--calibrate-loops``: calibrate the number of loops

@@ -152,7 +152,7 @@ See also:
   by Victor Stinner, September 2016
 
 If ``nohz_full`` kernel option is used, the CPU frequency must be fixed,
-otherwise the CPU frequency will be instable. See `Bug 1378529: intel_pstate
+otherwise the CPU frequency will be unstable. See `Bug 1378529: intel_pstate
 driver doesn't support NOHZ_FULL
 <https://bugzilla.redhat.com/show_bug.cgi?id=1378529>`_.
 
@@ -215,7 +215,7 @@ The :ref:`perf system command <system_cmd>` implements the following checks:
   report.
 * "Linux scheduler": Check that CPUs are isolated using the
   ``isolcpus=<cpu list>`` parameter of the Linux kernel. Check that
-  ``rcu_nocbs=<cpu list>`` paramater is used to no schedule RCU on isolated
+  ``rcu_nocbs=<cpu list>`` parameter is used to no schedule RCU on isolated
   CPUs.
 
 

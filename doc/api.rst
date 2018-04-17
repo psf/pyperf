@@ -382,7 +382,7 @@ BenchmarkSuite class
       Add a :class:`Benchmark` object.
 
       A suite cannot contain two benchmarks with the same name, because the
-      name is used as an unique key: see the :meth:`get_benchmark` method.
+      name is used as a unique key: see the :meth:`get_benchmark` method.
 
    .. method:: add_runs(bench: Benchmark or BenchmarkSuite)
 
@@ -515,7 +515,7 @@ Runner class
    set to these isolated CPUs. See :ref:`CPU pinning and CPU isolation
    <pin-cpu>`.
 
-   Methods to run benchmarls:
+   Methods to run benchmarks:
 
    * :meth:`bench_func`
    * :meth:`timeit`
@@ -671,7 +671,7 @@ Python metadata:
 * ``python_version``: Python version, with the architecture (32 or 64 bits) if
   available, ex: ``2.7.11 (64bit)``
 * ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
-  only set on Pyhon 2.7, Python 3.2 and older
+  only set on Python 2.7, Python 3.2 and older
 
 Memory metadata:
 

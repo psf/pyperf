@@ -97,7 +97,7 @@ factors like randomized address space layer (ASLR) and the Python randomized
 hash function.
 
 The total number of values (runs x values per run) should be large enough to
-get an uniform distribution.
+get a uniform distribution.
 
 The "warmups" parameter should be configured by analyzing manually values.
 Usually, skipping the first value is enough to warmup the benchmark.
@@ -137,7 +137,7 @@ See also the :ref:`check command <check_cmd>`.
 How to get reproductible benchmark results
 ==========================================
 
-Getting stable and reliable benchark results requires to tune the system and to
+Getting stable and reliable benchmark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`. The
 first goal is to avoid :ref:`outliers <outlier>` only caused by other "noisy"
 applications, and not the benchmark itself.
@@ -188,7 +188,7 @@ information.
 
 perf does not implement a function to warmup the benchmark until results seem
 to be stable. On some benchmarks, performances are never stable: see the paper
-mentionned above. Running an arbitrary number of warmup values may also make
+mentioned above. Running an arbitrary number of warmup values may also make
 the benchmark less reliable since two runs may use a different number of warmup
 values.
 
