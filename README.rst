@@ -42,11 +42,13 @@ Or write a benchmark script ``bench.py``:
     import perf
 
     runner = perf.Runner()
-    runner.timeit("sorted(list(range(1000)), key=lambda x: x)",
+    runner.timeit(name="sort a sorted list",
                   stmt="sorted(s, key=f)",
                   setup="f = lambda x: x; s = list(range(1000))")
 
-Run the script using (result written into ``bench.json``)::
+See `the API docs`_ for full details on the ``timeit`` function and the
+``Runner`` class. To run the script and dump the results into a file named
+``bench.json``::
 
     $ python3 bench.py -o bench.json
 
@@ -122,4 +124,5 @@ Command to install perf on Python 3::
 perf supports Python 2.7 and Python 3. It is distributed under the MIT license.
 
 .. _run a benchmark: https://perf.readthedocs.io/en/latest/run_benchmark.html
+.. _the API docs: http://perf.readthedocs.io/en/latest/api.html#Runner.timeit
 .. _analyze benchmark results: https://perf.readthedocs.io/en/latest/analyze.html
