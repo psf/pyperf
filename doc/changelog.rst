@@ -110,7 +110,7 @@ Backward incompatible changes:
   which is better defined
 * Run warmup values must now be normalized per loop iteration.
 * Remove ``format()`` and ``__str__()`` methods from Benchmark. These methods
-  were too opiniated.
+  were too opinionated.
 * Rename ``--name=NAME`` option to ``--benchmark=NAME``
 * Remove ``perf.monotonic_clock()`` since it wasn't monotonic on Python 2.7.
 * Remove ``is_significant()`` from the public API
@@ -173,7 +173,7 @@ Version 0.9.5 (2017-03-06)
 * Runner now raises an exception if a benchmark name is not unique.
 * ``compare_to`` command now keeps the original order of benchmarks, only
   sort if ``--by-speed`` option is used.
-* Fix ``system`` comand on macOS on non-existent ``/proc`` and ``/sys``
+* Fix ``system`` command on macOS on non-existent ``/proc`` and ``/sys``
   pseudo-files.
 * Fix ``system`` bugs on systems with more than 32 processors.
 
@@ -324,7 +324,7 @@ Incompatible API changes:
   Remove the ``perf.text_runner`` module.
 * ``TextRunner.program_args`` attribute becomes a parameter of :class:`Runner`
   constructor. *program_args* must no more start with ``sys.executable`` which
-  is automatically added, since the executable can now be overriden by the
+  is automatically added, since the executable can now be overridden by the
   ``--python`` command line option.
 * The ``TextRunner.prepare_subprocess_args`` attribute becomes a new
   *add_cmdline_args* parameter of :class:`Runner` constructor which is called
@@ -383,7 +383,7 @@ Version 0.7.8 (2016-09-10)
 --------------------------
 
 * Worker child processes are now run in a fresh environment: environment
-  variables are removed, to enhance reproductability.
+  variables are removed, to enhance reproducibility.
 * Add ``--inherit-environ`` command line argument.
 * metadata: add ``python_cflags``, fix ``python_version`` for PyPy and
   add also the Mercurial version into ``python_version`` (if available)
@@ -398,7 +398,7 @@ Version 0.7.6 (2016-09-02)
 --------------------------
 
 Tracking memory usage now works correctly on Linux and Windows. The calibration
-is now done in a the first worker process.
+is now done in the first worker process.
 
 * ``--tracemalloc`` and ``--track-memory`` now use the memory peak as the
   unique sample for the run.
@@ -551,7 +551,7 @@ New features:
   graphical mode)
 * New ``stats`` command: display statistics on a benchmark result
 * New ``--affinity=CPU_LIST`` command line option
-* Emit a warning or an error in english if the standard deviation is larger
+* Emit a warning or an error in English if the standard deviation is larger
   than 10% and/or the shortest sample is shorter than 1 ms
 * Emit a warning or an error if the shortest sample took less than 1 ms
 * Add ``perf_version``, ``duration`` metadata. Moreover, the ``date`` metadata
@@ -559,7 +559,7 @@ New features:
 
 API:
 
-* The API deeply changed to mininize duplications of data and make the JSON
+* The API deeply changed to minimize duplications of data and make the JSON
   files more compact
 
 Changes:

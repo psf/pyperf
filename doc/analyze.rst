@@ -113,7 +113,7 @@ Histogram::
     6.00 us:  1 ##
 
 Using an histogram, it's easy to see that most values (57 values) are in the
-range [4.12 us; 4.84 us], but 3 values are in the range [5.17 us; 6.02 us us]:
+range [4.12 us; 4.84 us], but 3 values are in the range [5.17 us; 6.02 us]:
 39% slower for the maximum (6.02 us).
 
 See :ref:`How to get reproductible benchmark results <stable_bench>` to avoid
@@ -145,7 +145,7 @@ Links:
 * Median versus Mean: `perf issue #1: Use a better measures than average and
   standard <https://github.com/vstinner/perf/issues/1>`_
 * timeit module of PyPy now uses average:
-  `change timeit to report the average +- stdandard deviation
+  `change timeit to report the average +- standard deviation
   <https://bitbucket.org/pypy/pypy/commits/fb6bb835369e>`_
 
 

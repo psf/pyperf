@@ -9,7 +9,7 @@ bench_func() method
 -------------------
 
 Benchmark using the :meth:`Runner.bench_func` method to
-measure the time elasped when sleeping 1 ms:
+measure the time elapsed when sleeping 1 ms:
 
 .. literalinclude:: examples/bench_func.py
 
@@ -56,7 +56,7 @@ outer ``range(loops)`` loop. To adjust the final result,
 ``runner.inner_loops`` is set to ``10``, the number of times that
 ``mydict[key]`` is repeated.
 
-The repeatition is needed on such microbenchmark where the measured instruction
+The repetition is needed on such microbenchmark where the measured instruction
 takes less than 1 microsecond. In this case, the cost the outer loop is non
 negligible.
 

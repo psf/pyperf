@@ -343,7 +343,7 @@ Render an histogram in text mode::
 
 * ``--bins`` is the number of histogram bars. By default, it renders up to 25
   bars, or less depending on the terminal size.
-* ``--extend``: don't limit to 80 colums x 25 lines but fill the whole
+* ``--extend``: don't limit to 80 columns x 25 lines but fill the whole
   terminal if it is wider.
 * ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
   can be specified multiple times.
