@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+* Add ``--teardown`` option to timeit.
+
 Version 1.5.1 (2018-01-10)
 --------------------------
 

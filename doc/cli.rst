@@ -450,6 +450,7 @@ Usage
         [--inner-loops INNER_LOOPS]
         [--duplicate DUPLICATE]
         [-s SETUP]
+        [--teardown TEARDOWN]
         stmt [stmt ...]
 
 Options:
@@ -458,6 +459,8 @@ Options:
 * ``stmt``: Python code executed in the benchmark.
   Multiple statements can be used.
 * ``-s SETUP``, ``--setup SETUP``: statement run before the tested statement.
+  The option can be specified multiple times.
+* ``--teardown TEARDOWN``: statement run after the tested statement.
   The option can be specified multiple times.
 * ``--name=BENCHMARK_NAME``: Benchmark name (default: ``timeit``).
 * ``--inner-loops=INNER_LOOPS``: Number of inner loops per value. For example,
