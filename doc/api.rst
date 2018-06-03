@@ -548,7 +548,7 @@ Runner class
 
       See the :ref:`bench_func() example <bench_func_example>`.
 
-   .. method:: timeit(name, stmt, setup="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
+   .. method:: timeit(name, stmt, setup="pass", teardown="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
       Run a benchmark on ``timeit.Timer(stmt, setup, globals=globals)``.
 
@@ -561,6 +561,10 @@ Runner class
       before computing each benchmark value. It can be a string or a sequence
       of strings.
 
+      *teardown* is a Python statement used to teardown the benchmark: it is
+      executed after computing each benchmark value. It can be a string or a
+      sequence of strings.
+
       Parameters:
 
       * *inner_loops*: Number of inner-loops. Can be used when *stmt* manually
@@ -569,8 +573,8 @@ Runner class
         the cost of the outer loop.
       * *metadata*: Metadata of this benchmark, added to the runner
         :attr:`metadata`.
-      * *globals*: Namespace used to run *setup* and *stmt*. By default, an
-        empty namespace is created. It can be used to pass variables.
+      * *globals*: Namespace used to run *setup*, *teardown* and *stmt*. By
+        default, an empty namespace is created. It can be used to pass variables.
 
       See the :ref:`timeit() example <timeit_example>`.
 

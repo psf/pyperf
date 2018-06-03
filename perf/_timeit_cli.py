@@ -16,6 +16,8 @@ def add_cmdline_args(cmd, args):
         cmd.extend(('--inner-loops', str(args.inner_loops)))
     for setup in args.setup:
         cmd.extend(("--setup", setup))
+    for teardown in args.teardown:
+        cmd.extend(('--teardown', teardown))
     if args.duplicate:
         cmd.extend(('--duplicate', str(args.duplicate)))
     cmd.extend(args.stmt)
@@ -36,6 +38,8 @@ class TimeitRunner(Runner):
                          help='Benchmark name (default: %r)' % DEFAULT_NAME)
         cmd.add_argument('-s', '--setup', action='append', default=[],
                          help='setup statements')
+        cmd.add_argument('--teardown', action='append', default=[],
+                         help='teardown statements')
         cmd.add_argument('--inner-loops',
                          type=int,
                          help='Number of inner loops per value. For example, '
@@ -59,5 +63,5 @@ class TimeitRunner(Runner):
 
 def main(runner):
     args = runner.args
-    bench_timeit(runner, args.name, args.stmt, args.setup,
+    bench_timeit(runner, args.name, args.stmt, args.setup, args.teardown,
                  args.inner_loops, args.duplicate)

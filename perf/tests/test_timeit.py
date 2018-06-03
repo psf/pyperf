@@ -8,6 +8,7 @@ import textwrap
 
 import perf
 from perf import tests
+from perf._timeit import Timer
 from perf.tests import unittest
 
 
@@ -30,6 +31,47 @@ MAX_VALUE = 50.0  # ms
 MIN_MEAN = MIN_VALUE
 MAX_MEAN = MAX_VALUE / 2
 MAX_STD_DEV = 10.0  # ms
+
+PYPY = perf.python_implementation() == 'pypy'
+
+
+def identity(x):
+    return x
+
+
+def reindent(src, indent):
+    return src.replace("\n", "\n" + " " * indent)
+
+
+def template_output(stmt='pass', setup='pass', teardown='pass', init=''):
+    if PYPY:
+        template = textwrap.dedent("""
+        def inner(_it, _timer{init}):
+            {setup}
+            _t0 = _timer()
+            while _it > 0:
+                _it -= 1
+                {stmt}
+            _t1 = _timer()
+            {teardown}
+            return _t1 - _t0
+        """)
+    else:
+        template = textwrap.dedent("""
+        def inner(_it, _timer{init}):
+            {setup}
+            _t0 = _timer()
+            for _i in _it:
+                {stmt}
+            _t1 = _timer()
+            {teardown}
+            return _t1 - _t0
+        """)
+
+    return template.format(init=init,
+                           stmt=reindent(stmt, 8),
+                           setup=reindent(setup, 4),
+                           teardown=reindent(teardown, 4))
 
 
 class TestTimeit(unittest.TestCase):
@@ -281,6 +323,138 @@ class TestTimeit(unittest.TestCase):
         self.assertEqual(metadata['timeit_duplicate'], duplicate)
         for raw_value in bench._get_raw_values():
             self.assertGreaterEqual(raw_value, sleep * duplicate)
+
+    def test_teardown_single_line(self):
+        args = PERF_TIMEIT + ('--teardown', 'assert 2 == 2') + FAST_BENCH_ARGS
+        cmd = tests.get_output(args)
+
+        self.assertEqual(cmd.returncode, 0, cmd.stdout + cmd.stderr)
+
+    def test_teardown_multi_line(self):
+        args = PERF_TIMEIT + ('--teardown', 'assert 2 == 2',
+                              '--teardown', 'assert 2 == 2') + FAST_BENCH_ARGS
+        cmd = tests.get_output(args)
+
+        self.assertEqual(cmd.returncode, 0, cmd.stdout + cmd.stderr)
+
+
+class TimerTests(unittest.TestCase):
+    def test_raises_if_setup_is_missing(self):
+        with self.assertRaises(ValueError) as cm:
+            Timer(setup=None)
+
+        err = cm.exception
+        self.assertEqual(str(err), 'setup is neither a string nor callable')
+
+    def test_raises_if_stmt_is_missing(self):
+        with self.assertRaises(ValueError) as cm:
+            Timer(stmt=None)
+
+        err = cm.exception
+        self.assertEqual(str(err), 'stmt is neither a string nor callable')
+
+    def test_raises_if_teardown_is_missing(self):
+        with self.assertRaises(ValueError) as cm:
+            Timer(teardown=None)
+
+        err = cm.exception
+        self.assertEqual(str(err), 'teardown is neither a string nor callable')
+
+    def test_raises_if_setup_contains_invalid_syntax(self):
+        with self.assertRaises(SyntaxError) as cm:
+            Timer(setup='foo = 1, 2, *')
+
+        err = cm.exception
+        self.assertTrue('invalid syntax' in str(err))
+
+    def test_raises_if_stmt_contains_invalid_syntax(self):
+        with self.assertRaises(SyntaxError) as cm:
+            Timer(stmt='foo = 1, 2, *')
+
+        err = cm.exception
+        self.assertTrue('invalid syntax' in str(err))
+
+    def test_raises_if_teardown_contains_invalid_syntax(self):
+        with self.assertRaises(SyntaxError) as cm:
+            Timer(teardown='foo = 1, 2, *')
+
+        err = cm.exception
+        self.assertTrue('invalid syntax' in str(err))
+
+    def test_raises_if_setup_and_stmt_contain_invalid_syntax(self):
+        with self.assertRaises(SyntaxError) as cm:
+            Timer(setup="foo = 'bar', \ ", stmt="bar = 'baz'")
+
+        err = cm.exception
+
+        if PYPY:
+            self.assertTrue("Unknown character" in str(err))
+        else:
+            self.assertTrue('unexpected character after line' in str(err))
+
+    def test_raises_if_stmt_and_teardown_contain_invalid_syntax(self):
+        with self.assertRaises(SyntaxError) as cm:
+            Timer(stmt="foo = 'bar', \ ", teardown="bar = 'baz'")
+
+        err = cm.exception
+
+        if PYPY:
+            self.assertTrue("Unknown character" in str(err))
+        else:
+            self.assertTrue('unexpected character after line' in str(err))
+
+    def test_returns_valid_template_if_setup_is_str(self):
+        setup = "foo = 'bar'\nbar = 'baz'"
+        timer = Timer(setup=setup)
+        self.assertEqual(timer.src, template_output(setup=setup))
+
+    def test_returns_valid_template_if_stmt_is_str(self):
+        stmt = "foo = 'bar'\nbar = 'baz'"
+        timer = Timer(stmt=stmt)
+        self.assertEqual(timer.src, template_output(stmt=stmt))
+
+    def test_returns_valid_template_if_teardown_is_str(self):
+        teardown = "foo = 'bar'\nbar = 'baz'"
+        timer = Timer(teardown=teardown)
+        self.assertEqual(timer.src, template_output(teardown=teardown))
+
+    def test_returns_valid_template_with_all_str_params(self):
+        setup, stmt, teardown = "a = 1 + 2", "b = 2 + 3", "c = 3 + 4"
+        timer = Timer(setup=setup, stmt=stmt, teardown=teardown)
+        self.assertEqual(timer.src, template_output(stmt, setup, teardown))
+
+    def test_returns_valid_template_if_setup_is_code(self):
+        setup = identity
+        timer = Timer(setup=setup)
+        output = template_output(setup='_setup()', init=', _setup=_setup')
+        self.assertEqual(timer.src, output)
+        self.assertDictEqual({'_setup': setup}, timer.local_ns)
+
+    def test_returns_valid_template_if_stmt_is_code(self):
+        stmt = identity
+        timer = Timer(stmt=stmt)
+        output = template_output(stmt='_stmt()', init=', _stmt=_stmt')
+        self.assertEqual(timer.src, output)
+        self.assertDictEqual({'_stmt': stmt}, timer.local_ns)
+
+    def test_returns_valid_template_if_teardown_is_code(self):
+        teardown = identity
+        timer = Timer(teardown=teardown)
+        output = template_output(teardown='_teardown()',
+                                 init=', _teardown=_teardown')
+        self.assertEqual(timer.src, output)
+        self.assertDictEqual({'_teardown': teardown}, timer.local_ns)
+
+    def test_returns_valid_template_with_all_callable_params(self):
+        setup, stmt, teardown = identity, identity, identity
+        timer = Timer(setup=setup, stmt=stmt, teardown=teardown)
+        output = template_output(setup='_setup()', stmt='_stmt()',
+                                 teardown='_teardown()',
+                                 init=', _setup=_setup, _stmt=_stmt, '
+                                      '_teardown=_teardown')
+        self.assertEqual(timer.src, output)
+        self.assertDictEqual({'_setup': setup, '_stmt': stmt,
+                              '_teardown': teardown}, timer.local_ns)
 
 
 if __name__ == "__main__":
