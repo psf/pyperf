@@ -8,6 +8,3 @@ env:
 # in install_requires of setup.py
 install: pip install -U setuptools tox
 script: tox
-notifications:
-  email:
-    - victor.stinner@gmail.com
