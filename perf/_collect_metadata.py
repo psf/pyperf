@@ -233,9 +233,24 @@ def collect_cpu_freq(metadata, cpus):
     cpu_freq = {}
     cpu = None
     for line in read_proc('cpuinfo'):
+        line = line.rstrip()
+
         if line.startswith('processor'):
-            value = line.split(':', 1)[-1].strip()
-            cpu = int(value)
+            # Intel format, example where \t is a tab (U+0009 character):
+            # processor\t: 7
+            # model name\t: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
+            # cpu MHz\t\t: 800.009
+            match = re.match(r'^processor\s*: ([0-9]+)', line)
+            if match is None:
+                # IBM Z
+                # Example: "processor 0: version = 00,  identification = [...]"
+                match = re.match(r'^processor ([0-9]+): ', line)
+                if match is None:
+                    raise Exception
+                    # unknown /proc/cpuinfo format: silently ignore and exit
+                    return
+
+            cpu = int(match.group(1))
             if cpu not in cpu_set:
                 # skip this CPU
                 cpu = None

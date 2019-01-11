@@ -12,6 +12,8 @@ Version 1.6.0 (2019-01-11)
 * Port :ref:`system tune <system_cmd>` command to Python 2 (use
   lseek+read/write instead of pread/pwrite which aren't available on Python 2).
   Patch by **Stefan Talpalaru**.
+* :ref:`perf collect_metadata <collect_metadata_cmd>` now also supports reading
+  CPU frequencies on IBM Z.
 
 Version 1.5.1 (2018-01-10)
 --------------------------
