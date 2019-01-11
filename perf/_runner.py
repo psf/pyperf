@@ -492,11 +492,15 @@ class Runner:
         task.inner_loops = inner_loops
         return self._main(task)
 
-    def timeit(self, name, stmt, setup="pass", teardown="pass",
+    def timeit(self, name, stmt=None, setup="pass", teardown="pass",
                inner_loops=None, duplicate=None, metadata=None, globals=None):
 
         if not self._check_worker_task():
             return None
+
+        if stmt is None:
+            # timeit(stmt) behaves as timeit(stmt, stmt)
+            stmt = name
 
         # Use lazy import to limit imports on 'import perf'
         from perf._timeit import bench_timeit

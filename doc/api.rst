@@ -548,7 +548,7 @@ Runner class
 
       See the :ref:`bench_func() example <bench_func_example>`.
 
-   .. method:: timeit(name, stmt, setup="pass", teardown="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
+   .. method:: timeit(name, stmt=None, setup="pass", teardown="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
       Run a benchmark on ``timeit.Timer(stmt, setup, globals=globals)``.
 
@@ -576,7 +576,14 @@ Runner class
       * *globals*: Namespace used to run *setup*, *teardown* and *stmt*. By
         default, an empty namespace is created. It can be used to pass variables.
 
+      ``runner.timeit(stmt)`` can be used to use the statement as the benchmark
+      mark.
+
       See the :ref:`timeit() example <timeit_example>`.
+
+      .. versionchanged:: 1.6.0
+         Add optional *teardown* parameter. The *stmt* parameter is now
+         optional.
 
    .. method:: bench_command(name, command)
 
