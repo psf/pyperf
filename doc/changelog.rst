@@ -4,7 +4,7 @@ Changelog
 Version 1.6.0 (2019-01-11)
 --------------------------
 
-* Add *teardown* optional paramter to :class:`Runner.timeit` and ``--teardown``
+* Add *teardown* optional parameter to :class:`Runner.timeit` and ``--teardown``
   option to the :ref:`perf timeit <timeit_cmd>` command. Patch by **Alex
   Khomchenko**.
 * ``Runner.timeit(stmt)`` can now be used to use the statement as the benchmark
