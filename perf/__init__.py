@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import
 
-VERSION = (1, 6, 0)
+VERSION = (1, 6, 1)
 __version__ = '.'.join(map(str, VERSION))
 
 # Clocks
