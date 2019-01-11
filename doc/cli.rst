@@ -491,6 +491,9 @@ Compare Python 3 to Python 2::
 
     Mean +- std dev: [python2] 84.6 ns +- 4.4 ns -> [python3] 104 ns +- 0 ns: 1.23x slower (+23%)
 
+.. versionchanged:: 1.6.0
+   Add ``--teardown`` option.
+
 
 timeit versus perf timeit
 ^^^^^^^^^^^^^^^^^^^^^^^^^

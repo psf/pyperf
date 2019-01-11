@@ -576,8 +576,8 @@ Runner class
       * *globals*: Namespace used to run *setup*, *teardown* and *stmt*. By
         default, an empty namespace is created. It can be used to pass variables.
 
-      ``runner.timeit(stmt)`` can be used to use the statement as the benchmark
-      mark.
+      ``Runner.timeit(stmt)`` can be used to use the statement as the benchmark
+      name.
 
       See the :ref:`timeit() example <timeit_example>`.
 

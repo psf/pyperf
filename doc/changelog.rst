@@ -1,10 +1,17 @@
 Changelog
 =========
 
-Unreleased
-----------
+Version 1.6.0 (2019-01-11)
+--------------------------
 
-* Add ``--teardown`` option to timeit.
+* Add *teardown* optional paramter to :class:`Runner.timeit` and ``--teardown``
+  option to the :ref:`perf timeit <timeit_cmd>` command. Patch by **Alex
+  Khomchenko**.
+* ``Runner.timeit(stmt)`` can now be used to use the statement as the benchmark
+  name.
+* Port :ref:`system tune <system_cmd>` command to Python 2 (use
+  lseek+read/write instead of pread/pwrite which aren't available on Python 2).
+  Patch by **Stefan Talpalaru**.
 
 Version 1.5.1 (2018-01-10)
 --------------------------
