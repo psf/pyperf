@@ -383,7 +383,7 @@ class TimerTests(unittest.TestCase):
 
     def test_raises_if_setup_and_stmt_contain_invalid_syntax(self):
         with self.assertRaises(SyntaxError) as cm:
-            Timer(setup="foo = 'bar', \ ", stmt="bar = 'baz'")
+            Timer(setup="foo = 'bar', \\ ", stmt="bar = 'baz'")
 
         err = cm.exception
 
@@ -394,7 +394,7 @@ class TimerTests(unittest.TestCase):
 
     def test_raises_if_stmt_and_teardown_contain_invalid_syntax(self):
         with self.assertRaises(SyntaxError) as cm:
-            Timer(stmt="foo = 'bar', \ ", teardown="bar = 'baz'")
+            Timer(stmt="foo = 'bar', \\ ", teardown="bar = 'baz'")
 
         err = cm.exception
 
