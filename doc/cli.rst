@@ -1,39 +1,39 @@
-perf commands
-=============
+pyperf commands
+===============
 
 Commands:
 
-* :ref:`perf show <show_cmd>`
-* :ref:`perf compare_to <compare_to_cmd>`
-* :ref:`perf stats <stats_cmd>`
-* :ref:`perf check <check_cmd>`
-* :ref:`perf dump <dump_cmd>`
-* :ref:`perf hist <hist_cmd>`
-* :ref:`perf metadata <metadata_cmd>`
-* :ref:`perf timeit <timeit_cmd>`
-* :ref:`perf command <command_cmd>`
-* :ref:`perf system <system_cmd>`
-* :ref:`perf collect_metadata <collect_metadata_cmd>`
-* :ref:`perf slowest <slowest_cmd>`
-* :ref:`perf convert <convert_cmd>`
+* :ref:`pyperf show <show_cmd>`
+* :ref:`pyperf compare_to <compare_to_cmd>`
+* :ref:`pyperf stats <stats_cmd>`
+* :ref:`pyperf check <check_cmd>`
+* :ref:`pyperf dump <dump_cmd>`
+* :ref:`pyperf hist <hist_cmd>`
+* :ref:`pyperf metadata <metadata_cmd>`
+* :ref:`pyperf timeit <timeit_cmd>`
+* :ref:`pyperf command <command_cmd>`
+* :ref:`pyperf system <system_cmd>`
+* :ref:`pyperf collect_metadata <collect_metadata_cmd>`
+* :ref:`pyperf slowest <slowest_cmd>`
+* :ref:`pyperf convert <convert_cmd>`
 
 
-The Python perf module comes with a ``pyperf`` program which includes different
+The Python pyperf module comes with a ``pyperf`` program which includes different
 commands. If for some reasons, ``pyperf`` program cannot be used, ``python3 -m
-perf ...`` can be used: it is the same, it's just longer to type :-) For
-example, the ``-m perf ...`` syntax is preferred for ``timeit`` because this
+pyperf ...`` can be used: it is the same, it's just longer to type :-) For
+example, the ``-m pyperf ...`` syntax is preferred for ``timeit`` because this
 command uses the running Python program.
 
 General note: if a filename is ``-``, read the JSON content from stdin.
 
 .. _show_cmd:
 
-perf show
----------
+pyperf show
+-----------
 
 Show benchmarks of one or multiple benchmark suites::
 
-    python3 -m perf show
+    python3 -m pyperf show
         [-q/--quiet]
         [-d/--dump]
         [-m/--metadata]
@@ -43,12 +43,12 @@ Show benchmarks of one or multiple benchmark suites::
 
 * ``--quiet`` enables the quiet mode
 * ``--dump`` displays the benchmark run results,
-  see :ref:`perf dump <dump_cmd>` command
-* ``--metadata`` displays benchmark metadata: see :ref:`perf metadata
+  see :ref:`pyperf dump <dump_cmd>` command
+* ``--metadata`` displays benchmark metadata: see :ref:`pyperf metadata
   <metadata_cmd>` command
-* ``--hist`` renders an histogram of values, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of values, see :ref:`pyperf hist <hist_cmd>`
   command
-* ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
+* ``--stats`` displays statistics (min, max, ...), see :ref:`pyperf stats
   <stats_cmd>` command
 * ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
   can be specified multiple times.
@@ -60,12 +60,12 @@ Show benchmarks of one or multiple benchmark suites::
 
 Example::
 
-    $ python3 -m perf show telco.json
+    $ python3 -m pyperf show telco.json
     Mean +- std dev: 22.5 ms +- 0.2 ms
 
 Example with metadata::
 
-    $ python3 -m perf show telco.json --metadata
+    $ python3 -m pyperf show telco.json --metadata
     Metadata:
     - boot_time: 2016-10-19 01:10:08
     - cpu_count: 4
@@ -82,12 +82,12 @@ Example with metadata::
 
 .. _compare_to_cmd:
 
-perf compare_to
----------------
+pyperf compare_to
+-----------------
 
 Compare benchmark suites, use the first file as the reference::
 
-    python3 -m perf compare_to
+    python3 -m pyperf compare_to
         [-v/--verbose] [-q/--quiet]
         [-G/--group-by-speed]
         [--min-speed=MIN_SPEED]
@@ -107,14 +107,14 @@ Options:
 .. versionchanged:: 1.2
    The ``--benchmark`` option can now be specified multiple times.
 
-perf determines whether two samples differ significantly using a `Student's
+pyperf determines whether two samples differ significantly using a `Student's
 two-sample, two-tailed t-test
 <https://en.wikipedia.org/wiki/Student's_t-test>`_ with alpha equals to
 ``0.95``.
 
 Example::
 
-    $ python3 -m perf compare_to py2.json py3.json
+    $ python3 -m pyperf compare_to py2.json py3.json
     Mean +- std dev: [py2] 4.70 us +- 0.18 us -> [py3] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
 On this example, py2 is faster and so used as the reference.
@@ -124,12 +124,12 @@ See also the ``--compare-to`` :ref:`option of the Runner CLI <runner_cli>`.
 
 .. _stats_cmd:
 
-perf stats
-----------
+pyperf stats
+------------
 
 Compute statistics on a benchmark result::
 
-    python3 -m perf stats
+    python3 -m pyperf stats
         [-b NAME/--benchmark NAME]
         file.json [file2.json ...]
 
@@ -155,7 +155,7 @@ Computed values:
 
 Example::
 
-    $ python3 -m perf stats telco.json
+    $ python3 -m pyperf stats telco.json
     Total duration: 29.2 sec
     Start date: 2016-10-21 03:14:19
     End date: 2016-10-21 03:14:53
@@ -197,12 +197,12 @@ See also `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 
 .. _check_cmd:
 
-perf check
-----------
+pyperf check
+------------
 
 Check if benchmarks are stable::
 
-    python3 -m perf check
+    python3 -m pyperf check
         [-b NAME/--benchmark NAME]
         filename [filename2 ...]
 
@@ -224,33 +224,33 @@ Checks:
 
 Example of a stable benchmark::
 
-    $ python3 -m perf check telco.json
+    $ python3 -m pyperf check telco.json
     The benchmark seem to be stable
 
 Example of an unstable benchmark::
 
-    $ python3 -m perf timeit -l1 -p3 '"abc".strip()' -o timeit_strip.json -q
+    $ python3 -m pyperf timeit -l1 -p3 '"abc".strip()' -o timeit_strip.json -q
     Mean +- std dev: 750 ns +- 89 ns
 
-    $ python3 -m perf check timeit_strip.json
+    $ python3 -m pyperf check timeit_strip.json
     WARNING: the benchmark result may be unstable
     * the standard deviation (89.4 ns) is 12% of the mean (750 ns)
     * the shortest raw value is only 636 ns
 
     Try to rerun the benchmark with more runs, values and/or loops.
-    Run 'python3 -m perf system tune' command to reduce the system jitter.
-    Use perf stats, perf dump and perf hist to analyze results.
+    Run 'python3 -m pyperf system tune' command to reduce the system jitter.
+    Use pyperf stats, pyperf dump and pyperf hist to analyze results.
     Use --quiet option to hide these warnings.
 
 
 .. _dump_cmd:
 
-perf dump
----------
+pyperf dump
+-----------
 
 Display the benchmark run results::
 
-    python3 -m perf dump
+    python3 -m pyperf dump
         [-q/--quiet]
         [-v/--verbose]
         [--raw]
@@ -270,7 +270,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf dump telco.json
+    $ python3 -m pyperf dump telco.json
     Run 1: calibrate the number of loops: 8
     - calibrate 1: 23.1 ms (loops: 1, raw: 23.1 ms)
     - calibrate 2: 22.5 ms (loops: 2, raw: 45.0 ms)
@@ -290,7 +290,7 @@ Example::
 
 Example in verbose mode::
 
-    $ python3 -m perf dump telco.json -v
+    $ python3 -m pyperf dump telco.json -v
     Metadata:
       cpu_affinity: 2-3
       cpu_config: 2-3=driver:intel_pstate, intel_pstate:turbo, governor:performance, isolated; idle:intel_idle
@@ -331,12 +331,12 @@ Example in verbose mode::
 
 .. _hist_cmd:
 
-perf hist
----------
+pyperf hist
+-----------
 
 Render an histogram in text mode::
 
-    python3 -m perf hist
+    python3 -m pyperf hist
         [-n BINS/--bins=BINS] [--extend]
         [-b NAME/--benchmark NAME]
         filename.json [filename2.json ...]
@@ -356,7 +356,7 @@ maximum of all files to be able to easily compare them.
 
 Example::
 
-    $ python3 -m perf hist telco.json
+    $ python3 -m pyperf hist telco.json
     26.4 ms:  1 ##
     26.4 ms:  1 ##
     26.4 ms:  2 #####
@@ -391,12 +391,12 @@ See `Gaussian function <https://en.wikipedia.org/wiki/Gaussian_function>`_ and
 
 .. _metadata_cmd:
 
-perf metadata
--------------
+pyperf metadata
+---------------
 
 Display metadata of benchmark files::
 
-    python3 -m perf metadata
+    python3 -m pyperf metadata
         [-b NAME/--benchmark NAME]
         filename [filename2 ...]
 
@@ -410,7 +410,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf metadata telco.json
+    $ python3 -m pyperf metadata telco.json
     Metadata:
     - aslr: Full randomization
     - boot_time: 2016-10-19 01:10:08
@@ -434,15 +434,15 @@ Example::
 
 .. _timeit_cmd:
 
-perf timeit
------------
+pyperf timeit
+-------------
 
 Usage
 ^^^^^
 
-``perf timeit`` usage::
+``pyperf timeit`` usage::
 
-    python3 -m perf timeit
+    python3 -m pyperf timeit
         [options]
         [--name BENCHMARK_NAME]
         [--python PYTHON]
@@ -475,17 +475,17 @@ Options:
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and
-   ``-n`` (runs) in perf timeit.
+   ``-n`` (runs) in pyperf timeit.
 
 Example::
 
-    $ python3 -m perf timeit '" abc ".strip()' --duplicate=1024
+    $ python3 -m pyperf timeit '" abc ".strip()' --duplicate=1024
     .........................
     Mean +- std dev: 104 ns +- 1 ns
 
 Compare Python 3 to Python 2::
 
-    $ python3 -m perf timeit '" abc ".strip()' --duplicate=1024 --compare-to=python2
+    $ python3 -m pyperf timeit '" abc ".strip()' --duplicate=1024 --compare-to=python2
     python2: ..................... 84.6 ns +- 4.4 ns
     python3: ..................... 104 ns +- 0 ns
 
@@ -495,8 +495,8 @@ Compare Python 3 to Python 2::
    Add ``--teardown`` option.
 
 
-timeit versus perf timeit
-^^^^^^^^^^^^^^^^^^^^^^^^^
+timeit versus pyperf timeit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The timeit module of the Python standard library has multiple issues:
 
@@ -504,7 +504,7 @@ The timeit module of the Python standard library has multiple issues:
 * It only runs the benchmark 3 times using a single process (1 run, 3 values)
 * It disables the garbage collector
 
-perf timeit is more reliable and gives a result more representative of a real
+pyperf timeit is more reliable and gives a result more representative of a real
 use case:
 
 * It displays the average and the standard deviation
@@ -525,8 +525,8 @@ See the :ref:`Minimum versus average and standard deviation <min>` section.
 
 .. _command_cmd:
 
-perf command
-------------
+pyperf command
+--------------
 
 .. versionadded:: 1.1
 
@@ -540,9 +540,9 @@ values.
 Usage
 ^^^^^
 
-``perf command`` usage::
+``pyperf command`` usage::
 
-    python3 -m perf command
+    python3 -m pyperf command
         [options]
         [--name NAME]
         [--track-memory]
@@ -558,46 +558,46 @@ Options:
 
 Example measuring Python 2 startup time::
 
-    $ python3 -m perf command -- python2 -c pass
+    $ python3 -m pyperf command -- python2 -c pass
     .....................
     command: Mean +- std dev: 21.2 ms +- 3.2 ms
 
 
 .. _system_cmd:
 
-perf system
------------
+pyperf system
+-------------
 
 Get or set the system state for benchmarks::
 
-    python3 -m perf system
+    python3 -m pyperf system
         [--affinity=CPU_LIST]
         [{show,tune,reset}]
 
 Commands:
 
-* ``perf system show`` (or just ``perf system``) shows the current state
+* ``pyperf system show`` (or just ``pyperf system``) shows the current state
   of the system
-* ``perf system tune`` tunes the system to run benchmarks
-* ``perf system reset`` resets the system to the default state
+* ``pyperf system tune`` tunes the system to run benchmarks
+* ``pyperf system reset`` resets the system to the default state
 
 Options:
 
 * ``--affinity=CPU_LIST``: Specify CPU affinity. By default, use isolate CPUs.
   See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
 
-See :ref:`operations and checks of the perf system command <system_cmd_ops>`
+See :ref:`operations and checks of the pyperf system command <system_cmd_ops>`
 and the :ref:`Tune the system for benchmarks <system>` section.
 
 
 .. _collect_metadata_cmd:
 
-perf collect_metadata
----------------------
+pyperf collect_metadata
+-----------------------
 
 Collect metadata::
 
-    python3 -m perf collect_metadata
+    python3 -m pyperf collect_metadata
         [--affinity=CPU_LIST]
         [-o FILENAME/--output FILENAME]
 
@@ -609,7 +609,7 @@ Options:
 
 Example::
 
-    $ python3 -m perf collect_metadata
+    $ python3 -m pyperf collect_metadata
     Metadata:
     - aslr: Full randomization
     - cpu_config: 0-3=driver:intel_pstate, intel_pstate:turbo, governor:powersave
@@ -630,8 +630,8 @@ Example::
 
 .. _slowest_cmd:
 
-perf slowest
-------------
+pyperf slowest
+--------------
 
 Display the 5 benchmarks which took the most time to be run. This command
 should not be used to compare performances, but only to find "slow" benchmarks
@@ -643,12 +643,12 @@ Options:
 
 .. _convert_cmd:
 
-perf convert
-------------
+pyperf convert
+--------------
 
 Convert or modify a benchmark suite::
 
-    python3 -m perf convert
+    python3 -m pyperf convert
         [--include-benchmark=NAME]
         [--exclude-benchmark=NAME]
         [--include-runs=RUNS]

@@ -49,7 +49,7 @@ method to measure the performance of ``dict[key]``:
 .. literalinclude:: examples/bench_time_func.py
 
 Pass ``--help`` to the script to see the command line options automatically
-added by ``perf``.
+added by ``pyperf``.
 
 The ``mydict[key]`` instruction is repeated 10 times to reduce the cost of the
 outer ``range(loops)`` loop. To adjust the final result,

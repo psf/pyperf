@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import csv
-import perf
+import pyperf
 import six
 import statistics
 
@@ -35,10 +35,10 @@ def parse_args():
 def main():
     args = parse_args()
     if args.benchmark:
-        suite = perf.BenchmarkSuite.load(args.json_filename)
+        suite = pyperf.BenchmarkSuite.load(args.json_filename)
         bench = suite.get_benchmark(args.benchmark)
     else:
-        bench = perf.Benchmark.load(args.json_filename)
+        bench = pyperf.Benchmark.load(args.json_filename)
 
     export_csv(args, bench)
 

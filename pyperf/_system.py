@@ -7,13 +7,13 @@ import struct
 import subprocess
 import sys
 
-from perf._cli import display_title
-from perf._cpu_utils import (parse_cpu_list,
-                             get_logical_cpu_count, get_isolated_cpus,
-                             format_cpu_list, format_cpu_infos,
-                             parse_cpu_mask, format_cpus_as_mask)
-from perf._utils import (read_first_line, sysfs_path, proc_path, open_text,
-                         popen_communicate)
+from pyperf._cli import display_title
+from pyperf._cpu_utils import (parse_cpu_list,
+                               get_logical_cpu_count, get_isolated_cpus,
+                               format_cpu_list, format_cpu_infos,
+                               parse_cpu_mask, format_cpus_as_mask)
+from pyperf._utils import (read_first_line, sysfs_path, proc_path, open_text,
+                           popen_communicate)
 
 
 MSR_IA32_MISC_ENABLE = 0x1a0
@@ -1068,7 +1068,7 @@ class System:
             if self.tuned and not self.errors:
                 print("OK! System ready for benchmarking")
             else:
-                print('Run "%s -m perf system tune" to tune the system '
+                print('Run "%s -m pyperf system tune" to tune the system '
                       'configuration to run benchmarks'
                       % os.path.basename(sys.executable))
 

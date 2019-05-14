@@ -3,10 +3,10 @@ from __future__ import division, print_function, absolute_import
 import sys
 import subprocess
 
-from perf._bench import _load_suite_from_pipe
-from perf._cli import format_run
-from perf._formatter import format_number
-from perf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
+from pyperf._bench import _load_suite_from_pipe
+from pyperf._cli import format_run
+from pyperf._formatter import format_number
+from pyperf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
 
 
 # Limit to 5 calibration processes
@@ -113,7 +113,7 @@ class Master(object):
         else:
             suite = self.spawn_worker(0, 0)
         if suite is None:
-            raise RuntimeError("perf worker process didn't produce JSON result")
+            raise RuntimeError("pyperf worker process didn't produce JSON result")
         return suite
 
     def create_worker_bench(self):

@@ -4,10 +4,10 @@ import sys
 
 import statistics
 
-import perf
-from perf._formatter import (format_number, format_value, format_values,
-                             format_timedelta)
-from perf._utils import MS_WINDOWS, percentile, median_abs_dev
+import pyperf
+from pyperf._formatter import (format_number, format_value, format_values,
+                               format_timedelta)
+from pyperf._utils import MS_WINDOWS, percentile, median_abs_dev
 
 try:
     # Python 3.3 provides a real monotonic clock (PEP 418)
@@ -110,7 +110,7 @@ class WorkerTask:
             index += 1
 
     def collect_metadata(self):
-        from perf._collect_metadata import collect_metadata
+        from pyperf._collect_metadata import collect_metadata
         return collect_metadata(process=False)
 
     def test_calibrate_warmups(self, nwarmup, unit):
@@ -293,10 +293,10 @@ class WorkerTask:
         self.compute()
         self.metadata['duration'] = monotonic_clock() - start_time
 
-        return perf.Run(self.values,
-                        warmups=self.warmups,
-                        metadata=self.metadata,
-                        collect_metadata=False)
+        return pyperf.Run(self.values,
+                          warmups=self.warmups,
+                          metadata=self.metadata,
+                          collect_metadata=False)
 
     def _set_memory_value(self, value):
         is_calibration = (not self.values)
@@ -318,9 +318,9 @@ class WorkerProcessTask(WorkerTask):
 
         if args.track_memory:
             if MS_WINDOWS:
-                from perf._win_memory import get_peak_pagefile_usage
+                from pyperf._win_memory import get_peak_pagefile_usage
             else:
-                from perf._memory import PeakMemoryUsageThread
+                from pyperf._memory import PeakMemoryUsageThread
                 mem_thread = PeakMemoryUsageThread()
                 mem_thread.start()
 
@@ -355,5 +355,5 @@ class WorkerProcessTask(WorkerTask):
             self._set_memory_value(mem_peak)
 
     def collect_metadata(self):
-        from perf._collect_metadata import collect_metadata
+        from pyperf._collect_metadata import collect_metadata
         return collect_metadata()

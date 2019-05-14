@@ -1,10 +1,10 @@
 """
-"perf timeit" microbenchmark command based on the Python timeit module.
+"pyperf timeit" microbenchmark command based on the Python timeit module.
 """
 from __future__ import division, print_function, absolute_import
 
-from perf._runner import Runner
-from perf._timeit import bench_timeit
+from pyperf._runner import Runner
+from pyperf._timeit import bench_timeit
 
 
 DEFAULT_NAME = 'timeit'
@@ -26,7 +26,7 @@ def add_cmdline_args(cmd, args):
 class TimeitRunner(Runner):
     def __init__(self, *args, **kw):
         if 'program_args' not in kw:
-            kw['program_args'] = ('-m', 'perf', 'timeit')
+            kw['program_args'] = ('-m', 'pyperf', 'timeit')
         kw['add_cmdline_args'] = add_cmdline_args
         Runner.__init__(self, *args, **kw)
 

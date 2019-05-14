@@ -5,8 +5,8 @@ import os.path
 import subprocess
 import sys
 
-from perf._utils import shell_quote, popen_communicate
-from perf._worker import WorkerTask
+from pyperf._utils import shell_quote, popen_communicate
+from pyperf._worker import WorkerTask
 
 
 def bench_command(command, task, loops):

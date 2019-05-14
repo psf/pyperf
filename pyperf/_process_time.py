@@ -80,9 +80,9 @@ def bench_process(timer, loops, args, kw):
 
 
 def main():
-    # Make sure that the perf module wasn't imported
-    if 'perf' in sys.modules:
-        print("ERROR: don't run %s -m perf._process, run the .py script"
+    # Make sure that the pyperf module wasn't imported
+    if 'pyperf' in sys.modules:
+        print("ERROR: don't run %s -m pyperf._process, run the .py script"
               % os.path.basename(sys.executable))
         sys.exit(1)
 

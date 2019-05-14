@@ -5,9 +5,9 @@ import errno
 import os.path
 import sys
 
-from perf._formatter import (format_seconds, format_number,
-                             format_datetime)
-from perf._metadata import format_metadata as _format_metadata
+from pyperf._formatter import (format_seconds, format_number,
+                               format_datetime)
+from pyperf._metadata import format_metadata as _format_metadata
 
 
 def empty_line(lines):
@@ -457,10 +457,10 @@ def format_checks(bench, lines=None):
         empty_line(lines)
         lines.append("Try to rerun the benchmark with more runs, values "
                      "and/or loops.")
-        lines.append("Run '%s -m perf system tune' command to reduce "
+        lines.append("Run '%s -m pyperf system tune' command to reduce "
                      "the system jitter."
                      % os.path.basename(sys.executable))
-        lines.append("Use perf stats, perf dump and perf hist to analyze results.")
+        lines.append("Use pyperf stats, pyperf dump and pyperf hist to analyze results.")
         lines.append("Use --quiet option to hide these warnings.")
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata

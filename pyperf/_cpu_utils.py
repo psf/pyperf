@@ -4,7 +4,7 @@ import collections
 import os
 import re
 
-from perf._utils import sysfs_path, proc_path, read_first_line
+from pyperf._utils import sysfs_path, proc_path, read_first_line
 
 try:
     # Optional dependency

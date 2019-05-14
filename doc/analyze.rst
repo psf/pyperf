@@ -2,29 +2,29 @@
 Analyze benchmark results
 +++++++++++++++++++++++++
 
-perf commands
-=============
+pyperf commands
+===============
 
 To analyze benchmark results, write the output into a JSON file using
 the ``--output`` option (``-o``)::
 
-    $ python3 -m perf timeit '[1,2]*1000' -o bench.json
+    $ python3 -m pyperf timeit '[1,2]*1000' -o bench.json
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
-perf provides the following commands to analyze benchmark results:
+pyperf provides the following commands to analyze benchmark results:
 
-* :ref:`perf show <show_cmd>`: single line summary, mean and standard deviation
-* :ref:`perf check <check_cmd>`: check if benchmark results stability
-* :ref:`perf metadata <metadata_cmd>`: display metadata collected during the
+* :ref:`pyperf show <show_cmd>`: single line summary, mean and standard deviation
+* :ref:`pyperf check <check_cmd>`: check if benchmark results stability
+* :ref:`pyperf metadata <metadata_cmd>`: display metadata collected during the
   benchmark
-* :ref:`perf dump <dump_cmd>`: see all values per run, including warmup values
+* :ref:`pyperf dump <dump_cmd>`: see all values per run, including warmup values
   and the calibration run
-* :ref:`perf stats <stats_cmd>`: compute various statistics (min/max, mean,
+* :ref:`pyperf stats <stats_cmd>`: compute various statistics (min/max, mean,
   median, percentiles, etc.).
-* :ref:`perf hist <hist_cmd>`: render an histogram to see the shape of
+* :ref:`pyperf hist <hist_cmd>`: render an histogram to see the shape of
   the distribution.
-* :ref:`perf slowest <slowest_cmd>`: top 5 benchmarks which took the most time
+* :ref:`pyperf slowest <slowest_cmd>`: top 5 benchmarks which took the most time
   to be run.
 
 
@@ -42,22 +42,22 @@ than the average.
 
 Example::
 
-    $ python3 -m perf timeit '[1,2]*1000' -o outliers.json
+    $ python3 -m pyperf timeit '[1,2]*1000' -o outliers.json
     .....................
     WARNING: the benchmark result may be unstable
     * the maximum (6.02 us) is 39% greater than the mean (4.34 us)
 
     Try to rerun the benchmark with more runs, values and/or loops.
-    Run 'python3 -m perf system tune' command to reduce the system jitter.
-    Use perf stats, perf dump and perf hist to analyze results.
+    Run 'python3 -m pyperf system tune' command to reduce the system jitter.
+    Use pyperf stats, pyperf dump and pyperf hist to analyze results.
     Use --quiet option to hide these warnings.
 
     Mean +- std dev: 4.34 us +- 0.31 us
 
-Use the :ref:`perf stats <stats_cmd>` command to count the number of
+Use the :ref:`pyperf stats <stats_cmd>` command to count the number of
 outliers (9 on this example)::
 
-    $ python3 -m perf stats outliers.json -q
+    $ python3 -m pyperf stats outliers.json -q
     Total duration: 11.6 sec
     Start date: 2017-03-16 16:30:01
     End date: 2017-03-16 16:30:16
@@ -90,7 +90,7 @@ outliers (9 on this example)::
 
 Histogram::
 
-    $ python3 -m perf hist outliers.json -q
+    $ python3 -m pyperf hist outliers.json -q
     4.10 us: 15 ##############################
     4.20 us: 29 ##########################################################
     4.30 us:  6 ############
@@ -142,8 +142,8 @@ Links:
 * `My journey to stable benchmark, part 3 (average)
   <https://vstinner.github.io/journey-to-stable-benchmark-average.html>`_
   (May 2016) by Victor Stinner
-* Median versus Mean: `perf issue #1: Use a better measures than average and
-  standard <https://github.com/vstinner/perf/issues/1>`_
+* Median versus Mean: `pyperf issue #1: Use a better measures than average and
+  standard <https://github.com/vstinner/pyperf/issues/1>`_
 * timeit module of PyPy now uses average:
   `change timeit to report the average +- standard deviation
   <https://bitbucket.org/pypy/pypy/commits/fb6bb835369e>`_
@@ -158,16 +158,16 @@ Median and median absolute deviation (MAD) are `robust statistics
 
 * `[Speed] Median +- MAD or Mean +- std dev?
   <https://mail.python.org/pipermail/speed/2017-March/000512.html>`_
-* `perf issue #1: Use a better measures than average and standard deviation
-  <https://github.com/vstinner/perf/issues/1>`_
-* `perf issue #20: Mean error of distribution
-  <https://github.com/vstinner/perf/issues/20>`_
+* `pyperf issue #1: Use a better measures than average and standard deviation
+  <https://github.com/vstinner/pyperf/issues/1>`_
+* `pyperf issue #20: Mean error of distribution
+  <https://github.com/vstinner/pyperf/issues/20>`_
 
 
 Probability distribution
 ------------------------
 
-The :ref:`perf hist command <hist_cmd>` renders an histogram of the distribution of
+The :ref:`pyperf hist command <hist_cmd>` renders an histogram of the distribution of
 all values.
 
 See also:
@@ -183,11 +183,11 @@ See also:
   <https://en.wikipedia.org/wiki/Multimodal_distribution>`_.
 
 
-Why is perf so slow?
+Why is pyperf so slow?
 ====================
 
 ``--fast`` and ``--rigorous`` options indirectly have an impact on the total
-duration of benchmarks. The ``perf`` module is not optimized for the total
+duration of benchmarks. The ``pyperf`` module is not optimized for the total
 duration but to produce :ref:`reliable benchmarks <stable_bench>`.
 
 The ``--fast`` is designed to be fast, but remain reliable enough to be
@@ -200,30 +200,30 @@ Compare benchmark results
 
 Let's use Python 2 and Python 3 to generate two different benchmark results::
 
-    $ python2 -m perf timeit '[1,2]*1000' -o py2.json
+    $ python2 -m pyperf timeit '[1,2]*1000' -o py2.json
     .....................
     Mean +- std dev: 4.70 us +- 0.18 us
 
-    $ python3 -m perf timeit '[1,2]*1000' -o py3.json
+    $ python3 -m pyperf timeit '[1,2]*1000' -o py3.json
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
-The :ref:`perf compare_to <compare_to_cmd>` command compares the second
+The :ref:`pyperf compare_to <compare_to_cmd>` command compares the second
 benchmark to the first benchmark::
 
-    $ python3 -m perf compare_to py2.json py3.json
+    $ python3 -m pyperf compare_to py2.json py3.json
     Mean +- std dev: [py2] 4.70 us +- 0.18 us -> [py3] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
 Python 3 is faster than Python 2 on this benchmark.
 
-perf determines whether two samples differ significantly using a `Student's
+pyperf determines whether two samples differ significantly using a `Student's
 two-sample, two-tailed t-test
 <https://en.wikipedia.org/wiki/Student's_t-test>`_ with alpha equals to
 ``0.95``.
 
 Render a table using ``--table`` option::
 
-    $ python3 -m perf compare_to py2.json py3.json --table
+    $ python3 -m pyperf compare_to py2.json py3.json --table
     +-----------+---------+------------------------------+
     | Benchmark | py2     | py3                          |
     +===========+=========+==============================+

@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import threading
 import time
 
-from perf._utils import proc_path
+from pyperf._utils import proc_path
 
 
 # Code to parse Linux /proc/%d/smaps files.

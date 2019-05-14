@@ -9,26 +9,26 @@ import sys
 import six
 import statistics
 
-from perf._metadata import (NUMBER_TYPES, parse_metadata,
-                            _common_metadata, get_metadata_info,
-                            _exclude_common_metadata)
-from perf._formatter import DEFAULT_UNIT, format_values
-from perf._utils import parse_iso8601, median_abs_dev, percentile
+from pyperf._metadata import (NUMBER_TYPES, parse_metadata,
+                              _common_metadata, get_metadata_info,
+                              _exclude_common_metadata)
+from pyperf._formatter import DEFAULT_UNIT, format_values
+from pyperf._utils import parse_iso8601, median_abs_dev, percentile
 
 
 # JSON format history:
 #
-# '1.0' - (perf 1.0) warmup values are now per loop iteration,
+# '1.0' - (pyperf 1.0) warmup values are now per loop iteration,
 #         rather than raw values.
-# 6 - (perf 0.9.6) add common_metadata to the root: metadata common to all
+# 6 - (pyperf 0.9.6) add common_metadata to the root: metadata common to all
 #     benchmarks (common to all runs of all benchmarks); rename 'samples'
 #     to 'values' in runs
-# 5 - (perf 0.8.3) timestamps in metadata are now formatted using a space
+# 5 - (pyperf 0.8.3) timestamps in metadata are now formatted using a space
 #      separator
-# 4 - (perf 0.7.4) warmups are now a lists of (loops, raw_sample)
+# 4 - (pyperf 0.7.4) warmups are now a lists of (loops, raw_sample)
 #     rather than lists of samples
-# 3 - (perf 0.7) add Run class
-# 2 - (perf 0.6) support multiple benchmarks per file
+# 3 - (pyperf 0.7) add Run class
+# 2 - (pyperf 0.6) support multiple benchmarks per file
 # 1 - first version
 _JSON_VERSION = '1.0'
 _JSON_MAP_VERSION = {5: (0, 8, 3), 6: (0, 9, 6), '1.0': (1, 0)}
@@ -116,7 +116,7 @@ class Run(object):
             raise ValueError("values and warmups are empty sequence")
 
         if collect_metadata:
-            from perf._collect_metadata import collect_metadata as collect_func
+            from pyperf._collect_metadata import collect_metadata as collect_func
 
             metadata2 = collect_func()
             if metadata is not None:
@@ -155,7 +155,7 @@ class Run(object):
             return False
         if self._has_metadata('calibrate_loops'):
             return True
-        # backward compatibility with perf 1.1 and older
+        # backward compatibility with pyperf 1.1 and older
         return not any(self._has_metadata(name)
                        for name in ('recalibrate_loops', 'calibrate_warmups',
                                     'recalibrate_warmups'))
@@ -180,7 +180,7 @@ class Run(object):
             return metadata['recalibrate_loops']
 
         if self._is_calibration_loops():
-            # backward compatibility with perf 1.1 and older
+            # backward compatibility with pyperf 1.1 and older
             return self.get_loops()
 
         raise ValueError("run is not a loop calibration")
@@ -734,7 +734,7 @@ class BenchmarkSuite(object):
             suffix = u'.gz'
 
         if filename.endswith(suffix):
-            # Use lazy import to limit imports on 'import perf'
+            # Use lazy import to limit imports on 'import pyperf'
             import gzip
             if six.PY3:
                 return gzip.open(filename, "rt", encoding="utf-8")
@@ -748,7 +748,7 @@ class BenchmarkSuite(object):
 
     @classmethod
     def load(cls, file):
-        # Use lazy import to limit imports on 'import perf'
+        # Use lazy import to limit imports on 'import pyperf'
         import json
 
         if isinstance(file, (bytes, six.text_type)):
@@ -769,7 +769,7 @@ class BenchmarkSuite(object):
 
     @classmethod
     def loads(cls, string):
-        # Use lazy import to limit imports on 'import perf'
+        # Use lazy import to limit imports on 'import pyperf'
         import json
 
         data = json.loads(string)
@@ -786,7 +786,7 @@ class BenchmarkSuite(object):
             raise OSError(errno.EEXIST, "File already exists")
 
         if filename.endswith(suffix):
-            # Use lazy import to limit imports on 'import perf'
+            # Use lazy import to limit imports on 'import pyperf'
             import gzip
 
             if six.PY3:
@@ -809,7 +809,7 @@ class BenchmarkSuite(object):
         return data
 
     def dump(self, file, compact=True, replace=False):
-        # Use lazy import to limit imports on 'import perf'
+        # Use lazy import to limit imports on 'import pyperf'
         import json
 
         data = self._as_json()

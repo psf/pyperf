@@ -4,12 +4,12 @@ Run a benchmark
 
 .. _install:
 
-Install perf
-============
+Install pyperf
+==============
 
-Command to install perf on Python 3::
+Command to install pyperf on Python 3::
 
-    python3 -m pip install perf
+    python3 -m pip install pyperf
 
 It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
 dependency is also installed: backport of Python 3.4 `statistics module
@@ -27,50 +27,50 @@ Optional dependencies:
 * Python module ``psutil``: needed for :ref:`CPU affinity <pin-cpu>` on Python
   2.7. Install: ``python2 -m pip install -U psutil``.
 
-perf supports Python 2.7 and Python 3.
+pyperf supports Python 2.7 and Python 3.
 
 
 Run a benchmark
 ===============
 
-The simplest way to run a benchmark is to use the :ref:`perf timeit command
+The simplest way to run a benchmark is to use the :ref:`pyperf timeit command
 <timeit_cmd>`::
 
-    $ python3 -m perf timeit '[1,2]*1000'
+    $ python3 -m pyperf timeit '[1,2]*1000'
     .....................
     Mean +- std dev: 4.19 us +- 0.05 us
 
-perf measures the performance of the Python instruction ``[1,2]*1000``: 4.19
+pyperf measures the performance of the Python instruction ``[1,2]*1000``: 4.19
 microseconds (us) in average with a standard deviation of 0.05 microseconds.
 
 If you get such warnings, see :ref:`How to get reproductible benchmark results
 <stable_bench>`::
 
-    $ python3 -m perf timeit '[1,2]*1000' -o json2
+    $ python3 -m pyperf timeit '[1,2]*1000' -o json2
     .....................
     WARNING: the benchmark result may be unstable
     * the maximum (6.02 us) is 39% greater than the mean (4.34 us)
 
     Try to rerun the benchmark with more runs, values and/or loops.
-    Run 'python3 -m perf system tune' command to reduce the system jitter.
-    Use perf stats, perf dump and perf hist to analyze results.
+    Run 'python3 -m pyperf system tune' command to reduce the system jitter.
+    Use pyperf stats, pyperf dump and pyperf hist to analyze results.
     Use --quiet option to hide these warnings.
 
     Mean +- std dev: 4.34 us +- 0.31 us
 
 
-perf architecture
-=================
+pyperf architecture
+===================
 
-* perf starts by spawning a first worker process (Run 1) only to calibrate the
+* pyperf starts by spawning a first worker process (Run 1) only to calibrate the
   benchmark: compute the number of outer loops: 2^15 loops on the example.
-* Then perf spawns 20 worker processes (Run 2 .. Run 21).
+* Then pyperf spawns 20 worker processes (Run 2 .. Run 21).
 * Each worker starts by running the benchmark once to "warmup" the process,
   but this result is ignored in the final result.
 * Then each worker runs the benchmark 3 times.
 
-Processes and benchmarks are run sequentially: perf does not run two benchmarks
-at the same time. Use ``python3 -m perf dump --verbose bench.json`` command to
+Processes and benchmarks are run sequentially: pyperf does not run two benchmarks
+at the same time. Use ``python3 -m pyperf dump --verbose bench.json`` command to
 see dates when each process was started.
 
 
@@ -79,7 +79,7 @@ see dates when each process was started.
 Runs, values, warmups, outer and inner loops
 ==============================================
 
-The ``perf`` module uses 5 options to configure benchmarks:
+The ``pyperf`` module uses 5 options to configure benchmarks:
 
 * "runs": Number of spawned processes, ``-p/--processes`` command line option
 * "values": Number of value per run,  ``-n/--values`` command line option
@@ -114,7 +114,7 @@ manually duplicated to limit the cost of Python loops. See the
 
 Example of unstable benchmark because the number of loops is too low::
 
-    $ python3 -m perf timeit --loops=10 pass
+    $ python3 -m pyperf timeit --loops=10 pass
     ....................
     WARNING: the benchmark result may be unstable
     * the standard deviation (10.8 ns) is 19% of the mean (56.8 ns)
@@ -122,8 +122,8 @@ Example of unstable benchmark because the number of loops is too low::
     * the shortest raw value only took 451 ns
 
     Try to rerun the benchmark with more runs, values and/or loops.
-    Run 'python3 -m perf system tune' command to reduce the system jitter.
-    Use perf stats, perf dump and perf hist to analyze results.
+    Run 'python3 -m pyperf system tune' command to reduce the system jitter.
+    Use pyperf stats, pyperf dump and pyperf hist to analyze results.
     Use --quiet option to hide these warnings.
 
     Mean +- std dev: 56.8 ns +- 10.8 ns
@@ -142,7 +142,7 @@ analyze manually results to adjust :ref:`benchmark parameters <loops>`. The
 first goal is to avoid :ref:`outliers <outlier>` only caused by other "noisy"
 applications, and not the benchmark itself.
 
-Use the :ref:`perf system tune command <system_cmd>` and see the :ref:`Tune the
+Use the :ref:`pyperf system tune command <system_cmd>` and see the :ref:`Tune the
 system for benchmarks <system>` section to reduce the system jitter.
 
 The ``--no-locale`` option may be used to use the POSIX locale and so not
@@ -183,10 +183,10 @@ threshold=1,function_threshold=1`` is a bad idea:
   parameters are not used in production.
 * It probably increases the pressure on the garbage collector.
 
-See the `perf issue #14 <https://github.com/vstinner/perf/issues/14>`_ for more
+See the `pyperf issue #14 <https://github.com/vstinner/pyperf/issues/14>`_ for more
 information.
 
-perf does not implement a function to warmup the benchmark until results seem
+pyperf does not implement a function to warmup the benchmark until results seem
 to be stable. On some benchmarks, performances are never stable: see the paper
 mentioned above. Running an arbitrary number of warmup values may also make
 the benchmark less reliable since two runs may use a different number of warmup

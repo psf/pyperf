@@ -6,13 +6,13 @@ import sys
 import tempfile
 import textwrap
 
-import perf
-from perf import tests
-from perf._timeit import Timer
-from perf.tests import unittest
+import pyperf
+from pyperf import tests
+from pyperf._timeit import Timer
+from pyperf.tests import unittest
 
 
-PERF_TIMEIT = (sys.executable, '-m', 'perf', 'timeit')
+PERF_TIMEIT = (sys.executable, '-m', 'pyperf', 'timeit')
 # We only need a statement taking longer than 0 nanosecond
 FAST_BENCH_ARGS = ('--debug-single-value',
                    '-s', 'import time',
@@ -32,7 +32,7 @@ MIN_MEAN = MIN_VALUE
 MAX_MEAN = MAX_VALUE / 2
 MAX_STD_DEV = 10.0  # ms
 
-PYPY = perf.python_implementation() == 'pypy'
+PYPY = pyperf.python_implementation() == 'pypy'
 
 
 def identity(x):
@@ -152,7 +152,7 @@ class TestTimeit(unittest.TestCase):
             filename = os.path.join(tmpdir, 'test.json')
             args += ('--output', filename)
             stdout = self.run_timeit(args)
-            bench = perf.Benchmark.load(filename)
+            bench = pyperf.Benchmark.load(filename)
         return (bench, stdout)
 
     def test_verbose_output(self):
@@ -182,14 +182,14 @@ class TestTimeit(unittest.TestCase):
         bench, stdout = self.run_timeit_bench(args)
 
         # FIXME: skipped test, since calibration continues during warmup
-        if not perf.python_has_jit():
+        if not pyperf.python_has_jit():
             for run in bench.get_runs():
                 self.assertEqual(run.get_total_loops(), 4)
 
         runs = bench.get_runs()
         self.assertEqual(len(runs), 2)
         for run in runs:
-            self.assertIsInstance(run, perf.Run)
+            self.assertIsInstance(run, pyperf.Run)
             raw_values = run._get_raw_values(warmups=True)
             self.assertEqual(len(raw_values), 4)
             for raw_value in raw_values:
@@ -202,11 +202,11 @@ class TestTimeit(unittest.TestCase):
             args = PERF_TIMEIT + ('--append', filename) + FAST_BENCH_ARGS
 
             self.run_timeit(args)
-            bench = perf.Benchmark.load(filename)
+            bench = pyperf.Benchmark.load(filename)
             self.assertEqual(bench.get_nvalue(), 1)
 
             self.run_timeit(args)
-            bench = perf.Benchmark.load(filename)
+            bench = pyperf.Benchmark.load(filename)
             self.assertEqual(bench.get_nvalue(), 2)
 
     def test_cli_snippet_error(self):
@@ -218,7 +218,7 @@ class TestTimeit(unittest.TestCase):
         self.assertIn("NameError", cmd.stderr)
 
     # When the PyPy program is copied, it fails with "Library path not found"
-    @unittest.skipIf(perf.python_implementation() == 'pypy',
+    @unittest.skipIf(pyperf.python_implementation() == 'pypy',
                      'pypy program cannot be copied')
     def test_python_option(self):
         # Ensure that paths are absolute

@@ -59,12 +59,12 @@ Options::
     -q/--quiet
 
 * ``--dump`` displays the benchmark run results,
-  see :ref:`perf dump <dump_cmd>` command
-* ``--metadata`` displays metadata: see :ref:`perf show metadata
+  see :ref:`pyperf dump <dump_cmd>` command
+* ``--metadata`` displays metadata: see :ref:`pyperf show metadata
   <show_cmd_metadata>` command
-* ``--hist`` renders an histogram of values, see :ref:`perf hist <hist_cmd>`
+* ``--hist`` renders an histogram of values, see :ref:`pyperf hist <hist_cmd>`
   command
-* ``--stats`` displays statistics (min, max, ...), see :ref:`perf stats
+* ``--stats`` displays statistics (min, max, ...), see :ref:`pyperf stats
   <stats_cmd>` command
 * ``--verbose`` enables the verbose mode
 * ``--quiet`` enables the quiet mode
@@ -100,7 +100,7 @@ Option::
     --tracemalloc
 
 * ``--python=PYTHON``: Python executable. By default, use the running Python
-  (``sys.executable``). The Python executable must have the ``perf`` module
+  (``sys.executable``). The Python executable must have the ``pyperf`` module
   installed.
 * ``--compare-to=REF_PYTHON``: Run benchmark on the Python executable ``REF_PYTHON``,
   run benchmark on Python executable ``PYTHON``, and then compare
@@ -152,7 +152,7 @@ Option::
 Internal usage only
 -------------------
 
-The following options are used internally by perf and should not be used
+The following options are used internally by pyperf and should not be used
 explicitly::
 
     --worker

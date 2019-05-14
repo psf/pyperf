@@ -20,14 +20,14 @@ except ImportError:
 __all__ = ['perf_counter']
 
 
-from perf._utils import python_implementation, python_has_jit  # noqa
+from pyperf._utils import python_implementation, python_has_jit  # noqa
 __all__.extend(('python_implementation', 'python_has_jit'))
 
-from perf._metadata import format_metadata  # noqa
+from pyperf._metadata import format_metadata  # noqa
 __all__.append('format_metadata')
 
-from perf._bench import Run, Benchmark, BenchmarkSuite, add_runs  # noqa
+from pyperf._bench import Run, Benchmark, BenchmarkSuite, add_runs  # noqa
 __all__.extend(('Run', 'Benchmark', 'BenchmarkSuite', 'add_runs'))
 
-from perf._runner import Runner   # noqa
+from pyperf._runner import Runner   # noqa
 __all__.append('Runner')

@@ -2,8 +2,8 @@ from __future__ import division, print_function, absolute_import
 
 import sys
 
-from perf._cli import display_title, format_result_value
-from perf._utils import is_significant
+from pyperf._cli import display_title, format_result_value
+from pyperf._utils import is_significant
 
 
 def is_significant_benchs(bench1, bench2):
@@ -35,7 +35,7 @@ class CompareData:
 def compute_speed(ref, changed):
     ref_avg = ref.mean()
     changed_avg = changed.mean()
-    # Note: means cannot be zero, it's a warranty of perf API
+    # Note: means cannot be zero, it's a warranty of pyperf API
     speed = ref_avg / changed_avg
     percent = (changed_avg - ref_avg) * 100.0 / ref_avg
     return (speed, percent)

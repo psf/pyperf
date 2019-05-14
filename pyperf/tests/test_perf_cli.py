@@ -2,9 +2,9 @@ import os
 import sys
 import textwrap
 
-import perf
-from perf import tests
-from perf.tests import unittest
+import pyperf
+from pyperf import tests
+from pyperf.tests import unittest
 
 
 TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')
@@ -21,14 +21,14 @@ class BaseTestCase(object):
             metadata['name'] = 'bench'
         runs = []
         for value in values:
-            run = perf.Run([value],
-                           metadata=metadata,
-                           collect_metadata=False)
+            run = pyperf.Run([value],
+                             metadata=metadata,
+                             collect_metadata=False)
             runs.append(run)
-        return perf.Benchmark(runs)
+        return pyperf.Benchmark(runs)
 
     def run_command(self, *args, **kwargs):
-        cmd = [sys.executable, '-m', 'perf']
+        cmd = [sys.executable, '-m', 'pyperf']
         cmd.extend(args)
 
         proc = tests.get_output(cmd, **kwargs)
@@ -47,7 +47,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                                    metadata={'hostname': 'toto',
                                              'python_version': '3.4',
                                              'name': 'py3'})
-        return perf.BenchmarkSuite([bench1, bench2])
+        return pyperf.BenchmarkSuite([bench1, bench2])
 
     def test_show_common_metadata(self):
         suite = self.create_suite()
@@ -412,8 +412,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             * the standard deviation (500 ms) is 33% of the mean (1.50 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
-            Run '{0} -m perf system tune' command to reduce the system jitter.
-            Use perf stats, perf dump and perf hist to analyze results.
+            Run '{0} -m pyperf system tune' command to reduce the system jitter.
+            Use pyperf stats, pyperf dump and pyperf hist to analyze results.
             Use --quiet option to hide these warnings.
 
             py3
@@ -423,8 +423,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             * the standard deviation (500 ms) is 25% of the mean (2.00 sec)
 
             Try to rerun the benchmark with more runs, values and/or loops.
-            Run '{0} -m perf system tune' command to reduce the system jitter.
-            Use perf stats, perf dump and perf hist to analyze results.
+            Run '{0} -m pyperf system tune' command to reduce the system jitter.
+            Use pyperf stats, pyperf dump and pyperf hist to analyze results.
             Use --quiet option to hide these warnings.
         """).strip()
         expected = expected.format(os.path.basename(sys.executable))
@@ -448,7 +448,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                              '-p2', '-w1', '-l5', '-n3',
                              '[1,2]*1000',
                              '-o', tmp_name)
-            bench = perf.Benchmark.load(tmp_name)
+            bench = pyperf.Benchmark.load(tmp_name)
 
         self._check_track_memory_bench(bench, loops=5)
 
@@ -473,7 +473,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                     '--')
             args += cmd
             self.run_command(*args)
-            bench = perf.Benchmark.load(tmp_name)
+            bench = pyperf.Benchmark.load(tmp_name)
 
         self._check_track_memory_bench(bench, loops=2)
 
@@ -501,13 +501,13 @@ class TestConvert(BaseTestCase, unittest.TestCase):
                          tests.benchmark_as_json(bench, compact=False))
 
     def test_convert(self):
-        bench = perf.Benchmark.load(TELCO)
+        bench = pyperf.Benchmark.load(TELCO)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
             self.run_command('convert', TELCO, '-o', filename)
 
-            bench2 = perf.Benchmark.load(filename)
+            bench2 = pyperf.Benchmark.load(filename)
 
         tests.compare_benchmarks(self, bench2, bench)
 
@@ -517,7 +517,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         for name in ("call_simple", "go", "telco"):
             bench = self.create_bench(values, metadata={'name': name})
             benchmarks.append(bench)
-        suite = perf.BenchmarkSuite(benchmarks)
+        suite = pyperf.BenchmarkSuite(benchmarks)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')
@@ -525,11 +525,11 @@ class TestConvert(BaseTestCase, unittest.TestCase):
 
             stdout = self.run_command('convert', filename,
                                       '--include-benchmark', 'go', '--stdout')
-            suite2 = perf.BenchmarkSuite.loads(stdout)
+            suite2 = pyperf.BenchmarkSuite.loads(stdout)
 
             stdout = self.run_command('convert', filename,
                                       '--exclude-benchmark', 'go', '--stdout')
-            suite3 = perf.BenchmarkSuite.loads(stdout)
+            suite3 = pyperf.BenchmarkSuite.loads(stdout)
 
         self.assertEqual(suite2.get_benchmark_names(),
                          ['go'])
@@ -540,9 +540,9 @@ class TestConvert(BaseTestCase, unittest.TestCase):
     def test_remove_warmups(self):
         values = [1.0, 2.0, 3.0]
         raw_values = [5.0] + values
-        run = perf.Run(values, warmups=[(1, 5.0)],
-                       metadata={'name': 'bench'})
-        bench = perf.Benchmark([run])
+        run = pyperf.Run(values, warmups=[(1, 5.0)],
+                         metadata={'name': 'bench'})
+        bench = pyperf.Benchmark([run])
 
         self.assertEqual(bench._get_nwarmup(), 1)
         self.assertEqual(bench._get_raw_values(warmups=True),
@@ -554,7 +554,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
 
             stdout = self.run_command('convert', filename,
                                       '--remove-warmups', '--stdout')
-            bench2 = perf.Benchmark.loads(stdout)
+            bench2 = pyperf.Benchmark.loads(stdout)
 
         self.assertEqual(bench2._get_nwarmup(), 0)
         self.assertEqual(bench2._get_raw_values(warmups=True),
@@ -572,15 +572,15 @@ class TestConvert(BaseTestCase, unittest.TestCase):
 
             stdout = self.run_command('convert', filename,
                                       '--include-runs', '4', '--stdout')
-            bench2 = perf.Benchmark.loads(stdout)
+            bench2 = pyperf.Benchmark.loads(stdout)
 
             stdout = self.run_command('convert', filename,
                                       '--include-runs', '1-3,5', '--stdout')
-            bench3 = perf.Benchmark.loads(stdout)
+            bench3 = pyperf.Benchmark.loads(stdout)
 
             stdout = self.run_command('convert', filename,
                                       '--exclude-runs', '2,4', '--stdout')
-            bench4 = perf.Benchmark.loads(stdout)
+            bench4 = pyperf.Benchmark.loads(stdout)
 
         self.assertEqual(bench2.get_values(), (4.0,))
         self.assertEqual(bench3.get_values(), (1.0, 2.0, 3.0, 5.0))

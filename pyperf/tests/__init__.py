@@ -25,7 +25,7 @@ except ImportError:
     # Python 2.7: use contextlib2 backport
     from contextlib2 import ExitStack   # noqa
 
-from perf._utils import popen_communicate, popen_killer
+from pyperf._utils import popen_communicate, popen_killer
 
 
 @contextlib.contextmanager

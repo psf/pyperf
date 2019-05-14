@@ -5,16 +5,16 @@ import functools
 import os.path
 import sys
 
-import perf
-from perf._metadata import _common_metadata
-from perf._cli import (format_metadata, empty_line,
-                       format_checks, format_histogram, format_title,
-                       format_benchmark, display_title, format_result,
-                       catch_broken_pipe_error)
-from perf._formatter import format_timedelta, format_seconds, format_datetime
-from perf._cpu_utils import parse_cpu_list
-from perf._timeit_cli import TimeitRunner
-from perf._utils import parse_run_list
+import pyperf
+from pyperf._metadata import _common_metadata
+from pyperf._cli import (format_metadata, empty_line,
+                         format_checks, format_histogram, format_title,
+                         format_benchmark, display_title, format_result,
+                         catch_broken_pipe_error)
+from pyperf._formatter import format_timedelta, format_seconds, format_datetime
+from pyperf._cpu_utils import parse_cpu_list
+from pyperf._timeit_cli import TimeitRunner
+from pyperf._utils import parse_run_list
 
 
 def add_cmdline_args(cmd, args):
@@ -24,15 +24,15 @@ def add_cmdline_args(cmd, args):
         cmd.extend(args.program_args)
 
 
-class CommandRunner(perf.Runner):
+class CommandRunner(pyperf.Runner):
     def __init__(self, cmd):
         def parse_name(name):
             return name.strip()
 
-        perf.Runner.__init__(self,
-                             _argparser=cmd,
-                             add_cmdline_args=add_cmdline_args)
-        self._program_args = ('-m', 'perf', 'command')
+        pyperf.Runner.__init__(self,
+                               _argparser=cmd,
+                               add_cmdline_args=add_cmdline_args)
+        self._program_args = ('-m', 'pyperf', 'command')
 
         cmd.add_argument('--name', type=parse_name, default='command',
                          help='Benchmark name (default: command)')
@@ -44,7 +44,7 @@ class CommandRunner(perf.Runner):
 
 def create_parser():
     parser = argparse.ArgumentParser(description='Display benchmark results.',
-                                     prog='-m perf')
+                                     prog='-m pyperf')
     subparsers = parser.add_subparsers(dest='action')
 
     def input_filenames(cmd, name=True):
@@ -247,7 +247,7 @@ class Benchmarks:
         self.suites = []
 
     def load_benchmark_suite(self, filename):
-        suite = perf.BenchmarkSuite.load(filename)
+        suite = pyperf.BenchmarkSuite.load(filename)
         self.suites.append(suite)
 
     def load_benchmark_suites(self, filenames):
@@ -384,7 +384,7 @@ def _display_common_metadata(metadatas, lines):
 
 
 def cmd_compare_to(args):
-    from perf._compare import compare_suites
+    from pyperf._compare import compare_suites
 
     data = load_benchmarks(args)
     if data.get_nsuite() < 2:
@@ -400,7 +400,7 @@ def cmd_compare_to(args):
 
 
 def cmd_collect_metadata(args):
-    from perf._collect_metadata import cmd_collect_metadata as func
+    from pyperf._collect_metadata import cmd_collect_metadata as func
     func(args)
 
 
@@ -543,7 +543,7 @@ def cmd_dump(args):
 
 
 def cmd_timeit(args, timeit_runner):
-    import perf._timeit_cli as timeit_cli
+    import pyperf._timeit_cli as timeit_cli
     timeit_runner._set_args(args)
     timeit_cli.main(timeit_runner)
 
@@ -604,10 +604,10 @@ def fatal_no_more_benchmark(suite):
 
 
 def cmd_convert(args):
-    suite = perf.BenchmarkSuite.load(args.input_filename)
+    suite = pyperf.BenchmarkSuite.load(args.input_filename)
 
     if args.add:
-        suite2 = perf.BenchmarkSuite.load(args.add)
+        suite2 = pyperf.BenchmarkSuite.load(args.add)
         for bench in suite2.get_benchmarks():
             suite._add_benchmark_runs(bench)
 
@@ -714,7 +714,7 @@ def cmd_slowest(args):
 
 
 def cmd_system(args):
-    from perf._system import System
+    from pyperf._system import System
     System().main(args.system_action, args)
 
 

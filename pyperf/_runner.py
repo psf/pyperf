@@ -4,17 +4,17 @@ import functools
 import os
 import sys
 
-import perf
-from perf._cli import (format_benchmark, format_checks,
-                       multiline_output, display_title, format_result_value,
-                       catch_broken_pipe_error)
-from perf._cpu_utils import (format_cpu_list, parse_cpu_list,
-                             get_isolated_cpus, set_cpu_affinity,
-                             set_highest_priority)
-from perf._formatter import format_timedelta
-from perf._utils import (MS_WINDOWS, abs_executable,
-                         WritePipe, get_python_names)
-from perf._worker import WorkerProcessTask
+import pyperf
+from pyperf._cli import (format_benchmark, format_checks,
+                         multiline_output, display_title, format_result_value,
+                         catch_broken_pipe_error)
+from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
+                               get_isolated_cpus, set_cpu_affinity,
+                               set_highest_priority)
+from pyperf._formatter import format_timedelta
+from pyperf._utils import (MS_WINDOWS, abs_executable,
+                           WritePipe, get_python_names)
+from pyperf._worker import WorkerProcessTask
 
 
 def strictly_positive(value):
@@ -74,10 +74,10 @@ class Runner:
                                "all benchmarks" % cls.__name__)
         cls._created.add(key)
 
-        # Use lazy import to limit imports on 'import perf'
+        # Use lazy import to limit imports on 'import pyperf'
         import argparse
 
-        has_jit = perf.python_has_jit()
+        has_jit = pyperf.python_has_jit()
         if not values:
             if has_jit:
                 # Since PyPy JIT has less processes:
@@ -116,8 +116,8 @@ class Runner:
         # Command list arguments to call the program: (sys.argv[0],) by
         # default.
         #
-        # For example, "python3 -m perf timeit" sets program_args to
-        # ('-m', 'perf', 'timeit').
+        # For example, "python3 -m pyperf timeit" sets program_args to
+        # ('-m', 'pyperf', 'timeit').
         if program_args:
             self._program_args = program_args
         else:
@@ -244,7 +244,7 @@ class Runner:
         elif args.quiet:
             args.verbose = False
 
-        has_jit = perf.python_has_jit()
+        has_jit = pyperf.python_has_jit()
         if args.warmups is None and not args.worker and not has_jit:
             args.warmups = 1
 
@@ -310,9 +310,9 @@ class Runner:
 
         if args.track_memory:
             if MS_WINDOWS:
-                from perf._win_memory import check_tracking_memory
+                from pyperf._win_memory import check_tracking_memory
             else:
-                from perf._memory import check_tracking_memory
+                from pyperf._memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
                 raise CLIError("unable to track the memory usage "
@@ -395,7 +395,7 @@ class Runner:
         self._cpu_affinity()
         self._process_priority()
         run = task.create_run()
-        bench = perf.Benchmark((run,))
+        bench = pyperf.Benchmark((run,))
         self._display_result(bench, checks=False)
         return bench
 
@@ -472,7 +472,7 @@ class Runner:
 
         def task_func(task, loops):
             # use fast local variables
-            local_timer = perf.perf_counter
+            local_timer = pyperf.perf_counter
             local_func = func
             if loops != 1:
                 range_it = range(loops)
@@ -502,8 +502,8 @@ class Runner:
             # timeit(stmt) behaves as timeit(stmt, stmt)
             stmt = name
 
-        # Use lazy import to limit imports on 'import perf'
-        from perf._timeit import bench_timeit
+        # Use lazy import to limit imports on 'import pyperf'
+        from pyperf._timeit import bench_timeit
         return bench_timeit(self, name, stmt,
                             setup=setup,
                             teardown=teardown,
@@ -539,17 +539,17 @@ class Runner:
             sys.stdout.flush()
 
         if args.append:
-            perf.add_runs(args.append, bench)
+            pyperf.add_runs(args.append, bench)
 
         if args.output:
             if self._worker_task >= 1:
-                perf.add_runs(args.output, bench)
+                pyperf.add_runs(args.output, bench)
             else:
                 bench.dump(args.output)
 
     def _master(self):
-        # Use lazy import to limit imports on 'import perf'
-        from perf._master import Master
+        # Use lazy import to limit imports on 'import pyperf'
+        from pyperf._master import Master
 
         if self.args.verbose and self._worker_task > 0:
             print()
@@ -560,9 +560,9 @@ class Runner:
         return bench
 
     def _compare_to(self):
-        # Use lazy import to limit imports on 'import perf'
-        from perf._compare import timeit_compare_benchs
-        from perf._master import Master
+        # Use lazy import to limit imports on 'import pyperf'
+        from pyperf._compare import timeit_compare_benchs
+        from pyperf._master import Master
 
         args = self.args
         python_ref = args.compare_to
@@ -612,7 +612,7 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        # Use lazy import to limit imports on 'import perf'
-        from perf._command import BenchCommandTask
+        # Use lazy import to limit imports on 'import pyperf'
+        from pyperf._command import BenchCommandTask
         task = BenchCommandTask(self, name, command)
         return self._main(task)

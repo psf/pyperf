@@ -3,8 +3,8 @@ from __future__ import division, print_function, absolute_import
 import collections
 import six
 
-from perf._formatter import (format_number, format_seconds, format_filesize,
-                             UNIT_FORMATTERS)
+from pyperf._formatter import (format_number, format_seconds, format_filesize,
+                               UNIT_FORMATTERS)
 
 
 METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
@@ -49,7 +49,7 @@ def parse_load_avg(value):
     if isinstance(value, NUMBER_TYPES):
         return value
     else:
-        # special case for load_avg_1min on perf < 0.7.2
+        # special case for load_avg_1min on pyperf < 0.7.2
         return float(value)
 
 
@@ -160,7 +160,7 @@ class Metadata(object):
             return not(self == other)
 
     def __repr__(self):
-        return ('<perf.Metadata name=%r value=%r>'
+        return ('<pyperf.Metadata name=%r value=%r>'
                 % (self._name, self._value))
 
 

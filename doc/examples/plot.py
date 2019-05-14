@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import matplotlib.pyplot as plt
-import perf
+import pyperf
 import statistics
 
 
@@ -72,10 +72,10 @@ def parse_args():
 def main():
     args = parse_args()
     if args.benchmark:
-        suite = perf.BenchmarkSuite.load(args.filename)
+        suite = pyperf.BenchmarkSuite.load(args.filename)
         bench = suite.get_benchmark(args.benchmark)
     else:
-        bench = perf.Benchmark.load(args.filename)
+        bench = pyperf.Benchmark.load(args.filename)
     plot_bench(args, bench)
 
 

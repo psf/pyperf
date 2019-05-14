@@ -4,10 +4,10 @@ import itertools
 import sys
 import traceback
 
-import perf
+import pyperf
 
 
-PYPY = (perf.python_implementation() == 'pypy')
+PYPY = (pyperf.python_implementation() == 'pypy')
 DUMMY_SRC_NAME = "<timeit-src>"
 
 # Don't change the indentation of the template; the reindent() calls
@@ -119,7 +119,7 @@ class Timer:
 
     def time_func(self, loops):
         inner = self.make_inner()
-        timer = perf.perf_counter
+        timer = pyperf.perf_counter
         if not PYPY:
             it = itertools.repeat(None, loops)
             return inner(it, timer)

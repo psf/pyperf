@@ -1,34 +1,34 @@
 import os.path
 import sys
 
-import perf
-from perf import _utils as utils
-from perf import tests
-from perf.tests import unittest
+import pyperf
+from pyperf import _utils as utils
+from pyperf import tests
+from pyperf.tests import unittest
 
 
 class MiscTests(unittest.TestCase):
     def test_version_tuple(self):
-        self.assertIsInstance(perf.VERSION, tuple)
-        self.assertTrue(all(isinstance(part, int) for part in perf.VERSION),
-                        perf.VERSION)
+        self.assertIsInstance(pyperf.VERSION, tuple)
+        self.assertTrue(all(isinstance(part, int) for part in pyperf.VERSION),
+                        pyperf.VERSION)
 
     def test_version_str(self):
-        self.assertIsInstance(perf.__version__, str)
-        self.assertEqual(perf.__version__,
-                         '.'.join(str(part) for part in perf.VERSION))
+        self.assertIsInstance(pyperf.__version__, str)
+        self.assertEqual(pyperf.__version__,
+                         '.'.join(str(part) for part in pyperf.VERSION))
 
     def test_format_metadata(self):
-        self.assertEqual(perf.format_metadata('loops', 2 ** 24),
+        self.assertEqual(pyperf.format_metadata('loops', 2 ** 24),
                          '2^24')
 
     def test_python_implementation(self):
-        name = perf.python_implementation()
+        name = pyperf.python_implementation()
         self.assertIsInstance(name, str)
         self.assertRegex(name, '^[a-z]+$')
 
     def test_python_has_jit(self):
-        jit = perf.python_has_jit()
+        jit = pyperf.python_has_jit()
         self.assertIsInstance(jit, bool)
 
     @unittest.skipUnless(hasattr(os, 'symlink'), 'need os.symlink')
@@ -68,7 +68,7 @@ class MiscTests(unittest.TestCase):
 
     def test_setup_version(self):
         import setup
-        self.assertEqual(perf.__version__, setup.VERSION)
+        self.assertEqual(pyperf.__version__, setup.VERSION)
 
     def test_doc_version(self):
         doc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'doc')
@@ -78,8 +78,8 @@ class MiscTests(unittest.TestCase):
         try:
             sys.path.insert(0, doc_path)
             import conf
-            self.assertEqual(perf.__version__, conf.version)
-            self.assertEqual(perf.__version__, conf.release)
+            self.assertEqual(pyperf.__version__, conf.version)
+            self.assertEqual(pyperf.__version__, conf.release)
         finally:
             sys.path[:] = old_path
 

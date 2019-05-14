@@ -1,12 +1,12 @@
 from __future__ import division, print_function, absolute_import
 
 import os
-import perf
+import pyperf
 import tempfile
 
 
 def get_raw_values(filename, run_id):
-    bench = perf.Benchmark.load(filename)
+    bench = pyperf.Benchmark.load(filename)
     run = bench.get_runs()[run_id]
     inner_loops = run.get_inner_loops()
     raw_values = [value * (loops * inner_loops)
@@ -70,7 +70,7 @@ def add_cmdline_args(cmd, args):
         cmd.extend(('--session-filename', args.session_filename))
 
 
-runner = perf.Runner(add_cmdline_args=add_cmdline_args)
+runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
 runner.argparser.add_argument('filename')
 runner.argparser.add_argument('--session-filename', default=None)
 runner.argparser.add_argument('--first-run', type=int, default=1)

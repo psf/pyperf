@@ -3,7 +3,7 @@ BUGS
 
 * Repair PyPy on Travis
 * Reject --tracemalloc in bench_command()
-* BUG: "python perf timeit --compare-to=pypy" doesn't tune correctly the runner
+* BUG: "python pyperf timeit --compare-to=pypy" doesn't tune correctly the runner
   for pypy. pypy requires more warmup values (10) than cpython (1).
 * BUG: --duplicate of timeit must be ignored in PyPy, see the discussion
   on the speed mailing list.
@@ -15,7 +15,7 @@ TODO
 * Runner ignores the warmups parameter passed to the constructor
 * system: don't complain on nohz_full if min_frequency=max_frequency?
 * check: error if psutil is not installed? if isolated CPUs are detected,
-  but perf failed to pin worker processes.
+  but pyperf failed to pin worker processes.
 * write an unit test for calibrate_warmups()
 * check: warn if min/max is 25% smaller/larger than mean, instead of 50%?
 * show: add --name option to always display benchmark names

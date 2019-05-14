@@ -1,16 +1,16 @@
-****
-perf
-****
+******
+pyperf
+******
 
-.. image:: https://img.shields.io/pypi/v/perf.svg
+.. image:: https://img.shields.io/pypi/v/pyperf.svg
    :alt: Latest release on the Python Cheeseshop (PyPI)
-   :target: https://pypi.python.org/pypi/perf
+   :target: https://pypi.python.org/pypi/pyperf
 
-.. image:: https://travis-ci.org/vstinner/perf.svg?branch=master
-   :alt: Build status of perf on Travis CI
-   :target: https://travis-ci.org/vstinner/perf
+.. image:: https://travis-ci.org/vstinner/pyperf.svg?branch=master
+   :alt: Build status of pyperf on Travis CI
+   :target: https://travis-ci.org/vstinner/pyperf
 
-The Python ``perf`` module is a toolkit to write, run and analyze benchmarks.
+The Python ``pyperf`` module is a toolkit to write, run and analyze benchmarks.
 
 Features
 ========
@@ -27,10 +27,10 @@ Features
 Usage
 =====
 
-To `run a benchmark`_ use the ``perf timeit`` command (result written into
+To `run a benchmark`_ use the ``pyperf timeit`` command (result written into
 ``bench.json``)::
 
-    $ python3 -m perf timeit '[1,2]*1000' -o bench.json
+    $ python3 -m pyperf timeit '[1,2]*1000' -o bench.json
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
@@ -39,9 +39,9 @@ Or write a benchmark script ``bench.py``:
 .. code:: python
 
     #!/usr/bin/env python3
-    import perf
+    import pyperf
 
-    runner = perf.Runner()
+    runner = pyperf.Runner()
     runner.timeit(name="sort a sorted list",
                   stmt="sorted(s, key=f)",
                   setup="f = lambda x: x; s = list(range(1000))")
@@ -52,9 +52,9 @@ See `the API docs`_ for full details on the ``timeit`` function and the
 
     $ python3 bench.py -o bench.json
 
-To `analyze benchmark results`_ use the ``perf stats`` command::
+To `analyze benchmark results`_ use the ``pyperf stats`` command::
 
-    $ python3 -m perf stats bench.json
+    $ python3 -m pyperf stats bench.json
     Total duration: 29.2 sec
     Start date: 2016-10-21 03:14:19
     End date: 2016-10-21 03:14:53
@@ -87,22 +87,22 @@ To `analyze benchmark results`_ use the ``perf stats`` command::
 
 There's also:
 
-* ``perf compare_to`` command tests if a difference is
+* ``pyperf compare_to`` command tests if a difference is
   significant. It supports comparison between multiple benchmark suites (made
   of multiple benchmarks)
   ::
 
-    $ python3 -m perf compare_to py2.json py3.json --table
+    $ python3 -m pyperf compare_to py2.json py3.json --table
     +-----------+---------+------------------------------+
     | Benchmark | py2     | py3                          |
     +===========+=========+==============================+
     | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
     +-----------+---------+------------------------------+
 
-* ``perf system tune`` command to tune your system to run stable benchmarks.
+* ``pyperf system tune`` command to tune your system to run stable benchmarks.
 * Automatically collect metadata on the computer and the benchmark:
-  use the ``perf metadata`` command to display them, or the
-  ``perf collect_metadata`` command to manually collect them.
+  use the ``pyperf metadata`` command to display them, or the
+  ``pyperf collect_metadata`` command to manually collect them.
 * ``--track-memory`` and ``--tracemalloc`` options to track
   the memory usage of a benchmark.
 
@@ -110,19 +110,19 @@ There's also:
 Quick Links
 ===========
 
-* `perf documentation
-  <https://perf.readthedocs.io/>`_
-* `perf project homepage at GitHub
-  <https://github.com/vstinner/perf>`_ (code, bugs)
-* `Download latest perf release at the Python Cheeseshop (PyPI)
-  <https://pypi.python.org/pypi/perf>`_
+* `pyperf documentation
+  <https://pyperf.readthedocs.io/>`_
+* `pyperf project homepage at GitHub
+  <https://github.com/vstinner/pyperf>`_ (code, bugs)
+* `Download latest pyperf release at the Python Cheeseshop (PyPI)
+  <https://pypi.python.org/pypi/pyperf>`_
 
-Command to install perf on Python 3::
+Command to install pyperf on Python 3::
 
-    python3 -m pip install perf
+    python3 -m pip install pyperf
 
-perf supports Python 2.7 and Python 3. It is distributed under the MIT license.
+pyperf supports Python 2.7 and Python 3. It is distributed under the MIT license.
 
-.. _run a benchmark: https://perf.readthedocs.io/en/latest/run_benchmark.html
-.. _the API docs: http://perf.readthedocs.io/en/latest/api.html#Runner.timeit
-.. _analyze benchmark results: https://perf.readthedocs.io/en/latest/analyze.html
+.. _run a benchmark: https://pyperf.readthedocs.io/en/latest/run_benchmark.html
+.. _the API docs: http://pyperf.readthedocs.io/en/latest/api.html#Runner.timeit
+.. _analyze benchmark results: https://pyperf.readthedocs.io/en/latest/analyze.html

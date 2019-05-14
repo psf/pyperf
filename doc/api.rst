@@ -3,8 +3,8 @@
 API
 ===
 
-The module version can be read from ``perf.VERSION`` (tuple of int) or
-``perf.__version__`` (str).
+The module version can be read from ``pyperf.VERSION`` (tuple of int) or
+``pyperf.__version__`` (str).
 
 See :ref:`API examples <examples>`.
 
@@ -193,7 +193,7 @@ Benchmark class
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    .. method:: format_value(value) -> str
 
@@ -296,7 +296,7 @@ Benchmark class
 
       Raise an exception if the file contains more than one benchmark.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    .. classmethod:: loads(string) -> Benchmark
 
@@ -304,7 +304,7 @@ Benchmark class
 
       Raise an exception if JSON contains more than one benchmark.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    .. method:: mean()
 
@@ -406,7 +406,7 @@ BenchmarkSuite class
 
       If *compact* is true, generate compact file. Otherwise, indent JSON.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    .. method:: get_benchmark(name: str) -> Benchmark
 
@@ -466,13 +466,13 @@ BenchmarkSuite class
       *file* can be a filename, ``'-'`` string to load from :data:`sys.stdin`,
       or a file object open to read.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    .. classmethod:: loads(string) -> Benchmark
 
       Load a benchmark suite from a JSON string.
 
-      See the :ref:`perf JSON format <json>`.
+      See the :ref:`pyperf JSON format <json>`.
 
    Attributes:
 
@@ -500,8 +500,8 @@ Runner class
 
    *program_args* is a list of strings passed to Python on the command line to
    run the program. By default, ``(sys.argv[0],)`` is used. For example,
-   ``python3 -m perf timeit`` sets *program_args* to
-   ``('-m', 'perf', 'timeit')``.
+   ``python3 -m pyperf timeit`` sets *program_args* to
+   ``('-m', 'pyperf', 'timeit')``.
 
    *add_cmdline_args* is an optional callback used to add command line
    arguments to the command line of worker processes. The callback is called
@@ -668,7 +668,7 @@ Benchmark:
 * ``name`` (non-empty str): benchmark name
 * ``loops`` (``int >= 1``): number of outer-loops per value (``int``)
 * ``inner_loops`` (``int >= 1``): number of inner-loops of the benchmark (``int``)
-* ``timer``: Implementation of ``perf.perf_counter()``, and also resolution if
+* ``timer``: Implementation of ``pyperf.perf_counter()``, and also resolution if
   available
 
 Python metadata:
@@ -723,7 +723,7 @@ System metadata:
 
 Other:
 
-* ``perf_version``: Version of the ``perf`` module
+* ``perf_version``: Version of the ``pyperf`` module
 * ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
 * ``calibrate_loops`` (``int >= 1``): number of loops computed in a loops
   calibration run
@@ -738,15 +738,15 @@ Other:
 
 .. _json:
 
-perf JSON format
-================
+pyperf JSON format
+==================
 
-perf stores benchmark results as JSON in files. By default, the JSON is
-formatted to produce small files. Use the ``python3 -m perf convert --indent
-(...)`` command (see :ref:`perf convert <convert_cmd>`) to get readable
+pyperf stores benchmark results as JSON in files. By default, the JSON is
+formatted to produce small files. Use the ``python3 -m pyperf convert --indent
+(...)`` command (see :ref:`pyperf convert <convert_cmd>`) to get readable
 (indented) JSON.
 
-perf supports JSON files compressed by gzip: use gzip if filename ends with
+pyperf supports JSON files compressed by gzip: use gzip if filename ends with
 ``.gz``.
 
 Example of JSON, ``...`` is used in the example for readability::

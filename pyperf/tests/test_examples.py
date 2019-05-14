@@ -2,8 +2,8 @@ import glob
 import os.path
 import sys
 
-from perf import tests
-from perf.tests import unittest
+from pyperf import tests
+from pyperf.tests import unittest
 
 
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..'))

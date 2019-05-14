@@ -6,12 +6,12 @@ import textwrap
 
 import six
 
-import perf
-from perf import tests
-from perf._utils import create_pipe, MS_WINDOWS, shell_quote
-from perf.tests import mock
-from perf.tests import unittest
-from perf.tests import ExitStack
+import pyperf
+from pyperf import tests
+from pyperf._utils import create_pipe, MS_WINDOWS, shell_quote
+from pyperf.tests import mock
+from pyperf.tests import unittest
+from pyperf.tests import ExitStack
 
 
 def check_args(loops, a, b):
@@ -29,9 +29,9 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 class TestRunner(unittest.TestCase):
     def create_runner(self, args, **kwargs):
         # hack to be able to create multiple instances per process
-        perf.Runner._created.clear()
+        pyperf.Runner._created.clear()
 
-        runner = perf.Runner(**kwargs)
+        runner = pyperf.Runner(**kwargs)
         # disable CPU affinity to not pollute stdout
         runner._cpu_affinity = lambda: None
         runner.parse_args(args)
@@ -49,7 +49,7 @@ class TestRunner(unittest.TestCase):
 
         runner = self.create_runner(args, **kwargs)
 
-        with mock.patch('perf.perf_counter', fake_timer):
+        with mock.patch('pyperf.perf_counter', fake_timer):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
                     if time_func:
@@ -63,7 +63,7 @@ class TestRunner(unittest.TestCase):
             self.assertEqual(stderr, '')
 
         # check bench_time_func() bench
-        self.assertIsInstance(bench, perf.Benchmark)
+        self.assertIsInstance(bench, pyperf.Benchmark)
         self.assertEqual(bench.get_name(), name)
         self.assertEqual(bench.get_nrun(), 1)
 
@@ -176,7 +176,7 @@ class TestRunner(unittest.TestCase):
             result = self.exec_runner('--worker', '-l1', '-w1',
                                       '--output', filename)
 
-            loaded = perf.Benchmark.load(filename)
+            loaded = pyperf.Benchmark.load(filename)
             tests.compare_benchmarks(self, loaded, result.bench)
 
     def test_time_func_zero(self):
@@ -361,11 +361,11 @@ class TestRunner(unittest.TestCase):
         def abs_executable(python):
             return python
 
-        run = perf.Run([1.5],
-                       metadata={'name': 'name'},
-                       collect_metadata=False)
-        bench = perf.Benchmark([run])
-        suite = perf.BenchmarkSuite([bench])
+        run = pyperf.Run([1.5],
+                         metadata={'name': 'name'},
+                         collect_metadata=False)
+        bench = pyperf.Benchmark([run])
+        suite = pyperf.BenchmarkSuite([bench])
 
         with ExitStack() as cm:
             def popen(*args, **kw):
@@ -373,12 +373,12 @@ class TestRunner(unittest.TestCase):
                 mock_popen.wait.return_value = 0
                 return mock_popen
 
-            mock_subprocess = cm.enter_context(mock.patch('perf._master.subprocess'))
+            mock_subprocess = cm.enter_context(mock.patch('pyperf._master.subprocess'))
             mock_subprocess.Popen.side_effect = popen
 
-            cm.enter_context(mock.patch('perf._runner.abs_executable',
+            cm.enter_context(mock.patch('pyperf._runner.abs_executable',
                              side_effect=abs_executable))
-            cm.enter_context(mock.patch('perf._master._load_suite_from_pipe',
+            cm.enter_context(mock.patch('pyperf._master._load_suite_from_pipe',
                                         return_value=suite))
 
             args = ["--python=python1", "--compare-to=python2", "--min-time=5",
@@ -435,21 +435,21 @@ class TestRunner(unittest.TestCase):
     def test_single_instance(self):
         runner1 = self.create_runner([])   # noqa
         with self.assertRaises(RuntimeError):
-            runner2 = perf.Runner()   # noqa
+            runner2 = pyperf.Runner()   # noqa
 
 
 class TestRunnerCPUAffinity(unittest.TestCase):
     def create_runner(self, args, **kwargs):
         # hack to be able to create multiple instances per process
-        perf.Runner._created.clear()
-        runner = perf.Runner(**kwargs)
+        pyperf.Runner._created.clear()
+        runner = pyperf.Runner(**kwargs)
         runner.parse_args(args)
         return runner
 
     def test_cpu_affinity_args(self):
         runner = self.create_runner(['-v', '--affinity=3,7'])
 
-        with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
+        with mock.patch('pyperf._runner.set_cpu_affinity') as mock_setaffinity:
             with tests.capture_stdout() as stdout:
                 runner._cpu_affinity()
 
@@ -461,8 +461,8 @@ class TestRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_isolcpus(self):
         runner = self.create_runner(['-v'])
 
-        with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf._runner.get_isolated_cpus', return_value=[1, 2]):
+        with mock.patch('pyperf._runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('pyperf._runner.get_isolated_cpus', return_value=[1, 2]):
                 with tests.capture_stdout() as stdout:
                     runner._cpu_affinity()
 
@@ -474,8 +474,8 @@ class TestRunnerCPUAffinity(unittest.TestCase):
     def test_cpu_affinity_no_isolcpus(self):
         runner = self.create_runner(['-v'])
 
-        with mock.patch('perf._runner.set_cpu_affinity') as mock_setaffinity:
-            with mock.patch('perf._runner.get_isolated_cpus', return_value=None):
+        with mock.patch('pyperf._runner.set_cpu_affinity') as mock_setaffinity:
+            with mock.patch('pyperf._runner.get_isolated_cpus', return_value=None):
                 runner._cpu_affinity()
 
         self.assertFalse(runner.args.affinity)

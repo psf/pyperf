@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import matplotlib.pyplot as plt
-import perf
+import pyperf
 import pylab
 import scipy.stats as stats
 
@@ -33,10 +33,10 @@ def main():
     args = parser.parse_args()
 
     if args.benchmark:
-        suite = perf.BenchmarkSuite.load(args.filename)
+        suite = pyperf.BenchmarkSuite.load(args.filename)
         bench = suite.get_benchmark(args.benchmark)
     else:
-        bench = perf.Benchmark.load(args.filename)
+        bench = pyperf.Benchmark.load(args.filename)
 
     display_histogram_scipy(bench, args.mean, args.bins)
 

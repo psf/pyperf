@@ -18,17 +18,17 @@ try:
 except ImportError:
     psutil = None
 
-import perf
-from perf._cli import format_metadata
-from perf._cpu_utils import (format_cpu_list,
-                             parse_cpu_list, get_isolated_cpus,
-                             get_logical_cpu_count, format_cpu_infos,
-                             set_cpu_affinity)
-from perf._formatter import format_timedelta, format_datetime
-from perf._utils import (MS_WINDOWS,
-                         open_text, read_first_line, sysfs_path, proc_path)
+import pyperf
+from pyperf._cli import format_metadata
+from pyperf._cpu_utils import (format_cpu_list,
+                               parse_cpu_list, get_isolated_cpus,
+                               get_logical_cpu_count, format_cpu_infos,
+                               set_cpu_affinity)
+from pyperf._formatter import format_timedelta, format_datetime
+from pyperf._utils import (MS_WINDOWS,
+                           open_text, read_first_line, sysfs_path, proc_path)
 if MS_WINDOWS:
-    from perf._win_memory import check_tracking_memory, get_peak_pagefile_usage
+    from pyperf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
 
 def normalize_text(text):
@@ -39,7 +39,7 @@ def normalize_text(text):
 
 def collect_python_metadata(metadata):
     # Implementation
-    impl = perf.python_implementation()
+    impl = pyperf.python_implementation()
     metadata['python_implementation'] = impl
 
     # Version
@@ -86,15 +86,15 @@ def collect_python_metadata(metadata):
 
     # timer
     if (hasattr(time, 'perf_counter')
-       and perf.perf_counter == time.perf_counter):
+       and pyperf.perf_counter == time.perf_counter):
 
         info = time.get_clock_info('perf_counter')
         metadata['timer'] = ('%s, resolution: %s'
                              % (info.implementation,
                                 format_timedelta(info.resolution)))
-    elif perf.perf_counter == time.clock:
+    elif pyperf.perf_counter == time.clock:
         metadata['timer'] = 'time.clock()'
-    elif perf.perf_counter == time.time:
+    elif pyperf.perf_counter == time.time:
         metadata['timer'] = 'time.time()'
 
     # PYTHONHASHSEED
@@ -218,7 +218,7 @@ def collect_memory_metadata(metadata):
             metadata['mem_max_rss'] = max_rss * 1024
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
-    # not accurate. See perf._memory for more accurate memory metrics.
+    # not accurate. See pyperf._memory for more accurate memory metrics.
 
     # On Windows, use GetProcessMemoryInfo() if available
     if MS_WINDOWS and not check_tracking_memory():
@@ -424,7 +424,7 @@ def collect_cpu_metadata(metadata):
 
 def collect_metadata(process=True):
     metadata = {}
-    metadata['perf_version'] = perf.__version__
+    metadata['perf_version'] = pyperf.__version__
     metadata['date'] = format_datetime(datetime.datetime.now())
 
     collect_system_metadata(metadata)
@@ -453,7 +453,7 @@ def cmd_collect_metadata(args):
             set_cpu_affinity(cpus)
             # ignore if set_cpu_affinity() failed
 
-    run = perf.Run([1.0])
+    run = pyperf.Run([1.0])
     metadata = run.get_metadata()
     if metadata:
         print("Metadata:")
@@ -462,5 +462,5 @@ def cmd_collect_metadata(args):
 
     if filename:
         run = run._update_metadata({'name': 'metadata'})
-        bench = perf.Benchmark([run])
+        bench = pyperf.Benchmark([run])
         bench.dump(filename)

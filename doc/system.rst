@@ -16,7 +16,7 @@ on the stability of benchmarks. The `My journey to stable benchmark, part 1
 article explains how to tune Linux for this and shows the effect of CPU
 isolation and CPU pinning.
 
-The perf :class:`Runner` class automatically pin worker
+The pyperf :class:`Runner` class automatically pin worker
 processes to isolated CPUs (when isolated CPUs are detected). CPU pinning can
 be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
@@ -94,7 +94,7 @@ You can also check the number of context switches by reading
 ``/proc/pid/status``: read ``voluntary_ctxt_switches`` and
 ``nonvoluntary_ctxt_switches``. It must be low on a CPU-bound benchmark.
 
-On Linux, perf adds a ``runnable_threads`` metadata to runs: "number of
+On Linux, pyperf adds a ``runnable_threads`` metadata to runs: "number of
 currently runnable kernel scheduling entities (processes, threads)" (the value
 comes from the 4th field of ``/proc/loadavg``).
 
@@ -168,13 +168,13 @@ driver doesn't support NOHZ_FULL
 
 .. _system_cmd_ops:
 
-Operations and checks of the perf system command
-================================================
+Operations and checks of the pyperf system command
+==================================================
 
 Operations
 ----------
 
-The :ref:`perf system command <system_cmd>` implements the following operations:
+The :ref:`pyperf system command <system_cmd>` implements the following operations:
 
 * "CPU scaling governor (intel_pstate driver)": Get/Set the CPU scaling
   governor. ``tune`` sets the governor to ``performance``, ``reset`` sets the
@@ -205,7 +205,7 @@ The :ref:`perf system command <system_cmd>` implements the following operations:
 Checks
 ------
 
-The :ref:`perf system command <system_cmd>` implements the following checks:
+The :ref:`pyperf system command <system_cmd>` implements the following checks:
 
 * "ASLR": Check that Full randomization (``2``) is enabled
   in ``/proc/sys/kernel/randomize_va_space``
@@ -273,7 +273,7 @@ tunes Linux and OpenBSD to run benchmarks.
 More options
 ============
 
-The following options were not tested by perf developers.
+The following options were not tested by pyperf developers.
 
 * Disable HyperThreading in the BIOS
 * Disable Turbo Boost in the BIOS

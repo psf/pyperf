@@ -5,7 +5,7 @@ include TODO.rst
 include tox.ini
 include .travis.yml
 
-include perf/tests/*.json
+include pyperf/tests/*.json
 
 include doc/conf.py doc/make.bat doc/Makefile
 include doc/*.rst doc/*.png doc/*.jpg doc/*.json.gz

@@ -2,19 +2,19 @@ import datetime
 
 import six
 
-import perf
-from perf._formatter import (format_filesize, format_seconds, format_timedelta,
-                             format_timedeltas, format_number)
-from perf import _cpu_utils as cpu_utils
-from perf import _utils as utils
-from perf.tests import mock
-from perf.tests import unittest
+import pyperf
+from pyperf._formatter import (format_filesize, format_seconds, format_timedelta,
+                               format_timedeltas, format_number)
+from pyperf import _cpu_utils as cpu_utils
+from pyperf import _utils as utils
+from pyperf.tests import mock
+from pyperf.tests import unittest
 
 
 class TestClocks(unittest.TestCase):
     def test_perf_counter(self):
-        t1 = perf.perf_counter()
-        t2 = perf.perf_counter()
+        t1 = pyperf.perf_counter()
+        t2 = pyperf.perf_counter()
         self.assertGreaterEqual(t2, t1)
 
 

@@ -127,9 +127,9 @@ if "%1" == "qthelp" (
 	echo.
 	echo.Build finished; now you can run "qcollectiongenerator" with the ^
 .qhcp project file in %BUILDDIR%/qthelp, like this:
-	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\perf.qhcp
+	echo.^> qcollectiongenerator %BUILDDIR%\qthelp\pyperf.qhcp
 	echo.To view the help file:
-	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\perf.ghc
+	echo.^> assistant -collectionFile %BUILDDIR%\qthelp\pyperf.ghc
 	goto end
 )
 

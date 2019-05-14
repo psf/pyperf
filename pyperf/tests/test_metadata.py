@@ -3,10 +3,10 @@ import textwrap
 
 import six
 
-from perf import _collect_metadata as perf_metadata
-from perf._metadata import METADATA_VALUE_TYPES
-from perf.tests import mock
-from perf.tests import unittest
+from pyperf import _collect_metadata as perf_metadata
+from pyperf._metadata import METADATA_VALUE_TYPES
+from pyperf.tests import mock
+from pyperf.tests import unittest
 
 
 MANDATORY_METADATA = [
@@ -167,8 +167,8 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._collect_metadata.get_isolated_cpus', return_value=[2]):
-            with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch('pyperf._collect_metadata.get_isolated_cpus', return_value=[2]):
+            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
                 metadata = {}
                 perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
@@ -177,8 +177,8 @@ class CpuFunctionsTests(unittest.TestCase):
                          'idle:IDLE_DRV')
 
         nohz_full = '  (null)\n'
-        with mock.patch('perf._collect_metadata.get_isolated_cpus'):
-            with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch('pyperf._collect_metadata.get_isolated_cpus'):
+            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
                 metadata = {}
                 perf_metadata.collect_cpu_config(metadata, [0, 2])
         self.assertEqual(metadata['cpu_config'],
@@ -200,7 +200,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 2])
             perf_metadata.collect_cpu_model(metadata)
@@ -218,7 +218,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise ValueError("unexpect open: %r" % filename)
             return six.StringIO(data)
 
-        with mock.patch('perf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 159])
             perf_metadata.collect_cpu_model(metadata)

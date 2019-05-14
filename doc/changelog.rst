@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 1.6.1
+-------------
+
+The project name changes to "pyperf" from "perf", to avoid confusion
+with the `Linux perf project <https://perf.wiki.kernel.org/>`_ which has
+a Python binding called "perf" as well.
+
 Version 1.6.0 (2019-01-11)
 --------------------------
 
