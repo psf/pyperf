@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 1.6.1
--------------
+Version 1.6.1 (2019-05-21)
+--------------------------
 
 The project name changes to "pyperf" from "perf", to avoid confusion
 with the `Linux perf project <https://perf.wiki.kernel.org/>`_ which has
