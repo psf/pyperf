@@ -57,7 +57,7 @@ def main():
         'long_description': long_description,
         'url': 'https://github.com/vstinner/pyperf',
         'author': 'Victor Stinner',
-        'author_email': 'victor.stinner@gmail.com',
+        'author_email': 'vstinner@redhat.com',
         'classifiers': CLASSIFIERS,
         'packages': ['pyperf', 'pyperf.tests'],
         'install_requires': ["six"],
