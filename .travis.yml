@@ -1,10 +1,8 @@
+dist: xenial   # required for Python >= 3.7
 language: python
-env:
-  - TOXENV=py27
-  - TOXENV=py34
-  - TOXENV=doc
-  - TOXENV=pep8
-# upgrade setuptools to support environment markers
-# in install_requires of setup.py
-install: pip install -U setuptools tox
-script: tox
+python:
+  - "3.7"
+  - "3.7-dev"  # 3.7 development branch
+  - "3.8-dev"  # 3.8 development branch
+  - "nightly"  # nightly build
+script: python -c "import sys; print(sys.version)"
