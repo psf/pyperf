@@ -62,6 +62,15 @@ class TestStatistics(unittest.TestCase):
         self.assertEqual(utils.median_abs_dev(range(97)), 24.0)
         self.assertEqual(utils.median_abs_dev((1, 1, 2, 2, 4, 6, 9)), 1.0)
 
+    def test_percentile(self):
+        # randomized range(10)
+        values = [4, 6, 9, 7, 5, 8, 3, 0, 1, 2]
+        self.assertEqual(utils.percentile(values, 0.00), 0)
+        self.assertEqual(utils.percentile(values, 0.25), 2.25)
+        self.assertEqual(utils.percentile(values, 0.50), 4.5)
+        self.assertEqual(utils.percentile(values, 0.75), 6.75)
+        self.assertEqual(utils.percentile(values, 1.00), 9)
+
 
 class TestUtils(unittest.TestCase):
     def test_parse_iso8601(self):
