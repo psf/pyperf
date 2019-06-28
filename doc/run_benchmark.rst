@@ -151,7 +151,7 @@ have a result depending on the current locale.
 See also:
 
 * `Microbenchmarks article
-  <http://vstinner.readthedocs.io/microbenchmark.html>`_ (by Victor Stinner)
+  <http://vstinner.readthedocs.io/benchmark.html>`_ (by Victor Stinner)
   contains misc information on how to run stable benchmarks.
 * `SPEC CPU2000: Measuring CPU Performance in the New Millennium
   <https://open.spec.org/cpu2000/papers/COMPUTER_200007.JLH.pdf>`_ by John L.
