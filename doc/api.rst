@@ -673,6 +673,7 @@ Benchmark:
 
 Python metadata:
 
+* ``python_compiler``: Compiler name and version.
 * ``python_cflags``: Compiler flags used to compile Python.
 * ``python_executable``: path to the Python executable
 * ``python_hash_seed``: value of the ``PYTHONHASHSEED`` environment variable

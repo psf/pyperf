@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version DEV (XXXX-XX-XX)
+--------------------------
+
+* metadata: add ``python_compiler``
+
 Version 1.6.1 (2019-05-21)
 --------------------------
 
