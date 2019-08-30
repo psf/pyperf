@@ -1,7 +1,7 @@
 language: python
 env:
   - TOXENV=py27
-  - TOXENV=py34
+  - TOXENV=py3
   - TOXENV=doc
   - TOXENV=pep8
 # upgrade setuptools to support environment markers
