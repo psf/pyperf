@@ -108,7 +108,7 @@ def collect_python_metadata(metadata):
         else:
             metadata['python_hash_seed'] = hash_seed
 
-    # compliler
+    # compiler
     python_compiler = normalize_text(platform.python_compiler())
     if python_compiler:
         metadata['python_compiler'] = python_compiler
