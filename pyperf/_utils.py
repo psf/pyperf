@@ -350,7 +350,7 @@ def abs_executable(python):
 def create_environ(inherit_environ, locale):
     env = {}
 
-    copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot"]
+    copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive"]
     if locale:
         copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
                          'LC_CTYPE', 'LC_IDENTIFICATION', 'LC_MEASUREMENT',
