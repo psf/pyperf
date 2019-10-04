@@ -295,7 +295,7 @@ The following options were not tested by pyperf developers.
   C-states. Open the device, write a 32-bit ``0`` to it, then keep it open
   while your tests runs, close when you're finished. See
   `processor.max_cstate, intel_idle.max_cstate and /dev/cpu_dma_latency
-  <http://www.breakage.org/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/>`_.
+  <https://jeremyeder.com/2012/11/14/processor-max_cstate-intel_idle-max_cstate-and-devcpu_dma_latency/>`_.
 
 Misc (untested) Linux commands::
 
