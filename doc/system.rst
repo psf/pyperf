@@ -33,7 +33,7 @@ Check the CPU topology for HyperThreading and NUMA for best performances.
 See also:
 
 * `nohz_full=godmode ?
-  <http://www.breakage.org/2013/11/15/nohz_fullgodmode/>`_ (by Jeremy Eder, November 2013)
+  <https://jeremyeder.com/2013/11/15/nohz_fullgodmode/>`_ (by Jeremy Eder, November 2013)
 * `cset shield - easily configure cpusets
   <http://skebanga.blogspot.it/2012/06/cset-shield-easily-configure-cpusets.html>`_
 * `cpuset <https://github.com/lpechacek/cpuset>`_
