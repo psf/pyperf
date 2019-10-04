@@ -8,7 +8,7 @@ from pyperf._utils import proc_path
 
 # Code to parse Linux /proc/%d/smaps files.
 #
-# See 
+# See
 # https://web.archive.org/web/20180907232758/https://bmaurer.blogspot.com/2006/03/memory-usage-with-smaps.html
 # for a quick introduction to smaps.
 #
