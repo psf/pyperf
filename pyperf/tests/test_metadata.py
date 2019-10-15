@@ -14,7 +14,7 @@ MANDATORY_METADATA = [
     'python_implementation', 'python_version',
     'platform']
 if sys.platform.startswith('linux'):
-    MANDATORY_METADATA.extend(('aslr', 'cpu_model_name'))
+    MANDATORY_METADATA.append('aslr')
 
 
 class TestMetadata(unittest.TestCase):
