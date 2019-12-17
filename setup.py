@@ -26,11 +26,11 @@
 #  - git commit -a -m "post-release"
 #  - git push
 
-VERSION = '1.6.1'
+VERSION = '1.7.0'
 
 DESCRIPTION = 'Python module to run and analyze benchmarks'
 CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',

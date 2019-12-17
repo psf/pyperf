@@ -1,10 +1,19 @@
 Changelog
 =========
 
-Version DEV (XXXX-XX-XX)
+Version 1.7.0 (2019-12-17)
 --------------------------
 
 * metadata: add ``python_compiler``
+* Windows: inherit ``SystemDrive`` environment variable by default.
+  Contribution by Steve Dower.
+* Fix tests on ARM and PPC: cpu_model_name metadata is no longer required
+  on Linux.
+* tests: Do not allow test suite to execute without unittest2 on Python2,
+  otherwise man failures occur due to missing 'assertRegex'.
+  Contribution by John Vandenberg.
+* doc: Update old/dead links.
+* Travis CI: drop Python 3.4 support.
 
 Version 1.6.1 (2019-05-21)
 --------------------------
