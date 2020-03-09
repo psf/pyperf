@@ -4,7 +4,8 @@ Changelog
 Version 2.0.0
 -------------
 
-* Drop Python 2 support.
+* Drop Python 2 support. Use pyperf 1.7.1 if you still need Python 2.7
+  support.
 * Remove ``python_unicode`` metadata.
 * pyperf.perf_counter() is now deprecated: use time.perf_counter() directly.
 
