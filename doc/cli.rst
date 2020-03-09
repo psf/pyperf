@@ -114,10 +114,10 @@ two-sample, two-tailed t-test
 
 Example::
 
-    $ python3 -m pyperf compare_to py2.json py3.json
-    Mean +- std dev: [py2] 4.70 us +- 0.18 us -> [py3] 4.22 us +- 0.08 us: 1.11x faster (-10%)
+    $ python3 -m pyperf compare_to py36.json py38.json
+    Mean +- std dev: [py36] 4.70 us +- 0.18 us -> [py38] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
-On this example, py2 is faster and so used as the reference.
+On this example, py36 is faster and so used as the reference.
 
 See also the ``--compare-to`` :ref:`option of the Runner CLI <runner_cli>`.
 

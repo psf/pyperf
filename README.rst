@@ -92,9 +92,9 @@ There's also:
   of multiple benchmarks)
   ::
 
-    $ python3 -m pyperf compare_to py2.json py3.json --table
+    $ python3 -m pyperf compare_to py36.json py38.json --table
     +-----------+---------+------------------------------+
-    | Benchmark | py2     | py3                          |
+    | Benchmark | py36    | py38                         |
     +===========+=========+==============================+
     | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
     +-----------+---------+------------------------------+

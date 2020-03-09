@@ -42,11 +42,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         bench1 = self.create_bench((1.0, 1.5, 2.0),
                                    metadata={'hostname': 'toto',
                                              'python_version': '2.7',
-                                             'name': 'py2'})
+                                             'name': 'py36'})
         bench2 = self.create_bench((1.5, 2.0, 2.5),
                                    metadata={'hostname': 'toto',
                                              'python_version': '3.4',
-                                             'name': 'py3'})
+                                             'name': 'py38'})
         return pyperf.BenchmarkSuite([bench1, bench2])
 
     def test_show_common_metadata(self):
@@ -62,16 +62,16 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             - hostname: toto
 
-            py2
-            ---
+            py36
+            ----
 
             Metadata:
             - python_version: 2.7
 
             Mean +- std dev: 1.50 sec +- 0.50 sec
 
-            py3
-            ---
+            py38
+            ----
 
             Metadata:
             - python_version: 3.4
@@ -93,14 +93,14 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             - hostname: toto
 
-            py2
-            ---
+            py36
+            ----
 
             Metadata:
             - python_version: 2.7
 
-            py3
-            ---
+            py38
+            ----
 
             Metadata:
             - python_version: 3.4
@@ -405,8 +405,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             stdout = self.run_command('check', tmp_name)
 
         expected = textwrap.dedent("""
-            py2
-            ---
+            py36
+            ----
 
             WARNING: the benchmark result may be unstable
             * the standard deviation (500 ms) is 33% of the mean (1.50 sec)
@@ -416,8 +416,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Use pyperf stats, pyperf dump and pyperf hist to analyze results.
             Use --quiet option to hide these warnings.
 
-            py3
-            ---
+            py38
+            ----
 
             WARNING: the benchmark result may be unstable
             * the standard deviation (500 ms) is 25% of the mean (2.00 sec)
