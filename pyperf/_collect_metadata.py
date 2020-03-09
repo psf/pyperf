@@ -92,7 +92,7 @@ def collect_python_metadata(metadata):
         metadata['timer'] = ('%s, resolution: %s'
                              % (info.implementation,
                                 format_timedelta(info.resolution)))
-    elif pyperf.perf_counter == time.clock:
+    elif (hasattr(time, 'clock') and pyperf.perf_counter == time.clock):
         metadata['timer'] = 'time.clock()'
     elif pyperf.perf_counter == time.time:
         metadata['timer'] = 'time.time()'
