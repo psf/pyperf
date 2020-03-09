@@ -18,7 +18,9 @@ class SystemTests(unittest.TestCase):
 
         # The return code is either 0 if the system is tuned or 2 if the
         # system isn't
-        self.assertIn(proc.returncode, (0, 2), msg=proc)
+        # Also it can return 1 if /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+        # is not available
+        self.assertIn(proc.returncode, (0, 1, 2), msg=proc)
 
 
 if __name__ == "__main__":
