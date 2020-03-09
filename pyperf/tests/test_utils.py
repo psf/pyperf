@@ -158,13 +158,13 @@ class TestUtils(unittest.TestCase):
                          '12.4 MB')
 
     def test_get_python_names(self):
-        self.assertEqual(utils.get_python_names('/usr/bin/python2.7',
-                                                '/usr/bin/python3.5'),
-                         ('python2.7', 'python3.5'))
+        self.assertEqual(utils.get_python_names('/usr/bin/python3.6',
+                                                '/usr/bin/python3.8'),
+                         ('python3.6', 'python3.8'))
 
-        self.assertEqual(utils.get_python_names('/bin/python2.7',
-                                                '/usr/bin/python2.7'),
-                         ('/bin/python2.7', '/usr/bin/python2.7'))
+        self.assertEqual(utils.get_python_names('/bin/python3.6',
+                                                '/usr/bin/python3.6'),
+                         ('/bin/python3.6', '/usr/bin/python3.6'))
 
 
 class CPUToolsTests(unittest.TestCase):

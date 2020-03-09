@@ -379,7 +379,7 @@ class TestRunner(unittest.TestCase):
             cm.enter_context(mock.patch('pyperf._master._load_suite_from_pipe',
                                         return_value=suite))
 
-            args = ["--python=python1", "--compare-to=python2", "--min-time=5",
+            args = ["--python=python3.8", "--compare-to=python3.6", "--min-time=5",
                     "-p1", "-w3", "-n7", "-l11"]
             runner = self.create_runner(args)
             with tests.capture_stdout():
@@ -397,8 +397,8 @@ class TestRunner(unittest.TestCase):
                     kw['pass_fds'] = mock.ANY
                 return mock.call(args, env=mock.ANY, **kw)
 
-            call1 = popen_call('python2')
-            call2 = popen_call('python1')
+            call1 = popen_call('python3.6')
+            call2 = popen_call('python3.8')
             mock_subprocess.Popen.assert_has_calls([call1, call2])
 
     def test_parse_args_twice_error(self):

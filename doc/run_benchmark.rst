@@ -20,7 +20,7 @@ setuptools to support environment markers in ``install_requires`` of
 
 Optional dependencies:
 
-* Python module ``psutil``. Install: ``python2 -m pip install -U psutil``.
+* Python module ``psutil``. Install: ``python3 -m pip install -U psutil``.
 
 pyperf requires Python 3.6 or newer.
 
