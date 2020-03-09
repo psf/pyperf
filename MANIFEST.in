@@ -4,6 +4,7 @@ include README.rst
 include TODO.rst
 include tox.ini
 include .travis.yml
+include test-requirements.txt
 
 include pyperf/tests/*.json
 
