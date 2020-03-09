@@ -1,10 +1,10 @@
 Changelog
 =========
 
-Version 1.7.1
--------------
+Version 1.7.1 (2020-03-09)
+--------------------------
 
-* Support Python 3.8.
+* Support Python 3.8: ``time.clock()`` no longer exists.
 
 Version 1.7.0 (2019-12-17)
 --------------------------
