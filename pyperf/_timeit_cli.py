@@ -1,8 +1,6 @@
 """
 "pyperf timeit" microbenchmark command based on the Python timeit module.
 """
-from __future__ import division, print_function, absolute_import
-
 from pyperf._runner import Runner
 from pyperf._timeit import bench_timeit
 

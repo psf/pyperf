@@ -1,20 +1,11 @@
-from __future__ import division, print_function, absolute_import
-
-import sys
-
 import statistics
+import sys
+import time
 
 import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
 from pyperf._utils import MS_WINDOWS, percentile, median_abs_dev
-
-try:
-    # Python 3.3 provides a real monotonic clock (PEP 418)
-    from time import monotonic as monotonic_clock
-except ImportError:
-    # time.time() can go backward on Python 2, but it's fine for Runner
-    from time import time as monotonic_clock
 
 
 MAX_LOOPS = 2 ** 32
@@ -289,9 +280,9 @@ class WorkerTask:
         self.metadata['loops'] = self.loops
 
     def create_run(self):
-        start_time = monotonic_clock()
+        start_time = time.monotonic()
         self.compute()
-        self.metadata['duration'] = monotonic_clock() - start_time
+        self.metadata['duration'] = time.monotonic() - start_time
 
         return pyperf.Run(self.values,
                           warmups=self.warmups,

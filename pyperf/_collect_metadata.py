@@ -1,5 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
 import datetime
 import os
 import platform
@@ -76,26 +74,11 @@ def collect_python_metadata(metadata):
     if sys.executable:
         metadata['python_executable'] = sys.executable
 
-    # Before PEP 393 (Python 3.3)
-    if sys.version_info < (3, 3):
-        if sys.maxunicode == 0xffff:
-            unicode_impl = 'UTF-16'
-        else:
-            unicode_impl = 'UCS-4'
-        metadata['python_unicode'] = unicode_impl
-
     # timer
-    if (hasattr(time, 'perf_counter')
-       and pyperf.perf_counter == time.perf_counter):
-
-        info = time.get_clock_info('perf_counter')
-        metadata['timer'] = ('%s, resolution: %s'
-                             % (info.implementation,
-                                format_timedelta(info.resolution)))
-    elif (hasattr(time, 'clock') and pyperf.perf_counter == time.clock):
-        metadata['timer'] = 'time.clock()'
-    elif pyperf.perf_counter == time.time:
-        metadata['timer'] = 'time.time()'
+    info = time.get_clock_info('perf_counter')
+    metadata['timer'] = ('%s, resolution: %s'
+                         % (info.implementation,
+                            format_timedelta(info.resolution)))
 
     # PYTHONHASHSEED
     if os.environ.get('PYTHONHASHSEED'):
@@ -137,14 +120,9 @@ def collect_python_metadata(metadata):
 def read_proc(path):
     path = proc_path(path)
     try:
-        fp = open_text(path)
-        try:
+        with open_text(path) as fp:
             for line in fp:
                 yield line.rstrip()
-        finally:
-            # don't use context manager to support StringIO on Python 2
-            # for unit tests
-            fp.close()
     except (OSError, IOError):
         return
 

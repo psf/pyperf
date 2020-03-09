@@ -21,9 +21,7 @@ processes to isolated CPUs (when isolated CPUs are detected). CPU pinning can
 be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 :ref:`metadata <metadata>` is set.
 
-On Python 3.3 and newer, :func:`os.sched_setaffinity` is used to pin processes.
-On Python 2.7, the Python module ``psutil`` is required for
-``psutil.Process().cpu_affinity()``.
+:func:`os.sched_setaffinity` is used to pin processes.
 
 Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
 ``--affinity`` command line option.

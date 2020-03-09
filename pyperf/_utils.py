@@ -1,25 +1,11 @@
-from __future__ import division, print_function, absolute_import
-
 import contextlib
 import datetime
 import math
 import os
-import sys
-
-import six
 import statistics
-
-if sys.version_info < (3, 4):
-    try:
-        import fcntl
-    except ImportError:
-        fcntl = None
-
-try:
-    from shlex import quote as shell_quote   # noqa
-except ImportError:
-    # Python 2
-    from pipes import quote as shell_quote   # noqa
+import sys
+from shlex import quote as shell_quote   # noqa
+from shutil import which
 
 
 MS_WINDOWS = (sys.platform == 'win32')
@@ -172,21 +158,13 @@ def parse_run_list(run_list):
 
 def open_text(path, write=False):
     mode = "w" if write else "r"
-    if six.PY3:
-        return open(path, mode, encoding="utf-8")
-    else:
-        return open(path, mode)
+    return open(path, mode, encoding="utf-8")
 
 
 def read_first_line(path, error=False):
     try:
-        fp = open_text(path)
-        try:
+        with open_text(path) as fp:
             line = fp.readline()
-        finally:
-            # don't use context manager to support StringIO on Python 2
-            # for unit tests
-            fp.close()
         return line.rstrip()
     except IOError:
         if error:
@@ -265,62 +243,6 @@ def get_python_names(python1, python2):
     return (python1, python2)
 
 
-_which = None
-
-
-def which(*args, **kw):
-    # Wrapper to which() to use lazy import for 'import shutil'
-    global _which
-
-    if _which is None:
-        try:
-            # Python 3.3
-            from shutil import which as _which
-        except ImportError:
-            # Backport shutil.which() from Python 3.6,
-            # comments/docstring stripped
-            def _which(cmd, mode=os.F_OK | os.X_OK, path=None):
-                def _access_check(fn, mode):
-                    return (os.path.exists(fn) and os.access(fn, mode)
-                            and not os.path.isdir(fn))
-
-                if os.path.dirname(cmd):
-                    if _access_check(cmd, mode):
-                        return cmd
-                    return None
-
-                if path is None:
-                    path = os.environ.get("PATH", os.defpath)
-                if not path:
-                    return None
-                path = path.split(os.pathsep)
-
-                if sys.platform == "win32":
-                    if os.curdir not in path:
-                        path.insert(0, os.curdir)
-
-                    pathext = os.environ.get("PATHEXT", "").split(os.pathsep)
-                    if any(cmd.lower().endswith(ext.lower()) for ext in pathext):
-                        files = [cmd]
-                    else:
-                        files = [cmd + ext for ext in pathext]
-                else:
-                    files = [cmd]
-
-                seen = set()
-                for dir in path:
-                    normdir = os.path.normcase(dir)
-                    if normdir not in seen:
-                        seen.add(normdir)
-                        for thefile in files:
-                            name = os.path.join(dir, thefile)
-                            if _access_check(name, mode):
-                                return name
-                return None
-
-    return _which(*args, **kw)
-
-
 def abs_executable(python):
     orig_python = python
 
@@ -365,38 +287,6 @@ def create_environ(inherit_environ, locale):
     return env
 
 
-if MS_WINDOWS:
-    if hasattr(os, 'set_handle_inheritable'):
-        # Python 3.4 and newer
-        set_handle_inheritable = os.set_handle_inheritable
-    else:
-        import ctypes
-        from ctypes import WinError
-
-        HANDLE_FLAG_INHERIT = 1
-        SetHandleInformation = ctypes.windll.kernel32.SetHandleInformation
-
-        def set_handle_inheritable(handle, inheritable):
-            flags = HANDLE_FLAG_INHERIT if inheritable else 0
-
-            ok = SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags)
-            if not ok:
-                raise WinError()
-else:
-    if hasattr(os, 'set_inheritable'):
-        set_inheritable = os.set_inheritable
-    elif fcntl is not None:
-        def set_inheritable(fd, inheritable):
-            flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-            if inheritable:
-                flags &= ~fcntl.FD_CLOEXEC
-            else:
-                flags |= fcntl.FD_CLOEXEC
-            fcntl.fcntl(fd, fcntl.F_SETFD, flags)
-    else:
-        set_inheritable = None
-
-
 class _Pipe(object):
     _OPEN_MODE = "r"
 
@@ -430,10 +320,7 @@ class _Pipe(object):
 
 class ReadPipe(_Pipe):
     def open_text(self):
-        if six.PY3:
-            file = open(self._fd, "r", encoding="utf8")
-        else:
-            file = os.fdopen(self._fd, "r")
+        file = open(self._fd, "r", encoding="utf8")
         self._file = file
         return file
 
@@ -441,10 +328,10 @@ class ReadPipe(_Pipe):
 class WritePipe(_Pipe):
     def to_subprocess(self):
         if MS_WINDOWS:
-            set_handle_inheritable(self._handle, True)
+            os.set_handle_inheritable(self._handle, True)
             arg = self._handle
         else:
-            set_inheritable(self._fd, True)
+            os.set_inheritable(self._fd, True)
             arg = self._fd
         return str(arg)
 
@@ -458,21 +345,13 @@ class WritePipe(_Pipe):
         return cls(fd)
 
     def open_text(self):
-        if six.PY3:
-            file = open(self._fd, "w", encoding="utf8")
-        else:
-            file = os.fdopen(self._fd, "w")
+        file = open(self._fd, "w", encoding="utf8")
         self._file = file
         return file
 
 
 def create_pipe():
     rfd, wfd = os.pipe()
-    # On Windows, os.pipe() creates non-inheritable handles
-    if not MS_WINDOWS:
-        set_inheritable(rfd, False)
-        set_inheritable(wfd, False)
-
     rpipe = ReadPipe(rfd)
     wpipe = WritePipe(wfd)
     return (rpipe, wpipe)
@@ -493,10 +372,8 @@ def percentile(values, p):
         raise ValueError("no value")
 
     k = (len(values) - 1) * p
-    # Python 3 returns integers: cast explicitly to int
-    # to get the same behaviour on Python 2
-    f = int(math.floor(k))
-    c = int(math.ceil(k))
+    f = math.floor(k)
+    c = math.ceil(k)
     if f != c:
         d0 = values[f] * (c - k)
         d1 = values[c] * (k - f)

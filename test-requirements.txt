@@ -1,5 +1,2 @@
-contextlib2; python_version < '3.0'
-mock; python_version < '3.0'
 nose
 psutil; platform_python_implementation != "PyPy"
-unittest2; python_version < '3.0'

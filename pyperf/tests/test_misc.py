@@ -1,10 +1,10 @@
 import os.path
 import sys
+import unittest
 
 import pyperf
 from pyperf import _utils as utils
 from pyperf import tests
-from pyperf.tests import unittest
 
 
 class MiscTests(unittest.TestCase):

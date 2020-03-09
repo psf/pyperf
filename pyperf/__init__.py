@@ -1,24 +1,11 @@
-from __future__ import division, print_function, absolute_import
+from time import perf_counter
 
-VERSION = (1, 7, 2)
+VERSION = (2, 0, 0)
 __version__ = '.'.join(map(str, VERSION))
 
-# Clocks
-try:
-    # Python 3.3+ (PEP 418)
-    from time import perf_counter
-except ImportError:
-    import sys
-    import time
-
-    if sys.platform == "win32":
-        perf_counter = time.clock
-    else:
-        perf_counter = time.time
-
-    del sys, time
+# Export pyperf.perf_counter for backward compatibility with pyperf 1.7
+# which supports Python 2 and Python 3
 __all__ = ['perf_counter']
-
 
 from pyperf._utils import python_implementation, python_has_jit  # noqa
 __all__.extend(('python_implementation', 'python_has_jit'))

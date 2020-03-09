@@ -1,12 +1,11 @@
+import io
 import sys
 import textwrap
-
-import six
+import unittest
+from unittest import mock
 
 from pyperf import _collect_metadata as perf_metadata
 from pyperf._metadata import METADATA_VALUE_TYPES
-from pyperf.tests import mock
-from pyperf.tests import unittest
 
 
 MANDATORY_METADATA = [
@@ -32,7 +31,7 @@ class TestMetadata(unittest.TestCase):
             # test value
             self.assertIsInstance(value, METADATA_VALUE_TYPES)
             self.assertNotEqual(value, '')
-            if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 self.assertEqual(value.strip(), value)
                 self.assertNotIn('\n', value)
 
@@ -165,7 +164,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 data = 'IDLE_DRV\n'
             else:
                 raise ValueError("unexpect open: %r" % filename)
-            return six.StringIO(data)
+            return io.StringIO(data)
 
         with mock.patch('pyperf._collect_metadata.get_isolated_cpus', return_value=[2]):
             with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
@@ -198,7 +197,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 raise IOError
             else:
                 raise ValueError("unexpect open: %r" % filename)
-            return six.StringIO(data)
+            return io.StringIO(data)
 
         with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
             metadata = {}
@@ -216,7 +215,7 @@ class CpuFunctionsTests(unittest.TestCase):
                 data = self.POWER8_CPUINFO
             else:
                 raise ValueError("unexpect open: %r" % filename)
-            return six.StringIO(data)
+            return io.StringIO(data)
 
         with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
             metadata = {}

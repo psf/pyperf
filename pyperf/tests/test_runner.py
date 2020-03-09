@@ -3,15 +3,13 @@ import os.path
 import sys
 import tempfile
 import textwrap
-
-import six
+import unittest
+from contextlib import ExitStack
+from unittest import mock
 
 import pyperf
 from pyperf import tests
 from pyperf._utils import create_pipe, MS_WINDOWS, shell_quote
-from pyperf.tests import mock
-from pyperf.tests import unittest
-from pyperf.tests import ExitStack
 
 
 def check_args(loops, a, b):
@@ -49,7 +47,7 @@ class TestRunner(unittest.TestCase):
 
         runner = self.create_runner(args, **kwargs)
 
-        with mock.patch('pyperf.perf_counter', fake_timer):
+        with mock.patch('time.perf_counter', fake_timer):
             with tests.capture_stdout() as stdout:
                 with tests.capture_stderr() as stderr:
                     if time_func:
@@ -395,7 +393,7 @@ class TestRunner(unittest.TestCase):
                 kw = {}
                 if MS_WINDOWS:
                     kw['close_fds'] = False
-                elif six.PY3:
+                else:
                     kw['pass_fds'] = mock.ANY
                 return mock.call(args, env=mock.ANY, **kw)
 

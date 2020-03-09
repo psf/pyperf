@@ -1,6 +1,7 @@
+import unittest
+
 import pyperf
 from pyperf import _cli as cli
-from pyperf.tests import unittest
 
 
 class CLITests(unittest.TestCase):

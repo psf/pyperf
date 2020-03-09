@@ -1,5 +1,3 @@
-from __future__ import division, print_function, absolute_import
-
 import sys
 
 from pyperf._cli import display_title, format_result_value

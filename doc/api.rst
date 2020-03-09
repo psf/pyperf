@@ -29,19 +29,8 @@ Functions
 
 .. function:: perf_counter()
 
-   Return the value (in fractional seconds) of a performance counter, i.e. a
-   clock with the highest available resolution to measure a short duration.  It
-   does include time elapsed during sleep and is system-wide.  The reference
-   point of the returned value is undefined, so that only the difference between
-   the results of consecutive calls is valid.
-
-   On Python 3.3 and newer, it's :func:`time.perf_counter`. On older versions,
-   it's :func:`time.clock` on Windows and :func:`time.time` on other
-   platforms. See the PEP 418 for more information on Python clocks.
-
-   See also `PEP 418 -- Add monotonic time, performance counter, and process
-   time functions <https://www.python.org/dev/peps/pep-0418/>`_.
-
+   Deprecated alias to ``time.perf_counter()``: use ``time.perf_counter()``
+   directly.
 
 .. function:: python_implementation()
 
@@ -168,7 +157,6 @@ Benchmark class
       * ``platform``
       * ``python_executable``
       * ``python_implementation``
-      * ``python_unicode``
       * ``python_version``
       * ``unit``
 
@@ -587,7 +575,7 @@ Runner class
 
    .. method:: bench_command(name, command)
 
-      Benchmark the execution time of a command using :func:`perf_counter`
+      Benchmark the execution time of a command using :func:`time.perf_counter`
       timer. Measure the wall-time, not CPU time.
 
       *command* must be a sequence of arguments, the first argument must be the
@@ -617,7 +605,7 @@ Runner class
       divide raw timings by ``loops x inner_loops`` (*loops* and *inner_loops*
       parameters).
 
-      :func:`perf_counter` should be used to measure the elapsed time.
+      :func:`time.perf_counter` should be used to measure the elapsed time.
 
       *name* is the benchmark name, it must be unique in the same script.
 
@@ -668,7 +656,7 @@ Benchmark:
 * ``name`` (non-empty str): benchmark name
 * ``loops`` (``int >= 1``): number of outer-loops per value (``int``)
 * ``inner_loops`` (``int >= 1``): number of inner-loops of the benchmark (``int``)
-* ``timer``: Implementation of ``pyperf.perf_counter()``, and also resolution if
+* ``timer``: Implementation of ``time.perf_counter()``, and also resolution if
   available
 
 Python metadata:
@@ -682,8 +670,6 @@ Python metadata:
   ``pypy``, etc.
 * ``python_version``: Python version, with the architecture (32 or 64 bits) if
   available, ex: ``2.7.11 (64bit)``
-* ``python_unicode``: Implementation of Unicode, ``UTF-16`` or ``UCS-4``,
-  only set on Python 2.7, Python 3.2 and older
 
 Memory metadata:
 

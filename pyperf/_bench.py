@@ -1,12 +1,9 @@
-from __future__ import division, print_function, absolute_import
-
 import datetime
 import errno
 import math
 import os.path
 import sys
 
-import six
 import statistics
 
 from pyperf._metadata import (NUMBER_TYPES, parse_metadata,
@@ -736,22 +733,16 @@ class BenchmarkSuite(object):
         if filename.endswith(suffix):
             # Use lazy import to limit imports on 'import pyperf'
             import gzip
-            if six.PY3:
-                return gzip.open(filename, "rt", encoding="utf-8")
-            else:
-                return gzip.open(filename, "rb")
+            return gzip.open(filename, "rt", encoding="utf-8")
         else:
-            if six.PY3:
-                return open(filename, "r", encoding="utf-8")
-            else:
-                return open(filename, "rb")
+            return open(filename, "r", encoding="utf-8")
 
     @classmethod
     def load(cls, file):
         # Use lazy import to limit imports on 'import pyperf'
         import json
 
-        if isinstance(file, (bytes, six.text_type)):
+        if isinstance(file, (bytes, str)):
             if file != '-':
                 filename = file
                 fp = cls._load_open(filename)
@@ -789,15 +780,9 @@ class BenchmarkSuite(object):
             # Use lazy import to limit imports on 'import pyperf'
             import gzip
 
-            if six.PY3:
-                return gzip.open(filename, mode="wt", encoding="utf-8")
-            else:
-                return gzip.open(filename, mode="wb")
+            return gzip.open(filename, mode="wt", encoding="utf-8")
         else:
-            if six.PY3:
-                return open(filename, "w", encoding="utf-8")
-            else:
-                return open(filename, "wb")
+            return open(filename, "w", encoding="utf-8")
 
     def _as_json(self):
         metadata = self.get_metadata()
@@ -824,7 +809,7 @@ class BenchmarkSuite(object):
             fp.write("\n")
             fp.flush()
 
-        if isinstance(file, (bytes, six.text_type)):
+        if isinstance(file, (bytes, str)):
             fp = self._dump_open(file, replace)
             with fp:
                 dump(data, fp, compact)

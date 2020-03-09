@@ -2,7 +2,7 @@
 Similar to UNIX time command: measure the execution time of a command.
 
 Minimum Python script spawning a program, wait until it completes, and then
-write the elapsed time into stdout. Time is measured by the perf_counter()
+write the elapsed time into stdout. Time is measured by the time.perf_counter()
 timer.
 
 Python subprocess.Popen() is implemented with fork()+exec(). Minimize the
@@ -14,21 +14,10 @@ Measure wall-time, not CPU time.
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
-from __future__ import division, print_function, absolute_import
-
 import os
 import subprocess
 import sys
-
-try:
-    # Python 3.3+ (PEP 418)
-    from time import perf_counter
-except ImportError:
-    import time
-    if sys.platform == "win32":
-        perf_counter = time.clock
-    else:
-        perf_counter = time.time
+import time
 
 try:
     import resource
@@ -44,24 +33,16 @@ def get_max_rss():
         return 0
 
 
-PY3 = (sys.version_info >= (3,))
-if PY3:
-    xrange = range
-
-
-def bench_process(timer, loops, args, kw):
+def bench_process(loops, args, kw):
     max_rss = 0
-    range_it = xrange(loops)
-    start_time = timer()
+    range_it = range(loops)
+    start_time = time.perf_counter()
 
     for loop in range_it:
         start_rss = get_max_rss()
 
         proc = subprocess.Popen(args, **kw)
-        if PY3:
-            with proc:
-                proc.wait()
-        else:
+        with proc:
             proc.wait()
 
         exitcode = proc.returncode
@@ -75,7 +56,7 @@ def bench_process(timer, loops, args, kw):
         rss = get_max_rss() - start_rss
         max_rss = max(max_rss, rss)
 
-    dt = timer() - start_time
+    dt = time.perf_counter() - start_time
     return (dt, max_rss)
 
 
@@ -93,7 +74,6 @@ def main():
 
     loops = int(sys.argv[1])
     args = sys.argv[2:]
-    timer = perf_counter
 
     kw = {}
     if hasattr(subprocess, 'DEVNULL'):
@@ -106,7 +86,7 @@ def main():
         kw['stdout'] = devnull
     kw['stderr'] = subprocess.STDOUT
 
-    dt, max_rss = bench_process(timer, loops, args, kw)
+    dt, max_rss = bench_process(loops, args, kw)
 
     if devnull is not None:
         devnull.close()

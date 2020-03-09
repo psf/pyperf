@@ -1,15 +1,13 @@
 import datetime
 import errno
 import gzip
-
-import six
+import unittest
 
 import pyperf
 from pyperf import tests
-from pyperf.tests import unittest
 
 
-NUMBER_TYPES = six.integer_types + (float,)
+NUMBER_TYPES = (int, float)
 
 
 def create_run(values=None, warmups=None, metadata=None):
@@ -220,11 +218,7 @@ class BenchmarkTests(unittest.TestCase):
         with tests.temporary_file(suffix='.gz') as tmp_name:
             bench.dump(tmp_name)
 
-            if six.PY3:
-                fp = gzip.open(tmp_name, 'rt', encoding='utf-8')
-            else:
-                fp = gzip.open(tmp_name, 'rb')
-            with fp:
+            with gzip.open(tmp_name, 'rt', encoding='utf-8') as fp:
                 json = fp.read()
 
         expected = tests.benchmark_as_json(bench)

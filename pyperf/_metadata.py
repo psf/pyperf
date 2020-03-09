@@ -1,14 +1,11 @@
-from __future__ import division, print_function, absolute_import
-
 import collections
-import six
 
 from pyperf._formatter import (format_number, format_seconds, format_filesize,
                                UNIT_FORMATTERS)
 
 
-METADATA_VALUE_TYPES = six.integer_types + six.string_types + (float,)
-NUMBER_TYPES = six.integer_types + (float,)
+METADATA_VALUE_TYPES = (int, str, float)
+NUMBER_TYPES = (int, float)
 
 
 def _common_metadata(metadatas):
@@ -26,7 +23,7 @@ def _common_metadata(metadatas):
 
 
 def format_generic(value):
-    if not isinstance(value, six.string_types):
+    if not isinstance(value, str):
         return str(value)
 
     return value
@@ -60,10 +57,10 @@ def format_noop(value):
 # types: accepted types
 _MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
-BYTES = _MetadataInfo(format_filesize, six.integer_types, is_strictly_positive, 'byte')
-DATETIME = _MetadataInfo(format_noop, six.string_types, None, None)
-LOOPS = _MetadataInfo(format_number, six.integer_types, is_strictly_positive, 'integer')
-WARMUPS = _MetadataInfo(format_number, six.integer_types, is_positive, 'integer')
+BYTES = _MetadataInfo(format_filesize, (int,), is_strictly_positive, 'byte')
+DATETIME = _MetadataInfo(format_noop, (str,), None, None)
+LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, 'integer')
+WARMUPS = _MetadataInfo(format_number, (int,), is_positive, 'integer')
 SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second')
 
 # Registry of metadata keys
@@ -79,7 +76,7 @@ METADATA = {
     'mem_peak_pagefile_usage': BYTES,
     'command_max_rss': BYTES,
 
-    'unit': _MetadataInfo(format_noop, six.string_types, UNIT_FORMATTERS.__contains__, None),
+    'unit': _MetadataInfo(format_noop, (str,), UNIT_FORMATTERS.__contains__, None),
     'date': DATETIME,
     'boot_time': DATETIME,
 
@@ -99,7 +96,7 @@ def get_metadata_info(name):
 def check_metadata(name, value):
     info = get_metadata_info(name)
 
-    if not isinstance(name, six.string_types):
+    if not isinstance(name, str):
         raise TypeError("metadata name must be a string, got %s"
                         % type(name).__name__)
 
@@ -115,7 +112,7 @@ def check_metadata(name, value):
 def parse_metadata(metadata):
     result = {}
     for name, value in metadata.items():
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = value.strip()
             if '\n' in value or '\r' in value:
                 raise ValueError("newline characters are not allowed "
@@ -153,11 +150,6 @@ class Metadata(object):
         if not isinstance(other, Metadata):
             return False
         return (self._name == other._name and self._value == other._value)
-
-    if six.PY2:
-        def __ne__(self, other):
-            # negate __eq__()
-            return not(self == other)
 
     def __repr__(self):
         return ('<pyperf.Metadata name=%r value=%r>'

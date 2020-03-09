@@ -483,13 +483,13 @@ Example::
     .........................
     Mean +- std dev: 104 ns +- 1 ns
 
-Compare Python 3 to Python 2::
+Compare Python 3.8 to Python 3.6::
 
-    $ python3 -m pyperf timeit '" abc ".strip()' --duplicate=1024 --compare-to=python2
-    python2: ..................... 84.6 ns +- 4.4 ns
-    python3: ..................... 104 ns +- 0 ns
+    $ python3.8 -m pyperf timeit '" abc ".strip()' --duplicate=1024 --compare-to=python3.6
+    python3.6: ..................... 84.6 ns +- 4.4 ns
+    python3.8: ..................... 104 ns +- 0 ns
 
-    Mean +- std dev: [python2] 84.6 ns +- 4.4 ns -> [python3] 104 ns +- 0 ns: 1.23x slower (+23%)
+    Mean +- std dev: [python3.6] 84.6 ns +- 4.4 ns -> [python3.8] 104 ns +- 0 ns: 1.23x slower (+23%)
 
 .. versionchanged:: 1.6.0
    Add ``--teardown`` option.
@@ -556,9 +556,9 @@ Options:
 * ``--name=BENCHMARK_NAME``: Benchmark name (default: ``command``).
 * ``program [arg1 arg2 ...]``: the tested command.
 
-Example measuring Python 2 startup time::
+Example measuring Python 3.6 startup time::
 
-    $ python3 -m pyperf command -- python2 -c pass
+    $ python3 -m pyperf command -- python3.6 -c pass
     .....................
     command: Mean +- std dev: 21.2 ms +- 3.2 ms
 

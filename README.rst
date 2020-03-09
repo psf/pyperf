@@ -121,7 +121,7 @@ Command to install pyperf on Python 3::
 
     python3 -m pip install pyperf
 
-pyperf supports Python 2.7 and Python 3. It is distributed under the MIT license.
+pyperf requires Python 3.6 or newer. It is distributed under the MIT license.
 
 .. _run a benchmark: https://pyperf.readthedocs.io/en/latest/run_benchmark.html
 .. _the API docs: http://pyperf.readthedocs.io/en/latest/api.html#Runner.timeit

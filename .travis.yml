@@ -4,14 +4,10 @@ language: python
 jobs:
   fast_finish: true
   include:
-    - python: '2.7'
-      env: TOX_ENV=py27
     - python: '3.6'
       env: TOX_ENV=py36
     - python: '3.8'
       env: TOX_ENV=py38
-    # - python: pypy3.5-5.10.1
-    #   env: TOX_ENV=pypy
     # - python: pypy3.5-5.10.1
     #   env: TOX_ENV=pypy3
     - python: nightly

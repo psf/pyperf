@@ -1,10 +1,10 @@
 import os
 import sys
 import textwrap
+import unittest
 
 import pyperf
 from pyperf import tests
-from pyperf.tests import unittest
 
 
 TELCO = os.path.join(os.path.dirname(__file__), 'telco.json')

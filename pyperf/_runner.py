@@ -1,8 +1,7 @@
-from __future__ import division, print_function, absolute_import
-
 import functools
 import os
 import sys
+import time
 
 import pyperf
 from pyperf._cli import (format_benchmark, format_checks,
@@ -472,7 +471,7 @@ class Runner:
 
         def task_func(task, loops):
             # use fast local variables
-            local_timer = pyperf.perf_counter
+            local_timer = time.perf_counter
             local_func = func
             if loops != 1:
                 range_it = range(loops)

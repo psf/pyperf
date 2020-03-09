@@ -8,26 +8,7 @@ import subprocess
 import sys
 import tempfile
 
-try:
-    # Python 3.3
-    from unittest import mock   # noqa
-except ImportError:
-    import mock   # noqa
-try:
-    # Python 3.3
-    from contextlib import ExitStack   # noqa
-except ImportError:
-    # Python 2.7: use contextlib2 backport
-    from contextlib2 import ExitStack   # noqa
-
-import six
-
 from pyperf._utils import popen_communicate, popen_killer
-
-if six.PY2:
-    import unittest2 as unittest   # noqa
-else:
-    import unittest   # noqa
 
 
 @contextlib.contextmanager

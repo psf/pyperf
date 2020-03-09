@@ -1,21 +1,19 @@
 import datetime
-
-import six
+import io
+import time
+import unittest
+from unittest import mock
 
 import pyperf
 from pyperf._formatter import (format_filesize, format_seconds, format_timedelta,
                                format_timedeltas, format_number)
 from pyperf import _cpu_utils as cpu_utils
 from pyperf import _utils as utils
-from pyperf.tests import mock
-from pyperf.tests import unittest
 
 
 class TestClocks(unittest.TestCase):
     def test_perf_counter(self):
-        t1 = pyperf.perf_counter()
-        t2 = pyperf.perf_counter()
-        self.assertGreaterEqual(t2, t1)
+        self.assertIs(pyperf.perf_counter, time.perf_counter)
 
 
 class TestStatistics(unittest.TestCase):
@@ -199,12 +197,11 @@ class CPUToolsTests(unittest.TestCase):
                          '1,3,7')
 
     def test_get_isolated_cpus(self):
-        BUILTIN_OPEN = 'builtins.open' if six.PY3 else '__builtin__.open'
-
         def check_get(line):
-            with mock.patch(BUILTIN_OPEN) as mock_open:
-                mock_file = mock_open.return_value
-                mock_file.readline.return_value = line
+            def mock_open(*args, **kw):
+                return io.StringIO(line)
+
+            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
                 return cpu_utils.get_isolated_cpus()
 
         # no isolated CPU
@@ -214,7 +211,7 @@ class CPUToolsTests(unittest.TestCase):
         self.assertEqual(check_get('1-2'), [1, 2])
 
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
-        with mock.patch(BUILTIN_OPEN, side_effect=IOError):
+        with mock.patch('builtins.open', side_effect=IOError):
             self.assertIsNone(cpu_utils.get_isolated_cpus())
 
     def test_parse_cpu_mask(self):

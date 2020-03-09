@@ -184,7 +184,7 @@ See also:
 
 
 Why is pyperf so slow?
-====================
+======================
 
 ``--fast`` and ``--rigorous`` options indirectly have an impact on the total
 duration of benchmarks. The ``pyperf`` module is not optimized for the total
@@ -198,23 +198,23 @@ produce unstable results.
 Compare benchmark results
 =========================
 
-Let's use Python 2 and Python 3 to generate two different benchmark results::
+Let's use Python 3.6 and Python 3.8 to generate two different benchmark results::
 
-    $ python2 -m pyperf timeit '[1,2]*1000' -o py2.json
+    $ python3.6 -m pyperf timeit '[1,2]*1000' -o py36.json
     .....................
     Mean +- std dev: 4.70 us +- 0.18 us
 
-    $ python3 -m pyperf timeit '[1,2]*1000' -o py3.json
+    $ python3.8 -m pyperf timeit '[1,2]*1000' -o py38.json
     .....................
     Mean +- std dev: 4.22 us +- 0.08 us
 
 The :ref:`pyperf compare_to <compare_to_cmd>` command compares the second
 benchmark to the first benchmark::
 
-    $ python3 -m pyperf compare_to py2.json py3.json
-    Mean +- std dev: [py2] 4.70 us +- 0.18 us -> [py3] 4.22 us +- 0.08 us: 1.11x faster (-10%)
+    $ python3 -m pyperf compare_to py36.json py38.json
+    Mean +- std dev: [py36] 4.70 us +- 0.18 us -> [py38] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
-Python 3 is faster than Python 2 on this benchmark.
+Python 3.8 is faster than Python 3.6 on this benchmark.
 
 pyperf determines whether two samples differ significantly using a `Student's
 two-sample, two-tailed t-test
@@ -223,9 +223,9 @@ two-sample, two-tailed t-test
 
 Render a table using ``--table`` option::
 
-    $ python3 -m pyperf compare_to py2.json py3.json --table
+    $ python3 -m pyperf compare_to py36.json py38.json --table
     +-----------+---------+------------------------------+
-    | Benchmark | py2     | py3                          |
+    | Benchmark | py36    | py38                         |
     +===========+=========+==============================+
     | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
     +-----------+---------+------------------------------+

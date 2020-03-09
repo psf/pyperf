@@ -1,8 +1,4 @@
-try:
-    # Use Python 3.3 _winapi module if available
-    from _winapi import GetCurrentProcess
-except ImportError:
-    GetCurrentProcess = None
+from _winapi import GetCurrentProcess
 
 try:
     import ctypes
@@ -10,11 +6,6 @@ try:
 except ImportError:
     GetProcessMemoryInfo = None
 else:
-    if GetCurrentProcess is None:
-        GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
-        GetCurrentProcess.argtypes = []
-        GetCurrentProcess.restype = wintypes.HANDLE
-
     SIZE_T = ctypes.c_size_t
 
     class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):

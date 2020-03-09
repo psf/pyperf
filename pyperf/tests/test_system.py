@@ -1,8 +1,8 @@
 import os.path
 import sys
+import unittest
 
 from pyperf.tests import get_output
-from pyperf.tests import unittest
 
 
 class SystemTests(unittest.TestCase):

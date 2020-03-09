@@ -1,7 +1,6 @@
-from __future__ import division, print_function, absolute_import
-
 import itertools
 import sys
+import time
 import traceback
 
 import pyperf
@@ -119,7 +118,7 @@ class Timer:
 
     def time_func(self, loops):
         inner = self.make_inner()
-        timer = pyperf.perf_counter
+        timer = time.perf_counter
         if not PYPY:
             it = itertools.repeat(None, loops)
             return inner(it, timer)

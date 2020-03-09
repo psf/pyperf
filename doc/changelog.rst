@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 2.0.0
+-------------
+
+* Drop Python 2 support.
+* Remove ``python_unicode`` metadata.
+* pyperf.perf_counter() is now deprecated: use time.perf_counter() directly.
+
 Version 1.7.1 (2020-03-09)
 --------------------------
 

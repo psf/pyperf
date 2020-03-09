@@ -2,7 +2,6 @@
 import argparse
 import csv
 import pyperf
-import six
 import statistics
 
 
@@ -15,11 +14,7 @@ def export_csv(args, bench):
         mean = statistics.mean(run_values)
         rows.append([mean])
 
-    if six.PY3:
-        fp = open(args.csv_filename, 'w', newline='', encoding='ascii')
-    else:
-        fp = open(args.csv_filename, 'w')
-    with fp:
+    with open(args.csv_filename, 'w', newline='', encoding='ascii') as fp:
         writer = csv.writer(fp)
         writer.writerows(rows)
 

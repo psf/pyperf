@@ -11,10 +11,6 @@ Command to install pyperf on Python 3::
 
     python3 -m pip install pyperf
 
-It installs the ``six`` dependency if needed. On Python 2.7, the ``statistics``
-dependency is also installed: backport of Python 3.4 `statistics module
-<https://docs.python.org/dev/library/statistics.html>`_.
-
 If you get the error ``'install_requires' must be a string ...`` or
 ``RequirementParseError: Expected version spec in ...``: you must upgrade
 setuptools to support environment markers in ``install_requires`` of
@@ -24,10 +20,9 @@ setuptools to support environment markers in ``install_requires`` of
 
 Optional dependencies:
 
-* Python module ``psutil``: needed for :ref:`CPU affinity <pin-cpu>` on Python
-  2.7. Install: ``python2 -m pip install -U psutil``.
+* Python module ``psutil``. Install: ``python2 -m pip install -U psutil``.
 
-pyperf supports Python 2.7 and Python 3.
+pyperf requires Python 3.6 or newer.
 
 
 Run a benchmark
