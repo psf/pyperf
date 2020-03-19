@@ -42,18 +42,25 @@ class TestRunner(unittest.TestCase):
             return t
         fake_timer.value = 0.0
 
+        def fake_get_clock_info(clock):
+            class ClockInfo:
+                implementation = 'fake_clock'
+                resolution = 1.0
+            return ClockInfo()
+
         name = kwargs.pop('name', 'bench')
         time_func = kwargs.pop('time_func', None)
 
         runner = self.create_runner(args, **kwargs)
 
         with mock.patch('time.perf_counter', fake_timer):
-            with tests.capture_stdout() as stdout:
-                with tests.capture_stderr() as stderr:
-                    if time_func:
-                        bench = runner.bench_time_func(name, time_func)
-                    else:
-                        bench = runner.bench_func(name, check_args, None, 1, 2)
+            with mock.patch('time.get_clock_info', fake_get_clock_info):
+                with tests.capture_stdout() as stdout:
+                    with tests.capture_stderr() as stderr:
+                        if time_func:
+                            bench = runner.bench_time_func(name, time_func)
+                        else:
+                            bench = runner.bench_func(name, check_args, None, 1, 2)
 
         stdout = stdout.getvalue()
         stderr = stderr.getvalue()
