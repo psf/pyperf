@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 2.0.0
--------------
+Version 2.0.0 (2020-03-19)
+--------------------------
 
 * Drop Python 2 support. Use pyperf 1.7.1 if you still need Python 2.7
   support.

@@ -32,6 +32,8 @@ Functions
    Deprecated alias to ``time.perf_counter()``: use ``time.perf_counter()``
    directly.
 
+   .. deprecated:: 2.0
+
 .. function:: python_implementation()
 
    Name of the Python implementation in lower case.

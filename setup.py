@@ -7,7 +7,7 @@
 #  - set release date in doc/changelog.rst
 #  - git commit -a -m "prepare release x.y"
 #  - Remove untracked files/dirs: git clean -fdx
-#  - run tests: tox
+#  - run tests: tox --parallel auto
 #  - git push
 #  - check Travis CI status:
 #    https://travis-ci.org/vstinner/pyperf
