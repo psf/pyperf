@@ -24,6 +24,9 @@ Optional dependencies:
 
 pyperf requires Python 3.6 or newer.
 
+Python 2.7 users can use pyperf 1.7.1 which is the last version compatible with
+Python 2.7.
+
 
 Run a benchmark
 ===============
