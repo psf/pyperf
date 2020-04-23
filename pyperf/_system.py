@@ -524,8 +524,8 @@ class CPUFrequency(Operation):
         scaling_min_freq = self.read_first_line(os.path.join(path, "scaling_min_freq"))
         scaling_max_freq = self.read_first_line(os.path.join(path, "scaling_max_freq"))
         if not scaling_min_freq or not scaling_max_freq:
-            self.error("Unable to read scaling_min_freq "
-                       "or scaling_max_freq of CPU %s" % cpu)
+            self.warning("Unable to read scaling_min_freq "
+                         "or scaling_max_freq of CPU %s" % cpu)
             return
 
         min_mhz = int(scaling_min_freq) // 1000
@@ -574,7 +574,7 @@ class CPUFrequency(Operation):
         name = "cpuinfo_max_freq" if tune else "cpuinfo_min_freq"
         freq = self.read_freq(os.path.join(cpu_path, name))
         if not freq:
-            self.error("Unable to read %s of CPU %s" % (name, cpu))
+            self.warning("Unable to read %s of CPU %s" % (name, cpu))
             return False
 
         filename = os.path.join(cpu_path, "scaling_min_freq")

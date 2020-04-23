@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.0.1
+-------------
+
+* system command now only emits a warning rather than failing with a hard error
+  if it fails to get or set the frequency of a CPU.
+
 Version 2.0.0 (2020-03-19)
 --------------------------
 
