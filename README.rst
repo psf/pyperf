@@ -128,6 +128,9 @@ Python 2.7.
 
 pyperf is distributed under the MIT license.
 
+The pyperf project is covered by the `PSF Code of Conduct
+<https://www.python.org/psf/codeofconduct/>`_.
+
 .. _run a benchmark: https://pyperf.readthedocs.io/en/latest/run_benchmark.html
 .. _the API docs: http://pyperf.readthedocs.io/en/latest/api.html#Runner.timeit
 .. _analyze benchmark results: https://pyperf.readthedocs.io/en/latest/analyze.html

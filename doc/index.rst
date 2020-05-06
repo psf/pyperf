@@ -60,3 +60,6 @@ Other Python benchmark projects:
   <https://github.com/ionelmc/pytest-benchmark/>`_
 * `boltons.statsutils
   <http://boltons.readthedocs.io/en/latest/statsutils.html>`_
+
+The pyperf project is covered by the `PSF Code of Conduct
+<https://www.python.org/psf/codeofconduct/>`_.
