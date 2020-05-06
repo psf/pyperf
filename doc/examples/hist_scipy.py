@@ -18,7 +18,7 @@ def display_histogram_scipy(bench, mean, bins):
         pylab.plot(values, fit, '-o', label='mean-stdev')
 
     plt.legend(loc='upper right', shadow=True, fontsize='x-large')
-    pylab.hist(values, bins=bins, normed=True)
+    pylab.hist(values, bins=bins)
     pylab.show()
 
 
