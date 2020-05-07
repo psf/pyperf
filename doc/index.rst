@@ -44,7 +44,7 @@ Quick Links:
 * `pyperf documentation
   <https://pyperf.readthedocs.io/>`_ (this documentation)
 * `pyperf project homepage at GitHub
-  <https://github.com/vstinner/pyperf>`_ (code, bugs)
+  <https://github.com/psf/pyperf>`_ (code, bugs)
 * `Download latest pyperf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/pyperf>`_
 
