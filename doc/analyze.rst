@@ -143,7 +143,7 @@ Links:
   <https://vstinner.github.io/journey-to-stable-benchmark-average.html>`_
   (May 2016) by Victor Stinner
 * Median versus Mean: `pyperf issue #1: Use a better measures than average and
-  standard <https://github.com/vstinner/pyperf/issues/1>`_
+  standard <https://github.com/psf/pyperf/issues/1>`_
 * timeit module of PyPy now uses average:
   `change timeit to report the average +- standard deviation
   <https://bitbucket.org/pypy/pypy/commits/fb6bb835369e>`_
@@ -159,9 +159,9 @@ Median and median absolute deviation (MAD) are `robust statistics
 * `[Speed] Median +- MAD or Mean +- std dev?
   <https://mail.python.org/pipermail/speed/2017-March/000512.html>`_
 * `pyperf issue #1: Use a better measures than average and standard deviation
-  <https://github.com/vstinner/pyperf/issues/1>`_
+  <https://github.com/psf/pyperf/issues/1>`_
 * `pyperf issue #20: Mean error of distribution
-  <https://github.com/vstinner/pyperf/issues/20>`_
+  <https://github.com/psf/pyperf/issues/20>`_
 
 
 Probability distribution

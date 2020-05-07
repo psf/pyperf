@@ -10,7 +10,7 @@
 #  - run tests: tox --parallel auto
 #  - git push
 #  - check Travis CI status:
-#    https://travis-ci.org/vstinner/pyperf
+#    https://travis-ci.org/psf/pyperf
 #
 # Release a new version:
 #
@@ -55,7 +55,7 @@ def main():
         'license': 'MIT license',
         'description': DESCRIPTION,
         'long_description': long_description,
-        'url': 'https://github.com/vstinner/pyperf',
+        'url': 'https://github.com/psf/pyperf',
         'author': 'Victor Stinner',
         'author_email': 'vstinner@redhat.com',
         'classifiers': CLASSIFIERS,
