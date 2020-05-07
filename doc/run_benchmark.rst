@@ -181,7 +181,7 @@ threshold=1,function_threshold=1`` is a bad idea:
   parameters are not used in production.
 * It probably increases the pressure on the garbage collector.
 
-See the `pyperf issue #14 <https://github.com/vstinner/pyperf/issues/14>`_ for more
+See the `pyperf issue #14 <https://github.com/psf/pyperf/issues/14>`_ for more
 information.
 
 pyperf does not implement a function to warmup the benchmark until results seem

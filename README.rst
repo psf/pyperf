@@ -6,9 +6,9 @@ pyperf
    :alt: Latest release on the Python Cheeseshop (PyPI)
    :target: https://pypi.python.org/pypi/pyperf
 
-.. image:: https://travis-ci.org/vstinner/pyperf.svg?branch=master
+.. image:: https://travis-ci.org/psf/pyperf.svg?branch=master
    :alt: Build status of pyperf on Travis CI
-   :target: https://travis-ci.org/vstinner/pyperf
+   :target: https://travis-ci.org/psf/pyperf
 
 The Python ``pyperf`` module is a toolkit to write, run and analyze benchmarks.
 
@@ -113,7 +113,7 @@ Quick Links
 * `pyperf documentation
   <https://pyperf.readthedocs.io/>`_
 * `pyperf project homepage at GitHub
-  <https://github.com/vstinner/pyperf>`_ (code, bugs)
+  <https://github.com/psf/pyperf>`_ (code, bugs)
 * `Download latest pyperf release at the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/pyperf>`_
 
