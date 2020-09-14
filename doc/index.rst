@@ -50,7 +50,7 @@ Quick Links:
 
 Other Python benchmark projects:
 
-* `performance <https://pypi.python.org/pypi/performance>`_: the Python
+* `pyperformance <https://pypi.python.org/pypi/pyperformance>`_: the Python
   benchmark suite which uses ``pyperf``
 * `Python speed mailing list
   <https://mail.python.org/mailman/listinfo/speed>`_
