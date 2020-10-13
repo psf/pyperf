@@ -162,7 +162,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                                            metadata={'name': 'telco'})
 
         stdout = self.compare('compare_to', ref_result, changed_result, '--table')
-        expected = "Not significant (1): telco"
+        expected = "Benchmark hidden because not significant (1): telco"
         self.assertEqual(stdout.rstrip(),
                          expected)
 
@@ -326,7 +326,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             | [1,2,3]*1000 | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
             +--------------+----------------+------------------------------+------------------------------+
 
-            Not significant (1): [1]*1000
+            Benchmark hidden because not significant (1): [1]*1000
         """
         self.check_command(expected, 'compare_to', '--table', "--min-speed=10", py36, py37, py38)
 

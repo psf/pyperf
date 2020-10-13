@@ -169,6 +169,11 @@ def compare_benchmarks(name, benchmarks, min_speed):
     return results
 
 
+def display_not_signiticant(not_significant):
+    print("Benchmark hidden because not significant (%s): %s"
+          % (len(not_significant), ', '.join(not_significant)))
+
+
 class Table:
     def __init__(self, headers, rows):
         self.headers = headers
@@ -247,8 +252,7 @@ def compare_suites_table(all_results, by_speed, args):
     if not_significant:
         if rows:
             print()
-        print("Not significant (%s): %s"
-              % (len(not_significant), '; '.join(not_significant)))
+        display_not_signiticant(not_significant)
 
 
 def compare_suites_list(all_results, show_name, args):
@@ -281,8 +285,7 @@ def compare_suites_list(all_results, show_name, args):
     if not args.quiet and not_significant:
         if empty_line:
             print()
-        print("Benchmark hidden because not significant (%s): %s"
-              % (len(not_significant), ', '.join(not_significant)))
+        display_not_signiticant(not_significant)
 
 
 def compare_suites_by_speed(all_results, args):
@@ -331,8 +334,7 @@ def compare_suites_by_speed(all_results, args):
     if not args.quiet and not_significant:
         if empty_line:
             print()
-        print("Benchmark hidden because not significant (%s): %s"
-              % (len(not_significant), ', '.join(not_significant)))
+        display_not_signiticant(not_significant)
 
 
 def compare_suites(benchmarks, args):
