@@ -305,6 +305,12 @@ def compare_suites_by_speed(all_results, args):
         else:
             slower.append(item)
 
+    def sort_key(item):
+        return item[1].norm_mean
+
+    slower.sort(key=sort_key, reverse=True)
+    faster.sort(key=sort_key)
+
     empty_line = False
     for title, results, sort_reverse in (
         ('Slower', slower, True),
@@ -313,8 +319,6 @@ def compare_suites_by_speed(all_results, args):
     ):
         if not results:
             continue
-
-        results.sort(key=lambda item: item[1].norm_mean, reverse=sort_reverse)
 
         if empty_line:
             print()
