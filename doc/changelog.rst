@@ -1,12 +1,14 @@
 Changelog
 =========
 
-Version 2.0.1
+Version 2.1.0
 -------------
 
+* The ``compare_to`` command now computes the geometric mean when comparing
+  suites with more than one benchmark.
+* The ``system`` command now only emits a warning rather than failing with a
+  hard error if it fails to get or set the frequency of a CPU.
 * Project moved to https://github.com/psf/pyperf/
-* system command now only emits a warning rather than failing with a hard error
-  if it fails to get or set the frequency of a CPU.
 * The pyperf project is now covered by the `PSF Code of Conduct
   <https://www.python.org/psf/codeofconduct/>`_.
 
