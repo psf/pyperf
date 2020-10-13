@@ -30,12 +30,12 @@ class CompareData:
         return '<CompareData name=%r value#=%s>' % (self.name, self.benchmark.get_nvalue())
 
 
-def compute_speed(ref, changed):
+def compute_speed(ref, bench):
     ref_avg = ref.mean()
-    changed_avg = changed.mean()
+    bench_avg = bench.mean()
     # Note: means cannot be zero, it's a warranty of pyperf API
-    speed = ref_avg / changed_avg
-    percent = (changed_avg - ref_avg) * 100.0 / ref_avg
+    speed = ref_avg / bench_avg
+    percent = (bench_avg - ref_avg) * 100.0 / ref_avg
     return (speed, percent)
 
 
@@ -48,12 +48,12 @@ def format_speed(speed, percent):
         return "%.2fx slower (%+.0f%%)" % (1.0 / speed, percent)
 
 
-def format_geometric_mean(speeds):
-    geo_mean = geometric_mean(speeds)
+def format_geometric_mean(norm_means):
+    geo_mean = geometric_mean(norm_means)
     text = '%.2f' % geo_mean
     if geo_mean == 1.0:
         text = f'{text} (same speed)'
-    elif geo_mean > 1.0:
+    elif geo_mean < 1.0:
         text = f'{text} (faster)'
     else:
         text = f'{text} (slower)'
@@ -220,9 +220,9 @@ def compare_suites_table(grouped_by_name, by_speed, args):
 
         grouped_by_name.sort(key=sort_key)
 
-    all_speeds = []
+    all_norm_means = []
     for column in headers[2:]:
-        all_speeds.append([])
+        all_norm_means.append([])
 
     rows = []
     for group in grouped_by_name:
@@ -234,7 +234,6 @@ def compare_suites_table(grouped_by_name, by_speed, args):
             text = bench.format_value(bench.mean())
             if index != 0:
                 speed, percent = compute_speed(ref, bench)
-                all_speeds[index - 1].append(speed)
 
                 if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
                     significant = False
@@ -248,16 +247,20 @@ def compare_suites_table(grouped_by_name, by_speed, args):
                 else:
                     text = "not significant"
                 all_significant.append(significant)
+
+                norm_mean = bench.mean() / ref.mean()
+                all_norm_means[index - 1].append(norm_mean)
             row.append(text)
+
         if any(all_significant):
             rows.append(row)
         else:
             not_significant.append(group.name)
 
-    if len(all_speeds[0]) > 1:
+    if len(all_norm_means[0]) > 1:
         row = ['Geometric mean', '(ref)']
-        for speeds in all_speeds:
-            row.append(format_geometric_mean(speeds))
+        for norm_means in all_norm_means:
+            row.append(format_geometric_mean(norm_means))
         rows.append(row)
 
     if rows:
@@ -352,10 +355,10 @@ def compare_suites_by_speed(all_results, show_name, args):
 
 
 def compare_geometric_mean(grouped_by_name):
-    all_speeds = []
+    all_norm_means = []
     for group in grouped_by_name:
         for item in group.benchmarks[1:]:
-            all_speeds.append((item.filename, []))
+            all_norm_means.append((item.filename, []))
         break
 
     for group in grouped_by_name:
@@ -366,20 +369,22 @@ def compare_geometric_mean(grouped_by_name):
             speed, percent = compute_speed(ref, bench)
             speeds.append(speed)
             name = item.filename
-            all_speeds[index][1].append(speed)
 
-    if len(all_speeds[0][1]) < 2:
+            norm_mean = bench.mean() / ref.mean()
+            all_norm_means[index][1].append(norm_mean)
+
+    if len(all_norm_means[0][1]) < 2:
         # only compute the geometric mean when there is at least two benchmarks
         return
 
     print()
-    if len(all_speeds) > 1:
+    if len(all_norm_means) > 1:
         display_title('Geometric mean')
-        for name, speeds in all_speeds:
-            geo_mean = format_geometric_mean(speeds)
+        for name, norm_means in all_norm_means:
+            geo_mean = format_geometric_mean(norm_means)
             print(f'{name}: {geo_mean}')
     else:
-        geo_mean = format_geometric_mean(all_speeds[0][1])
+        geo_mean = format_geometric_mean(all_norm_means[0][1])
         print(f'Geometric mean: {geo_mean}')
 
 

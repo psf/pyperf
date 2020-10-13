@@ -113,15 +113,15 @@ two-sample, two-tailed t-test
 ``0.95``.
 
 If the benchmark suites contain more than one benchmark, the `geometric mean
-<https://en.wikipedia.org/wiki/Geometric_mean>`_ of benchmark results compared
-to the reference suite is computed. It is a convenient index to summarize
-benchmark suite results compared to the reference suite. See `How not to lie
-with statistics: the correct way to summarize benchmark results
+<https://en.wikipedia.org/wiki/Geometric_mean>`_ of benchmark results mean
+normalized to the reference results mean is computed. It is a convenient index
+to summarize benchmark suite results normalized to the reference suite. See
+`How not to lie with statistics: the correct way to summarize benchmark results
 <https://www.cse.unsw.edu.au/~cs9242/11/papers/Fleming_Wallace_86.pdf>`_ paper
 by Philip J. Fleming and John J. Wallace (ACM, 1986).
 
-If the geometric mean is greater than 1.0, its benchmark suite is faster than
-the reference.  If it is less than 1.0, its benchmark suite is slower than the
+If the geometric mean is less than 1.0, its benchmark suite is faster than the
+reference. If it is greater than 1.0, its benchmark suite is slower than the
 refrence.
 
 Example 1 comparing Python 3.8 to Python 3.6::
@@ -134,7 +134,7 @@ On this example, py36 is the reference: py38 is faster than py36.
 Example 2 comparing two suites (Python 3.7 and Python 3.8) to a reference suite
 (Python 3.6)::
 
-    $ python3 -m pyperf compare_to pyperf/tests/mult_list_py36.json  pyperf/tests/mult_list_py37.json  pyperf/tests/mult_list_py38.json --table
+    $ python3 -m pyperf compare_to mult_list_py36.json mult_list_py37.json mult_list_py38.json --table
     +----------------+----------------+------------------------------+------------------------------+
     | Benchmark      | mult_list_py36 | mult_list_py37               | mult_list_py38               |
     +================+================+==============================+==============================+
@@ -144,7 +144,7 @@ Example 2 comparing two suites (Python 3.7 and Python 3.8) to a reference suite
     +----------------+----------------+------------------------------+------------------------------+
     | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
     +----------------+----------------+------------------------------+------------------------------+
-    | Geometric mean | (ref)          | 0.82 (slower)                | 1.09 (faster)                |
+    | Geometric mean | (ref)          | 1.22 (slower)                | 0.92 (faster)                |
     +----------------+----------------+------------------------------+------------------------------+
 
 On this example, mult_list_py36 (Python 3.6) is the reference. According to
