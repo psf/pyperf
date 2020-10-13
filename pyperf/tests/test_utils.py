@@ -69,6 +69,10 @@ class TestStatistics(unittest.TestCase):
         self.assertEqual(utils.percentile(values, 0.75), 6.75)
         self.assertEqual(utils.percentile(values, 1.00), 9)
 
+    def test_geometric_mean(self):
+        self.assertEqual(utils.geometric_mean([1.0]), 1.0)
+        self.assertAlmostEqual(utils.geometric_mean([54, 24, 36]), 36.0)
+
 
 class TestUtils(unittest.TestCase):
     def test_parse_iso8601(self):

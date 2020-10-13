@@ -1,7 +1,7 @@
 import sys
 
 from pyperf._cli import display_title, format_result_value
-from pyperf._utils import is_significant
+from pyperf._utils import is_significant, geometric_mean
 
 
 def is_significant_benchs(bench1, bench2):
@@ -46,6 +46,18 @@ def format_speed(speed, percent):
         return "%.2fx faster (%+.0f%%)" % (speed, percent)
     else:
         return "%.2fx slower (%+.0f%%)" % (1.0 / speed, percent)
+
+
+def format_geometric_mean(speeds):
+    geo_mean = geometric_mean(speeds)
+    text = '%.2f' % geo_mean
+    if geo_mean == 1.0:
+        text = f'{text} (same speed)'
+    elif geo_mean > 1.0:
+        text = f'{text} (faster)'
+    else:
+        text = f'{text} (slower)'
+    return text
 
 
 class CompareResult(object):
@@ -208,6 +220,10 @@ def compare_suites_table(grouped_by_name, by_speed, args):
 
         grouped_by_name.sort(key=sort_key)
 
+    all_speeds = []
+    for column in headers[2:]:
+        all_speeds.append([])
+
     rows = []
     for group in grouped_by_name:
         all_significant = []
@@ -218,6 +234,8 @@ def compare_suites_table(grouped_by_name, by_speed, args):
             text = bench.format_value(bench.mean())
             if index != 0:
                 speed, percent = compute_speed(ref, bench)
+                all_speeds[index - 1].append(speed)
+
                 if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
                     significant = False
                 else:
@@ -235,6 +253,12 @@ def compare_suites_table(grouped_by_name, by_speed, args):
             rows.append(row)
         else:
             not_significant.append(group.name)
+
+    if len(all_speeds[0]) > 1:
+        row = ['Geometric mean', '(ref)']
+        for speeds in all_speeds:
+            row.append(format_geometric_mean(speeds))
+        rows.append(row)
 
     if rows:
         table = Table(headers, rows)
@@ -302,6 +326,7 @@ def compare_suites_by_speed(all_results, show_name, args):
         else:
             slower.append(item)
 
+    empty_line = False
     for title, results, sort_reverse in (
         ('Slower', slower, False),
         ('Faster', faster, True),
@@ -312,15 +337,50 @@ def compare_suites_by_speed(all_results, show_name, args):
 
         results.sort(key=lambda item: item[1].speed, reverse=sort_reverse)
 
+        if empty_line:
+            print()
+
         print("%s (%s):" % (title, len(results)))
         for name, result in results:
             text = result.oneliner(verbose=False)
             print("- %s: %s" % (name, text))
-        print()
+        empty_line = True
 
     if not args.quiet and not_significant:
         print("Benchmark hidden because not significant (%s): %s"
               % (len(not_significant), ', '.join(not_significant)))
+
+
+def compare_geometric_mean(grouped_by_name):
+    all_speeds = []
+    for group in grouped_by_name:
+        for item in group.benchmarks[1:]:
+            all_speeds.append((item.filename, []))
+        break
+
+    for group in grouped_by_name:
+        speeds = []
+        ref = group.benchmarks[0].benchmark
+        for index, item in enumerate(group.benchmarks[1:]):
+            bench = item.benchmark
+            speed, percent = compute_speed(ref, bench)
+            speeds.append(speed)
+            name = item.filename
+            all_speeds[index][1].append(speed)
+
+    if len(all_speeds[0][1]) < 2:
+        # only compute the geometric mean when there is at least two benchmarks
+        return
+
+    print()
+    if len(all_speeds) > 1:
+        display_title('Geometric mean')
+        for name, speeds in all_speeds:
+            geo_mean = format_geometric_mean(speeds)
+            print(f'{name}: {geo_mean}')
+    else:
+        geo_mean = format_geometric_mean(all_speeds[0][1])
+        print(f'Geometric mean: {geo_mean}')
 
 
 def compare_suites(benchmarks, args):
@@ -345,6 +405,8 @@ def compare_suites(benchmarks, args):
             compare_suites_by_speed(all_results, show_name, args)
         else:
             compare_suites_list(all_results, show_name, args)
+
+        compare_geometric_mean(grouped_by_name)
 
     if not args.quiet:
         for suite, hidden in benchmarks.group_by_name_ignored():

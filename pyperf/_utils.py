@@ -380,3 +380,23 @@ def percentile(values, p):
         return d0 + d1
     else:
         return values[int(k)]
+
+
+if hasattr(statistics, 'geometric_mean'):
+    _geometric_mean = statistics.geometric_mean
+else:
+    def _geometric_mean(data):
+        # Compute exp(fmean(map(log, data))) using floats
+        data = list(map(math.log, data))
+
+        # fmean(data)
+        fmean = math.fsum(data) / len(data)
+
+        return math.exp(fmean)
+
+
+def geometric_mean(data):
+    data = list(map(float, data))
+    if not data:
+        raise ValueError("empty data")
+    return _geometric_mean(data)
