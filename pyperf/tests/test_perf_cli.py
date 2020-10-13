@@ -214,7 +214,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         py37 = os.path.join(TESTDIR, 'mult_list_py37.json')
         py38 = os.path.join(TESTDIR, 'mult_list_py38.json')
 
-        # 2 files (grouped by speed)
+        # 2 files
+        expected = """
+            [1]*1000: Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster (-2%)
+            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
+            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
+        """
+        self.check_command(expected, 'compare_to', py36, py37)
+
+        # 2 files grouped by speed
         expected = """
             Slower (2):
             - [1,2]*1000: 3.70 us +- 0.05 us -> 5.28 us +- 0.09 us: 1.42x slower (+42%)
@@ -262,17 +270,24 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         """
         self.check_command(expected, 'compare_to', '--table', py36, py37, py38)
 
-    def test_compare_cli_min_speed(self):
+        # 3 files as table grouped by speed
+        expected = """
+            +--------------+----------------+------------------------------+
+            | Benchmark    | mult_list_py36 | mult_list_py37               |
+            +==============+================+==============================+
+            | [1]*1000     | 2.13 us        | 2.09 us: 1.02x faster (-2%)  |
+            +--------------+----------------+------------------------------+
+            | [1,2,3]*1000 | 4.61 us        | 6.05 us: 1.31x slower (+31%) |
+            +--------------+----------------+------------------------------+
+            | [1,2]*1000   | 3.70 us        | 5.28 us: 1.42x slower (+42%) |
+            +--------------+----------------+------------------------------+
+        """
+        self.check_command(expected, 'compare_to', '--table', "--group-by-speed", py36, py37)
+
+    def test_compare_to_cli_min_speed(self):
         py36 = os.path.join(TESTDIR, 'mult_list_py36.json')
         py37 = os.path.join(TESTDIR, 'mult_list_py37.json')
-
-        # 2 files
-        expected = """
-            [1]*1000: Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster (-2%)
-            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
-            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
-        """
-        self.check_command(expected, 'compare_to', py36, py37)
+        py38 = os.path.join(TESTDIR, 'mult_list_py38.json')
 
         # 2 files, min-speed=10
         expected = """
@@ -288,6 +303,20 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Benchmark hidden because not significant (2): [1]*1000, [1,2,3]*1000
         """
         self.check_command(expected, 'compare_to', "--min-speed=40", py36, py37)
+
+        # 3 files as table, min-speed=10
+        expected = """
+            +--------------+----------------+------------------------------+------------------------------+
+            | Benchmark    | mult_list_py36 | mult_list_py37               | mult_list_py38               |
+            +==============+================+==============================+==============================+
+            | [1,2]*1000   | 3.70 us        | 5.28 us: 1.42x slower (+42%) | 3.18 us: 1.16x faster (-14%) |
+            +--------------+----------------+------------------------------+------------------------------+
+            | [1,2,3]*1000 | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
+            +--------------+----------------+------------------------------+------------------------------+
+
+            Not significant (1): [1]*1000
+        """
+        self.check_command(expected, 'compare_to', '--table', "--min-speed=10", py36, py37, py38)
 
     def test_hist(self):
         # Force terminal size on Python 3 for shutil.get_terminal_size()
