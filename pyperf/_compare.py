@@ -30,22 +30,22 @@ class CompareData:
         return '<CompareData name=%r value#=%s>' % (self.name, self.benchmark.get_nvalue())
 
 
-def compute_speed(ref, changed):
+def compute_normalized_mean(bench, ref):
     ref_avg = ref.mean()
-    changed_avg = changed.mean()
+    bench_avg = bench.mean()
     # Note: means cannot be zero, it's a warranty of pyperf API
-    speed = ref_avg / changed_avg
-    percent = (changed_avg - ref_avg) * 100.0 / ref_avg
-    return (speed, percent)
+    norm_mean = ref_avg / bench_avg
+    percent = (bench_avg - ref_avg) * 100.0 / ref_avg
+    return (norm_mean, percent)
 
 
-def format_speed(speed, percent):
-    if speed == 1.0:
+def format_normalized_mean(norm_mean, percent):
+    if norm_mean == 1.0:
         return "no change"
-    elif speed > 1.0:
-        return "%.2fx faster (%+.0f%%)" % (speed, percent)
+    elif norm_mean > 1.0:
+        return "%.2fx faster (%+.0f%%)" % (norm_mean, percent)
     else:
-        return "%.2fx slower (%+.0f%%)" % (1.0 / speed, percent)
+        return "%.2fx slower (%+.0f%%)" % (1.0 / norm_mean, percent)
 
 
 class CompareResult(object):
@@ -57,7 +57,7 @@ class CompareResult(object):
         self._min_speed = min_speed
         self._significant = None
         self._t_score = None
-        self._speed = None
+        self._norm_mean = None
         self._percent = None
 
     def __repr__(self):
@@ -69,11 +69,11 @@ class CompareResult(object):
         self._significant, self._t_score = is_significant_benchs(bench1, bench2)
 
         if self._min_speed is not None:
-            speed = self.speed
-            if speed < 1.0:
+            norm_mean = self.norm_mean
+            if norm_mean < 1.0:
                 # slower uses the inverse
-                speed = 1.0 / speed
-            if (speed - 1.0) * 100 < self._min_speed:
+                norm_mean = 1.0 / norm_mean
+            if (norm_mean - 1.0) * 100 < self._min_speed:
                 self._significant = False
 
     @property
@@ -88,20 +88,22 @@ class CompareResult(object):
             self._set_significant()
         return self._t_score
 
-    def _compute_speed(self):
-        self._speed, self._percent = compute_speed(self.ref.benchmark,
-                                                   self.changed.benchmark)
+    def _compute_norm_mean(self):
+        ref = self.ref.benchmark
+        bench = self.changed.benchmark
+        self._norm_mean, self._percent = compute_normalized_mean(bench, ref)
 
+    # mean normalized to the reference benchmark mean
     @property
-    def speed(self):
-        if self._speed is None:
-            self._compute_speed()
-        return self._speed
+    def norm_mean(self):
+        if self._norm_mean is None:
+            self._compute_norm_mean()
+        return self._norm_mean
 
     @property
     def percent(self):
         if self._percent is None:
-            self._compute_speed()
+            self._compute_norm_mean()
         return self._percent
 
     def oneliner(self, verbose=True, show_name=True, check_significant=True):
@@ -122,7 +124,7 @@ class CompareResult(object):
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
-        text = "%s: %s" % (text, format_speed(self.speed, self.percent))
+        text = "%s: %s" % (text, format_normalized_mean(self.norm_mean, self.percent))
         return text
 
     def format(self, verbose=True, show_name=True):
@@ -203,7 +205,7 @@ def compare_suites_table(all_results, by_speed, args):
     if by_speed:
         def sort_key(results):
             result = results[0]
-            return -result.speed
+            return -result.norm_mean
 
         all_results.sort(key=sort_key)
 
@@ -225,7 +227,7 @@ def compare_suites_table(all_results, by_speed, args):
             bench = result.changed.benchmark
             significant = result.significant
             if significant:
-                text = format_speed(result.speed, result.percent)
+                text = format_normalized_mean(result.norm_mean, result.percent)
                 if not args.quiet:
                     text = "%s: %s" % (bench.format_value(bench.mean()), text)
             else:
@@ -295,10 +297,10 @@ def compare_suites_by_speed(all_results, args):
             continue
 
         item = (results.name, result)
-        speed = result.speed
-        if speed == 1.0:
+        norm_mean = result.norm_mean
+        if norm_mean == 1.0:
             same.append(item)
-        elif speed > 1.0:
+        elif norm_mean > 1.0:
             faster.append(item)
         else:
             slower.append(item)
@@ -312,7 +314,7 @@ def compare_suites_by_speed(all_results, args):
         if not results:
             continue
 
-        results.sort(key=lambda item: item[1].speed, reverse=sort_reverse)
+        results.sort(key=lambda item: item[1].norm_mean, reverse=sort_reverse)
 
         if empty_line:
             print()
