@@ -330,22 +330,22 @@ def compare_suites_by_speed(all_results, show_name, args):
         else:
             slower.append(item)
 
+    def sort_key(item):
+        speed = item[1].speed
+        if speed < 1.0:
+            speed = 1 / speed
+        return speed
+
     empty_line = False
-    for title, results, sort_reverse in (
-        ('Slower', slower, True),
-        ('Faster', faster, False),
-        ('Same speed', same, False),
+    for title, results in (
+        ('Slower', slower),
+        ('Faster', faster),
+        ('Same speed', same),
     ):
         if not results:
             continue
 
-        def sort_key(item):
-            speed = item[1].speed
-            if speed < 1.0:
-                speed = 1 / speed
-            return speed
-
-        results.sort(key=sort_key, reverse=sort_reverse)
+        results.sort(key=sort_key, reverse=True)
 
         if empty_line:
             print()
