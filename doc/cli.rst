@@ -113,8 +113,8 @@ two-sample, two-tailed t-test
 ``0.95``.
 
 If the benchmark suites contain more than one benchmark, the `geometric mean
-<https://en.wikipedia.org/wiki/Geometric_mean>`_ of benchmark results mean
-normalized to the reference results mean is computed. It is a convenient index
+<https://en.wikipedia.org/wiki/Geometric_mean>`_ of benchmark results means
+normalized to the reference results means is computed. It is a convenient index
 to summarize benchmark suite results normalized to the reference suite. See
 `How not to lie with statistics: the correct way to summarize benchmark results
 <https://www.cse.unsw.edu.au/~cs9242/11/papers/Fleming_Wallace_86.pdf>`_ paper
@@ -129,7 +129,8 @@ Example 1 comparing Python 3.8 to Python 3.6::
     $ python3 -m pyperf compare_to py36.json py38.json
     Mean +- std dev: [py36] 4.70 us +- 0.18 us -> [py38] 4.22 us +- 0.08 us: 1.11x faster (-10%)
 
-On this example, py36 is the reference: py38 is faster than py36.
+On this example, py36 is the reference: py38 is faster than py36 (4.22 us is
+less than 4.70 us).
 
 Example 2 comparing two suites (Python 3.7 and Python 3.8) to a reference suite
 (Python 3.6)::
@@ -148,15 +149,14 @@ Example 2 comparing two suites (Python 3.7 and Python 3.8) to a reference suite
     +----------------+----------------+------------------------------+------------------------------+
 
 On this example, mult_list_py36 (Python 3.6) is the reference. According to
-geometric mean, overall mult_list_py37 (Python 3.7) is slower than
-mult_list_py36, whereas overall mult_list_py38 (Python 3.8) is faster than
+geometric mean, mult_list_py37 (Python 3.7) is slower than
+mult_list_py36, whereas mult_list_py38 (Python 3.8) is faster than
 mult_list_py36.
 
 The geometric mean is a convenient index to summarize the 3 benchmark results
 of each suite as a single index which is normalized to the reference suite
 results. For example, mult_list_py37 is faster on one benchmark and slower on
-two others: according to the geometric mean, overall it is slower than the
-reference.
+two others: according to the geometric mean, it is slower than the reference.
 
 See also the ``--compare-to`` :ref:`option of the Runner CLI <runner_cli>`.
 
