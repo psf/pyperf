@@ -34,7 +34,7 @@ def compute_speed(ref, bench):
     ref_avg = ref.mean()
     bench_avg = bench.mean()
     # Note: means cannot be zero, it's a warranty of pyperf API
-    speed = ref_avg / bench_avg
+    speed = bench_avg / ref_avg
     percent = (bench_avg - ref_avg) * 100.0 / ref_avg
     return (speed, percent)
 
@@ -42,10 +42,10 @@ def compute_speed(ref, bench):
 def format_speed(speed, percent):
     if speed == 1.0:
         return "no change"
-    elif speed > 1.0:
-        return "%.2fx faster (%+.0f%%)" % (speed, percent)
+    elif speed < 1.0:
+        return "%.2fx faster (%+.0f%%)" % (1.0 / speed, percent)
     else:
-        return "%.2fx slower (%+.0f%%)" % (1.0 / speed, percent)
+        return "%.2fx slower (%+.0f%%)" % (speed, percent)
 
 
 def format_geometric_mean(norm_means):
@@ -95,6 +95,7 @@ class CompareResult(object):
         self._speed, self._percent = compute_speed(self.ref.benchmark,
                                                    self.changed.benchmark)
 
+    # Benchmark mean normalized to the reference mean
     @property
     def speed(self):
         if self._speed is None:
@@ -324,21 +325,27 @@ def compare_suites_by_speed(all_results, show_name, args):
         item = (results.name, result)
         if speed == 1.0:
             same.append(item)
-        elif speed > 1.0:
+        elif speed < 1.0:
             faster.append(item)
         else:
             slower.append(item)
 
     empty_line = False
     for title, results, sort_reverse in (
-        ('Slower', slower, False),
-        ('Faster', faster, True),
+        ('Slower', slower, True),
+        ('Faster', faster, False),
         ('Same speed', same, False),
     ):
         if not results:
             continue
 
-        results.sort(key=lambda item: item[1].speed, reverse=sort_reverse)
+        def sort_key(item):
+            speed = item[1].speed
+            if speed < 1.0:
+                speed = 1 / speed
+            return speed
+
+        results.sort(key=sort_key, reverse=sort_reverse)
 
         if empty_line:
             print()
@@ -362,14 +369,9 @@ def compare_geometric_mean(grouped_by_name):
         break
 
     for group in grouped_by_name:
-        speeds = []
         ref = group.benchmarks[0].benchmark
         for index, item in enumerate(group.benchmarks[1:]):
             bench = item.benchmark
-            speed, percent = compute_speed(ref, bench)
-            speeds.append(speed)
-            name = item.filename
-
             norm_mean = bench.mean() / ref.mean()
             all_norm_means[index][1].append(norm_mean)
 
