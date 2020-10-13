@@ -251,6 +251,7 @@ def compare_suites_table(all_results, by_speed, args):
 
 def compare_suites_list(all_results, show_name, args):
     not_significant = []
+    empty_line = False
     for index, results in enumerate(all_results):
         significant = any(result.significant for result in results)
         lines = []
@@ -273,11 +274,13 @@ def compare_suites_list(all_results, show_name, args):
             if show_name:
                 text = '%s: %s' % (results.name, text)
             print(text)
+        empty_line = True
 
-    if not args.quiet:
-        if not_significant:
-            print("Benchmark hidden because not significant (%s): %s"
-                  % (len(not_significant), ', '.join(not_significant)))
+    if not args.quiet and not_significant:
+        if empty_line:
+            print()
+        print("Benchmark hidden because not significant (%s): %s"
+              % (len(not_significant), ', '.join(not_significant)))
 
 
 def compare_suites_by_speed(all_results, args):
@@ -300,6 +303,7 @@ def compare_suites_by_speed(all_results, args):
         else:
             slower.append(item)
 
+    empty_line = False
     for title, results, sort_reverse in (
         ('Slower', slower, False),
         ('Faster', faster, True),
@@ -310,13 +314,17 @@ def compare_suites_by_speed(all_results, args):
 
         results.sort(key=lambda item: item[1].speed, reverse=sort_reverse)
 
+        if empty_line:
+            print()
         print("%s (%s):" % (title, len(results)))
         for name, result in results:
             text = result.oneliner(verbose=False)
             print("- %s: %s" % (name, text))
-        print()
+        empty_line = True
 
     if not args.quiet and not_significant:
+        if empty_line:
+            print()
         print("Benchmark hidden because not significant (%s): %s"
               % (len(not_significant), ', '.join(not_significant)))
 
