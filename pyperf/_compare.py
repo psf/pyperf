@@ -34,7 +34,7 @@ def compute_normalized_mean(bench, ref):
     ref_avg = ref.mean()
     bench_avg = bench.mean()
     # Note: means cannot be zero, it's a warranty of pyperf API
-    norm_mean = ref_avg / bench_avg
+    norm_mean = bench_avg / ref_avg
     percent = (bench_avg - ref_avg) * 100.0 / ref_avg
     return (norm_mean, percent)
 
@@ -42,10 +42,10 @@ def compute_normalized_mean(bench, ref):
 def format_normalized_mean(norm_mean, percent):
     if norm_mean == 1.0:
         return "no change"
-    elif norm_mean > 1.0:
-        return "%.2fx faster (%+.0f%%)" % (norm_mean, percent)
+    elif norm_mean < 1.0:
+        return "%.2fx faster (%+.0f%%)" % (1.0 / norm_mean, percent)
     else:
-        return "%.2fx slower (%+.0f%%)" % (1.0 / norm_mean, percent)
+        return "%.2fx slower (%+.0f%%)" % (norm_mean, percent)
 
 
 class CompareResult(object):
@@ -71,7 +71,7 @@ class CompareResult(object):
         if self._min_speed is not None:
             norm_mean = self.norm_mean
             if norm_mean < 1.0:
-                # slower uses the inverse
+                # faster uses the inverse
                 norm_mean = 1.0 / norm_mean
             if (norm_mean - 1.0) * 100 < self._min_speed:
                 self._significant = False
@@ -205,7 +205,7 @@ def compare_suites_table(all_results, by_speed, args):
     if by_speed:
         def sort_key(results):
             result = results[0]
-            return -result.norm_mean
+            return result.norm_mean
 
         all_results.sort(key=sort_key)
 
@@ -300,15 +300,15 @@ def compare_suites_by_speed(all_results, args):
         norm_mean = result.norm_mean
         if norm_mean == 1.0:
             same.append(item)
-        elif norm_mean > 1.0:
+        elif norm_mean < 1.0:
             faster.append(item)
         else:
             slower.append(item)
 
     empty_line = False
     for title, results, sort_reverse in (
-        ('Slower', slower, False),
-        ('Faster', faster, True),
+        ('Slower', slower, True),
+        ('Faster', faster, False),
         ('Same speed', same, False),
     ):
         if not results:
