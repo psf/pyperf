@@ -199,51 +199,44 @@ class Table:
             write_line(self._render_line('-'))
 
 
-def compare_suites_table(grouped_by_name, by_speed, args):
-    headers = ['Benchmark']
-    for group in grouped_by_name:
-        for item in group.benchmarks:
-            headers.append(item.filename)
-        break
-
-    not_significant = []
-
+def compare_suites_table(all_results, by_speed, args):
     if by_speed:
-        def sort_key(group):
-            ref = group.benchmarks[0].benchmark
-            bench = group.benchmarks[1].benchmark
-            speed, percent = compute_speed(ref, bench)
-            return -speed
+        def sort_key(results):
+            result = results[0]
+            return -result.speed
 
-        grouped_by_name.sort(key=sort_key)
+        all_results.sort(key=sort_key)
+
+    headers = ['Benchmark', all_results[0][0].ref.name]
+    for item in all_results[0]:
+        headers.append(item.changed.name)
 
     rows = []
-    for group in grouped_by_name:
-        all_significant = []
-        row = [group.name]
-        ref = group.benchmarks[0].benchmark
-        for index, item in enumerate(group.benchmarks):
-            bench = item.benchmark
-            text = bench.format_value(bench.mean())
-            if index != 0:
-                speed, percent = compute_speed(ref, bench)
-                if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
-                    significant = False
-                else:
-                    significant = is_significant_benchs(ref, bench)[0]
-                if significant:
-                    if args.quiet:
-                        text = format_speed(speed, percent)
-                    else:
-                        text = "%s: %s" % (text, format_speed(speed, percent))
-                else:
-                    text = "not significant"
-                all_significant.append(significant)
+    not_significant = []
+    for results in all_results:
+        row = [results.name]
+
+        ref_bench = results[0].ref.benchmark
+        text = ref_bench.format_value(ref_bench.mean())
+        row.append(text)
+
+        significants = []
+        for index, result in enumerate(results):
+            bench = result.changed.benchmark
+            significant = result.significant
+            if significant:
+                text = format_speed(result.speed, result.percent)
+                if not args.quiet:
+                    text = "%s: %s" % (bench.format_value(bench.mean()), text)
+            else:
+                text = "not significant"
+            significants.append(significant)
             row.append(text)
-        if any(all_significant):
+
+        if any(significants):
             rows.append(row)
         else:
-            not_significant.append(group.name)
+            not_significant.append(results.name)
 
     if rows:
         table = Table(headers, rows)
@@ -287,7 +280,7 @@ def compare_suites_list(all_results, show_name, args):
                   % (len(not_significant), ', '.join(not_significant)))
 
 
-def compare_suites_by_speed(all_results, show_name, args):
+def compare_suites_by_speed(all_results, args):
     not_significant = []
     slower = []
     faster = []
@@ -335,20 +328,20 @@ def compare_suites(benchmarks, args):
               file=sys.stderr)
         sys.exit(1)
 
-    if args.table:
-        compare_suites_table(grouped_by_name, args.group_by_speed, args)
-    else:
-        # List of CompareResults
-        all_results = []
-        for item in grouped_by_name:
-            cmp_benchmarks = item.benchmarks
-            results = compare_benchmarks(item.name, cmp_benchmarks,
-                                         args.min_speed)
-            all_results.append(results)
+    # List of CompareResults
+    all_results = []
+    for item in grouped_by_name:
+        cmp_benchmarks = item.benchmarks
+        results = compare_benchmarks(item.name, cmp_benchmarks,
+                                     args.min_speed)
+        all_results.append(results)
 
+    if args.table:
+        compare_suites_table(all_results, args.group_by_speed, args)
+    else:
         show_name = (len(grouped_by_name) > 1)
         if args.group_by_speed:
-            compare_suites_by_speed(all_results, show_name, args)
+            compare_suites_by_speed(all_results, args)
         else:
             compare_suites_list(all_results, show_name, args)
 
