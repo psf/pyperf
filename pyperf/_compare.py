@@ -49,11 +49,12 @@ def format_speed(speed, percent):
 
 
 class CompareResult(object):
-    def __init__(self, ref, changed):
+    def __init__(self, ref, changed, min_speed=None):
         # CompareData object
         self.ref = ref
         # CompareData object
         self.changed = changed
+        self._min_speed = min_speed
         self._significant = None
         self._t_score = None
         self._speed = None
@@ -66,6 +67,14 @@ class CompareResult(object):
         bench1 = self.ref.benchmark
         bench2 = self.changed.benchmark
         self._significant, self._t_score = is_significant_benchs(bench1, bench2)
+
+        if self._min_speed is not None:
+            speed = self.speed
+            if speed < 1.0:
+                # slower uses the inverse
+                speed = 1.0 / speed
+            if (speed - 1.0) * 100 < self._min_speed:
+                self._significant = False
 
     @property
     def significant(self):
@@ -144,7 +153,7 @@ class CompareResults(list):
         return '<CompareResult %r>' % (list(self),)
 
 
-def compare_benchmarks(name, benchmarks):
+def compare_benchmarks(name, benchmarks, min_speed):
     results = CompareResults(name)
 
     ref_item = benchmarks[0]
@@ -152,7 +161,7 @@ def compare_benchmarks(name, benchmarks):
 
     for item in benchmarks[1:]:
         changed = CompareData(item.filename, item.benchmark)
-        result = CompareResult(ref, changed)
+        result = CompareResult(ref, changed, min_speed)
         results.append(result)
 
     return results
@@ -289,12 +298,8 @@ def compare_suites_by_speed(all_results, show_name, args):
             not_significant.append(results.name)
             continue
 
-        speed = result.speed
-        if args.min_speed and abs(speed - 1.0) * 100 < args.min_speed:
-            not_significant.append(results.name)
-            continue
-
         item = (results.name, result)
+        speed = result.speed
         if speed == 1.0:
             same.append(item)
         elif speed > 1.0:
@@ -337,7 +342,8 @@ def compare_suites(benchmarks, args):
         all_results = []
         for item in grouped_by_name:
             cmp_benchmarks = item.benchmarks
-            results = compare_benchmarks(item.name, cmp_benchmarks)
+            results = compare_benchmarks(item.name, cmp_benchmarks,
+                                         args.min_speed)
             all_results.append(results)
 
         show_name = (len(grouped_by_name) > 1)
