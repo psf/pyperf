@@ -1,5 +1,3 @@
-import sys
-
 from pyperf._cli import display_title, format_result_value
 from pyperf._utils import is_significant
 
@@ -155,25 +153,6 @@ class CompareResults(list):
         return '<CompareResult %r>' % (list(self),)
 
 
-def compare_benchmarks(name, benchmarks, min_speed):
-    results = CompareResults(name)
-
-    ref_item = benchmarks[0]
-    ref = CompareData(ref_item.filename, ref_item.benchmark)
-
-    for item in benchmarks[1:]:
-        changed = CompareData(item.filename, item.benchmark)
-        result = CompareResult(ref, changed, min_speed)
-        results.append(result)
-
-    return results
-
-
-def display_not_signiticant(not_significant):
-    print("Benchmark hidden because not significant (%s): %s"
-          % (len(not_significant), ', '.join(not_significant)))
-
-
 class Table:
     def __init__(self, headers, rows):
         self.headers = headers
@@ -206,168 +185,206 @@ class Table:
             write_line(self._render_line('-'))
 
 
-def compare_suites_table(all_results, by_speed, args):
-    if by_speed:
-        def sort_key(results):
-            result = results[0]
-            return result.norm_mean
+class CompareError(Exception):
+    pass
 
-        all_results.sort(key=sort_key)
 
-    headers = ['Benchmark', all_results[0][0].ref.name]
-    for item in all_results[0]:
-        headers.append(item.changed.name)
+class CompareSuites:
+    def __init__(self, benchmarks, args):
+        self.benchmarks = benchmarks
 
-    rows = []
-    not_significant = []
-    for results in all_results:
-        row = [results.name]
+        self.table = args.table
+        self.min_speed = args.min_speed
+        self.group_by_speed = args.group_by_speed
+        self.verbose = args.verbose
+        self.quiet = args.quiet
 
-        ref_bench = results[0].ref.benchmark
-        text = ref_bench.format_value(ref_bench.mean())
-        row.append(text)
+        grouped_by_name = self.benchmarks.group_by_name()
+        if not grouped_by_name:
+            raise CompareError("Benchmark suites have no benchmark in common")
 
-        significants = []
-        for index, result in enumerate(results):
-            bench = result.changed.benchmark
-            significant = result.significant
-            if significant:
-                text = format_normalized_mean(result.norm_mean, result.percent)
-                if not args.quiet:
-                    text = "%s: %s" % (bench.format_value(bench.mean()), text)
-            else:
-                text = "not significant"
-            significants.append(significant)
+        # List of CompareResults
+        self.all_results = []
+        for item in grouped_by_name:
+            cmp_benchmarks = item.benchmarks
+            results = self.compare_benchmarks(item.name, cmp_benchmarks)
+            self.all_results.append(results)
+
+        self.show_name = (len(grouped_by_name) > 1)
+
+    def compare_benchmarks(self, name, benchmarks):
+        min_speed = self.min_speed
+
+        results = CompareResults(name)
+
+        ref_item = benchmarks[0]
+        ref = CompareData(ref_item.filename, ref_item.benchmark)
+
+        for item in benchmarks[1:]:
+            changed = CompareData(item.filename, item.benchmark)
+            result = CompareResult(ref, changed, min_speed)
+            results.append(result)
+
+        return results
+
+    @staticmethod
+    def display_not_signiticant(not_significant):
+        print("Benchmark hidden because not significant (%s): %s"
+              % (len(not_significant), ', '.join(not_significant)))
+
+    def compare_suites_table(self):
+        if self.group_by_speed:
+            def sort_key(results):
+                result = results[0]
+                return result.norm_mean
+
+            self.all_results.sort(key=sort_key)
+
+        headers = ['Benchmark', self.all_results[0][0].ref.name]
+        for item in self.all_results[0]:
+            headers.append(item.changed.name)
+
+        rows = []
+        not_significant = []
+        for results in self.all_results:
+            row = [results.name]
+
+            ref_bench = results[0].ref.benchmark
+            text = ref_bench.format_value(ref_bench.mean())
             row.append(text)
 
-        if any(significants):
-            rows.append(row)
-        else:
-            not_significant.append(results.name)
+            significants = []
+            for index, result in enumerate(results):
+                bench = result.changed.benchmark
+                significant = result.significant
+                if significant:
+                    text = format_normalized_mean(result.norm_mean, result.percent)
+                    if not self.quiet:
+                        text = "%s: %s" % (bench.format_value(bench.mean()), text)
+                else:
+                    text = "not significant"
+                significants.append(significant)
+                row.append(text)
 
-    if rows:
-        table = Table(headers, rows)
-        table.render(print)
+            if any(significants):
+                rows.append(row)
+            else:
+                not_significant.append(results.name)
 
-    if not_significant:
         if rows:
-            print()
-        display_not_signiticant(not_significant)
+            table = Table(headers, rows)
+            table.render(print)
 
-
-def compare_suites_list(all_results, show_name, args):
-    not_significant = []
-    empty_line = False
-    for index, results in enumerate(all_results):
-        significant = any(result.significant for result in results)
-        lines = []
-        for result in results:
-            lines.extend(result.format(args.verbose))
-
-        if not(significant or args.verbose):
-            not_significant.append(results.name)
-            continue
-
-        if len(lines) != 1:
-            if show_name:
-                display_title(results.name)
-            for line in lines:
-                print(line)
-            if index != len(all_results) - 1:
+        if not_significant:
+            if rows:
                 print()
-        else:
-            text = lines[0]
-            if show_name:
-                text = '%s: %s' % (results.name, text)
-            print(text)
-        empty_line = True
+            self.display_not_signiticant(not_significant)
 
-    if not args.quiet and not_significant:
-        if empty_line:
-            print()
-        display_not_signiticant(not_significant)
+    def compare_suites_by_speed(self):
+        not_significant = []
+        slower = []
+        faster = []
+        same = []
+        for results in self.all_results:
+            result = results[0]
+            if not result.significant:
+                not_significant.append(results.name)
+                continue
 
+            item = (results.name, result)
+            norm_mean = result.norm_mean
+            if norm_mean == 1.0:
+                same.append(item)
+            elif norm_mean < 1.0:
+                faster.append(item)
+            else:
+                slower.append(item)
 
-def compare_suites_by_speed(all_results, args):
-    not_significant = []
-    slower = []
-    faster = []
-    same = []
-    for results in all_results:
-        result = results[0]
-        if not result.significant:
-            not_significant.append(results.name)
-            continue
+        def sort_key(item):
+            return item[1].norm_mean
 
-        item = (results.name, result)
-        norm_mean = result.norm_mean
-        if norm_mean == 1.0:
-            same.append(item)
-        elif norm_mean < 1.0:
-            faster.append(item)
-        else:
-            slower.append(item)
+        slower.sort(key=sort_key, reverse=True)
+        faster.sort(key=sort_key)
 
-    def sort_key(item):
-        return item[1].norm_mean
+        empty_line = False
+        for title, results, sort_reverse in (
+            ('Slower', slower, True),
+            ('Faster', faster, False),
+            ('Same speed', same, False),
+        ):
+            if not results:
+                continue
 
-    slower.sort(key=sort_key, reverse=True)
-    faster.sort(key=sort_key)
+            if empty_line:
+                print()
+            print("%s (%s):" % (title, len(results)))
+            for name, result in results:
+                text = result.oneliner(verbose=False)
+                print("- %s: %s" % (name, text))
+            empty_line = True
 
-    empty_line = False
-    for title, results, sort_reverse in (
-        ('Slower', slower, True),
-        ('Faster', faster, False),
-        ('Same speed', same, False),
-    ):
-        if not results:
-            continue
+        if not self.quiet and not_significant:
+            if empty_line:
+                print()
+            self.display_not_signiticant(not_significant)
 
-        if empty_line:
-            print()
-        print("%s (%s):" % (title, len(results)))
-        for name, result in results:
-            text = result.oneliner(verbose=False)
-            print("- %s: %s" % (name, text))
-        empty_line = True
+    def compare_suites_list(self):
+        not_significant = []
+        empty_line = False
+        last_index = (len(self.all_results) - 1)
 
-    if not args.quiet and not_significant:
-        if empty_line:
-            print()
-        display_not_signiticant(not_significant)
+        for index, results in enumerate(self.all_results):
+            significant = any(result.significant for result in results)
+            lines = []
+            for result in results:
+                lines.extend(result.format(self.verbose))
 
+            if not(significant or self.verbose):
+                not_significant.append(results.name)
+                continue
 
-def compare_suites(benchmarks, args):
-    grouped_by_name = benchmarks.group_by_name()
-    if not grouped_by_name:
-        print("ERROR: Benchmark suites have no benchmark in common",
-              file=sys.stderr)
-        sys.exit(1)
+            if len(lines) != 1:
+                if self.show_name:
+                    display_title(results.name)
+                for line in lines:
+                    print(line)
+                if index != last_index:
+                    print()
+            else:
+                text = lines[0]
+                if self.show_name:
+                    text = '%s: %s' % (results.name, text)
+                print(text)
+            empty_line = True
 
-    # List of CompareResults
-    all_results = []
-    for item in grouped_by_name:
-        cmp_benchmarks = item.benchmarks
-        results = compare_benchmarks(item.name, cmp_benchmarks,
-                                     args.min_speed)
-        all_results.append(results)
+        if not self.quiet and not_significant:
+            if empty_line:
+                print()
+            self.display_not_signiticant(not_significant)
 
-    if args.table:
-        compare_suites_table(all_results, args.group_by_speed, args)
-    else:
-        show_name = (len(grouped_by_name) > 1)
-        if args.group_by_speed:
-            compare_suites_by_speed(all_results, args)
-        else:
-            compare_suites_list(all_results, show_name, args)
-
-    if not args.quiet:
-        for suite, hidden in benchmarks.group_by_name_ignored():
+    def list_ignored(self):
+        for suite, hidden in self.benchmarks.group_by_name_ignored():
             if not hidden:
                 continue
             hidden_names = [bench.get_name() for bench in hidden]
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
+
+    def compare(self):
+        if self.table:
+            self.compare_suites_table()
+        else:
+            if self.group_by_speed:
+                self.compare_suites_by_speed()
+            else:
+                self.compare_suites_list()
+
+        if not self.quiet:
+            self.list_ignored()
+
+
+def compare_suites(benchmarks, args):
+    CompareSuites(benchmarks, args).compare()
 
 
 def timeit_compare_benchs(name1, bench1, name2, bench2, args):

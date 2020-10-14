@@ -383,7 +383,7 @@ def _display_common_metadata(metadatas, lines):
 
 
 def cmd_compare_to(args):
-    from pyperf._compare import compare_suites
+    from pyperf._compare import compare_suites, CompareError
 
     data = load_benchmarks(args)
     if data.get_nsuite() < 2:
@@ -395,7 +395,11 @@ def cmd_compare_to(args):
               file=sys.stderr)
         sys.exit(1)
 
-    compare_suites(data, args)
+    try:
+        compare_suites(data, args)
+    except CompareError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(1)
 
 
 def cmd_collect_metadata(args):
