@@ -1,5 +1,5 @@
 from pyperf._cli import display_title, format_result_value
-from pyperf._utils import is_significant
+from pyperf._utils import is_significant, geometric_mean
 
 
 def is_significant_benchs(bench1, bench2):
@@ -44,6 +44,18 @@ def format_normalized_mean(norm_mean, percent):
         return "%.2fx faster (%+.0f%%)" % (1.0 / norm_mean, percent)
     else:
         return "%.2fx slower (%+.0f%%)" % (norm_mean, percent)
+
+
+def format_geometric_mean(norm_means):
+    geo_mean = geometric_mean(norm_means)
+    text = '%.2f' % geo_mean
+    if geo_mean == 1.0:
+        text = f'{text} (same speed)'
+    elif geo_mean < 1.0:
+        text = f'{text} (faster)'
+    else:
+        text = f'{text} (slower)'
+    return text
 
 
 class CompareResult(object):
@@ -244,6 +256,10 @@ class CompareSuites:
         for item in self.all_results[0]:
             headers.append(item.changed.name)
 
+        all_norm_means = []
+        for column in headers[2:]:
+            all_norm_means.append([])
+
         rows = []
         not_significant = []
         for results in self.all_results:
@@ -264,12 +280,21 @@ class CompareSuites:
                 else:
                     text = "not significant"
                 significants.append(significant)
+                all_norm_means[index].append(result.norm_mean)
                 row.append(text)
 
             if any(significants):
                 rows.append(row)
             else:
                 not_significant.append(results.name)
+
+        # only compute the geometric mean if there is at least two benchmarks
+        # and if at least one is signicant.
+        if len(all_norm_means[0]) > 1 and rows:
+            row = ['Geometric mean', '(ref)']
+            for norm_means in all_norm_means:
+                row.append(format_geometric_mean(norm_means))
+            rows.append(row)
 
         if rows:
             table = Table(headers, rows)
@@ -370,6 +395,33 @@ class CompareSuites:
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
+    def compare_geometric_mean(self):
+        all_results = self.all_results
+
+        # use a list since two filenames can be identical,
+        # even if results are different
+        all_norm_means = []
+        for item in all_results[0]:
+            all_norm_means.append((item.changed.name, []))
+
+        for results in all_results:
+            for index, result in enumerate(results):
+                all_norm_means[index][1].append(result.norm_mean)
+
+        if len(all_norm_means[0][1]) < 2:
+            # only compute the geometric mean when there is at least two benchmarks
+            return
+
+        print()
+        if len(all_norm_means) > 1:
+            display_title('Geometric mean')
+            for name, norm_means in all_norm_means:
+                geo_mean = format_geometric_mean(norm_means)
+                print(f'{name}: {geo_mean}')
+        else:
+            geo_mean = format_geometric_mean(all_norm_means[0][1])
+            print(f'Geometric mean: {geo_mean}')
+
     def compare(self):
         if self.table:
             self.compare_suites_table()
@@ -378,6 +430,8 @@ class CompareSuites:
                 self.compare_suites_by_speed()
             else:
                 self.compare_suites_list()
+
+            self.compare_geometric_mean()
 
         if not self.quiet:
             self.list_ignored()

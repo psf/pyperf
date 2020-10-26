@@ -4,6 +4,7 @@ Changelog
 Version 2.0.1
 -------------
 
+* ``compare`` commmand: Add geometric mean
 * Project moved to https://github.com/psf/pyperf/
 * system command now only emits a warning rather than failing with a hard error
   if it fails to get or set the frequency of a CPU.
