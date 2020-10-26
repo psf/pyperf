@@ -16,7 +16,9 @@ jobs:
       env: TOX_ENV=doc
     - python: '3.8'
       env: TOX_ENV=pep8
-    - python: '3.9'
+    # FIXME: At 2020-10-26, '3.9' is not accepted by Travis CI yet.
+    # Python 3.9.0 was released at 2020-10-05.
+    - python: '3.9-dev'
       env: TOX_ENV=py3
 
 install:
