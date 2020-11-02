@@ -129,7 +129,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
         expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
@@ -144,11 +144,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare_to', ref_result, changed_result, '--table')
 
         expected = textwrap.dedent('''
-            +-----------+----------+--------------------------------+
-            | Benchmark | ref      | changed                        |
-            +===========+==========+================================+
-            | telco     | 1.00 sec | 2.00 sec: 2.00x slower (+100%) |
-            +-----------+----------+--------------------------------+
+            +-----------+----------+------------------------+
+            | Benchmark | ref      | changed                |
+            +===========+==========+========================+
+            | telco     | 1.00 sec | 2.00 sec: 2.00x slower |
+            +-----------+----------+------------------------+
         ''').strip()
 
         self.assertEqual(stdout.rstrip(),
@@ -187,7 +187,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         stdout = self.compare('compare_to', ref_result, changed_result, '-v')
 
         expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower (+33%)\n'
+                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
                     'Not significant!')
         self.assertEqual(stdout.rstrip(),
                          expected)
@@ -216,9 +216,9 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         # 2 files
         expected = """
-            [1]*1000: Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster (-2%)
-            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
-            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
+            [1]*1000: Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster
+            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower
+            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower
 
             Geometric mean: 1.22x slower
         """
@@ -227,11 +227,11 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         # 2 files grouped by speed
         expected = """
             Slower (2):
-            - [1,2]*1000: 3.70 us +- 0.05 us -> 5.28 us +- 0.09 us: 1.42x slower (+42%)
-            - [1,2,3]*1000: 4.61 us +- 0.13 us -> 6.05 us +- 0.11 us: 1.31x slower (+31%)
+            - [1,2]*1000: 3.70 us +- 0.05 us -> 5.28 us +- 0.09 us: 1.42x slower
+            - [1,2,3]*1000: 4.61 us +- 0.13 us -> 6.05 us +- 0.11 us: 1.31x slower
 
             Faster (1):
-            - [1]*1000: 2.13 us +- 0.06 us -> 2.09 us +- 0.04 us: 1.02x faster (-2%)
+            - [1]*1000: 2.13 us +- 0.06 us -> 2.09 us +- 0.04 us: 1.02x faster
 
             Geometric mean: 1.22x slower
         """
@@ -240,8 +240,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         # 2 files grouped by speed (with not significant)
         expected = """
             Faster (2):
-            - [1,2]*1000: 3.70 us +- 0.05 us -> 3.18 us +- 0.08 us: 1.16x faster (-14%)
-            - [1,2,3]*1000: 4.61 us +- 0.13 us -> 4.17 us +- 0.11 us: 1.11x faster (-10%)
+            - [1,2]*1000: 3.70 us +- 0.05 us -> 3.18 us +- 0.08 us: 1.16x faster
+            - [1,2,3]*1000: 4.61 us +- 0.13 us -> 4.17 us +- 0.11 us: 1.11x faster
 
             Benchmark hidden because not significant (1): [1]*1000
 
@@ -254,21 +254,21 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             [1]*1000
             ========
 
-            Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster (-2%)
-            Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py38] 2.13 us +- 0.03 us: 1.00x slower (+0%)
+            Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py37] 2.09 us +- 0.04 us: 1.02x faster
+            Mean +- std dev: [mult_list_py36] 2.13 us +- 0.06 us -> [mult_list_py38] 2.13 us +- 0.03 us: 1.00x slower
             Not significant!
 
             [1,2]*1000
             ==========
 
-            Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
-            Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py38] 3.18 us +- 0.08 us: 1.16x faster (-14%)
+            Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower
+            Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py38] 3.18 us +- 0.08 us: 1.16x faster
 
             [1,2,3]*1000
             ============
 
-            Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
-            Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py38] 4.17 us +- 0.11 us: 1.11x faster (-10%)
+            Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower
+            Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py38] 4.17 us +- 0.11 us: 1.11x faster
 
             Geometric mean
             ==============
@@ -280,33 +280,33 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         # 3 files as table
         expected = """
-            +----------------+----------------+------------------------------+------------------------------+
-            | Benchmark      | mult_list_py36 | mult_list_py37               | mult_list_py38               |
-            +================+================+==============================+==============================+
-            | [1]*1000       | 2.13 us        | 2.09 us: 1.02x faster (-2%)  | not significant              |
-            +----------------+----------------+------------------------------+------------------------------+
-            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower (+42%) | 3.18 us: 1.16x faster (-14%) |
-            +----------------+----------------+------------------------------+------------------------------+
-            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
-            +----------------+----------------+------------------------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22x slower                 | 1.09x faster                 |
-            +----------------+----------------+------------------------------+------------------------------+
+            +----------------+----------------+-----------------------+-----------------------+
+            | Benchmark      | mult_list_py36 | mult_list_py37        | mult_list_py38        |
+            +================+================+=======================+=======================+
+            | [1]*1000       | 2.13 us        | 2.09 us: 1.02x faster | not significant       |
+            +----------------+----------------+-----------------------+-----------------------+
+            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower | 3.18 us: 1.16x faster |
+            +----------------+----------------+-----------------------+-----------------------+
+            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower | 4.17 us: 1.11x faster |
+            +----------------+----------------+-----------------------+-----------------------+
+            | Geometric mean | (ref)          | 1.22x slower          | 1.09x faster          |
+            +----------------+----------------+-----------------------+-----------------------+
         """
         self.check_command(expected, 'compare_to', '--table', py36, py37, py38)
 
         # 3 files as table grouped by speed
         expected = """
-            +----------------+----------------+------------------------------+
-            | Benchmark      | mult_list_py36 | mult_list_py37               |
-            +================+================+==============================+
-            | [1]*1000       | 2.13 us        | 2.09 us: 1.02x faster (-2%)  |
-            +----------------+----------------+------------------------------+
-            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) |
-            +----------------+----------------+------------------------------+
-            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower (+42%) |
-            +----------------+----------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22x slower                 |
-            +----------------+----------------+------------------------------+
+            +----------------+----------------+-----------------------+
+            | Benchmark      | mult_list_py36 | mult_list_py37        |
+            +================+================+=======================+
+            | [1]*1000       | 2.13 us        | 2.09 us: 1.02x faster |
+            +----------------+----------------+-----------------------+
+            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower |
+            +----------------+----------------+-----------------------+
+            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower |
+            +----------------+----------------+-----------------------+
+            | Geometric mean | (ref)          | 1.22x slower          |
+            +----------------+----------------+-----------------------+
         """
         self.check_command(expected, 'compare_to', '--table', "--group-by-speed", py36, py37)
 
@@ -317,8 +317,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         # 2 files, min-speed=10
         expected = """
-            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
-            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
+            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower
+            [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower
 
             Benchmark hidden because not significant (1): [1]*1000
 
@@ -328,7 +328,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         # 2 files, min-speed=40
         expected = """
-            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
+            [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower
 
             Benchmark hidden because not significant (2): [1]*1000, [1,2,3]*1000
 
@@ -338,15 +338,15 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         # 3 files as table, min-speed=10
         expected = """
-            +----------------+----------------+------------------------------+------------------------------+
-            | Benchmark      | mult_list_py36 | mult_list_py37               | mult_list_py38               |
-            +================+================+==============================+==============================+
-            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower (+42%) | 3.18 us: 1.16x faster (-14%) |
-            +----------------+----------------+------------------------------+------------------------------+
-            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
-            +----------------+----------------+------------------------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22x slower                 | 1.09x faster                 |
-            +----------------+----------------+------------------------------+------------------------------+
+            +----------------+----------------+-----------------------+-----------------------+
+            | Benchmark      | mult_list_py36 | mult_list_py37        | mult_list_py38        |
+            +================+================+=======================+=======================+
+            | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower | 3.18 us: 1.16x faster |
+            +----------------+----------------+-----------------------+-----------------------+
+            | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower | 4.17 us: 1.11x faster |
+            +----------------+----------------+-----------------------+-----------------------+
+            | Geometric mean | (ref)          | 1.22x slower          | 1.09x faster          |
+            +----------------+----------------+-----------------------+-----------------------+
 
             Benchmark hidden because not significant (1): [1]*1000
         """

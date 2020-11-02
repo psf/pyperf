@@ -54,7 +54,7 @@ See `the API docs`_ for full details on the ``timeit`` function and the
 
 To `analyze benchmark results`_ use the ``pyperf stats`` command::
 
-    $ python3 -m pyperf stats bench.json
+    $ python3 -m pyperf stats telco.json
     Total duration: 29.2 sec
     Start date: 2016-10-21 03:14:19
     End date: 2016-10-21 03:14:53
@@ -85,6 +85,7 @@ To `analyze benchmark results`_ use the ``pyperf stats`` command::
 
     Number of outlier (out of 22.0 ms..23.0 ms): 0
 
+
 There's also:
 
 * ``pyperf compare_to`` command tests if a difference is
@@ -92,12 +93,18 @@ There's also:
   of multiple benchmarks)
   ::
 
-    $ python3 -m pyperf compare_to py36.json py38.json --table
-    +-----------+---------+------------------------------+
-    | Benchmark | py36    | py38                         |
-    +===========+=========+==============================+
-    | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
-    +-----------+---------+------------------------------+
+    $ python3 -m pyperf compare_to --table mult_list_py36.json mult_list_py37.json mult_list_py38.json
+    +----------------+----------------+-----------------------+-----------------------+
+    | Benchmark      | mult_list_py36 | mult_list_py37        | mult_list_py38        |
+    +================+================+=======================+=======================+
+    | [1]*1000       | 2.13 us        | 2.09 us: 1.02x faster | not significant       |
+    +----------------+----------------+-----------------------+-----------------------+
+    | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower | 3.18 us: 1.16x faster |
+    +----------------+----------------+-----------------------+-----------------------+
+    | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower | 4.17 us: 1.11x faster |
+    +----------------+----------------+-----------------------+-----------------------+
+    | Geometric mean | (ref)          | 1.22x slower          | 1.09x faster          |
+    +----------------+----------------+-----------------------+-----------------------+
 
 * ``pyperf system tune`` command to tune your system to run stable benchmarks.
 * Automatically collect metadata on the computer and the benchmark:

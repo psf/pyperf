@@ -32,24 +32,16 @@ def compute_normalized_mean(bench, ref):
     ref_avg = ref.mean()
     bench_avg = bench.mean()
     # Note: means cannot be zero, it's a warranty of pyperf API
-    norm_mean = bench_avg / ref_avg
-    percent = (bench_avg - ref_avg) * 100.0 / ref_avg
-    return (norm_mean, percent)
+    return bench_avg / ref_avg
 
 
-def format_normalized_mean(norm_mean, percent=None):
+def format_normalized_mean(norm_mean):
     if norm_mean == 1.0:
         return "no change"
     elif norm_mean < 1.0:
-        if percent is not None:
-            return "%.2fx faster (%+.0f%%)" % (1.0 / norm_mean, percent)
-        else:
-            return "%.2fx faster" % (1.0 / norm_mean)
+        return "%.2fx faster" % (1.0 / norm_mean)
     else:
-        if percent is not None:
-            return "%.2fx slower (%+.0f%%)" % (norm_mean, percent)
-        else:
-            return "%.2fx slower" % norm_mean
+        return "%.2fx slower" % norm_mean
 
 
 def format_geometric_mean(norm_means):
@@ -67,7 +59,6 @@ class CompareResult(object):
         self._significant = None
         self._t_score = None
         self._norm_mean = None
-        self._percent = None
 
     def __repr__(self):
         return '<CompareResult ref=%r changed=%r>' % (self.ref, self.changed)
@@ -100,7 +91,7 @@ class CompareResult(object):
     def _compute_norm_mean(self):
         ref = self.ref.benchmark
         bench = self.changed.benchmark
-        self._norm_mean, self._percent = compute_normalized_mean(bench, ref)
+        self._norm_mean = compute_normalized_mean(bench, ref)
 
     # mean normalized to the reference benchmark mean
     @property
@@ -108,12 +99,6 @@ class CompareResult(object):
         if self._norm_mean is None:
             self._compute_norm_mean()
         return self._norm_mean
-
-    @property
-    def percent(self):
-        if self._percent is None:
-            self._compute_norm_mean()
-        return self._percent
 
     def oneliner(self, verbose=True, show_name=True, check_significant=True):
         if check_significant and not self.significant:
@@ -133,7 +118,7 @@ class CompareResult(object):
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
-        text = "%s: %s" % (text, format_normalized_mean(self.norm_mean, self.percent))
+        text = "%s: %s" % (text, format_normalized_mean(self.norm_mean))
         return text
 
     def format(self, verbose=True, show_name=True):
@@ -273,7 +258,7 @@ class CompareSuites:
                 bench = result.changed.benchmark
                 significant = result.significant
                 if significant:
-                    text = format_normalized_mean(result.norm_mean, result.percent)
+                    text = format_normalized_mean(result.norm_mean)
                     if not self.quiet:
                         text = "%s: %s" % (bench.format_value(bench.mean()), text)
                 else:

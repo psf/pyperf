@@ -4,7 +4,12 @@ Changelog
 Version 2.1.0
 -------------
 
-* :ref:`compare_to command <compare_to_cmd>`: Add the geometric mean.
+* The :ref:`compare_to command <compare_to_cmd>` now computes the geometric
+  mean.
+* The :ref:`compare_to command <compare_to_cmd>` no longer displays
+  percentages: display less numbers to make the output easier to read. Also,
+  percentage were almost the same values than the xxx faster or xxx slower
+  values, but rounded differenly which introduced confusion.
 * Project moved to https://github.com/psf/pyperf/
 * system command now only emits a warning rather than failing with a hard error
   if it fails to get or set the frequency of a CPU.
