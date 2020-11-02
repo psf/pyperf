@@ -37,25 +37,24 @@ def compute_normalized_mean(bench, ref):
     return (norm_mean, percent)
 
 
-def format_normalized_mean(norm_mean, percent):
+def format_normalized_mean(norm_mean, percent=None):
     if norm_mean == 1.0:
         return "no change"
     elif norm_mean < 1.0:
-        return "%.2fx faster (%+.0f%%)" % (1.0 / norm_mean, percent)
+        if percent is not None:
+            return "%.2fx faster (%+.0f%%)" % (1.0 / norm_mean, percent)
+        else:
+            return "%.2fx faster" % (1.0 / norm_mean)
     else:
-        return "%.2fx slower (%+.0f%%)" % (norm_mean, percent)
+        if percent is not None:
+            return "%.2fx slower (%+.0f%%)" % (norm_mean, percent)
+        else:
+            return "%.2fx slower" % norm_mean
 
 
 def format_geometric_mean(norm_means):
     geo_mean = geometric_mean(norm_means)
-    text = '%.2f' % geo_mean
-    if geo_mean == 1.0:
-        text = f'{text} (same speed)'
-    elif geo_mean < 1.0:
-        text = f'{text} (faster)'
-    else:
-        text = f'{text} (slower)'
-    return text
+    return format_normalized_mean(geo_mean)
 
 
 class CompareResult(object):

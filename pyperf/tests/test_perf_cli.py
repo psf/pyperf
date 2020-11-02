@@ -220,7 +220,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             [1,2]*1000: Mean +- std dev: [mult_list_py36] 3.70 us +- 0.05 us -> [mult_list_py37] 5.28 us +- 0.09 us: 1.42x slower (+42%)
             [1,2,3]*1000: Mean +- std dev: [mult_list_py36] 4.61 us +- 0.13 us -> [mult_list_py37] 6.05 us +- 0.11 us: 1.31x slower (+31%)
 
-            Geometric mean: 1.22 (slower)
+            Geometric mean: 1.22x slower
         """
         self.check_command(expected, 'compare_to', py36, py37)
 
@@ -233,7 +233,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Faster (1):
             - [1]*1000: 2.13 us +- 0.06 us -> 2.09 us +- 0.04 us: 1.02x faster (-2%)
 
-            Geometric mean: 1.22 (slower)
+            Geometric mean: 1.22x slower
         """
         self.check_command(expected, 'compare_to', "--group-by-speed", py36, py37)
 
@@ -245,7 +245,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Benchmark hidden because not significant (1): [1]*1000
 
-            Geometric mean: 0.92 (faster)
+            Geometric mean: 1.09x faster
         """
         self.check_command(expected, 'compare_to', "--group-by-speed", py36, py38)
 
@@ -273,8 +273,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Geometric mean
             ==============
 
-            mult_list_py37: 1.22 (slower)
-            mult_list_py38: 0.92 (faster)
+            mult_list_py37: 1.22x slower
+            mult_list_py38: 1.09x faster
         """
         self.check_command(expected, 'compare_to', py36, py37, py38)
 
@@ -289,7 +289,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             +----------------+----------------+------------------------------+------------------------------+
             | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
             +----------------+----------------+------------------------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22 (slower)                | 0.92 (faster)                |
+            | Geometric mean | (ref)          | 1.22x slower                 | 1.09x faster                 |
             +----------------+----------------+------------------------------+------------------------------+
         """
         self.check_command(expected, 'compare_to', '--table', py36, py37, py38)
@@ -305,7 +305,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             +----------------+----------------+------------------------------+
             | [1,2]*1000     | 3.70 us        | 5.28 us: 1.42x slower (+42%) |
             +----------------+----------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22 (slower)                |
+            | Geometric mean | (ref)          | 1.22x slower                 |
             +----------------+----------------+------------------------------+
         """
         self.check_command(expected, 'compare_to', '--table', "--group-by-speed", py36, py37)
@@ -322,7 +322,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Benchmark hidden because not significant (1): [1]*1000
 
-            Geometric mean: 1.22 (slower)
+            Geometric mean: 1.22x slower
         """
         self.check_command(expected, 'compare_to', "--min-speed=10", py36, py37)
 
@@ -332,7 +332,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Benchmark hidden because not significant (2): [1]*1000, [1,2,3]*1000
 
-            Geometric mean: 1.22 (slower)
+            Geometric mean: 1.22x slower
         """
         self.check_command(expected, 'compare_to', "--min-speed=40", py36, py37)
 
@@ -345,7 +345,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             +----------------+----------------+------------------------------+------------------------------+
             | [1,2,3]*1000   | 4.61 us        | 6.05 us: 1.31x slower (+31%) | 4.17 us: 1.11x faster (-10%) |
             +----------------+----------------+------------------------------+------------------------------+
-            | Geometric mean | (ref)          | 1.22 (slower)                | 0.92 (faster)                |
+            | Geometric mean | (ref)          | 1.22x slower                 | 1.09x faster                 |
             +----------------+----------------+------------------------------+------------------------------+
 
             Benchmark hidden because not significant (1): [1]*1000
