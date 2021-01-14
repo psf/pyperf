@@ -120,10 +120,6 @@ to summarize benchmark suite results normalized to the reference suite. See
 <https://www.cse.unsw.edu.au/~cs9242/11/papers/Fleming_Wallace_86.pdf>`_ paper
 by Philip J. Fleming and John J. Wallace (ACM, 1986).
 
-If the geometric mean is less than 1.0, its benchmark suite is faster than the
-reference. If it is greater than 1.0, its benchmark suite is slower than the
-refrence.
-
 Example 1 comparing Python 3.8 to Python 3.6::
 
     $ python3 -m pyperf compare_to py36.json py38.json
