@@ -6,9 +6,9 @@ pyperf
    :alt: Latest release on the Python Cheeseshop (PyPI)
    :target: https://pypi.python.org/pypi/pyperf
 
-.. image:: https://travis-ci.org/psf/pyperf.svg?branch=master
+.. image:: https://api.travis-ci.com/psf/pyperf.svg?branch=master
    :alt: Build status of pyperf on Travis CI
-   :target: https://travis-ci.org/psf/pyperf
+   :target: https://travis-ci.com/github/psf/pyperf
 
 The Python ``pyperf`` module is a toolkit to write, run and analyze benchmarks.
 

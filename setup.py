@@ -10,7 +10,7 @@
 #  - run tests: tox --parallel auto
 #  - git push
 #  - check Travis CI status:
-#    https://travis-ci.org/psf/pyperf
+#    https://travis-ci.com/github/psf/pyperf
 #
 # Release a new version:
 #

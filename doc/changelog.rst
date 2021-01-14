@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Version 2.1.0
--------------
+Version 2.1.0 (2021-01-14)
+--------------------------
 
 * The :ref:`compare_to command <compare_to_cmd>` now computes the geometric
   mean.
