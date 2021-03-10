@@ -1,5 +1,5 @@
 ******
-pyperf
+pyperf-test
 ******
 
 .. image:: https://img.shields.io/pypi/v/pyperf.svg
