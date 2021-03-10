@@ -12,7 +12,16 @@ from pyperf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
 MAX_CALIBRATION = 5
 
 
-class Master(object):
+class Manager(object):
+    """
+    Manager process which spawns worker processes to:
+    - calibrate warmups
+    - calibrate loops
+    - compute values
+
+    It uses a state machine with next_run attribute and the choose_next_run()
+    method.
+    """
     def __init__(self, runner, python=None):
         self.runner = runner
         self.args = runner.args

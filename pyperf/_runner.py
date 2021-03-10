@@ -424,7 +424,7 @@ class Runner:
                 self._compare_to()
                 bench = None
             else:
-                bench = self._master()
+                bench = self._manager()
         except KeyboardInterrupt:
             what = "Benchmark worker" if args.worker else "Benchmark"
             print("%s interrupted: exit" % what, file=sys.stderr)
@@ -546,13 +546,13 @@ class Runner:
             else:
                 bench.dump(args.output)
 
-    def _master(self):
+    def _manager(self):
         # Use lazy import to limit imports on 'import pyperf'
-        from pyperf._master import Master
+        from pyperf._manager import Manager
 
         if self.args.verbose and self._worker_task > 0:
             print()
-        bench = Master(self).create_bench()
+        bench = Manager(self).create_bench()
         if not self.args.quiet:
             print()
         self._display_result(bench)
@@ -561,7 +561,7 @@ class Runner:
     def _compare_to(self):
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._compare import timeit_compare_benchs
-        from pyperf._master import Master
+        from pyperf._manager import Manager
 
         args = self.args
         python_ref = args.compare_to
@@ -583,7 +583,7 @@ class Runner:
             elif not args.quiet:
                 print(name, end=': ')
 
-            bench = Master(self, python=python).create_bench()
+            bench = Manager(self, python=python).create_bench()
             benchs.append(bench)
 
             if multiline:
