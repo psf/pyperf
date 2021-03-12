@@ -21,6 +21,7 @@ setuptools to support environment markers in ``install_requires`` of
 Optional dependencies:
 
 * Python module ``psutil``. Install: ``python3 -m pip install -U psutil``.
+* When you are using macOS, you need to install ``psutil`` if you want to use ``--track-memory`` option.
 
 pyperf requires Python 3.6 or newer.
 
