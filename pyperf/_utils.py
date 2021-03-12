@@ -9,6 +9,7 @@ from shutil import which
 
 
 MS_WINDOWS = (sys.platform == 'win32')
+MAC_OS = (sys.platform == 'darwin')
 
 if MS_WINDOWS:
     import msvcrt

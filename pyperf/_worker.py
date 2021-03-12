@@ -5,7 +5,7 @@ import time
 import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
-from pyperf._utils import MS_WINDOWS, percentile, median_abs_dev
+from pyperf._utils import MS_WINDOWS, MAC_OS, percentile, median_abs_dev
 
 
 MAX_LOOPS = 2 ** 32
@@ -310,6 +310,10 @@ class WorkerProcessTask(WorkerTask):
         if args.track_memory:
             if MS_WINDOWS:
                 from pyperf._win_memory import get_peak_pagefile_usage
+            elif MAC_OS:
+                from pyperf._psutil_memory import PeakMemoryUsageThread
+                mem_thread = PeakMemoryUsageThread()
+                mem_thread.start()
             else:
                 from pyperf._memory import PeakMemoryUsageThread
                 mem_thread = PeakMemoryUsageThread()

@@ -11,7 +11,7 @@ from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
                                get_isolated_cpus, set_cpu_affinity,
                                set_highest_priority)
 from pyperf._formatter import format_timedelta
-from pyperf._utils import (MS_WINDOWS, abs_executable,
+from pyperf._utils import (MS_WINDOWS, MAC_OS, abs_executable,
                            WritePipe, get_python_names)
 from pyperf._worker import WorkerProcessTask
 
@@ -310,6 +310,8 @@ class Runner:
         if args.track_memory:
             if MS_WINDOWS:
                 from pyperf._win_memory import check_tracking_memory
+            elif MAC_OS:
+                from pyperf._psutil_memory import check_tracking_memory
             else:
                 from pyperf._memory import check_tracking_memory
             err_msg = check_tracking_memory()
