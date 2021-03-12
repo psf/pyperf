@@ -1,10 +1,10 @@
-    import os
+import os
 try:
     import psutil
 except ImportError:
     raise ImportError('psutil is not installed')
-    import threading
-    import time
+import threading
+import time
 
 
 class PeakMemoryUsageThread(threading.Thread):
