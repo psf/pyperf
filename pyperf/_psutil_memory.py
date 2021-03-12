@@ -13,7 +13,7 @@ class PeakMemoryUsageThread(threading.Thread):
         self.process = psutil.Process(os.getpid())
         self.peak_usage = 0
         self._done = threading.Event()
-        self.sleep = 0.01   # 10 ms
+        self.sleep = 0.010   # 10 ms
         self._quit = False
 
     def get(self):
