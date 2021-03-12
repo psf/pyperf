@@ -201,7 +201,7 @@ def collect_memory_metadata(metadata):
             metadata['mem_max_rss'] = max_rss * 1024
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
-    # not accurate. See pyperf._memory for more accurate memory metrics.
+    # not accurate. See pyperf._linux_memory for more accurate memory metrics.
 
     # On Windows, use GetProcessMemoryInfo() if available
     if MS_WINDOWS and not check_tracking_memory():

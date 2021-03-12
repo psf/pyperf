@@ -29,7 +29,7 @@ class PeakMemoryUsageThread(threading.Thread):
         threading.Thread.__init__(self)
         self.peak_usage = 0
         self._done = threading.Event()
-        self.sleep = 0.001   # 1 ms
+        self.sleep = 0.010   # 10 ms
         self._quit = False
 
     def get(self):
