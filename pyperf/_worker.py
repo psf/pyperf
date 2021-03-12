@@ -315,7 +315,7 @@ class WorkerProcessTask(WorkerTask):
                 mem_thread = PeakMemoryUsageThread()
                 mem_thread.start()
             else:
-                from pyperf._memory import PeakMemoryUsageThread
+                from pyperf._linux_memory import PeakMemoryUsageThread
                 mem_thread = PeakMemoryUsageThread()
                 mem_thread.start()
 

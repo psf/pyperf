@@ -313,7 +313,7 @@ class Runner:
             elif MAC_OS:
                 from pyperf._psutil_memory import check_tracking_memory
             else:
-                from pyperf._memory import check_tracking_memory
+                from pyperf._linux_memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
                 raise CLIError("unable to track the memory usage "
