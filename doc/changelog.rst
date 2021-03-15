@@ -1,6 +1,7 @@
 Changelog
 =========
-Verison 2.2.0 (TBA)
+
+Version 2.2.0 (TBA)
 -------------------
 * ``--track-memory`` option now supports macOS.
 * Added ``--copy-env`` command line option that inherits all environment variables.
@@ -678,4 +679,3 @@ Version 0.1 (2016-06-02)
 ------------------------
 
 * First public release
-
