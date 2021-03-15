@@ -203,7 +203,7 @@ class Runner:
                                  'processes.')
         parser.add_argument("--copy-env",
                             dest="copy_env", action="store_true", default=False,
-                            help="Copy all env vars")
+                            help="Copy all environment variables")
         parser.add_argument("--no-locale",
                             dest="locale", action="store_false", default=True,
                             help="Don't copy locale environment variables "
