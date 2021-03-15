@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.2.0 (TBA)
+-------------------
+
+* ``--track-memory`` option now supports macOS by using ``psutil``.
+* Added ``--copy-env`` command line option that inherits all environment variables.
+
 Version 2.1.0 (2021-01-14)
 --------------------------
 
@@ -674,4 +680,3 @@ Version 0.1 (2016-06-02)
 ------------------------
 
 * First public release
-

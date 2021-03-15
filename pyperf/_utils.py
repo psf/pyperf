@@ -270,7 +270,9 @@ def abs_executable(python):
     return os.path.normpath(python)
 
 
-def create_environ(inherit_environ, locale):
+def create_environ(inherit_environ, locale, copy_all):
+    if copy_all:
+        return os.environ
     env = {}
 
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive"]

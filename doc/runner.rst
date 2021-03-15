@@ -96,6 +96,8 @@ Option::
     --python-names REF_NAME:CHANGED_NAME
     --affinity=CPU_LIST
     --inherit-environ=VARS
+    --copy-env
+    --no-locale
     --track-memory
     --tracemalloc
 
@@ -119,6 +121,7 @@ Option::
   only the following variables are inherited: ``PATH``, ``HOME``, ``TEMP``,
   ``COMSPEC``, ``SystemRoot`` and locale environment variables. See the
   ``--no-locale`` below for locale environment variables.
+* ``--copy-env``: Inherit all environment variables.
 * ``--no-locale``: Don't inherit locale environment variables:
 
   - ``LANG``

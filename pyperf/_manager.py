@@ -73,7 +73,8 @@ class Manager(object):
 
     def spawn_worker(self, calibrate_loops, calibrate_warmups):
         env = create_environ(self.args.inherit_environ,
-                             self.args.locale)
+                             self.args.locale,
+                             self.args.copy_env)
 
         rpipe, wpipe = create_pipe()
         with rpipe:
