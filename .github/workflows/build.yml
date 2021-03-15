@@ -8,15 +8,19 @@ on:
 
 jobs:
   build:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
         python: [3.9]
         include:
-          - python: [3.6, 3.7, 3.8]
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            python: 3.6
+          - os: ubuntu-latest
+            python: 3.7
+          - os: ubuntu-latest
+            python: 3.8
 
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python
