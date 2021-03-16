@@ -7,6 +7,8 @@ import tempfile
 import textwrap
 import unittest
 
+from pathlib import Path
+
 import pyperf
 from pyperf import tests
 from pyperf._timeit import Timer
@@ -242,6 +244,7 @@ class TestTimeit(unittest.TestCase):
                 if exc.errno != errno.ENOENT:
                     raise
 
+        tmp_exe = Path(tmp_exe).resolve()
         self.assertEqual(cmd.returncode, 0, repr(cmd.stdout + cmd.stderr))
         self.assertIn("python_executable: %s" % tmp_exe, cmd.stdout)
 
