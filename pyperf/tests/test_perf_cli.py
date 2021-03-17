@@ -607,6 +607,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         self._check_track_memory('--tracemalloc')
 
+    @unittest.skipIf(sys.platform == 'win32',
+                     'https://github.com/psf/pyperf/issues/97')
     def test_command_track_memory(self):
         cmd = (sys.executable, '-c', 'pass')
         with tests.temporary_file() as tmp_name:
