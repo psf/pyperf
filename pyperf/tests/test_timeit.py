@@ -222,6 +222,8 @@ class TestTimeit(unittest.TestCase):
     # When the PyPy program is copied, it fails with "Library path not found"
     @unittest.skipIf(pyperf.python_implementation() == 'pypy',
                      'pypy program cannot be copied')
+    @unittest.skipIf(sys.platform == 'win32',
+                     'https://github.com/psf/pyperf/issues/97')
     def test_python_option(self):
         # Ensure that paths are absolute
         paths = [os.path.realpath(path) for path in sys.path]
