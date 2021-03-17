@@ -77,6 +77,8 @@ def template_output(stmt='pass', setup='pass', teardown='pass', init=''):
 
 
 class TestTimeit(unittest.TestCase):
+    @unittest.skipIf(sys.platform == 'win32',
+                     'https://github.com/psf/pyperf/issues/97')
     def test_worker_verbose(self):
         args = ('--worker',
                 '-w', '1',
