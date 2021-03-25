@@ -8,23 +8,21 @@
 #  - git commit -a -m "prepare release x.y"
 #  - Remove untracked files/dirs: git clean -fdx
 #  - run tests: tox --parallel auto
-#  - git push
-#  - check Travis CI status:
-#    https://travis-ci.com/github/psf/pyperf
+#  - git push or send the PR to the repository
+#  - check Github Action CI: https://github.com/psf/pyperf/actions/workflows/build.yml
 #
 # Release a new version:
 #
-#  - git tag VERSION
-#  - git clean -fdx  # Remove untracked files/dirs
-#  - python3 setup.py sdist bdist_wheel
-#  - git push --tags
-#  - twine upload dist/*
+#  - go to the Github release tab: https://github.com/psf/pyperf/releases
+#  - click "Draft a new release" and fill the contents
+#  - finally click the "Publish release" button! Done!
+#  - monitor the publish status: https://github.com/psf/pyperf/actions/workflows/publish.yml
 #
 # After the release:
 #
 #  - set version to n+1
 #  - git commit -a -m "post-release"
-#  - git push
+#  - git push or send the PR to the repository
 
 VERSION = '2.2.1'
 
