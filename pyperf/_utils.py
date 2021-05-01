@@ -4,27 +4,27 @@ import math
 import os
 import statistics
 import sys
-from shlex import quote as shell_quote   # noqa
+from shlex import quote as shell_quote  # noqa
 from shutil import which
 
 
-MS_WINDOWS = (sys.platform == 'win32')
-MAC_OS = (sys.platform == 'darwin')
+MS_WINDOWS = sys.platform == "win32"
+MAC_OS = sys.platform == "darwin"
 
 if MS_WINDOWS:
     import msvcrt
 
 
 def parse_iso8601(date):
-    if '.' in date:
-        date, floatpart = date.split('.', 1)
-        floatpart = float('.' + floatpart)
+    if "." in date:
+        date, floatpart = date.split(".", 1)
+        floatpart = float("." + floatpart)
     else:
         floatpart = 0
     try:
-        dt = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+        dt = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     except ValueError:
-        dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+        dt = datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S")
     dt += datetime.timedelta(seconds=floatpart)
     return dt
 
@@ -34,13 +34,39 @@ def parse_iso8601(date):
 # approximate. While this may look less elegant than simply calculating the
 # critical value, those calculations suck. Look at
 # http://www.math.unb.ca/~knight/utility/t-table.htm if you need more values.
-_T_DIST_95_CONF_LEVELS = [0, 12.706, 4.303, 3.182, 2.776,
-                          2.571, 2.447, 2.365, 2.306, 2.262,
-                          2.228, 2.201, 2.179, 2.160, 2.145,
-                          2.131, 2.120, 2.110, 2.101, 2.093,
-                          2.086, 2.080, 2.074, 2.069, 2.064,
-                          2.060, 2.056, 2.052, 2.048, 2.045,
-                          2.042]
+_T_DIST_95_CONF_LEVELS = [
+    0,
+    12.706,
+    4.303,
+    3.182,
+    2.776,
+    2.571,
+    2.447,
+    2.365,
+    2.306,
+    2.262,
+    2.228,
+    2.201,
+    2.179,
+    2.160,
+    2.145,
+    2.131,
+    2.120,
+    2.110,
+    2.101,
+    2.093,
+    2.086,
+    2.080,
+    2.074,
+    2.069,
+    2.064,
+    2.060,
+    2.056,
+    2.052,
+    2.048,
+    2.045,
+    2.042,
+]
 
 
 def tdist95conf_level(df):
@@ -134,11 +160,11 @@ def parse_run_list(run_list):
     run_list = run_list.strip()
 
     runs = []
-    for part in run_list.split(','):
+    for part in run_list.split(","):
         part = part.strip()
         try:
-            if '-' in part:
-                parts = part.split('-', 1)
+            if "-" in part:
+                parts = part.split("-", 1)
                 first = int(parts[0])
                 last = int(parts[1])
                 for run in range(first, last + 1):
@@ -171,7 +197,7 @@ def read_first_line(path, error=False):
         if error:
             raise
         else:
-            return ''
+            return ""
 
 
 def proc_path(path):
@@ -183,26 +209,26 @@ def sysfs_path(path):
 
 
 def python_implementation():
-    if hasattr(sys, 'implementation'):
+    if hasattr(sys, "implementation"):
         # PEP 421, Python 3.3
         name = sys.implementation.name
     else:
         # Code extracted from platform.python_implementation().
         # Don't import platform to avoid the subprocess import.
         sys_version = sys.version
-        if 'IronPython' in sys_version:
-            name = 'IronPython'
-        elif sys.platform.startswith('java'):
-            name = 'Jython'
+        if "IronPython" in sys_version:
+            name = "IronPython"
+        elif sys.platform.startswith("java"):
+            name = "Jython"
         elif "PyPy" in sys_version:
             name = "PyPy"
         else:
-            name = 'CPython'
+            name = "CPython"
     return name.lower()
 
 
 def python_has_jit():
-    if python_implementation() == 'pypy':
+    if python_implementation() == "pypy":
         return sys.pypy_translation_info["translation.jit"]
 
     return False
@@ -212,7 +238,7 @@ def python_has_jit():
 def popen_killer(proc):
     try:
         yield
-    except:   # noqa: E722
+    except:  # noqa: E722
         # Close pipes
         if proc.stdin:
             proc.stdin.close()
@@ -277,10 +303,24 @@ def create_environ(inherit_environ, locale, copy_all):
 
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive"]
     if locale:
-        copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
-                         'LC_CTYPE', 'LC_IDENTIFICATION', 'LC_MEASUREMENT',
-                         'LC_MESSAGES', 'LC_MONETARY', 'LC_NAME', 'LC_NUMERIC',
-                         'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'))
+        copy_env.extend(
+            (
+                "LANG",
+                "LC_ADDRESS",
+                "LC_ALL",
+                "LC_COLLATE",
+                "LC_CTYPE",
+                "LC_IDENTIFICATION",
+                "LC_MEASUREMENT",
+                "LC_MESSAGES",
+                "LC_MONETARY",
+                "LC_NAME",
+                "LC_NUMERIC",
+                "LC_PAPER",
+                "LC_TELEPHONE",
+                "LC_TIME",
+            )
+        )
     if inherit_environ:
         copy_env.extend(inherit_environ)
 
@@ -367,7 +407,7 @@ def median_abs_dev(values):
 
 
 def percentile(values, p):
-    if not isinstance(p, float) or not(0.0 <= p <= 1.0):
+    if not isinstance(p, float) or not (0.0 <= p <= 1.0):
         raise ValueError("p must be a float in the range [0.0; 1.0]")
 
     values = sorted(values)
@@ -385,9 +425,10 @@ def percentile(values, p):
         return values[int(k)]
 
 
-if hasattr(statistics, 'geometric_mean'):
+if hasattr(statistics, "geometric_mean"):
     _geometric_mean = statistics.geometric_mean
 else:
+
     def _geometric_mean(data):
         # Compute exp(fmean(map(log, data))) using floats
         data = list(map(math.log, data))

@@ -4,15 +4,29 @@ import sys
 import time
 
 import pyperf
-from pyperf._cli import (format_benchmark, format_checks,
-                         multiline_output, display_title, format_result_value,
-                         catch_broken_pipe_error)
-from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
-                               get_isolated_cpus, set_cpu_affinity,
-                               set_highest_priority)
+from pyperf._cli import (
+    format_benchmark,
+    format_checks,
+    multiline_output,
+    display_title,
+    format_result_value,
+    catch_broken_pipe_error,
+)
+from pyperf._cpu_utils import (
+    format_cpu_list,
+    parse_cpu_list,
+    get_isolated_cpus,
+    set_cpu_affinity,
+    set_highest_priority,
+)
 from pyperf._formatter import format_timedelta
-from pyperf._utils import (MS_WINDOWS, MAC_OS, abs_executable,
-                           WritePipe, get_python_names)
+from pyperf._utils import (
+    MS_WINDOWS,
+    MAC_OS,
+    abs_executable,
+    WritePipe,
+    get_python_names,
+)
 from pyperf._worker import WorkerProcessTask
 
 
@@ -24,8 +38,8 @@ def strictly_positive(value):
 
 
 def positive_or_nul(value):
-    if '^' in value:
-        x, _, y = value.partition('^')
+    if "^" in value:
+        x, _, y = value.partition("^")
         x = int(x)
         y = int(y)
         value = x ** y
@@ -37,12 +51,12 @@ def positive_or_nul(value):
 
 
 def comma_separated(values):
-    values = [value.strip() for value in values.split(',')]
+    values = [value.strip() for value in values.split(",")]
     return list(filter(None, values))
 
 
 def parse_python_names(names):
-    parts = names.split(':')
+    parts = names.split(":")
     if len(parts) != 2:
         raise ValueError("syntax is REF_NAME:CHANGED_NAME")
     return parts
@@ -57,20 +71,30 @@ class Runner:
 
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, values=None, warmups=None, processes=None,
-                 loops=0, min_time=0.1, metadata=None,
-                 show_name=True,
-                 program_args=None, add_cmdline_args=None,
-                 _argparser=None):
+    def __init__(
+        self,
+        values=None,
+        warmups=None,
+        processes=None,
+        loops=0,
+        min_time=0.1,
+        metadata=None,
+        show_name=True,
+        program_args=None,
+        add_cmdline_args=None,
+        _argparser=None,
+    ):
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad suprises
         cls = self.__class__
         key = id(cls)
         if key in cls._created:
-            raise RuntimeError("only one %s instance must be created "
-                               "per process: use the same instance to run "
-                               "all benchmarks" % cls.__name__)
+            raise RuntimeError(
+                "only one %s instance must be created "
+                "per process: use the same instance to run "
+                "all benchmarks" % cls.__name__
+            )
         cls._created.add(key)
 
         # Use lazy import to limit imports on 'import pyperf'
@@ -127,106 +151,193 @@ class Runner:
             parser = _argparser
         else:
             parser = argparse.ArgumentParser()
-        parser.description = 'Benchmark'
-        parser.add_argument('--rigorous', action="store_true",
-                            help='Spend longer running tests '
-                                 'to get more accurate results')
-        parser.add_argument('--fast', action="store_true",
-                            help='Get rough answers quickly')
-        parser.add_argument("--debug-single-value", action="store_true",
-                            help="Debug mode, only compute a single value")
-        parser.add_argument('-p', '--processes',
-                            type=strictly_positive, default=processes,
-                            help='number of processes used to run benchmarks '
-                                 '(default: %s)' % processes)
-        parser.add_argument('-n', '--values', dest="values",
-                            type=strictly_positive, default=values,
-                            help='number of values per process (default: %s)'
-                                 % values)
-        parser.add_argument('-w', '--warmups',
-                            type=positive_or_nul,
-                            help='number of skipped values per run used '
-                                 'to warmup the benchmark')
-        parser.add_argument('-l', '--loops',
-                            type=positive_or_nul, default=loops,
-                            help='number of loops per value, 0 means '
-                                 'automatic calibration (default: %s)'
-                            % loops)
-        parser.add_argument('-v', '--verbose', action="store_true",
-                            help='enable verbose mode')
-        parser.add_argument('-q', '--quiet', action="store_true",
-                            help='enable quiet mode')
-        parser.add_argument('--pipe', type=int, metavar="FD",
-                            help='Write benchmarks encoded as JSON '
-                                 'into the pipe FD')
-        parser.add_argument('-o', '--output', metavar='FILENAME',
-                            help='write results encoded to JSON into FILENAME')
-        parser.add_argument('--append', metavar='FILENAME',
-                            help='append results encoded to JSON into FILENAME')
-        parser.add_argument('--min-time', type=float, default=min_time,
-                            help='Minimum duration in seconds of a single '
-                                 'value, used to calibrate the number of '
-                                 'loops (default: %s)'
-                            % format_timedelta(min_time))
-        parser.add_argument('--worker', action='store_true',
-                            help='Worker process, run the benchmark.')
-        parser.add_argument('--worker-task', type=positive_or_nul, metavar='TASK_ID',
-                            help='Identifier of the worker task: '
-                                 'only execute the benchmark function TASK_ID')
-        parser.add_argument('--calibrate-loops', action="store_true",
-                            help="calibrate the number of loops")
-        parser.add_argument('--recalibrate-loops', action="store_true",
-                            help="recalibrate the the number of loops")
-        parser.add_argument('--calibrate-warmups', action="store_true",
-                            help="calibrate the number of warmups")
-        parser.add_argument('--recalibrate-warmups', action="store_true",
-                            help="recalibrate the number of warmups")
-        parser.add_argument('-d', '--dump', action="store_true",
-                            help='display benchmark run results')
-        parser.add_argument('--metadata', '-m', action="store_true",
-                            help='show metadata')
-        parser.add_argument('--hist', '-g', action="store_true",
-                            help='display an histogram of values')
-        parser.add_argument('--stats', '-t', action="store_true",
-                            help='display statistics (min, max, ...)')
-        parser.add_argument("--affinity", metavar="CPU_LIST", default=None,
-                            help='Specify CPU affinity for worker processes. '
-                                 'This way, benchmarks can be forced to run '
-                                 'on a given set of CPUs to minimize run to '
-                                 'run variation. By default, worker processes '
-                                 'are pinned to isolate CPUs if isolated CPUs '
-                                 'are found.')
-        parser.add_argument("--inherit-environ", metavar='VARS',
-                            type=comma_separated,
-                            help='Comma-separated list of environment '
-                                 'variables inherited by worker child '
-                                 'processes.')
-        parser.add_argument("--copy-env",
-                            dest="copy_env", action="store_true", default=False,
-                            help="Copy all environment variables")
-        parser.add_argument("--no-locale",
-                            dest="locale", action="store_false", default=True,
-                            help="Don't copy locale environment variables "
-                                 "like LANG or LC_CTYPE.")
-        parser.add_argument("--python", default=sys.executable,
-                            help='Python executable '
-                                 '(default: use running Python, '
-                                 'sys.executable)')
-        parser.add_argument("--compare-to", metavar="REF_PYTHON",
-                            help='Run benchmark on the Python executable REF_PYTHON, '
-                                 'run benchmark on Python executable PYTHON, '
-                                 'and then compare REF_PYTHON result to PYTHON result')
-        parser.add_argument("--python-names", metavar="REF_NAME:CHANGED_NAMED",
-                            type=parse_python_names,
-                            help='option used with --compare-to to name '
-                                 'PYTHON as CHANGED_NAME '
-                                 'and REF_PYTHON as REF_NAME in results')
+        parser.description = "Benchmark"
+        parser.add_argument(
+            "--rigorous",
+            action="store_true",
+            help="Spend longer running tests " "to get more accurate results",
+        )
+        parser.add_argument(
+            "--fast", action="store_true", help="Get rough answers quickly"
+        )
+        parser.add_argument(
+            "--debug-single-value",
+            action="store_true",
+            help="Debug mode, only compute a single value",
+        )
+        parser.add_argument(
+            "-p",
+            "--processes",
+            type=strictly_positive,
+            default=processes,
+            help="number of processes used to run benchmarks "
+            "(default: %s)" % processes,
+        )
+        parser.add_argument(
+            "-n",
+            "--values",
+            dest="values",
+            type=strictly_positive,
+            default=values,
+            help="number of values per process (default: %s)" % values,
+        )
+        parser.add_argument(
+            "-w",
+            "--warmups",
+            type=positive_or_nul,
+            help="number of skipped values per run used " "to warmup the benchmark",
+        )
+        parser.add_argument(
+            "-l",
+            "--loops",
+            type=positive_or_nul,
+            default=loops,
+            help="number of loops per value, 0 means "
+            "automatic calibration (default: %s)" % loops,
+        )
+        parser.add_argument(
+            "-v", "--verbose", action="store_true", help="enable verbose mode"
+        )
+        parser.add_argument(
+            "-q", "--quiet", action="store_true", help="enable quiet mode"
+        )
+        parser.add_argument(
+            "--pipe",
+            type=int,
+            metavar="FD",
+            help="Write benchmarks encoded as JSON " "into the pipe FD",
+        )
+        parser.add_argument(
+            "-o",
+            "--output",
+            metavar="FILENAME",
+            help="write results encoded to JSON into FILENAME",
+        )
+        parser.add_argument(
+            "--append",
+            metavar="FILENAME",
+            help="append results encoded to JSON into FILENAME",
+        )
+        parser.add_argument(
+            "--min-time",
+            type=float,
+            default=min_time,
+            help="Minimum duration in seconds of a single "
+            "value, used to calibrate the number of "
+            "loops (default: %s)" % format_timedelta(min_time),
+        )
+        parser.add_argument(
+            "--worker", action="store_true", help="Worker process, run the benchmark."
+        )
+        parser.add_argument(
+            "--worker-task",
+            type=positive_or_nul,
+            metavar="TASK_ID",
+            help="Identifier of the worker task: "
+            "only execute the benchmark function TASK_ID",
+        )
+        parser.add_argument(
+            "--calibrate-loops",
+            action="store_true",
+            help="calibrate the number of loops",
+        )
+        parser.add_argument(
+            "--recalibrate-loops",
+            action="store_true",
+            help="recalibrate the the number of loops",
+        )
+        parser.add_argument(
+            "--calibrate-warmups",
+            action="store_true",
+            help="calibrate the number of warmups",
+        )
+        parser.add_argument(
+            "--recalibrate-warmups",
+            action="store_true",
+            help="recalibrate the number of warmups",
+        )
+        parser.add_argument(
+            "-d", "--dump", action="store_true", help="display benchmark run results"
+        )
+        parser.add_argument(
+            "--metadata", "-m", action="store_true", help="show metadata"
+        )
+        parser.add_argument(
+            "--hist", "-g", action="store_true", help="display an histogram of values"
+        )
+        parser.add_argument(
+            "--stats",
+            "-t",
+            action="store_true",
+            help="display statistics (min, max, ...)",
+        )
+        parser.add_argument(
+            "--affinity",
+            metavar="CPU_LIST",
+            default=None,
+            help="Specify CPU affinity for worker processes. "
+            "This way, benchmarks can be forced to run "
+            "on a given set of CPUs to minimize run to "
+            "run variation. By default, worker processes "
+            "are pinned to isolate CPUs if isolated CPUs "
+            "are found.",
+        )
+        parser.add_argument(
+            "--inherit-environ",
+            metavar="VARS",
+            type=comma_separated,
+            help="Comma-separated list of environment "
+            "variables inherited by worker child "
+            "processes.",
+        )
+        parser.add_argument(
+            "--copy-env",
+            dest="copy_env",
+            action="store_true",
+            default=False,
+            help="Copy all environment variables",
+        )
+        parser.add_argument(
+            "--no-locale",
+            dest="locale",
+            action="store_false",
+            default=True,
+            help="Don't copy locale environment variables " "like LANG or LC_CTYPE.",
+        )
+        parser.add_argument(
+            "--python",
+            default=sys.executable,
+            help="Python executable "
+            "(default: use running Python, "
+            "sys.executable)",
+        )
+        parser.add_argument(
+            "--compare-to",
+            metavar="REF_PYTHON",
+            help="Run benchmark on the Python executable REF_PYTHON, "
+            "run benchmark on Python executable PYTHON, "
+            "and then compare REF_PYTHON result to PYTHON result",
+        )
+        parser.add_argument(
+            "--python-names",
+            metavar="REF_NAME:CHANGED_NAMED",
+            type=parse_python_names,
+            help="option used with --compare-to to name "
+            "PYTHON as CHANGED_NAME "
+            "and REF_PYTHON as REF_NAME in results",
+        )
 
         memory = parser.add_mutually_exclusive_group()
-        memory.add_argument('--tracemalloc', action="store_true",
-                            help='Trace memory allocations using tracemalloc')
-        memory.add_argument('--track-memory', action="store_true",
-                            help='Track memory usage using a thread')
+        memory.add_argument(
+            "--tracemalloc",
+            action="store_true",
+            help="Trace memory allocations using tracemalloc",
+        )
+        memory.add_argument(
+            "--track-memory",
+            action="store_true",
+            help="Track memory usage using a thread",
+        )
 
         self.argparser = parser
 
@@ -250,8 +361,8 @@ class Runner:
         if args.warmups is None and not args.worker and not has_jit:
             args.warmups = 1
 
-        nprocess = self.argparser.get_default('processes')
-        nvalues = self.argparser.get_default('values')
+        nprocess = self.argparser.get_default("processes")
+        nvalues = self.argparser.get_default("values")
         if args.rigorous:
             args.processes = nprocess * 2
             # args.values = nvalues * 5 // 3
@@ -271,8 +382,7 @@ class Runner:
         if args.calibrate_loops:
             self._only_in_worker("--calibrate-loops")
             if args.loops:
-                raise CLIError("--loops=N is incompatible with "
-                               "--calibrate-loops")
+                raise CLIError("--loops=N is incompatible with " "--calibrate-loops")
         elif args.recalibrate_loops:
             self._only_in_worker("--recalibrate-loops")
             if args.loops < 1:
@@ -284,15 +394,16 @@ class Runner:
         elif args.recalibrate_warmups:
             self._only_in_worker("--recalibrate-warmups")
             if args.loops < 1 or args.warmups is None:
-                raise CLIError("--recalibrate-warmups requires "
-                               "--loops=N and --warmups=N")
+                raise CLIError(
+                    "--recalibrate-warmups requires " "--loops=N and --warmups=N"
+                )
         else:
             if args.worker and args.loops < 1:
-                raise CLIError("--worker requires --loops=N "
-                               "or --calibrate-loops")
+                raise CLIError("--worker requires --loops=N " "or --calibrate-loops")
             if args.worker and args.warmups is None:
-                raise CLIError("--worker requires --warmups=N "
-                               "or --calibrate-warmups")
+                raise CLIError(
+                    "--worker requires --warmups=N " "or --calibrate-warmups"
+                )
 
             if args.values < 1:
                 raise CLIError("--values must be >= 1")
@@ -306,7 +417,7 @@ class Runner:
 
         if args.tracemalloc:
             try:
-                import tracemalloc   # noqa
+                import tracemalloc  # noqa
             except ImportError as exc:
                 raise CLIError("fail to import tracemalloc: %s" % exc)
 
@@ -319,18 +430,21 @@ class Runner:
                 from pyperf._linux_memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
-                raise CLIError("unable to track the memory usage "
-                               "(--track-memory): %s" % err_msg)
+                raise CLIError(
+                    "unable to track the memory usage " "(--track-memory): %s" % err_msg
+                )
 
         args.python = abs_executable(args.python)
         if args.compare_to:
             args.compare_to = abs_executable(args.compare_to)
 
         if args.compare_to:
-            for option in ('output', 'append'):
+            for option in ("output", "append"):
                 if getattr(args, option):
-                    raise CLIError("--%s option is incompatible "
-                                   "with --compare-to option" % option)
+                    raise CLIError(
+                        "--%s option is incompatible "
+                        "with --compare-to option" % option
+                    )
 
     def _process_args(self):
         try:
@@ -370,11 +484,9 @@ class Runner:
         if set_cpu_affinity(cpus):
             if self.args.verbose:
                 if isolated:
-                    text = ("Pin process to isolated CPUs: %s"
-                            % format_cpu_list(cpus))
+                    text = "Pin process to isolated CPUs: %s" % format_cpu_list(cpus)
                 else:
-                    text = ("Pin process to CPUs: %s"
-                            % format_cpu_list(cpus))
+                    text = "Pin process to CPUs: %s" % format_cpu_list(cpus)
                 print(text)
 
             if isolated:
@@ -385,8 +497,10 @@ class Runner:
                 print("Use Python 3.3 or newer, or install psutil dependency")
                 sys.exit(1)
             elif not self.args.quiet:
-                print("WARNING: unable to pin worker processes to "
-                      "isolated CPUs, CPU affinity not available")
+                print(
+                    "WARNING: unable to pin worker processes to "
+                    "isolated CPUs, CPU affinity not available"
+                )
                 print("Use Python 3.3 or newer, or install psutil dependency")
 
     def _process_priority(self):
@@ -443,12 +557,12 @@ class Runner:
         if not kwargs:
             return
 
-        args = ', '.join(map(repr, sorted(kwargs)))
-        raise TypeError('unexpected keyword argument %s' % args)
+        args = ", ".join(map(repr, sorted(kwargs)))
+        raise TypeError("unexpected keyword argument %s" % args)
 
     def bench_time_func(self, name, time_func, *args, **kwargs):
-        inner_loops = kwargs.pop('inner_loops', None)
-        metadata = kwargs.pop('metadata', None)
+        inner_loops = kwargs.pop("inner_loops", None)
+        metadata = kwargs.pop("metadata", None)
         self._no_keyword_argument(kwargs)
 
         if not self._check_worker_task():
@@ -464,8 +578,8 @@ class Runner:
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
 
-        inner_loops = kwargs.pop('inner_loops', None)
-        metadata = kwargs.pop('metadata', None)
+        inner_loops = kwargs.pop("inner_loops", None)
+        metadata = kwargs.pop("metadata", None)
         self._no_keyword_argument(kwargs)
 
         if not self._check_worker_task():
@@ -496,8 +610,17 @@ class Runner:
         task.inner_loops = inner_loops
         return self._main(task)
 
-    def timeit(self, name, stmt=None, setup="pass", teardown="pass",
-               inner_loops=None, duplicate=None, metadata=None, globals=None):
+    def timeit(
+        self,
+        name,
+        stmt=None,
+        setup="pass",
+        teardown="pass",
+        inner_loops=None,
+        duplicate=None,
+        metadata=None,
+        globals=None,
+    ):
 
         if not self._check_worker_task():
             return None
@@ -508,13 +631,18 @@ class Runner:
 
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._timeit import bench_timeit
-        return bench_timeit(self, name, stmt,
-                            setup=setup,
-                            teardown=teardown,
-                            inner_loops=inner_loops,
-                            duplicate=duplicate,
-                            func_metadata=metadata,
-                            globals=globals)
+
+        return bench_timeit(
+            self,
+            name,
+            stmt,
+            setup=setup,
+            teardown=teardown,
+            inner_loops=inner_loops,
+            duplicate=duplicate,
+            func_metadata=metadata,
+            globals=globals,
+        )
 
     def _display_result(self, bench, checks=True):
         args = self.args
@@ -530,13 +658,15 @@ class Runner:
                 with catch_broken_pipe_error(wfile):
                     bench.dump(wfile)
         else:
-            lines = format_benchmark(bench,
-                                     checks=checks,
-                                     metadata=args.metadata,
-                                     dump=args.dump,
-                                     stats=args.stats,
-                                     hist=args.hist,
-                                     show_name=self._show_name)
+            lines = format_benchmark(
+                bench,
+                checks=checks,
+                metadata=args.metadata,
+                dump=args.dump,
+                stats=args.stats,
+                hist=args.hist,
+                show_name=self._show_name,
+            )
             for line in lines:
                 print(line)
 
@@ -584,9 +714,9 @@ class Runner:
                 print()
 
             if multiline:
-                display_title('Benchmark %s' % name)
+                display_title("Benchmark %s" % name)
             elif not args.quiet:
-                print(name, end=': ')
+                print(name, end=": ")
 
             bench = Manager(self, python=python).create_bench()
             benchs.append(bench)
@@ -594,7 +724,7 @@ class Runner:
             if multiline:
                 self._display_result(bench)
             elif not args.quiet:
-                print(' ' + format_result_value(bench))
+                print(" " + format_result_value(bench))
 
             if multiline:
                 print()
@@ -607,7 +737,7 @@ class Runner:
                     print()
 
         if multiline:
-            display_title('Compare')
+            display_title("Compare")
         elif not args.quiet:
             print()
         timeit_compare_benchs(name_ref, benchs[0], name_changed, benchs[1], args)
@@ -618,5 +748,6 @@ class Runner:
 
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._command import BenchCommandTask
+
         task = BenchCommandTask(self, name, command)
         return self._main(task)

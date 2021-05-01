@@ -15,7 +15,7 @@ def get_logical_cpu_count():
     if psutil is not None:
         # Number of logical CPUs
         cpu_count = psutil.cpu_count()
-    elif hasattr(os, 'cpu_count'):
+    elif hasattr(os, "cpu_count"):
         # Python 3.4
         cpu_count = os.cpu_count()
     else:
@@ -46,16 +46,16 @@ def format_cpu_list(cpus):
             first = cpu
         elif cpu != last + 1:
             if first != last:
-                parts.append('%s-%s' % (first, last))
+                parts.append("%s-%s" % (first, last))
             else:
                 parts.append(str(last))
             first = cpu
         last = cpu
     if first != last:
-        parts.append('%s-%s' % (first, last))
+        parts.append("%s-%s" % (first, last))
     else:
         parts.append(str(last))
-    return ','.join(parts)
+    return ",".join(parts)
 
 
 def format_cpu_infos(infos):
@@ -68,24 +68,24 @@ def format_cpu_infos(infos):
     text = []
     for cpus, info in items:
         cpus = format_cpu_list(cpus)
-        text.append('%s=%s' % (cpus, info))
+        text.append("%s=%s" % (cpus, info))
     return text
 
 
 def parse_cpu_list(cpu_list):
-    cpu_list = cpu_list.strip(' \x00')
+    cpu_list = cpu_list.strip(" \x00")
     # /sys/devices/system/cpu/nohz_full returns ' (null)\n' when NOHZ full
     # is not used
-    if cpu_list == '(null)':
+    if cpu_list == "(null)":
         return
     if not cpu_list:
         return
 
     cpus = []
-    for part in cpu_list.split(','):
+    for part in cpu_list.split(","):
         part = part.strip()
-        if '-' in part:
-            parts = part.split('-', 1)
+        if "-" in part:
+            parts = part.split("-", 1)
             first = int(parts[0])
             last = int(parts[1])
             for cpu in range(first, last + 1):
@@ -98,7 +98,7 @@ def parse_cpu_list(cpu_list):
 
 def parse_cpu_mask(line):
     mask = 0
-    for part in line.split(','):
+    for part in line.split(","):
         mask <<= 32
         mask |= int(part, 16)
     return mask
@@ -107,18 +107,18 @@ def parse_cpu_mask(line):
 def format_cpu_mask(mask):
     parts = []
     while 1:
-        part = "%08x" % (mask & 0xffffffff)
+        part = "%08x" % (mask & 0xFFFFFFFF)
         parts.append(part)
         mask >>= 32
         if not mask:
             break
-    return ','.join(reversed(parts))
+    return ",".join(reversed(parts))
 
 
 def format_cpus_as_mask(cpus):
     mask = 0
     for cpu in cpus:
-        mask |= (1 << cpu)
+        mask |= 1 << cpu
     return format_cpu_mask(mask)
 
 
@@ -130,14 +130,14 @@ def get_isolated_cpus():
     """
     # The cpu/isolated sysfs was added in Linux 4.2
     # (commit 59f30abe94bff50636c8cad45207a01fdcb2ee49)
-    path = sysfs_path('devices/system/cpu/isolated')
+    path = sysfs_path("devices/system/cpu/isolated")
     isolated = read_first_line(path)
     if isolated:
         return parse_cpu_list(isolated)
 
-    cmdline = read_first_line(proc_path('cmdline'))
+    cmdline = read_first_line(proc_path("cmdline"))
     if cmdline:
-        match = re.search(r'\bisolcpus=([^ ]+)', cmdline)
+        match = re.search(r"\bisolcpus=([^ ]+)", cmdline)
         if match:
             isolated = match.group(1)
             return parse_cpu_list(isolated)
@@ -147,7 +147,7 @@ def get_isolated_cpus():
 
 def set_cpu_affinity(cpus):
     # Python 3.3 or newer?
-    if hasattr(os, 'sched_setaffinity'):
+    if hasattr(os, "sched_setaffinity"):
         os.sched_setaffinity(0, cpus)
         return True
 
@@ -157,7 +157,7 @@ def set_cpu_affinity(cpus):
         return
 
     proc = psutil.Process()
-    if not hasattr(proc, 'cpu_affinity'):
+    if not hasattr(proc, "cpu_affinity"):
         return
 
     proc.cpu_affinity(cpus)
@@ -171,7 +171,7 @@ def set_highest_priority():
         return
 
     proc = psutil.Process()
-    if not hasattr(proc, 'nice'):
+    if not hasattr(proc, "nice"):
         return
 
     # Want to set realtime on Windows.

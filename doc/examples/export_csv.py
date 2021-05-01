@@ -14,16 +14,16 @@ def export_csv(args, bench):
         mean = statistics.mean(run_values)
         rows.append([mean])
 
-    with open(args.csv_filename, 'w', newline='', encoding='ascii') as fp:
+    with open(args.csv_filename, "w", newline="", encoding="ascii") as fp:
         writer = csv.writer(fp)
         writer.writerows(rows)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--benchmark')
-    parser.add_argument('json_filename')
-    parser.add_argument('csv_filename')
+    parser.add_argument("-b", "--benchmark")
+    parser.add_argument("json_filename")
+    parser.add_argument("csv_filename")
     return parser.parse_args()
 
 

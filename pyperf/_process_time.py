@@ -28,7 +28,7 @@ except ImportError:
 def get_max_rss():
     if resource is not None:
         usage = resource.getrusage(resource.RUSAGE_CHILDREN)
-        if sys.platform == 'darwin':
+        if sys.platform == "darwin":
             return usage.ru_maxrss
         return usage.ru_maxrss * 1024
     else:
@@ -49,8 +49,7 @@ def bench_process(loops, args, kw):
 
         exitcode = proc.returncode
         if exitcode != 0:
-            print("Command failed with exit code %s" % exitcode,
-                  file=sys.stderr)
+            print("Command failed with exit code %s" % exitcode, file=sys.stderr)
             sys.exit(exitcode)
 
         proc = None
@@ -64,29 +63,33 @@ def bench_process(loops, args, kw):
 
 def main():
     # Make sure that the pyperf module wasn't imported
-    if 'pyperf' in sys.modules:
-        print("ERROR: don't run %s -m pyperf._process, run the .py script"
-              % os.path.basename(sys.executable))
+    if "pyperf" in sys.modules:
+        print(
+            "ERROR: don't run %s -m pyperf._process, run the .py script"
+            % os.path.basename(sys.executable)
+        )
         sys.exit(1)
 
     if len(sys.argv) < 3:
-        print("Usage: %s %s loops program [arg1 arg2 ...]"
-              % (os.path.basename(sys.executable), __file__))
+        print(
+            "Usage: %s %s loops program [arg1 arg2 ...]"
+            % (os.path.basename(sys.executable), __file__)
+        )
         sys.exit(1)
 
     loops = int(sys.argv[1])
     args = sys.argv[2:]
 
     kw = {}
-    if hasattr(subprocess, 'DEVNULL'):
+    if hasattr(subprocess, "DEVNULL"):
         devnull = None
-        kw['stdin'] = subprocess.DEVNULL
-        kw['stdout'] = subprocess.DEVNULL
+        kw["stdin"] = subprocess.DEVNULL
+        kw["stdout"] = subprocess.DEVNULL
     else:
-        devnull = open(os.devnull, 'w+', 0)
-        kw['stdin'] = devnull
-        kw['stdout'] = devnull
-    kw['stderr'] = subprocess.STDOUT
+        devnull = open(os.devnull, "w+", 0)
+        kw["stdin"] = devnull
+        kw["stdout"] = devnull
+    kw["stderr"] = subprocess.STDOUT
 
     dt, max_rss = bench_process(loops, args, kw)
 

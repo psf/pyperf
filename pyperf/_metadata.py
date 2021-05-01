@@ -1,7 +1,11 @@
 import collections
 
-from pyperf._formatter import (format_number, format_seconds, format_filesize,
-                               UNIT_FORMATTERS)
+from pyperf._formatter import (
+    format_number,
+    format_seconds,
+    format_filesize,
+    UNIT_FORMATTERS,
+)
 
 
 METADATA_VALUE_TYPES = (int, str, float)
@@ -31,15 +35,15 @@ def format_generic(value):
 
 def format_system_load(load):
     # Format system load read from /proc/loadavg on Linux (ex: 0.12)
-    return '%.2f' % load
+    return "%.2f" % load
 
 
 def is_strictly_positive(value):
-    return (value >= 1)
+    return value >= 1
 
 
 def is_positive(value):
-    return (value >= 0)
+    return value >= 0
 
 
 def parse_load_avg(value):
@@ -55,35 +59,33 @@ def format_noop(value):
 
 
 # types: accepted types
-_MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
+_MetadataInfo = collections.namedtuple(
+    "_MetadataInfo", "formatter types check_value unit"
+)
 
-BYTES = _MetadataInfo(format_filesize, (int,), is_strictly_positive, 'byte')
+BYTES = _MetadataInfo(format_filesize, (int,), is_strictly_positive, "byte")
 DATETIME = _MetadataInfo(format_noop, (str,), None, None)
-LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, 'integer')
-WARMUPS = _MetadataInfo(format_number, (int,), is_positive, 'integer')
-SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second')
+LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, "integer")
+WARMUPS = _MetadataInfo(format_number, (int,), is_positive, "integer")
+SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, "second")
 
 # Registry of metadata keys
 METADATA = {
-    'loops': LOOPS,
-    'inner_loops': LOOPS,
-
-    'duration': SECONDS,
-    'uptime': SECONDS,
-    'load_avg_1min': _MetadataInfo(format_system_load, NUMBER_TYPES, is_positive, None),
-
-    'mem_max_rss': BYTES,
-    'mem_peak_pagefile_usage': BYTES,
-    'command_max_rss': BYTES,
-
-    'unit': _MetadataInfo(format_noop, (str,), UNIT_FORMATTERS.__contains__, None),
-    'date': DATETIME,
-    'boot_time': DATETIME,
-
-    'calibrate_loops': LOOPS,
-    'recalibrate_loops': LOOPS,
-    'calibrate_warmups': WARMUPS,
-    'recalibrate_warmups': WARMUPS,
+    "loops": LOOPS,
+    "inner_loops": LOOPS,
+    "duration": SECONDS,
+    "uptime": SECONDS,
+    "load_avg_1min": _MetadataInfo(format_system_load, NUMBER_TYPES, is_positive, None),
+    "mem_max_rss": BYTES,
+    "mem_peak_pagefile_usage": BYTES,
+    "command_max_rss": BYTES,
+    "unit": _MetadataInfo(format_noop, (str,), UNIT_FORMATTERS.__contains__, None),
+    "date": DATETIME,
+    "boot_time": DATETIME,
+    "calibrate_loops": LOOPS,
+    "recalibrate_loops": LOOPS,
+    "calibrate_warmups": WARMUPS,
+    "recalibrate_warmups": WARMUPS,
 }
 
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)
@@ -97,16 +99,15 @@ def check_metadata(name, value):
     info = get_metadata_info(name)
 
     if not isinstance(name, str):
-        raise TypeError("metadata name must be a string, got %s"
-                        % type(name).__name__)
+        raise TypeError("metadata name must be a string, got %s" % type(name).__name__)
 
     if not isinstance(value, info.types):
-        raise ValueError("invalid metadata %r value type: got %r"
-                         % (name, type(value).__name__))
+        raise ValueError(
+            "invalid metadata %r value type: got %r" % (name, type(value).__name__)
+        )
 
     if info.check_value is not None and not info.check_value(value):
-        raise ValueError("invalid metadata %r value: %r"
-                         % (name, value))
+        raise ValueError("invalid metadata %r value: %r" % (name, value))
 
 
 def parse_metadata(metadata):
@@ -114,9 +115,11 @@ def parse_metadata(metadata):
     for name, value in metadata.items():
         if isinstance(value, str):
             value = value.strip()
-            if '\n' in value or '\r' in value:
-                raise ValueError("newline characters are not allowed "
-                                 "in metadata values: %r" % value)
+            if "\n" in value or "\r" in value:
+                raise ValueError(
+                    "newline characters are not allowed "
+                    "in metadata values: %r" % value
+                )
             if not value:
                 raise ValueError("metadata %r value is empty" % name)
         check_metadata(name, value)
@@ -149,15 +152,15 @@ class Metadata(object):
     def __eq__(self, other):
         if not isinstance(other, Metadata):
             return False
-        return (self._name == other._name and self._value == other._value)
+        return self._name == other._name and self._value == other._value
 
     def __repr__(self):
-        return ('<pyperf.Metadata name=%r value=%r>'
-                % (self._name, self._value))
+        return "<pyperf.Metadata name=%r value=%r>" % (self._name, self._value)
 
 
 def _exclude_common_metadata(metadata, common_metadata):
     if common_metadata:
-        metadata = {key: value for key, value in metadata.items()
-                    if key not in common_metadata}
+        metadata = {
+            key: value for key, value in metadata.items() if key not in common_metadata
+        }
     return metadata

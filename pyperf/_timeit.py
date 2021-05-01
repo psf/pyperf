@@ -6,7 +6,7 @@ import traceback
 import pyperf
 
 
-PYPY = (pyperf.python_implementation() == 'pypy')
+PYPY = pyperf.python_implementation() == "pypy"
 DUMMY_SRC_NAME = "<timeit-src>"
 
 # Don't change the indentation of the template; the reindent() calls
@@ -41,36 +41,35 @@ def reindent(src, indent):
 
 
 class Timer:
-    def __init__(self, stmt="pass", setup="pass", teardown="pass",
-                 globals=None):
+    def __init__(self, stmt="pass", setup="pass", teardown="pass", globals=None):
         self.local_ns = {}
         self.global_ns = {} if globals is None else globals
         self.filename = DUMMY_SRC_NAME
 
-        init = ''
+        init = ""
         if isinstance(setup, str):
             # Check that the code can be compiled outside a function
             compile(setup, self.filename, "exec")
-            full = setup + '\n'
+            full = setup + "\n"
             setup = reindent(setup, 4)
         elif callable(setup):
-            self.local_ns['_setup'] = setup
-            init += ', _setup=_setup'
-            full = ''
-            setup = '_setup()'
+            self.local_ns["_setup"] = setup
+            init += ", _setup=_setup"
+            full = ""
+            setup = "_setup()"
         else:
             raise ValueError("setup is neither a string nor callable")
 
         if isinstance(stmt, str):
             # Check that the code can be compiled outside a function
             compile(full + stmt, self.filename, "exec")
-            full = full + stmt + '\n'
+            full = full + stmt + "\n"
             stmt = reindent(stmt, 8)
         elif callable(stmt):
-            self.local_ns['_stmt'] = stmt
-            init += ', _stmt=_stmt'
-            full = ''
-            stmt = '_stmt()'
+            self.local_ns["_stmt"] = stmt
+            init += ", _stmt=_stmt"
+            full = ""
+            stmt = "_stmt()"
         else:
             raise ValueError("stmt is neither a string nor callable")
 
@@ -79,9 +78,9 @@ class Timer:
             compile(full + teardown, self.filename, "exec")
             teardown = reindent(teardown, 4)
         elif callable(teardown):
-            self.local_ns['_teardown'] = teardown
-            init += ', _teardown=_teardown'
-            teardown = '_teardown()'
+            self.local_ns["_teardown"] = teardown
+            init += ", _teardown=_teardown"
+            teardown = "_teardown()"
         else:
             raise ValueError("teardown is neither a string nor callable")
 
@@ -89,8 +88,7 @@ class Timer:
             template = PYPY_TEMPLATE
         else:
             template = TEMPLATE
-        src = template.format(stmt=stmt, setup=setup, init=init,
-                              teardown=teardown)
+        src = template.format(stmt=stmt, setup=setup, init=init, teardown=teardown)
         self.src = src  # Save for traceback display
 
     def make_inner(self):
@@ -111,10 +109,12 @@ class Timer:
     def update_linecache(self, file=None):
         import linecache
 
-        linecache.cache[self.filename] = (len(self.src),
-                                          None,
-                                          self.src.split("\n"),
-                                          self.filename)
+        linecache.cache[self.filename] = (
+            len(self.src),
+            None,
+            self.src.split("\n"),
+            self.filename,
+        )
 
     def time_func(self, loops):
         inner = self.make_inner()
@@ -137,7 +137,7 @@ def strip_statements(statements):
 
 
 def format_statements(statements):
-    return ' '.join(repr(stmt) for stmt in statements)
+    return " ".join(repr(stmt) for stmt in statements)
 
 
 def create_timer(stmt, setup, teardown, globals):
@@ -145,6 +145,7 @@ def create_timer(stmt, setup, teardown, globals):
     # contains the directory of this script, rather than the current
     # directory)
     import os
+
     sys.path.insert(0, os.curdir)
 
     stmt = "\n".join(stmt)
@@ -181,9 +182,17 @@ def display_error(timer, stmt, setup, teardown):
     traceback.print_exc()
 
 
-def bench_timeit(runner, name, stmt, setup, teardown,
-                 inner_loops=None, duplicate=None,
-                 func_metadata=None, globals=None):
+def bench_timeit(
+    runner,
+    name,
+    stmt,
+    setup,
+    teardown,
+    inner_loops=None,
+    duplicate=None,
+    func_metadata=None,
+    globals=None,
+):
 
     if isinstance(stmt, str):
         stmt = (stmt,)
@@ -203,10 +212,10 @@ def bench_timeit(runner, name, stmt, setup, teardown,
     if func_metadata:
         metadata.update(func_metadata)
     if setup:
-        metadata['timeit_setup'] = format_statements(setup)
+        metadata["timeit_setup"] = format_statements(setup)
     if teardown:
-        metadata['timeit_teardown'] = format_statements(teardown)
-    metadata['timeit_stmt'] = format_statements(stmt)
+        metadata["timeit_teardown"] = format_statements(teardown)
+    metadata["timeit_stmt"] = format_statements(stmt)
 
     orig_stmt = stmt
 
@@ -218,11 +227,11 @@ def bench_timeit(runner, name, stmt, setup, teardown,
             inner_loops *= duplicate
         else:
             inner_loops = duplicate
-        metadata['timeit_duplicate'] = duplicate
+        metadata["timeit_duplicate"] = duplicate
 
-    kwargs = {'metadata': metadata}
+    kwargs = {"metadata": metadata}
     if inner_loops:
-        kwargs['inner_loops'] = inner_loops
+        kwargs["inner_loops"] = inner_loops
 
     timer = None
     try:
@@ -230,6 +239,6 @@ def bench_timeit(runner, name, stmt, setup, teardown,
         runner.bench_time_func(name, timer.time_func, **kwargs)
     except SystemExit:
         raise
-    except:   # noqa: E722
+    except:  # noqa: E722
         display_error(timer, orig_stmt, setup, teardown)
         sys.exit(1)

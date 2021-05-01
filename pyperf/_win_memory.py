@@ -10,17 +10,17 @@ else:
 
     class PROCESS_MEMORY_COUNTERS_EX(ctypes.Structure):
         _fields_ = [
-            ('cb', wintypes.DWORD),
-            ('PageFaultCount', wintypes.DWORD),
-            ('PeakWorkingSetSize', SIZE_T),
-            ('WorkingSetSize', SIZE_T),
-            ('QuotaPeakPagedPoolUsage', SIZE_T),
-            ('QuotaPagedPoolUsage', SIZE_T),
-            ('QuotaPeakNonPagedPoolUsage', SIZE_T),
-            ('QuotaNonPagedPoolUsage', SIZE_T),
-            ('PagefileUsage', SIZE_T),
-            ('PeakPagefileUsage', SIZE_T),
-            ('PrivateUsage', SIZE_T),
+            ("cb", wintypes.DWORD),
+            ("PageFaultCount", wintypes.DWORD),
+            ("PeakWorkingSetSize", SIZE_T),
+            ("WorkingSetSize", SIZE_T),
+            ("QuotaPeakPagedPoolUsage", SIZE_T),
+            ("QuotaPagedPoolUsage", SIZE_T),
+            ("QuotaPeakNonPagedPoolUsage", SIZE_T),
+            ("QuotaNonPagedPoolUsage", SIZE_T),
+            ("PagefileUsage", SIZE_T),
+            ("PeakPagefileUsage", SIZE_T),
+            ("PrivateUsage", SIZE_T),
         ]
 
     GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
@@ -35,9 +35,7 @@ else:
 def get_peak_pagefile_usage():
     process = GetCurrentProcess()
     counters = PROCESS_MEMORY_COUNTERS_EX()
-    ret = GetProcessMemoryInfo(process,
-                               ctypes.byref(counters),
-                               ctypes.sizeof(counters))
+    ret = GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters))
     if not ret:
         raise ctypes.WinError()
 
@@ -46,8 +44,7 @@ def get_peak_pagefile_usage():
 
 def check_tracking_memory():
     if GetProcessMemoryInfo is None:
-        return ("missing ctypes module, "
-                "unable to get GetProcessMemoryInfo()")
+        return "missing ctypes module, " "unable to get GetProcessMemoryInfo()"
 
     usage = get_peak_pagefile_usage()
     if not usage:

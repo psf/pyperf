@@ -7,8 +7,7 @@ def get_raw_values(filename, run_id):
     bench = pyperf.Benchmark.load(filename)
     run = bench.get_runs()[run_id]
     inner_loops = run.get_inner_loops()
-    raw_values = [value * (loops * inner_loops)
-                  for loops, value in run.warmups]
+    raw_values = [value * (loops * inner_loops) for loops, value in run.warmups]
     total_loops = run.get_total_loops()
     raw_values.extend(value * total_loops for value in run.values)
     return (run, raw_values)
@@ -65,16 +64,16 @@ class Replay(object):
 def add_cmdline_args(cmd, args):
     cmd.append(args.filename)
     if args.session_filename:
-        cmd.extend(('--session-filename', args.session_filename))
+        cmd.extend(("--session-filename", args.session_filename))
 
 
 runner = pyperf.Runner(add_cmdline_args=add_cmdline_args)
-runner.argparser.add_argument('filename')
-runner.argparser.add_argument('--session-filename', default=None)
-runner.argparser.add_argument('--first-run', type=int, default=1)
+runner.argparser.add_argument("filename")
+runner.argparser.add_argument("--session-filename", default=None)
+runner.argparser.add_argument("--first-run", type=int, default=1)
 
 args = runner.parse_args()
 replay = Replay(runner, args.filename)
-runner.bench_time_func('bench', replay.time_func)
+runner.bench_time_func("bench", replay.time_func)
 if not args.worker:
     os.unlink(args.session_filename)

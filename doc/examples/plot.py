@@ -15,12 +15,12 @@ def plot_bench(args, bench):
         for run in runs:
             run_values = run.values
             if args.skip:
-                run_values = run_values[args.skip:]
+                run_values = run_values[args.skip :]
             values.extend(run_values)
-        plt.plot(values, label='values')
+        plt.plot(values, label="values")
 
         mean = statistics.mean(values)
-        plt.plot([mean] * len(values), label='mean')
+        plt.plot([mean] * len(values), label="mean")
     else:
         values = []
         width = None
@@ -30,12 +30,12 @@ def plot_bench(args, bench):
             y = []
             run_values = run.values
             if args.skip:
-                run_values = run_values[args.skip:]
+                run_values = run_values[args.skip :]
             for value in run_values:
                 x.append(index)
                 y.append(value)
                 index += 1
-            plt.plot(x, y, color='blue')
+            plt.plot(x, y, color="blue")
             values.extend(run_values)
             width = len(run_values)
 
@@ -48,24 +48,25 @@ def plot_bench(args, bench):
                     x.append(index)
                     y.append(value)
                     index += 1
-                plt.plot(x, y, color='red')
+                plt.plot(x, y, color="red")
 
         mean = statistics.mean(values)
-        plt.plot([mean] * width, label='mean', color='green')
+        plt.plot([mean] * width, label="mean", color="green")
 
-    plt.legend(loc='upper right', shadow=True, fontsize='x-large')
+    plt.legend(loc="upper right", shadow=True, fontsize="x-large")
     plt.show()
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--benchmark')
-    parser.add_argument('--split-runs', action='store_true')
-    parser.add_argument('--skip', type=int, help='skip first SKIP values')
-    parser.add_argument('--warmups', action='store_true')
-    parser.add_argument('--run', metavar='INDEX', type=int,
-                        help='only render run number INDEX')
-    parser.add_argument('filename')
+    parser.add_argument("-b", "--benchmark")
+    parser.add_argument("--split-runs", action="store_true")
+    parser.add_argument("--skip", type=int, help="skip first SKIP values")
+    parser.add_argument("--warmups", action="store_true")
+    parser.add_argument(
+        "--run", metavar="INDEX", type=int, help="only render run number INDEX"
+    )
+    parser.add_argument("filename")
     return parser.parse_args()
 
 

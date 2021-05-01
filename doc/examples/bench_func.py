@@ -8,4 +8,4 @@ def func():
 
 
 runner = pyperf.Runner()
-runner.bench_func('sleep', func)
+runner.bench_func("sleep", func)

@@ -6,10 +6,17 @@ import sys
 
 import pyperf
 from pyperf._metadata import _common_metadata
-from pyperf._cli import (format_metadata, empty_line,
-                         format_checks, format_histogram, format_title,
-                         format_benchmark, display_title, format_result,
-                         catch_broken_pipe_error)
+from pyperf._cli import (
+    format_metadata,
+    empty_line,
+    format_checks,
+    format_histogram,
+    format_title,
+    format_benchmark,
+    display_title,
+    format_result,
+    catch_broken_pipe_error,
+)
 from pyperf._formatter import format_timedelta, format_seconds, format_datetime
 from pyperf._cpu_utils import parse_cpu_list
 from pyperf._timeit_cli import TimeitRunner
@@ -17,7 +24,7 @@ from pyperf._utils import parse_run_list
 
 
 def add_cmdline_args(cmd, args):
-    cmd.extend(('--name', args.name))
+    cmd.extend(("--name", args.name))
     cmd.append(args.program)
     if args.program_args:
         cmd.extend(args.program_args)
@@ -28,36 +35,43 @@ class CommandRunner(pyperf.Runner):
         def parse_name(name):
             return name.strip()
 
-        pyperf.Runner.__init__(self,
-                               _argparser=cmd,
-                               add_cmdline_args=add_cmdline_args)
-        self._program_args = ('-m', 'pyperf', 'command')
+        pyperf.Runner.__init__(self, _argparser=cmd, add_cmdline_args=add_cmdline_args)
+        self._program_args = ("-m", "pyperf", "command")
 
-        cmd.add_argument('--name', type=parse_name, default='command',
-                         help='Benchmark name (default: command)')
-        cmd.add_argument('program',
-                         help='Program path')
-        cmd.add_argument('program_args', nargs=argparse.REMAINDER,
-                         help='Program arguments')
+        cmd.add_argument(
+            "--name",
+            type=parse_name,
+            default="command",
+            help="Benchmark name (default: command)",
+        )
+        cmd.add_argument("program", help="Program path")
+        cmd.add_argument(
+            "program_args", nargs=argparse.REMAINDER, help="Program arguments"
+        )
 
 
 def create_parser():
-    parser = argparse.ArgumentParser(description='Display benchmark results.',
-                                     prog='-m pyperf')
-    subparsers = parser.add_subparsers(dest='action')
+    parser = argparse.ArgumentParser(
+        description="Display benchmark results.", prog="-m pyperf"
+    )
+    subparsers = parser.add_subparsers(dest="action")
 
     def input_filenames(cmd, name=True):
         if name:
-            cmd.add_argument('-b', '--benchmark', metavar='NAME',
-                             dest='benchmarks', action='append',
-                             help='only display the benchmark called NAME')
-        cmd.add_argument('filenames', metavar='file.json',
-                         type=str, nargs='+',
-                         help='Benchmark file')
+            cmd.add_argument(
+                "-b",
+                "--benchmark",
+                metavar="NAME",
+                dest="benchmarks",
+                action="append",
+                help="only display the benchmark called NAME",
+            )
+        cmd.add_argument(
+            "filenames", metavar="file.json", type=str, nargs="+", help="Benchmark file"
+        )
 
     def display_options(cmd):
-        cmd.add_argument('-q', '--quiet',
-                         action="store_true", help='enable quiet mode')
+        cmd.add_argument("-q", "--quiet", action="store_true", help="enable quiet mode")
         input_filenames(cmd)
 
     def parse_affinity(value):
@@ -66,146 +80,187 @@ def create_parser():
         except ValueError:
             cpus = None
         if not cpus:
-            raise argparse.ArgumentTypeError('invalid CPU list: %r' % value)
+            raise argparse.ArgumentTypeError("invalid CPU list: %r" % value)
         return cpus
 
     def cpu_affinity(cmd):
-        cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
-                         type=parse_affinity,
-                         help='Specify CPU affinity. '
-                              'By default, use isolated CPUs.')
+        cmd.add_argument(
+            "--affinity",
+            metavar="CPU_LIST",
+            default=None,
+            type=parse_affinity,
+            help="Specify CPU affinity. " "By default, use isolated CPUs.",
+        )
 
     # show
-    cmd = subparsers.add_parser('show', help='Display a benchmark')
-    cmd.add_argument('-m', '--metadata', dest='metadata', action="store_true",
-                     help="Show metadata.")
-    cmd.add_argument('-g', '--hist', action="store_true",
-                     help='display an histogram of values')
-    cmd.add_argument('-t', '--stats', action="store_true",
-                     help='display statistics (min, max, ...)')
-    cmd.add_argument('-d', '--dump', action="store_true",
-                     help='display benchmark run results')
+    cmd = subparsers.add_parser("show", help="Display a benchmark")
+    cmd.add_argument(
+        "-m", "--metadata", dest="metadata", action="store_true", help="Show metadata."
+    )
+    cmd.add_argument(
+        "-g", "--hist", action="store_true", help="display an histogram of values"
+    )
+    cmd.add_argument(
+        "-t", "--stats", action="store_true", help="display statistics (min, max, ...)"
+    )
+    cmd.add_argument(
+        "-d", "--dump", action="store_true", help="display benchmark run results"
+    )
     display_options(cmd)
 
     # hist
-    cmd = subparsers.add_parser('hist', help='Render an histogram')
-    cmd.add_argument('--extend', action="store_true",
-                     help="Extend the histogram to fit the terminal")
-    cmd.add_argument('-n', '--bins', type=int, default=None,
-                     help='Number of histogram bars (default: 25, or less '
-                          'depeding on the terminal size)')
+    cmd = subparsers.add_parser("hist", help="Render an histogram")
+    cmd.add_argument(
+        "--extend", action="store_true", help="Extend the histogram to fit the terminal"
+    )
+    cmd.add_argument(
+        "-n",
+        "--bins",
+        type=int,
+        default=None,
+        help="Number of histogram bars (default: 25, or less "
+        "depeding on the terminal size)",
+    )
     display_options(cmd)
 
     # compare_to
-    cmd = subparsers.add_parser('compare_to', help='Compare benchmarks')
-    cmd.add_argument('-q', '--quiet', action="store_true",
-                     help='enable quiet mode')
-    cmd.add_argument('-v', '--verbose', action="store_true",
-                     help='enable verbose mode')
-    cmd.add_argument('-G', '--group-by-speed', action="store_true",
-                     help='group slower/faster/same speed')
-    cmd.add_argument('--min-speed', type=float,
-                     help='Absolute minimum of speed in percent to '
-                          'consider that a benchmark is significant '
-                          '(default: 0%%)')
-    cmd.add_argument('--table', action="store_true",
-                     help='Render a table')
+    cmd = subparsers.add_parser("compare_to", help="Compare benchmarks")
+    cmd.add_argument("-q", "--quiet", action="store_true", help="enable quiet mode")
+    cmd.add_argument("-v", "--verbose", action="store_true", help="enable verbose mode")
+    cmd.add_argument(
+        "-G",
+        "--group-by-speed",
+        action="store_true",
+        help="group slower/faster/same speed",
+    )
+    cmd.add_argument(
+        "--min-speed",
+        type=float,
+        help="Absolute minimum of speed in percent to "
+        "consider that a benchmark is significant "
+        "(default: 0%%)",
+    )
+    cmd.add_argument("--table", action="store_true", help="Render a table")
     input_filenames(cmd)
 
     # stats
-    cmd = subparsers.add_parser('stats', help='Compute statistics')
+    cmd = subparsers.add_parser("stats", help="Compute statistics")
     display_options(cmd)
 
     # metadata
-    cmd = subparsers.add_parser('metadata', help='Display metadata')
+    cmd = subparsers.add_parser("metadata", help="Display metadata")
     display_options(cmd)
 
     # check
-    cmd = subparsers.add_parser('check',
-                                help='Check if a benchmark seems stable')
+    cmd = subparsers.add_parser("check", help="Check if a benchmark seems stable")
     display_options(cmd)
 
     # collect_metadata
-    cmd = subparsers.add_parser('collect_metadata')
+    cmd = subparsers.add_parser("collect_metadata")
     cpu_affinity(cmd)
-    cmd.add_argument('-o', '--output', metavar='FILENAME',
-                     help='Save metadata as JSON into FILENAME')
+    cmd.add_argument(
+        "-o", "--output", metavar="FILENAME", help="Save metadata as JSON into FILENAME"
+    )
 
     # timeit
-    cmd = subparsers.add_parser('timeit', help='Quick Python microbenchmark')
+    cmd = subparsers.add_parser("timeit", help="Quick Python microbenchmark")
     timeit_runner = TimeitRunner(_argparser=cmd)
 
     # system
-    cmd = subparsers.add_parser('system', help='System setup for benchmarks')
+    cmd = subparsers.add_parser("system", help="System setup for benchmarks")
     cpu_affinity(cmd)
-    cmd.add_argument("system_action", nargs="?",
-                     choices=('show', 'tune', 'reset'),
-                     default='show')
+    cmd.add_argument(
+        "system_action", nargs="?", choices=("show", "tune", "reset"), default="show"
+    )
 
     # convert
-    cmd = subparsers.add_parser('convert', help='Modify benchmarks')
-    cmd.add_argument(
-        'input_filename', help='Filename of the input benchmark suite')
+    cmd = subparsers.add_parser("convert", help="Modify benchmarks")
+    cmd.add_argument("input_filename", help="Filename of the input benchmark suite")
     output = cmd.add_mutually_exclusive_group(required=True)
-    output.add_argument('-o', '--output', metavar='OUTPUT_FILENAME',
-                        dest='output_filename',
-                        help='Filename where the output benchmark suite '
-                             'is written')
-    output.add_argument('--stdout', action='store_true',
-                        help='Write benchmark encoded to JSON into stdout')
-    cmd.add_argument('--include-benchmark', metavar='NAME',
-                     dest='include_benchmarks', action='append',
-                     help='Only keep benchmark called NAME')
-    cmd.add_argument('--exclude-benchmark', metavar='NAME',
-                     dest='exclude_benchmarks', action='append',
-                     help='Remove the benchmark called NAMED')
-    cmd.add_argument('--include-runs', help='Only keep benchmark runs RUNS')
-    cmd.add_argument('--exclude-runs', help='Remove specified benchmark runs')
-    cmd.add_argument('--indent', action='store_true',
-                     help='Indent JSON (rather using compact JSON)')
-    cmd.add_argument('--remove-warmups', action='store_true',
-                     help='Remove warmup values')
-    cmd.add_argument('--add', metavar='FILE',
-                     help='Add benchmark runs of benchmark FILE')
-    cmd.add_argument('--extract-metadata', metavar='NAME',
-                     help='Use metadata NAME as the new run values')
-    cmd.add_argument('--remove-all-metadata', action="store_true",
-                     help='Remove all benchmarks metadata, but keep '
-                          'the benchmarks name')
-    cmd.add_argument('--update-metadata', metavar='METADATA',
-                     help='Update metadata: METADATA is a comma-separated '
-                          'list of KEY=VALUE')
+    output.add_argument(
+        "-o",
+        "--output",
+        metavar="OUTPUT_FILENAME",
+        dest="output_filename",
+        help="Filename where the output benchmark suite " "is written",
+    )
+    output.add_argument(
+        "--stdout",
+        action="store_true",
+        help="Write benchmark encoded to JSON into stdout",
+    )
+    cmd.add_argument(
+        "--include-benchmark",
+        metavar="NAME",
+        dest="include_benchmarks",
+        action="append",
+        help="Only keep benchmark called NAME",
+    )
+    cmd.add_argument(
+        "--exclude-benchmark",
+        metavar="NAME",
+        dest="exclude_benchmarks",
+        action="append",
+        help="Remove the benchmark called NAMED",
+    )
+    cmd.add_argument("--include-runs", help="Only keep benchmark runs RUNS")
+    cmd.add_argument("--exclude-runs", help="Remove specified benchmark runs")
+    cmd.add_argument(
+        "--indent", action="store_true", help="Indent JSON (rather using compact JSON)"
+    )
+    cmd.add_argument(
+        "--remove-warmups", action="store_true", help="Remove warmup values"
+    )
+    cmd.add_argument(
+        "--add", metavar="FILE", help="Add benchmark runs of benchmark FILE"
+    )
+    cmd.add_argument(
+        "--extract-metadata",
+        metavar="NAME",
+        help="Use metadata NAME as the new run values",
+    )
+    cmd.add_argument(
+        "--remove-all-metadata",
+        action="store_true",
+        help="Remove all benchmarks metadata, but keep " "the benchmarks name",
+    )
+    cmd.add_argument(
+        "--update-metadata",
+        metavar="METADATA",
+        help="Update metadata: METADATA is a comma-separated " "list of KEY=VALUE",
+    )
 
     # dump
-    cmd = subparsers.add_parser('dump', help='Dump the runs')
-    cmd.add_argument('-v', '--verbose', action='store_true',
-                     help='enable verbose mode')
-    cmd.add_argument('--raw', action='store_true',
-                     help='display raw values')
+    cmd = subparsers.add_parser("dump", help="Dump the runs")
+    cmd.add_argument("-v", "--verbose", action="store_true", help="enable verbose mode")
+    cmd.add_argument("--raw", action="store_true", help="display raw values")
     display_options(cmd)
 
     # slowest
-    cmd = subparsers.add_parser('slowest',
-                                help='List benchmarks which took most '
-                                     'of the time')
-    cmd.add_argument('-n', type=int, default=5,
-                     help='Number of slow benchmarks to display (default: 5)')
+    cmd = subparsers.add_parser(
+        "slowest", help="List benchmarks which took most " "of the time"
+    )
+    cmd.add_argument(
+        "-n",
+        type=int,
+        default=5,
+        help="Number of slow benchmarks to display (default: 5)",
+    )
     input_filenames(cmd, name=False)
 
     # command
-    cmd = subparsers.add_parser('command',
-                                help='Benchmark a command')
+    cmd = subparsers.add_parser("command", help="Benchmark a command")
     command_runner = CommandRunner(cmd)
 
     return parser, timeit_runner, command_runner
 
 
-DataItem = collections.namedtuple('DataItem',
-                                  'suite filename benchmark '
-                                  'name title is_last')
-GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
-GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
-IterSuite = collections.namedtuple('IterSuite', 'filename suite')
+DataItem = collections.namedtuple(
+    "DataItem", "suite filename benchmark " "name title is_last"
+)
+GroupItem = collections.namedtuple("GroupItem", "benchmark title filename")
+GroupItem2 = collections.namedtuple("GroupItem2", "name benchmarks is_last")
+IterSuite = collections.namedtuple("IterSuite", "filename suite")
 
 
 def format_filename_noop(filename):
@@ -224,7 +279,7 @@ def format_filename_func(suites):
 
     def strip_extension(filename):
         name = os.path.splitext(filename)[0]
-        if name.endswith('.json'):
+        if name.endswith(".json"):
             # replace "bench.json.gz" with "bench"
             name = name[:-5]
         return name
@@ -258,8 +313,7 @@ class Benchmarks:
         if any(len(suite) > 1 for suite in self.suites):
             return False
         names = self.suites[0].get_benchmark_names()
-        return all(suite.get_benchmark_names() == names
-                   for suite in self.suites[1:])
+        return all(suite.get_benchmark_names() == names for suite in self.suites[1:])
 
     def include_benchmarks(self, names):
         for suite in self.suites:
@@ -283,12 +337,12 @@ class Benchmarks:
     def __iter__(self):
         format_filename = format_filename_func(self.suites)
 
-        show_name = (len(self) > 1)
-        show_filename = (self.get_nsuite() > 1)
+        show_name = len(self) > 1
+        show_filename = self.get_nsuite() > 1
 
         for suite_index, suite in enumerate(self.suites):
             filename = format_filename(suite.filename)
-            last_suite = (suite_index == (len(self.suites) - 1))
+            last_suite = suite_index == (len(self.suites) - 1)
 
             benchmarks = suite.get_benchmarks()
             for bench_index, benchmark in enumerate(benchmarks):
@@ -300,8 +354,8 @@ class Benchmarks:
                         title = "%s:%s" % (filename, title)
                 else:
                     title = None
-                last_benchmark = (bench_index == (len(benchmarks) - 1))
-                is_last = (last_suite and last_benchmark)
+                last_benchmark = bench_index == (len(benchmarks) - 1)
+                is_last = last_suite and last_benchmark
 
                 yield DataItem(suite, filename, benchmark, name, title, is_last)
 
@@ -310,16 +364,15 @@ class Benchmarks:
         for suite in self.suites[1:]:
             names &= set(suite.get_benchmark_names())
         # Keep original name order
-        return [name for name in self.suites[0].get_benchmark_names()
-                if name in names]
+        return [name for name in self.suites[0].get_benchmark_names() if name in names]
 
     def group_by_name(self):
         format_filename = format_filename_func(self.suites)
 
-        show_filename = (self.get_nsuite() > 1)
+        show_filename = self.get_nsuite() > 1
 
         names = self._group_by_name_names()
-        show_name = (len(names) > 1)
+        show_name = len(names) > 1
 
         groups = []
         for index, name in enumerate(names):
@@ -337,7 +390,7 @@ class Benchmarks:
                     title = None
                 benchmarks.append(GroupItem(benchmark, title, filename))
 
-            is_last = (index == (len(names) - 1))
+            is_last = index == (len(names) - 1)
             group = GroupItem2(name, benchmarks, is_last)
             groups.append(group)
 
@@ -357,7 +410,7 @@ class Benchmarks:
 def load_benchmarks(args, name=True):
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
-    if getattr(args, 'benchmarks', None):
+    if getattr(args, "benchmarks", None):
         data.include_benchmarks(args.benchmarks)
     return data
 
@@ -368,11 +421,11 @@ def _display_common_metadata(metadatas, lines):
 
     for metadata in metadatas:
         # don't display name as metadata, it's already displayed
-        metadata.pop('name', None)
+        metadata.pop("name", None)
 
     common_metadata = _common_metadata(metadatas)
     if common_metadata:
-        format_title('Common metadata', lines=lines)
+        format_title("Common metadata", lines=lines)
         empty_line(lines)
 
         format_metadata(common_metadata, lines=lines)
@@ -391,8 +444,7 @@ def cmd_compare_to(args):
         sys.exit(1)
 
     if args.group_by_speed and data.get_nsuite() != 2:
-        print("ERROR: --by-speed only works on two benchmark files",
-              file=sys.stderr)
+        print("ERROR: --by-speed only works on two benchmark files", file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -404,12 +456,21 @@ def cmd_compare_to(args):
 
 def cmd_collect_metadata(args):
     from pyperf._collect_metadata import cmd_collect_metadata as func
+
     func(args)
 
 
-def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
-                       dump=False, result=False, checks=False,
-                       display_runs_args=None, only_checks=False):
+def display_benchmarks(
+    args,
+    show_metadata=False,
+    hist=False,
+    stats=False,
+    dump=False,
+    result=False,
+    checks=False,
+    display_runs_args=None,
+    only_checks=False,
+):
     data = load_benchmarks(args)
 
     output = []
@@ -430,10 +491,10 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                     break
 
     if use_title:
-        show_filename = (data.get_nsuite() > 1)
+        show_filename = data.get_nsuite() > 1
         show_name = not data.has_same_unique_benchmark()
         if not show_filename and stats:
-            show_filename = (len(data) > 1)
+            show_filename = len(data) > 1
 
         suite = None
         for index, item in enumerate(data):
@@ -446,13 +507,15 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                     lines.append("Metadata:")
                     format_metadata(metadata, lines=lines)
 
-            bench_lines = format_benchmark(item.benchmark,
-                                           hist=hist,
-                                           stats=stats,
-                                           dump=dump,
-                                           checks=checks,
-                                           result=result,
-                                           display_runs_args=display_runs_args)
+            bench_lines = format_benchmark(
+                item.benchmark,
+                hist=hist,
+                stats=stats,
+                dump=dump,
+                checks=checks,
+                result=result,
+                display_runs_args=display_runs_args,
+            )
 
             if bench_lines:
                 empty_line(lines)
@@ -475,8 +538,13 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                         dates = suite.get_dates()
                         if dates:
                             start, end = dates
-                            lines.append("Start date: %s" % format_datetime(start, microsecond=False))
-                            lines.append("End date: %s" % format_datetime(end, microsecond=False))
+                            lines.append(
+                                "Start date: %s"
+                                % format_datetime(start, microsecond=False)
+                            )
+                            lines.append(
+                                "End date: %s" % format_datetime(end, microsecond=False)
+                            )
 
                 if show_name:
                     format_title(item.name, 2, lines=lines)
@@ -500,7 +568,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
         for line in output:
             print(line)
 
-        show_filename = (data.get_nsuite() > 1)
+        show_filename = data.get_nsuite() > 1
 
         suite = None
         for item in data:
@@ -513,18 +581,20 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
             line = format_result(item.benchmark)
             if item.title:
-                line = '%s: %s' % (item.name, line)
+                line = "%s: %s" % (item.name, line)
             print(line)
 
 
 def cmd_show(args):
-    display_benchmarks(args,
-                       show_metadata=args.metadata,
-                       hist=args.hist,
-                       stats=args.stats,
-                       dump=args.dump,
-                       checks=not args.quiet,
-                       result=True)
+    display_benchmarks(
+        args,
+        show_metadata=args.metadata,
+        hist=args.hist,
+        stats=args.stats,
+        dump=args.dump,
+        checks=not args.quiet,
+        result=True,
+    )
 
 
 def cmd_metadata(args):
@@ -536,17 +606,15 @@ def cmd_check(args):
 
 
 def cmd_dump(args):
-    display_runs_args = {'quiet': args.quiet,
-                         'verbose': args.verbose,
-                         'raw': args.raw}
-    display_benchmarks(args,
-                       dump=True,
-                       display_runs_args=display_runs_args,
-                       checks=not args.quiet)
+    display_runs_args = {"quiet": args.quiet, "verbose": args.verbose, "raw": args.raw}
+    display_benchmarks(
+        args, dump=True, display_runs_args=display_runs_args, checks=not args.quiet
+    )
 
 
 def cmd_timeit(args, timeit_runner):
     import pyperf._timeit_cli as timeit_cli
+
     timeit_runner._set_args(args)
     timeit_cli.main(timeit_runner)
 
@@ -562,47 +630,51 @@ def cmd_hist(args):
     ignored = list(data.group_by_name_ignored())
 
     groups = data.group_by_name()
-    show_filename = (data.get_nsuite() > 1)
-    show_group_name = (len(groups) > 1)
+    show_filename = data.get_nsuite() > 1
+    show_group_name = len(groups) > 1
 
     for name, benchmarks, is_last in groups:
         if show_group_name:
             display_title(name)
 
-        benchmarks = [(benchmark, filename if show_filename else None)
-                      for benchmark, title, filename in benchmarks]
+        benchmarks = [
+            (benchmark, filename if show_filename else None)
+            for benchmark, title, filename in benchmarks
+        ]
 
-        for line in format_histogram(benchmarks, bins=args.bins,
-                                     extend=args.extend,
-                                     checks=checks):
+        for line in format_histogram(
+            benchmarks, bins=args.bins, extend=args.extend, checks=checks
+        ):
             print(line)
 
-        if not(is_last or ignored):
+        if not (is_last or ignored):
             print()
 
     for suite, ignored in ignored:
         for bench in ignored:
             name = bench.get_name()
             print("[ %s ]" % name)
-            for line in format_histogram([name], bins=args.bins,
-                                         extend=args.extend,
-                                         checks=checks):
+            for line in format_histogram(
+                [name], bins=args.bins, extend=args.extend, checks=checks
+            ):
                 print(line)
 
 
 def fatal_missing_benchmarks(suite, names):
-    print("ERROR: The benchmark suite %s doesn't contain "
-          "with benchmark name in %r"
-          % (suite.filename, names),
-          file=sys.stderr)
+    print(
+        "ERROR: The benchmark suite %s doesn't contain "
+        "with benchmark name in %r" % (suite.filename, names),
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
 def fatal_no_more_benchmark(suite):
-    print("ERROR: After modification, the benchmark suite %s has no "
-          "more benchmark!"
-          % suite.filename,
-          file=sys.stderr)
+    print(
+        "ERROR: After modification, the benchmark suite %s has no "
+        "more benchmark!" % suite.filename,
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
@@ -644,9 +716,10 @@ def cmd_convert(args):
             try:
                 benchmark._filter_runs(include, only_runs)
             except ValueError:
-                print("ERROR: Benchmark %r has no more run"
-                      % benchmark.get_name(),
-                      file=sys.stderr)
+                print(
+                    "ERROR: Benchmark %r has no more run" % benchmark.get_name(),
+                    file=sys.stderr,
+                )
                 sys.exit(1)
 
     if args.remove_warmups:
@@ -654,14 +727,13 @@ def cmd_convert(args):
             benchmark._remove_warmups()
 
     if args.update_metadata:
-        items = [item.strip()
-                 for item in args.update_metadata.split(',')]
+        items = [item.strip() for item in args.update_metadata.split(",")]
 
         metadata = {}
         for item in items:
             if not item:
                 continue
-            key, _, value = item.partition('=')
+            key, _, value = item.partition("=")
             metadata[key] = value
 
         for benchmark in suite:
@@ -673,22 +745,26 @@ def cmd_convert(args):
             try:
                 benchmark._extract_metadata(name)
             except KeyError:
-                print("ERROR: Benchmark %r has no metadata %r"
-                      % (benchmark.get_name(), name),
-                      file=sys.stderr)
+                print(
+                    "ERROR: Benchmark %r has no metadata %r"
+                    % (benchmark.get_name(), name),
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             except TypeError:
                 raise
-                print("ERROR: Metadata %r of benchmark %r is not an integer"
-                      % (name, benchmark.get_name()),
-                      file=sys.stderr)
+                print(
+                    "ERROR: Metadata %r of benchmark %r is not an integer"
+                    % (name, benchmark.get_name()),
+                    file=sys.stderr,
+                )
                 sys.exit(1)
 
     if args.remove_all_metadata:
         for benchmark in suite:
             benchmark._remove_all_metadata()
 
-    compact = not(args.indent)
+    compact = not (args.indent)
     if args.output_filename:
         suite.dump(args.output_filename, compact=compact)
     else:
@@ -699,7 +775,7 @@ def cmd_slowest(args):
     data = load_benchmarks(args, name=False)
     nslowest = args.n
 
-    use_title = (data.get_nsuite() > 1)
+    use_title = data.get_nsuite() > 1
     for item in data.iter_suites():
         if use_title:
             display_title(item.filename, 1)
@@ -712,12 +788,14 @@ def cmd_slowest(args):
 
         for index, item in enumerate(benchs[:nslowest], 1):
             duration, bench = item
-            print("#%s: %s (%s)"
-                  % (index, bench.get_name(), format_timedelta(duration)))
+            print(
+                "#%s: %s (%s)" % (index, bench.get_name(), format_timedelta(duration))
+            )
 
 
 def cmd_system(args):
     from pyperf._system import System
+
     System().main(args.system_action, args)
 
 
@@ -734,19 +812,19 @@ def main():
     action = args.action
 
     dispatch = {
-        'show': functools.partial(cmd_show, args),
-        'compare_to': functools.partial(cmd_compare_to, args),
-        'hist': functools.partial(cmd_hist, args),
-        'stats': functools.partial(cmd_stats, args),
-        'metadata': functools.partial(cmd_metadata, args),
-        'check': functools.partial(cmd_check, args),
-        'collect_metadata': functools.partial(cmd_collect_metadata, args),
-        'timeit': functools.partial(cmd_timeit, args, timeit_runner),
-        'convert': functools.partial(cmd_convert, args),
-        'dump': functools.partial(cmd_dump, args),
-        'slowest': functools.partial(cmd_slowest, args),
-        'system': functools.partial(cmd_system, args),
-        'command': functools.partial(cmd_bench_command, command_runner, args),
+        "show": functools.partial(cmd_show, args),
+        "compare_to": functools.partial(cmd_compare_to, args),
+        "hist": functools.partial(cmd_hist, args),
+        "stats": functools.partial(cmd_stats, args),
+        "metadata": functools.partial(cmd_metadata, args),
+        "check": functools.partial(cmd_check, args),
+        "collect_metadata": functools.partial(cmd_collect_metadata, args),
+        "timeit": functools.partial(cmd_timeit, args, timeit_runner),
+        "convert": functools.partial(cmd_convert, args),
+        "dump": functools.partial(cmd_dump, args),
+        "slowest": functools.partial(cmd_slowest, args),
+        "system": functools.partial(cmd_system, args),
+        "command": functools.partial(cmd_bench_command, command_runner, args),
     }
 
     with catch_broken_pipe_error():

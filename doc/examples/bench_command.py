@@ -3,4 +3,4 @@ import sys
 import pyperf
 
 runner = pyperf.Runner()
-runner.bench_command('python_startup', [sys.executable, '-c', 'pass'])
+runner.bench_command("python_startup", [sys.executable, "-c", "pass"])

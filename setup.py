@@ -24,17 +24,17 @@
 #  - git commit -a -m "post-release"
 #  - git push or send the PR to the repository
 
-VERSION = '2.2.1'
+VERSION = "2.2.1"
 
-DESCRIPTION = 'Python module to run and analyze benchmarks'
+DESCRIPTION = "Python module to run and analyze benchmarks"
 CLASSIFIERS = [
-    'Development Status :: 5 - Production/Stable',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
-    'Natural Language :: English',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3',
-    'Topic :: Software Development :: Libraries :: Python Modules',
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 
@@ -44,34 +44,32 @@ CLASSIFIERS = [
 def main():
     from setuptools import setup
 
-    with open('README.rst') as fp:
+    with open("README.rst") as fp:
         long_description = fp.read().strip()
 
     options = {
-        'name': 'pyperf',
-        'version': VERSION,
-        'license': 'MIT license',
-        'description': DESCRIPTION,
-        'long_description': long_description,
-        'url': 'https://github.com/psf/pyperf',
-        'author': 'Victor Stinner',
-        'author_email': 'vstinner@redhat.com',
-        'classifiers': CLASSIFIERS,
-        'packages': ['pyperf', 'pyperf.tests'],
-        'install_requires': [],
+        "name": "pyperf",
+        "version": VERSION,
+        "license": "MIT license",
+        "description": DESCRIPTION,
+        "long_description": long_description,
+        "url": "https://github.com/psf/pyperf",
+        "author": "Victor Stinner",
+        "author_email": "vstinner@redhat.com",
+        "classifiers": CLASSIFIERS,
+        "packages": ["pyperf", "pyperf.tests"],
+        "install_requires": [],
         # don't use environment markers in install_requires, but use weird
         # syntax of extras_require, to support setuptools 18
-        'extras_require': {
+        "extras_require": {
             ":python_version < '3.4'": ["statistics"],
         },
-        'entry_points': {
-            'console_scripts': ['pyperf=pyperf.__main__:main']
-        }
+        "entry_points": {"console_scripts": ["pyperf=pyperf.__main__:main"]}
         # Optional dependencies:
         # 'psutil'
     }
     setup(**options)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

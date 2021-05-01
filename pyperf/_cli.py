@@ -3,14 +3,13 @@ import errno
 import os.path
 import sys
 
-from pyperf._formatter import (format_seconds, format_number,
-                               format_datetime)
+from pyperf._formatter import format_seconds, format_number, format_datetime
 from pyperf._metadata import format_metadata as _format_metadata
 
 
 def empty_line(lines):
     if lines:
-        lines.append('')
+        lines.append("")
 
 
 def format_title(title, level=1, lines=None):
@@ -21,9 +20,9 @@ def format_title(title, level=1, lines=None):
 
     lines.append(title)
     if level == 1:
-        char = '='
+        char = "="
     else:
-        char = '-'
+        char = "-"
     lines.append(char * len(title))
     return lines
 
@@ -34,7 +33,7 @@ def display_title(title, level=1):
     print()
 
 
-def format_metadata(metadata, prefix='- ', lines=None):
+def format_metadata(metadata, prefix="- ", lines=None):
     if lines is None:
         lines = []
     for name, value in sorted(metadata.items()):
@@ -52,12 +51,13 @@ def _format_values_diff(bench, values, raw, total_loops):
             value = float(value) / total_loops
         delta = float(value) - mean
         if abs(delta) > max_delta:
-            values_str[index] += ' (%+.0f%%)' % (delta * 100 / mean)
+            values_str[index] += " (%+.0f%%)" % (delta * 100 / mean)
     return values_str
 
 
-def format_run(bench, run_index, run, common_metadata=None, raw=False,
-               verbose=0, lines=None):
+def format_run(
+    bench, run_index, run, common_metadata=None, raw=False, verbose=0, lines=None
+):
     if lines is None:
         lines = []
 
@@ -66,21 +66,21 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
     if run._is_calibration():
         if run._is_calibration_warmups():
             warmups = run._get_calibration_warmups()
-            action = 'calibrate the number of warmups: %s' % format_number(warmups)
+            action = "calibrate the number of warmups: %s" % format_number(warmups)
         elif run._is_recalibration_warmups():
             warmups = run._get_calibration_warmups()
-            action = 'recalibrate the number of warmups: %s' % format_number(warmups)
+            action = "recalibrate the number of warmups: %s" % format_number(warmups)
         elif run._is_recalibration_loops():
             loops = run._get_calibration_loops()
-            action = 'recalibrate the number of loops: %s' % format_number(loops)
+            action = "recalibrate the number of loops: %s" % format_number(loops)
         else:
             loops = run._get_calibration_loops()
-            action = 'calibrate the number of loops: %s' % format_number(loops)
+            action = "calibrate the number of loops: %s" % format_number(loops)
         lines.append("Run %s: %s" % (run_index, action))
         if raw:
-            name = 'raw calibrate'
+            name = "raw calibrate"
         else:
-            name = 'calibrate'
+            name = "calibrate"
         unit = bench.get_unit()
         format_value = bench.format_value
         for index, warmup in enumerate(run.warmups, 1):
@@ -88,31 +88,32 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             raw_value = value * (loops * inner_loops)
             if raw:
                 text = format_value(raw_value)
-                text = ("%s (loops: %s)"
-                        % (format_value(raw_value),
-                           format_number(loops)))
+                text = "%s (loops: %s)" % (
+                    format_value(raw_value),
+                    format_number(loops),
+                )
             # when using --track-memory, displaying value * loops doesn't make
             # sense, so only display raw value if the unit is seconds
-            elif unit == 'second':
-                text = ("%s (loops: %s, raw: %s)"
-                        % (format_value(value),
-                           format_number(loops),
-                           format_value(raw_value)))
+            elif unit == "second":
+                text = "%s (loops: %s, raw: %s)" % (
+                    format_value(value),
+                    format_number(loops),
+                    format_value(raw_value),
+                )
             else:
-                text = ("%s (loops: %s)"
-                        % (format_value(value),
-                           format_number(loops)))
-            lines.append("- %s %s: %s"
-                         % (name, index, text))
+                text = "%s (loops: %s)" % (format_value(value), format_number(loops))
+            lines.append("- %s %s: %s" % (name, index, text))
     else:
-        show_warmup = (verbose >= 0)
+        show_warmup = verbose >= 0
 
         total_loops = run.get_total_loops()
 
         values = run.values
         if raw:
-            warmups = [bench.format_value(value * (loops * inner_loops))
-                       for loops, value in run.warmups]
+            warmups = [
+                bench.format_value(value * (loops * inner_loops))
+                for loops, value in run.warmups
+            ]
             values = [value * total_loops for value in values]
         else:
             warmups = run.warmups
@@ -123,38 +124,42 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
 
         if verbose >= 0:
             loops = run.get_loops()
-            lines.append("Run %s: %s, %s, %s"
-                         % (run_index,
-                            format_number(len(warmups), 'warmup'),
-                            format_number(len(values), 'value'),
-                            format_number(loops, 'loop')))
+            lines.append(
+                "Run %s: %s, %s, %s"
+                % (
+                    run_index,
+                    format_number(len(warmups), "warmup"),
+                    format_number(len(values), "value"),
+                    format_number(loops, "loop"),
+                )
+            )
         else:
             lines.append("Run %s:" % run_index)
 
         if warmups and show_warmup:
             if raw:
-                name = 'raw warmup'
+                name = "raw warmup"
             else:
-                name = 'warmup'
+                name = "warmup"
             for index, warmup in enumerate(warmups, 1):
-                lines.append('- %s %s: %s' % (name, index, warmup))
+                lines.append("- %s %s: %s" % (name, index, warmup))
 
         if raw:
-            name = 'raw value'
+            name = "raw value"
         else:
-            name = 'value'
+            name = "value"
         for index, value in enumerate(values, 1):
-            lines.append('- %s %s: %s' % (name, index, value))
+            lines.append("- %s %s: %s" % (name, index, value))
 
     if verbose > 0:
         metadata = run.get_metadata()
         if metadata:
-            lines.append('- Metadata:')
+            lines.append("- Metadata:")
             for name, value in sorted(metadata.items()):
                 if common_metadata and name in common_metadata:
                     continue
                 value = _format_metadata(name, value)
-                lines.append('  %s: %s' % (name, value))
+                lines.append("  %s: %s" % (name, value))
 
     return lines
 
@@ -176,7 +181,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
         # FIXME: display metadata in format_benchmark()
         common_metadata = bench.get_metadata()
         lines.append("Metadata:")
-        format_metadata(common_metadata, prefix='  ', lines=lines)
+        format_metadata(common_metadata, prefix="  ", lines=lines)
     else:
         common_metadata = None
 
@@ -187,14 +192,20 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
         if not empty_line_written:
             empty_line_written = True
             empty_line(lines)
-        format_run(bench, run_index, run,
-                   common_metadata=common_metadata,
-                   verbose=verbose, raw=raw, lines=lines)
+        format_run(
+            bench,
+            run_index,
+            run,
+            common_metadata=common_metadata,
+            verbose=verbose,
+            raw=raw,
+            lines=lines,
+        )
 
     return lines
 
 
-PERCENTILE_NAMES = {0: 'minimum', 25: 'Q1', 50: 'median', 75: 'Q3', 100: 'maximum'}
+PERCENTILE_NAMES = {0: "minimum", 25: "Q1", 50: "median", 75: "Q3", 100: "maximum"}
 
 
 def format_stats(bench, lines):
@@ -222,29 +233,29 @@ def format_stats(bench, lines):
     raw_values = bench._get_raw_values()
     lines.append("Raw value minimum: %s" % bench.format_value(min(raw_values)))
     lines.append("Raw value maximum: %s" % bench.format_value(max(raw_values)))
-    lines.append('')
+    lines.append("")
 
     # Number of values
     ncalibration_runs = sum(run._is_calibration() for run in bench._runs)
-    lines.append("Number of calibration run: %s"
-                 % format_number(ncalibration_runs))
-    lines.append("Number of run with values: %s"
-                 % (format_number(nrun - ncalibration_runs)))
+    lines.append("Number of calibration run: %s" % format_number(ncalibration_runs))
+    lines.append(
+        "Number of run with values: %s" % (format_number(nrun - ncalibration_runs))
+    )
     lines.append("Total number of run: %s" % format_number(nrun))
-    lines.append('')
+    lines.append("")
 
     # Number of values
     nwarmup = bench._get_nwarmup()
     text = format_number(nwarmup)
     if isinstance(nwarmup, float):
-        text += ' (average)'
-    lines.append('Number of warmup per run: %s' % text)
+        text += " (average)"
+    lines.append("Number of warmup per run: %s" % text)
 
     nvalue_per_run = bench._get_nvalue_per_run()
     text = format_number(nvalue_per_run)
     if isinstance(nvalue_per_run, float):
-        text += ' (average)'
-    lines.append('Number of value per run: %s' % text)
+        text += " (average)"
+    lines.append("Number of value per run: %s" % text)
 
     # Loop iterations per value
     loops = bench.get_loops()
@@ -255,22 +266,22 @@ def format_stats(bench, lines):
     else:
         text = "%s (average)" % total_loops
 
-    if not(isinstance(inner_loops, int) and inner_loops == 1):
+    if not (isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
-            loops = format_number(loops, 'outer-loop')
+            loops = format_number(loops, "outer-loop")
         else:
-            loops = '%.1f outer-loops (average)'
+            loops = "%.1f outer-loops (average)"
 
         if isinstance(inner_loops, int):
-            inner_loops = format_number(inner_loops, 'inner-loop')
+            inner_loops = format_number(inner_loops, "inner-loop")
         else:
             inner_loops = "%.1f inner-loops (average)" % inner_loops
 
-        text = '%s (%s x %s)' % (text, loops, inner_loops)
+        text = "%s (%s x %s)" % (text, loops, inner_loops)
 
     lines.append("Loop iterations per value: %s" % text)
     lines.append("Total number of values: %s" % format_number(nvalue))
-    lines.append('')
+    lines.append("")
 
     # Minimum
     table = []
@@ -280,9 +291,12 @@ def format_stats(bench, lines):
     median = bench.median()
     if len(values) > 2:
         median_abs_dev = bench.median_abs_dev()
-        table.append(("Median +- MAD",
-                      "%s +- %s"
-                      % bench.format_values((median, median_abs_dev))))
+        table.append(
+            (
+                "Median +- MAD",
+                "%s +- %s" % bench.format_values((median, median_abs_dev)),
+            )
+        )
     else:
         table.append(("Mean", bench.format_value(median)))
 
@@ -290,8 +304,9 @@ def format_stats(bench, lines):
     mean = bench.mean()
     if len(values) > 2:
         stdev = bench.stdev()
-        table.append(("Mean +- std dev",
-                      "%s +- %s" % bench.format_values((mean, stdev))))
+        table.append(
+            ("Mean +- std dev", "%s +- %s" % bench.format_values((mean, stdev)))
+        )
     else:
         table.append(("Mean", bench.format_value(mean)))
 
@@ -300,13 +315,12 @@ def format_stats(bench, lines):
     # Render table
     width = max(len(row[0]) + 1 for row in table)
     for key, value in table:
-        key = (key + ':').ljust(width)
+        key = (key + ":").ljust(width)
         lines.append("%s %s" % (key, value))
-    lines.append('')
+    lines.append("")
 
     def format_limit(mean, value):
-        return ("%s (%+.0f%% of the mean)"
-                % (fmt(value), (value - mean) * 100.0 / mean))
+        return "%s (%+.0f%% of the mean)" % (fmt(value), (value - mean) * 100.0 / mean)
 
     # Percentiles
     for p in (0, 5, 25, 50, 75, 95, 100):
@@ -314,31 +328,31 @@ def format_stats(bench, lines):
         text = "%3sth percentile: %s" % (p, text)
         name = PERCENTILE_NAMES.get(p)
         if name:
-            text = '%s -- %s' % (text, name)
+            text = "%s -- %s" % (text, name)
         lines.append(text)
-    lines.append('')
+    lines.append("")
 
     # Outliers
     q1 = bench.percentile(25)
     q3 = bench.percentile(75)
     iqr = q3 - q1
-    outlier_min = (q1 - 1.5 * iqr)
-    outlier_max = (q3 + 1.5 * iqr)
-    noutlier = sum(not(outlier_min <= value <= outlier_max)
-                   for value in values)
+    outlier_min = q1 - 1.5 * iqr
+    outlier_max = q3 + 1.5 * iqr
+    noutlier = sum(not (outlier_min <= value <= outlier_max) for value in values)
     bounds = bench.format_values((outlier_min, outlier_max))
-    lines.append('Number of outlier (out of %s..%s): %s'
-                 % (bounds[0], bounds[1], format_number(noutlier)))
+    lines.append(
+        "Number of outlier (out of %s..%s): %s"
+        % (bounds[0], bounds[1], format_number(noutlier))
+    )
 
     return lines
 
 
-def format_histogram(benchmarks, bins=20, extend=False, lines=None,
-                     checks=False):
+def format_histogram(benchmarks, bins=20, extend=False, lines=None, checks=False):
     import collections
     import shutil
 
-    if hasattr(shutil, 'get_terminal_size'):
+    if hasattr(shutil, "get_terminal_size"):
         columns, nline = shutil.get_terminal_size()
     else:
         columns, nline = (80, 25)
@@ -380,11 +394,15 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
         count_max = max(counter.values())
         count_width = len(str(count_max))
 
-        value_width = max([len(bench.format_value(bucket * value_k))
-                           for bucket in range(bucket_min, bucket_max + 1)])
+        value_width = max(
+            [
+                len(bench.format_value(bucket * value_k))
+                for bucket in range(bucket_min, bucket_max + 1)
+            ]
+        )
         width = columns - value_width
 
-        line = ': %s #' % count_max
+        line = ": %s #" % count_max
         width = columns - (value_width + len(line))
         if not extend:
             width = min(width, 79)
@@ -394,9 +412,10 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
             count = counter.get(bucket, 0)
             linelen = int(round(count * line_k))
             text = bench.format_value(bucket * value_k)
-            line = ('#' * linelen) or '|'
-            lines.append("{:>{}}: {:>{}} {}".format(text, value_width,
-                                                    count, count_width, line))
+            line = ("#" * linelen) or "|"
+            lines.append(
+                "{:>{}}: {:>{}} {}".format(text, value_width, count, count_width, line)
+            )
 
         if checks:
             format_checks(bench, lines=lines)
@@ -423,13 +442,15 @@ def format_checks(bench, lines=None):
         stdev = bench.stdev()
         percent = stdev * 100.0 / mean
         if percent >= 10.0:
-            warn("the standard deviation (%s) is %.0f%% of the mean (%s)"
-                 % (bench.format_value(stdev), percent, bench.format_value(mean)))
+            warn(
+                "the standard deviation (%s) is %.0f%% of the mean (%s)"
+                % (bench.format_value(stdev), percent, bench.format_value(mean))
+            )
 
     # Minimum and maximum, detect obvious outliers
     for minimum, value in (
-        ('minimum', min(values)),
-        ('maximum', max(values)),
+        ("minimum", min(values)),
+        ("maximum", max(values)),
     ):
         percent = (value - mean) * 100.0 / mean
         if abs(percent) >= 50:
@@ -437,15 +458,16 @@ def format_checks(bench, lines=None):
                 text = "%.0f%% greater" % (percent)
             else:
                 text = "%.0f%% smaller" % (-percent)
-            warn("the %s (%s) is %s than the mean (%s)"
-                 % (minimum, bench.format_value(value), text, bench.format_value(mean)))
+            warn(
+                "the %s (%s) is %s than the mean (%s)"
+                % (minimum, bench.format_value(value), text, bench.format_value(mean))
+            )
 
     # Check that the shortest raw value took at least 1 ms
-    if bench.get_unit() == 'second':
+    if bench.get_unit() == "second":
         shortest = min(bench._get_raw_values())
         if shortest < 1e-3:
-            warn("the shortest raw value is only %s"
-                 % bench.format_value(shortest))
+            warn("the shortest raw value is only %s" % bench.format_value(shortest))
 
     if warnings:
         empty_line(lines)
@@ -453,24 +475,30 @@ def format_checks(bench, lines=None):
         for msg in warnings:
             lines.append("* %s" % msg)
         empty_line(lines)
-        lines.append("Try to rerun the benchmark with more runs, values "
-                     "and/or loops.")
-        lines.append("Run '%s -m pyperf system tune' command to reduce "
-                     "the system jitter."
-                     % os.path.basename(sys.executable))
-        lines.append("Use pyperf stats, pyperf dump and pyperf hist to analyze results.")
+        lines.append(
+            "Try to rerun the benchmark with more runs, values " "and/or loops."
+        )
+        lines.append(
+            "Run '%s -m pyperf system tune' command to reduce "
+            "the system jitter." % os.path.basename(sys.executable)
+        )
+        lines.append(
+            "Use pyperf stats, pyperf dump and pyperf hist to analyze results."
+        )
         lines.append("Use --quiet option to hide these warnings.")
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:
-        cpu_config = run._metadata.get('cpu_config')
+        cpu_config = run._metadata.get("cpu_config")
         if not cpu_config:
             continue
-        if 'nohz_full' in cpu_config and 'intel_pstate' in cpu_config:
+        if "nohz_full" in cpu_config and "intel_pstate" in cpu_config:
             empty_line(lines)
-            warn("WARNING: nohz_full is enabled on CPUs which use the "
-                 "intel_pstate driver, whereas intel_pstate is incompatible "
-                 "with nohz_full")
+            warn(
+                "WARNING: nohz_full is enabled on CPUs which use the "
+                "intel_pstate driver, whereas intel_pstate is incompatible "
+                "with nohz_full"
+            )
             warn("CPU config: %s" % cpu_config)
             warn("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
             break
@@ -482,7 +510,7 @@ def _format_result_value(bench):
     mean = bench.mean()
     if bench.get_nvalue() >= 2:
         args = bench.format_values((mean, bench.stdev()))
-        return '%s +- %s' % args
+        return "%s +- %s" % args
     else:
         return bench.format_value(mean)
 
@@ -508,11 +536,11 @@ def format_result_value(bench):
 
     info = []
     if loops is not None:
-        info.append(format_number(loops, 'loop'))
+        info.append(format_number(loops, "loop"))
     if warmups is not None:
-        info.append(format_number(warmups, 'warmup'))
+        info.append(format_number(warmups, "warmup"))
     if info:
-        return '<calibration: %s>' % ', '.join(info)
+        return "<calibration: %s>" % ", ".join(info)
 
     return _format_result_value(bench)
 
@@ -538,22 +566,30 @@ def format_result(bench, prefix=True):
 
     info = []
     if loops is not None:
-        info.append(format_number(loops, 'loop'))
+        info.append(format_number(loops, "loop"))
     if warmups is not None:
-        info.append(format_number(warmups, 'warmup'))
+        info.append(format_number(warmups, "warmup"))
     if info:
-        return 'Calibration: %s' % ', '.join(info)
+        return "Calibration: %s" % ", ".join(info)
 
     text = _format_result_value(bench)
     if bench.get_nvalue() >= 2:
-        return 'Mean +- std dev: %s' % text
+        return "Mean +- std dev: %s" % text
     else:
         return text
 
 
-def format_benchmark(bench, checks=True, metadata=False,
-                     dump=False, stats=False, hist=False, show_name=False,
-                     result=True, display_runs_args=None):
+def format_benchmark(
+    bench,
+    checks=True,
+    metadata=False,
+    dump=False,
+    stats=False,
+    hist=False,
+    show_name=False,
+    result=True,
+    display_runs_args=None,
+):
     lines = []
 
     if metadata:
@@ -588,7 +624,7 @@ def format_benchmark(bench, checks=True, metadata=False,
 
 # FIXME: remove this function?
 def multiline_output(args):
-    return (args.hist or args.stats or args.dump or args.metadata)
+    return args.hist or args.stats or args.dump or args.metadata
 
 
 @contextlib.contextmanager

@@ -22,6 +22,7 @@ class Manager(object):
     It uses a state machine with next_run attribute and the choose_next_run()
     method.
     """
+
     def __init__(self, runner, python=None):
         self.runner = runner
         self.args = runner.args
@@ -32,7 +33,7 @@ class Manager(object):
         self.bench = None
         self.need_nprocess = self.args.processes
         self.nprocess = 0
-        self.next_run = 'loops'
+        self.next_run = "loops"
         self.calibrate_loops = int(not self.args.loops)
         self.calibrate_warmups = int(self.args.warmups is None)
 
@@ -41,30 +42,38 @@ class Manager(object):
 
         cmd = [self.python]
         cmd.extend(self.runner._program_args)
-        cmd.extend(('--worker', '--pipe', str(wpipe),
-                    '--worker-task=%s' % self.runner._worker_task,
-                    '--values', str(args.values),
-                    '--min-time', str(args.min_time)))
+        cmd.extend(
+            (
+                "--worker",
+                "--pipe",
+                str(wpipe),
+                "--worker-task=%s" % self.runner._worker_task,
+                "--values",
+                str(args.values),
+                "--min-time",
+                str(args.min_time),
+            )
+        )
         if calibrate_loops == 1:
-            cmd.append('--calibrate-loops')
+            cmd.append("--calibrate-loops")
         else:
-            cmd.extend(('--loops', str(args.loops)))
+            cmd.extend(("--loops", str(args.loops)))
             if calibrate_loops > 1:
-                cmd.append('--recalibrate-loops')
+                cmd.append("--recalibrate-loops")
         if calibrate_warmups == 1:
-            cmd.append('--calibrate-warmups')
+            cmd.append("--calibrate-warmups")
         else:
-            cmd.extend(('--warmups', str(args.warmups)))
+            cmd.extend(("--warmups", str(args.warmups)))
             if calibrate_warmups > 1:
-                cmd.append('--recalibrate-warmups')
+                cmd.append("--recalibrate-warmups")
         if args.verbose:
-            cmd.append('-' + 'v' * args.verbose)
+            cmd.append("-" + "v" * args.verbose)
         if args.affinity:
-            cmd.append('--affinity=%s' % args.affinity)
+            cmd.append("--affinity=%s" % args.affinity)
         if args.tracemalloc:
-            cmd.append('--tracemalloc')
+            cmd.append("--tracemalloc")
         if args.track_memory:
-            cmd.append('--track-memory')
+            cmd.append("--track-memory")
 
         if self.runner._add_cmdline_args:
             self.runner._add_cmdline_args(cmd, args)
@@ -72,25 +81,24 @@ class Manager(object):
         return cmd
 
     def spawn_worker(self, calibrate_loops, calibrate_warmups):
-        env = create_environ(self.args.inherit_environ,
-                             self.args.locale,
-                             self.args.copy_env)
+        env = create_environ(
+            self.args.inherit_environ, self.args.locale, self.args.copy_env
+        )
 
         rpipe, wpipe = create_pipe()
         with rpipe:
             with wpipe:
                 warg = wpipe.to_subprocess()
-                cmd = self.worker_cmd(calibrate_loops,
-                                      calibrate_warmups, warg)
+                cmd = self.worker_cmd(calibrate_loops, calibrate_warmups, warg)
 
                 kw = {}
                 if MS_WINDOWS:
                     # Set close_fds to False to call CreateProcess() with
                     # bInheritHandles=True. For pass_handles, see
                     # http://bugs.python.org/issue19764
-                    kw['close_fds'] = False
+                    kw["close_fds"] = False
                 elif sys.version_info >= (3, 2):
-                    kw['pass_fds'] = [wpipe.fd]
+                    kw["pass_fds"] = [wpipe.fd]
 
                 proc = subprocess.Popen(cmd, env=env, **kw)
 
@@ -101,22 +109,21 @@ class Manager(object):
                 exitcode = proc.wait()
 
         if exitcode:
-            raise RuntimeError("%s failed with exit code %s"
-                               % (cmd[0], exitcode))
+            raise RuntimeError("%s failed with exit code %s" % (cmd[0], exitcode))
 
         return _load_suite_from_pipe(bench_json)
 
     def create_suite(self):
         # decide which kind of run must be computed
-        if self.next_run == 'loops' and not self.calibrate_loops:
-            self.next_run = 'warmups'
-        if self.next_run == 'warmups' and not self.calibrate_warmups:
-            self.next_run = 'values'
+        if self.next_run == "loops" and not self.calibrate_loops:
+            self.next_run = "warmups"
+        if self.next_run == "warmups" and not self.calibrate_warmups:
+            self.next_run = "values"
 
         # compute the run
-        if self.next_run == 'loops':
+        if self.next_run == "loops":
             suite = self.spawn_worker(self.calibrate_loops, 0)
-        elif self.next_run == 'warmups':
+        elif self.next_run == "warmups":
             suite = self.spawn_worker(0, self.calibrate_warmups)
         else:
             suite = self.spawn_worker(0, 0)
@@ -130,12 +137,14 @@ class Manager(object):
         # get the run
         benchmarks = suite._benchmarks
         if len(benchmarks) != 1:
-            raise ValueError("worker produced %s benchmarks instead of 1"
-                             % len(benchmarks))
+            raise ValueError(
+                "worker produced %s benchmarks instead of 1" % len(benchmarks)
+            )
         worker_bench = benchmarks[0]
         if len(worker_bench._runs) != 1:
-            raise ValueError("worker produced %s runs, only 1 run expected"
-                             % len(worker_bench._runs))
+            raise ValueError(
+                "worker produced %s runs, only 1 run expected" % len(worker_bench._runs)
+            )
         run = worker_bench._runs[0]
 
         # save the run into bench
@@ -154,14 +163,18 @@ class Manager(object):
                 print(line)
             sys.stdout.flush()
         elif not self.args.quiet:
-            print(".", end='')
+            print(".", end="")
             sys.stdout.flush()
 
     def calibration_done(self):
         if self.args.verbose:
-            print("Calibration: %s, %s"
-                  % (format_number(self.args.warmups, 'warmup'),
-                     format_number(self.args.loops, 'loop')))
+            print(
+                "Calibration: %s, %s"
+                % (
+                    format_number(self.args.warmups, "warmup"),
+                    format_number(self.args.loops, "loop"),
+                )
+            )
         self.calibrate_loops = 0
         self.calibrate_warmups = 0
 
@@ -185,9 +198,10 @@ class Manager(object):
                 self.calibration_done()
 
             if self.calibrate_loops > MAX_CALIBRATION:
-                print("ERROR: calibration failed, the number of loops "
-                      "is not stable after %s calibrations"
-                      % (self.calibrate_loops - 1))
+                print(
+                    "ERROR: calibration failed, the number of loops "
+                    "is not stable after %s calibrations" % (self.calibrate_loops - 1)
+                )
                 sys.exit(1)
 
         elif run._is_calibration_warmups() or run._is_recalibration_warmups():
@@ -207,16 +221,17 @@ class Manager(object):
                 self.calibration_done()
 
             if self.calibrate_warmups > MAX_CALIBRATION:
-                print("ERROR: calibration failed, the number of warmups "
-                      "is not stable after %s calibrations"
-                      % (self.calibrate_warmups - 1))
+                print(
+                    "ERROR: calibration failed, the number of warmups "
+                    "is not stable after %s calibrations" % (self.calibrate_warmups - 1)
+                )
                 sys.exit(1)
 
     def choose_next_run(self):
-        if self.next_run == 'loops':
-            self.next_run = 'warmups'
-        elif self.next_run == 'warmups':
-            self.next_run = 'loops'
+        if self.next_run == "loops":
+            self.next_run = "warmups"
+        elif self.next_run == "warmups":
+            self.next_run = "loops"
         # else: keep action 'values'
 
     def create_bench(self):

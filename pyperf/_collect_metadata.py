@@ -5,6 +5,7 @@ import re
 import socket
 import sys
 import time
+
 try:
     import resource
 except ImportError:
@@ -18,83 +19,88 @@ except ImportError:
 
 import pyperf
 from pyperf._cli import format_metadata
-from pyperf._cpu_utils import (format_cpu_list,
-                               parse_cpu_list, get_isolated_cpus,
-                               get_logical_cpu_count, format_cpu_infos,
-                               set_cpu_affinity)
+from pyperf._cpu_utils import (
+    format_cpu_list,
+    parse_cpu_list,
+    get_isolated_cpus,
+    get_logical_cpu_count,
+    format_cpu_infos,
+    set_cpu_affinity,
+)
 from pyperf._formatter import format_timedelta, format_datetime
-from pyperf._utils import (MS_WINDOWS,
-                           open_text, read_first_line, sysfs_path, proc_path)
+from pyperf._utils import MS_WINDOWS, open_text, read_first_line, sysfs_path, proc_path
+
 if MS_WINDOWS:
     from pyperf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
 
 def normalize_text(text):
     text = str(text)
-    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
 def collect_python_metadata(metadata):
     # Implementation
     impl = pyperf.python_implementation()
-    metadata['python_implementation'] = impl
+    metadata["python_implementation"] = impl
 
     # Version
     version = platform.python_version()
 
-    match = re.search(r'\[(PyPy [^ ]+)', sys.version)
+    match = re.search(r"\[(PyPy [^ ]+)", sys.version)
     if match:
-        version = '%s (Python %s)' % (match.group(1), version)
+        version = "%s (Python %s)" % (match.group(1), version)
 
     bits = platform.architecture()[0]
     if bits:
-        if bits == '64bit':
-            bits = '64-bit'
-        elif bits == '32bit':
-            bits = '32-bit'
-        version = '%s (%s)' % (version, bits)
+        if bits == "64bit":
+            bits = "64-bit"
+        elif bits == "32bit":
+            bits = "32-bit"
+        version = "%s (%s)" % (version, bits)
 
     # '74667320778e' in 'Python 2.7.12+ (2.7:74667320778e,'
-    match = re.search(r'^[^(]+\([^:]+:([a-f0-9]{6,}\+?),', sys.version)
+    match = re.search(r"^[^(]+\([^:]+:([a-f0-9]{6,}\+?),", sys.version)
     if match:
         revision = match.group(1)
     else:
         # 'bbd45126bc691f669c4ebdfbd74456cd274c6b92'
         # in 'Python 2.7.10 (bbd45126bc691f669c4ebdfbd74456cd274c6b92,'
-        match = re.search(r'^[^(]+\(([a-f0-9]{6,}\+?),', sys.version)
+        match = re.search(r"^[^(]+\(([a-f0-9]{6,}\+?),", sys.version)
         if match:
             revision = match.group(1)
         else:
             revision = None
     if revision:
-        version = '%s revision %s' % (version, revision)
-    metadata['python_version'] = version
+        version = "%s revision %s" % (version, revision)
+    metadata["python_version"] = version
 
     if sys.executable:
-        metadata['python_executable'] = sys.executable
+        metadata["python_executable"] = sys.executable
 
     # timer
-    info = time.get_clock_info('perf_counter')
-    metadata['timer'] = ('%s, resolution: %s'
-                         % (info.implementation,
-                            format_timedelta(info.resolution)))
+    info = time.get_clock_info("perf_counter")
+    metadata["timer"] = "%s, resolution: %s" % (
+        info.implementation,
+        format_timedelta(info.resolution),
+    )
 
     # PYTHONHASHSEED
-    if os.environ.get('PYTHONHASHSEED'):
-        hash_seed = os.environ['PYTHONHASHSEED']
+    if os.environ.get("PYTHONHASHSEED"):
+        hash_seed = os.environ["PYTHONHASHSEED"]
         try:
             if hash_seed != "random":
                 hash_seed = int(hash_seed)
         except ValueError:
             pass
         else:
-            metadata['python_hash_seed'] = hash_seed
+            metadata["python_hash_seed"] = hash_seed
 
     # compiler
     python_compiler = normalize_text(platform.python_compiler())
     if python_compiler:
-        metadata['python_compiler'] = python_compiler
+        metadata["python_compiler"] = python_compiler
 
     # CFLAGS
     try:
@@ -102,10 +108,10 @@ def collect_python_metadata(metadata):
     except ImportError:
         pass
     else:
-        cflags = sysconfig.get_config_var('CFLAGS')
+        cflags = sysconfig.get_config_var("CFLAGS")
         if cflags:
             cflags = normalize_text(cflags)
-            metadata['python_cflags'] = cflags
+            metadata["python_cflags"] = cflags
 
     # GC disabled?
     try:
@@ -114,7 +120,7 @@ def collect_python_metadata(metadata):
         pass
     else:
         if not gc.isenabled():
-            metadata['python_gc'] = 'disabled'
+            metadata["python_gc"] = "disabled"
 
 
 def read_proc(path):
@@ -129,52 +135,52 @@ def read_proc(path):
 
 def collect_linux_metadata(metadata):
     # ASLR
-    for line in read_proc('sys/kernel/randomize_va_space'):
-        if line == '0':
-            metadata['aslr'] = 'No randomization'
-        elif line == '1':
-            metadata['aslr'] = 'Conservative randomization'
-        elif line == '2':
-            metadata['aslr'] = 'Full randomization'
+    for line in read_proc("sys/kernel/randomize_va_space"):
+        if line == "0":
+            metadata["aslr"] = "No randomization"
+        elif line == "1":
+            metadata["aslr"] = "Conservative randomization"
+        elif line == "2":
+            metadata["aslr"] = "Full randomization"
         break
 
 
 def get_cpu_affinity():
-    if hasattr(os, 'sched_getaffinity'):
+    if hasattr(os, "sched_getaffinity"):
         return os.sched_getaffinity(0)
 
     if psutil is not None:
         proc = psutil.Process()
         # cpu_affinity() is only available on Linux, Windows and FreeBSD
-        if hasattr(proc, 'cpu_affinity'):
+        if hasattr(proc, "cpu_affinity"):
             return proc.cpu_affinity()
 
     return None
 
 
 def collect_system_metadata(metadata):
-    metadata['platform'] = platform.platform(True, False)
-    if sys.platform.startswith('linux'):
+    metadata["platform"] = platform.platform(True, False)
+    if sys.platform.startswith("linux"):
         collect_linux_metadata(metadata)
 
     # on linux, load average over 1 minute
     for line in read_proc("loadavg"):
         fields = line.split()
         loadavg = fields[0]
-        metadata['load_avg_1min'] = float(loadavg)
+        metadata["load_avg_1min"] = float(loadavg)
 
-        if len(fields) >= 4 and '/' in fields[3]:
-            runnable_threads = fields[3].split('/', 1)[0]
+        if len(fields) >= 4 and "/" in fields[3]:
+            runnable_threads = fields[3].split("/", 1)[0]
             runnable_threads = int(runnable_threads)
-            metadata['runnable_threads'] = runnable_threads
+            metadata["runnable_threads"] = runnable_threads
 
-    if 'load_avg_1min' not in metadata and hasattr(os, 'getloadavg'):
-        metadata['load_avg_1min'] = os.getloadavg()[0]
+    if "load_avg_1min" not in metadata and hasattr(os, "getloadavg"):
+        metadata["load_avg_1min"] = os.getloadavg()[0]
 
     # Hostname
     hostname = socket.gethostname()
     if hostname:
-        metadata['hostname'] = hostname
+        metadata["hostname"] = hostname
 
     # Boot time
     boot_time = None
@@ -189,8 +195,8 @@ def collect_system_metadata(metadata):
 
     if boot_time is not None:
         btime = datetime.datetime.fromtimestamp(boot_time)
-        metadata['boot_time'] = format_datetime(btime)
-        metadata['uptime'] = time.time() - boot_time
+        metadata["boot_time"] = format_datetime(btime)
+        metadata["uptime"] = time.time() - boot_time
 
 
 def collect_memory_metadata(metadata):
@@ -198,7 +204,7 @@ def collect_memory_metadata(metadata):
         usage = resource.getrusage(resource.RUSAGE_SELF)
         max_rss = usage.ru_maxrss
         if max_rss:
-            metadata['mem_max_rss'] = max_rss * 1024
+            metadata["mem_max_rss"] = max_rss * 1024
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
     # not accurate. See pyperf._linux_memory for more accurate memory metrics.
@@ -207,7 +213,7 @@ def collect_memory_metadata(metadata):
     if MS_WINDOWS and not check_tracking_memory():
         usage = get_peak_pagefile_usage()
         if usage:
-            metadata['mem_peak_pagefile_usage'] = usage
+            metadata["mem_peak_pagefile_usage"] = usage
 
 
 def collect_cpu_freq(metadata, cpus):
@@ -215,19 +221,19 @@ def collect_cpu_freq(metadata, cpus):
     cpu_set = set(cpus)
     cpu_freq = {}
     cpu = None
-    for line in read_proc('cpuinfo'):
+    for line in read_proc("cpuinfo"):
         line = line.rstrip()
 
-        if line.startswith('processor'):
+        if line.startswith("processor"):
             # Intel format, example where \t is a tab (U+0009 character):
             # processor\t: 7
             # model name\t: Intel(R) Core(TM) i7-6820HQ CPU @ 2.70GHz
             # cpu MHz\t\t: 800.009
-            match = re.match(r'^processor\s*: ([0-9]+)', line)
+            match = re.match(r"^processor\s*: ([0-9]+)", line)
             if match is None:
                 # IBM Z
                 # Example: "processor 0: version = 00,  identification = [...]"
-                match = re.match(r'^processor ([0-9]+): ', line)
+                match = re.match(r"^processor ([0-9]+): ", line)
                 if match is None:
                     raise Exception
                     # unknown /proc/cpuinfo format: silently ignore and exit
@@ -238,24 +244,24 @@ def collect_cpu_freq(metadata, cpus):
                 # skip this CPU
                 cpu = None
 
-        elif line.startswith('cpu MHz') and cpu is not None:
+        elif line.startswith("cpu MHz") and cpu is not None:
             # Intel: 'cpu MHz : 1261.613'
-            mhz = line.split(':', 1)[-1].strip()
+            mhz = line.split(":", 1)[-1].strip()
             mhz = float(mhz)
             mhz = int(round(mhz))
-            cpu_freq[cpu] = '%s MHz' % mhz
+            cpu_freq[cpu] = "%s MHz" % mhz
 
-        elif line.startswith('clock') and line.endswith('MHz') and cpu is not None:
+        elif line.startswith("clock") and line.endswith("MHz") and cpu is not None:
             # Power8: 'clock : 3425.000000MHz'
-            mhz = line[:-3].split(':', 1)[-1].strip()
+            mhz = line[:-3].split(":", 1)[-1].strip()
             mhz = float(mhz)
             mhz = int(round(mhz))
-            cpu_freq[cpu] = '%s MHz' % mhz
+            cpu_freq[cpu] = "%s MHz" % mhz
 
     if not cpu_freq:
         return
 
-    metadata['cpu_freq'] = '; '.join(format_cpu_infos(cpu_freq))
+    metadata["cpu_freq"] = "; ".join(format_cpu_infos(cpu_freq))
 
 
 def get_cpu_config(cpu):
@@ -265,26 +271,26 @@ def get_cpu_config(cpu):
     path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
     if scaling_driver:
-        info.append('driver:%s' % scaling_driver)
+        info.append("driver:%s" % scaling_driver)
 
-    if scaling_driver == 'intel_pstate':
+    if scaling_driver == "intel_pstate":
         path = os.path.join(sys_cpu_path, "intel_pstate/no_turbo")
         no_turbo = read_first_line(path)
-        if no_turbo == '1':
-            info.append('intel_pstate:no turbo')
-        elif no_turbo == '0':
-            info.append('intel_pstate:turbo')
+        if no_turbo == "1":
+            info.append("intel_pstate:no turbo")
+        elif no_turbo == "0":
+            info.append("intel_pstate:turbo")
 
     path = os.path.join(sys_cpu_path, "cpu%s/cpufreq/scaling_governor" % cpu)
     scaling_governor = read_first_line(path)
     if scaling_governor:
-        info.append('governor:%s' % scaling_governor)
+        info.append("governor:%s" % scaling_governor)
 
     return info
 
 
 def collect_cpu_config(metadata, cpus):
-    nohz_full = read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+    nohz_full = read_first_line(sysfs_path("devices/system/cpu/nohz_full"))
     if nohz_full:
         nohz_full = parse_cpu_list(nohz_full)
 
@@ -296,25 +302,25 @@ def collect_cpu_config(metadata, cpus):
     for cpu in cpus:
         config = get_cpu_config(cpu)
         if nohz_full and cpu in nohz_full:
-            config.append('nohz_full')
+            config.append("nohz_full")
         if isolated and cpu in isolated:
-            config.append('isolated')
+            config.append("isolated")
         if config:
-            configs[cpu] = ', '.join(config)
+            configs[cpu] = ", ".join(config)
     config = format_cpu_infos(configs)
 
-    cpuidle = read_first_line('/sys/devices/system/cpu/cpuidle/current_driver')
+    cpuidle = read_first_line("/sys/devices/system/cpu/cpuidle/current_driver")
     if cpuidle:
-        config.append('idle:%s' % cpuidle)
+        config.append("idle:%s" % cpuidle)
 
     if not config:
         return
-    metadata['cpu_config'] = '; '.join(config)
+    metadata["cpu_config"] = "; ".join(config)
 
 
 def get_cpu_temperature(path, cpu_temp):
-    hwmon_name = read_first_line(os.path.join(path, 'name'))
-    if not hwmon_name.startswith('coretemp'):
+    hwmon_name = read_first_line(os.path.join(path, "name"))
+    if not hwmon_name.startswith("coretemp"):
         return
 
     index = 1
@@ -322,17 +328,17 @@ def get_cpu_temperature(path, cpu_temp):
         template = os.path.join(path, "temp%s_%%s" % index)
 
         try:
-            temp_label = read_first_line(template % 'label', error=True)
+            temp_label = read_first_line(template % "label", error=True)
         except IOError:
             break
 
-        temp_input = read_first_line(template % 'input', error=True)
+        temp_input = read_first_line(template % "input", error=True)
         temp_input = float(temp_input) / 1000
         # On Python 2, u"%.0f\xb0C" introduces unicode errors if the
         # locale encoding is ASCII, so use a space.
         temp_input = "%.0f C" % temp_input
 
-        item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input)
+        item = "%s:%s=%s" % (hwmon_name, temp_label, temp_input)
         cpu_temp.append(item)
 
         index += 1
@@ -352,7 +358,7 @@ def collect_cpu_temperatures(metadata):
     if not cpu_temp:
         return None
 
-    metadata['cpu_temp'] = ', '.join(cpu_temp)
+    metadata["cpu_temp"] = ", ".join(cpu_temp)
 
 
 def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
@@ -365,21 +371,21 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     if set(cpu_affinity) == set(range(cpu_count)):
         return
 
-    metadata['cpu_affinity'] = format_cpu_list(cpu_affinity)
+    metadata["cpu_affinity"] = format_cpu_list(cpu_affinity)
 
 
 def collect_cpu_model(metadata):
     for line in read_proc("cpuinfo"):
-        if line.startswith('model name'):
-            model_name = line.split(':', 1)[1].strip()
+        if line.startswith("model name"):
+            model_name = line.split(":", 1)[1].strip()
             if model_name:
-                metadata['cpu_model_name'] = model_name
+                metadata["cpu_model_name"] = model_name
             break
 
-        if line.startswith('machine'):
-            machine = line.split(':', 1)[1].strip()
+        if line.startswith("machine"):
+            machine = line.split(":", 1)[1].strip()
             if machine:
-                metadata['cpu_machine'] = machine
+                metadata["cpu_machine"] = machine
             break
 
 
@@ -389,7 +395,7 @@ def collect_cpu_metadata(metadata):
     # CPU count
     cpu_count = get_logical_cpu_count()
     if cpu_count:
-        metadata['cpu_count'] = cpu_count
+        metadata["cpu_count"] = cpu_count
 
     cpu_affinity = get_cpu_affinity()
     collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
@@ -407,8 +413,8 @@ def collect_cpu_metadata(metadata):
 
 def collect_metadata(process=True):
     metadata = {}
-    metadata['perf_version'] = pyperf.__version__
-    metadata['date'] = format_datetime(datetime.datetime.now())
+    metadata["perf_version"] = pyperf.__version__
+    metadata["date"] = format_datetime(datetime.datetime.now())
 
     collect_system_metadata(metadata)
     collect_cpu_metadata(metadata)
@@ -444,6 +450,6 @@ def cmd_collect_metadata(args):
             print(line)
 
     if filename:
-        run = run._update_metadata({'name': 'metadata'})
+        run = run._update_metadata({"name": "metadata"})
         bench = pyperf.Benchmark([run])
         bench.dump(filename)

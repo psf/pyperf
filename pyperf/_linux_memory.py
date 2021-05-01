@@ -18,7 +18,7 @@ def read_smap_file():
         for line in fp:
             # Include both Private_Clean and Private_Dirty sections.
             line = line.rstrip()
-            if line.startswith(b"Private_") and line.endswith(b'kB'):
+            if line.startswith(b"Private_") and line.endswith(b"kB"):
                 parts = line.split()
                 total += int(parts[1]) * 1024
     return total
@@ -29,7 +29,7 @@ class PeakMemoryUsageThread(threading.Thread):
         threading.Thread.__init__(self)
         self.peak_usage = 0
         self._done = threading.Event()
-        self.sleep = 0.010   # 10 ms
+        self.sleep = 0.010  # 10 ms
         self._quit = False
 
     def get(self):
