@@ -302,22 +302,40 @@ class WorkerTask:
             self.warmups = None
             self.values = (value,)
 
+class MemoryUsage:
+    def __init__(self):
+        self.mem_thread = None
+
+    def start(self):
+        if MS_WINDOWS:
+            from pyperf._win_memory import get_peak_pagefile_usage
+        elif MAC_OS:
+            from pyperf._psutil_memory import PeakMemoryUsageThread
+            self.mem_thread = PeakMemoryUsageThread()
+            self.mem_thread.start()
+        else:
+            from pyperf._linux_memory import PeakMemoryUsageThread
+            self.mem_thread = PeakMemoryUsageThread()
+            self.mem_thread.start()
+
+    def get_memory_peak(self):
+        if MS_WINDOWS:
+            mem_peak = get_peak_pagefile_usage()
+        else:
+            self.mem_thread.stop()
+            mem_peak = self.mem_thread.peak_usage
+
+        if not mem_peak:
+            raise RuntimeError("failed to get the memory peak usage")
+        return self.mem_peak
 
 class WorkerProcessTask(WorkerTask):
     def compute(self):
         args = self.args
 
         if args.track_memory:
-            if MS_WINDOWS:
-                from pyperf._win_memory import get_peak_pagefile_usage
-            elif MAC_OS:
-                from pyperf._psutil_memory import PeakMemoryUsageThread
-                mem_thread = PeakMemoryUsageThread()
-                mem_thread.start()
-            else:
-                from pyperf._linux_memory import PeakMemoryUsageThread
-                mem_thread = PeakMemoryUsageThread()
-                mem_thread.start()
+           mem_usage = MemoryUsage()
+           mem_usage.start()
 
         if args.tracemalloc:
             import tracemalloc
@@ -337,15 +355,7 @@ class WorkerProcessTask(WorkerTask):
             self._set_memory_value(traced_peak)
 
         if args.track_memory:
-            if MS_WINDOWS:
-                mem_peak = get_peak_pagefile_usage()
-            else:
-                mem_thread.stop()
-                mem_peak = mem_thread.peak_usage
-
-            if not mem_peak:
-                raise RuntimeError("failed to get the memory peak usage")
-
+            mem_peak = mem_usage.get_memory_peak()
             # drop timings, replace them with the memory peak
             self._set_memory_value(mem_peak)
 
