@@ -327,7 +327,7 @@ class MemoryUsage:
 
         if not mem_peak:
             raise RuntimeError("failed to get the memory peak usage")
-        return self.mem_peak
+        return mem_peak
 
 class WorkerProcessTask(WorkerTask):
     def compute(self):
