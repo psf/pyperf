@@ -306,10 +306,12 @@ class WorkerTask:
 class MemoryUsage:
     def __init__(self):
         self.mem_thread = None
+        self.get_peak_profile_usage = None
 
     def start(self):
         if MS_WINDOWS:
             from pyperf._win_memory import get_peak_pagefile_usage
+            self.get_peak_profile_usage = get_peak_pagefile_usage
         elif MAC_OS:
             from pyperf._psutil_memory import PeakMemoryUsageThread
             self.mem_thread = PeakMemoryUsageThread()
@@ -321,7 +323,7 @@ class MemoryUsage:
 
     def get_memory_peak(self):
         if MS_WINDOWS:
-            mem_peak = get_peak_pagefile_usage()
+            mem_peak = self.get_peak_pagefile_usage()
         else:
             self.mem_thread.stop()
             mem_peak = self.mem_thread.peak_usage
