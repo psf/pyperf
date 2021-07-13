@@ -302,6 +302,7 @@ class WorkerTask:
             self.warmups = None
             self.values = (value,)
 
+
 class MemoryUsage:
     def __init__(self):
         self.mem_thread = None
@@ -329,13 +330,14 @@ class MemoryUsage:
             raise RuntimeError("failed to get the memory peak usage")
         return mem_peak
 
+
 class WorkerProcessTask(WorkerTask):
     def compute(self):
         args = self.args
 
         if args.track_memory:
-           mem_usage = MemoryUsage()
-           mem_usage.start()
+            mem_usage = MemoryUsage()
+            mem_usage.start()
 
         if args.tracemalloc:
             import tracemalloc
