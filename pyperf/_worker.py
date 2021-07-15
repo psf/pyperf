@@ -323,7 +323,7 @@ class MemoryUsage:
 
     def get_memory_peak(self):
         if MS_WINDOWS:
-            mem_peak = self.get_peak_pagefile_usage()
+            mem_peak = self.get_peak_profile_usage()
         else:
             self.mem_thread.stop()
             mem_peak = self.mem_thread.peak_usage
