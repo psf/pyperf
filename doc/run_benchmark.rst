@@ -134,7 +134,7 @@ See also the :ref:`check command <check_cmd>`.
 .. _stable_bench:
 
 How to get reproducible benchmark results
-==========================================
+=========================================
 
 Getting stable and reliable benchmark results requires to tune the system and to
 analyze manually results to adjust :ref:`benchmark parameters <loops>`. The
