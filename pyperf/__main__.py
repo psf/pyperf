@@ -110,6 +110,9 @@ def create_parser():
                           '(default: 0%%)')
     cmd.add_argument('--table', action="store_true",
                      help='Render a table')
+    cmd.add_argument("--table-format", type=str, default="rest",
+                     choices=["rest", "md"],
+                     help="Format of table rendering")
     input_filenames(cmd)
 
     # stats

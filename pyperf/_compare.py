@@ -149,7 +149,7 @@ class CompareResults(list):
         return '<CompareResult %r>' % (list(self),)
 
 
-class Table:
+class ReSTTable:
     def __init__(self, headers, rows):
         self.headers = headers
         self.rows = rows
@@ -181,6 +181,36 @@ class Table:
             write_line(self._render_line('-'))
 
 
+class MarkDownTable:
+    def __init__(self, headers, rows):
+        self.headers = headers
+        self.rows = rows
+        self.widths = [len(header) for header in self.headers]
+        for row in self.rows:
+            for column, cell in enumerate(row):
+                self.widths[column] = max(self.widths[column], len(cell))
+
+    def _render_line(self, char='-'):
+        parts = ['']
+        for width in self.widths:
+            parts.append(char * (width + 2))
+        parts.append('')
+        return '|'.join(parts)
+
+    def _render_row(self, row):
+        parts = ['']
+        for width, cell in zip(self.widths, row):
+            parts.append(" %s " % cell.ljust(width))
+        parts.append('')
+        return '|'.join(parts)
+
+    def render(self, write_line):
+        write_line(self._render_row(self.headers))
+        write_line(self._render_line('-'))
+        for row in self.rows:
+            write_line(self._render_row(row))
+
+
 class CompareError(Exception):
     pass
 
@@ -190,6 +220,7 @@ class CompareSuites:
         self.benchmarks = benchmarks
 
         self.table = args.table
+        self.table_format = args.table_format
         self.min_speed = args.min_speed
         self.group_by_speed = args.group_by_speed
         self.verbose = args.verbose
@@ -281,7 +312,10 @@ class CompareSuites:
             rows.append(row)
 
         if rows:
-            table = Table(headers, rows)
+            if self.table_format == 'rest':
+                table = ReSTTable(headers, rows)
+            else:
+                table = MarkDownTable(headers, rows)
             table.render(print)
 
         if not_significant:
