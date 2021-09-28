@@ -167,7 +167,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         expected = textwrap.dedent('''
             | Benchmark | ref      | changed                |
-            |-----------|----------|------------------------|
+            |-----------|:--------:|:----------------------:|
             | telco     | 1.00 sec | 2.00 sec: 2.00x slower |
         ''').strip()
 

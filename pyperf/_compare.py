@@ -192,8 +192,11 @@ class MarkDownTable:
 
     def _render_line(self, char='-'):
         parts = ['']
-        for width in self.widths:
-            parts.append(char * (width + 2))
+        for idx, width in enumerate(self.widths):
+            if idx == 0:
+                parts.append(char * (width + 2))
+            else:
+                parts.append(f':{char * width}:')
         parts.append('')
         return '|'.join(parts)
 
