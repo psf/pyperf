@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 2.3.0 (2021-xx-xx)
+Version 2.3.0 (2021-09-28)
 --------------------------
 
 * pyperf ref:`compare_to command <compare_to_cmd>` now supports the
