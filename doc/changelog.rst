@@ -4,8 +4,9 @@ Changelog
 Version 2.3.0 (2021-xx-xx)
 --------------------------
 
-* pyperf now supports the ``--table-format`` option which can
-  designate the table format between reST and markdown.
+* pyperf ref:`compare_to command <compare_to_cmd>` now supports the
+  ``--table-format`` option which can designate the table format
+  between reST and markdown.
 
 Version 2.2.0 (2021-03-24)
 --------------------------
