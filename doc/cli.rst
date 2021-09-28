@@ -92,6 +92,7 @@ Compare benchmark suites, use the first file as the reference::
         [-G/--group-by-speed]
         [--min-speed=MIN_SPEED]
         [--table]
+        [--table-format=rest|md]
         [-b NAME/--benchmark NAME]
         reference.json changed.json [changed2.json ...]
 
@@ -101,11 +102,15 @@ Options:
 * ``--min-speed``: Absolute minimum of speed in percent to consider that a
   benchmark is significant (default: 0%)
 * ``--table``: Render a table.
+* ``--table-format``: Table rendering format.
 * ``--benchmark NAME`` only displays the benchmark called ``NAME``. The option
   can be specified multiple times.
 
 .. versionchanged:: 1.2
    The ``--benchmark`` option can now be specified multiple times.
+
+.. versionchnaged:: 2.3
+   The ``--table-format`` option now can designate format between reST and markdown.
 
 pyperf determines whether two samples differ significantly using a `Student's
 two-sample, two-tailed t-test
