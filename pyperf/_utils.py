@@ -403,3 +403,29 @@ def geometric_mean(data):
     if not data:
         raise ValueError("empty data")
     return _geometric_mean(data)
+
+
+def _count_pairs_less_than(list1, list2):
+    # counts sum(x < y for x in list1 for y in list2)
+    # list1 and list2 should be sorted
+    i = 0
+    count = 0
+    for x in list2:
+        while i < len(list1) and list1[i] < x:
+            i += 1
+        # x is bigger than all of list1[:i]
+        count += i
+    return count
+
+
+def percentage_less_than(list1, list2):
+    # measures mean(x < y for x in list1 for y in list2)
+    list1 = sorted(list1)
+    list2 = sorted(list2)
+    list1_less = _count_pairs_less_than(list1, list2)
+    list2_less = _count_pairs_less_than(list2, list1)
+    product = len(list1) * len(list2)
+    if product == 0:
+        raise ValueError("Can't compute percentages of empty samples")
+    ties = product - list1_less - list2_less
+    return (list1_less + ties / 2) / product
