@@ -202,9 +202,11 @@ def python_implementation():
 
 
 def python_has_jit():
-    if python_implementation() == 'pypy':
+    implementation_name = python_implementation()
+    if implementation_name == 'pypy':
         return sys.pypy_translation_info["translation.jit"]
-
+    elif implementation_name == 'graalpython':
+        return True
     return False
 
 
