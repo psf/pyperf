@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
 import pyperf
-import time
 
 
 async def func():
