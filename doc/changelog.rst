@@ -1,11 +1,13 @@
 Changelog
 =========
 
-Version 2.3.1
--------------
+Version 2.3.1 (2022-02-03)
+--------------------------
 
 * Add a ``Runner.bench_async_func()`` to benchmark an asyncio coroutine.
   Patch by Inada Naoki.
+* pyperf now recognizes graalpython as the JIT-based implementation.
+  Patch by Tim Felgentreff.
 
 Version 2.3.0 (2021-09-28)
 --------------------------
