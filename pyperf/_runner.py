@@ -534,7 +534,15 @@ class Runner:
                     return dt
 
             import asyncio
-            dt = asyncio.run(main())
+            try:
+                dt = asyncio.run(main())
+            except AttributeError:  # Python 3.6 doesn't have asyncio.run
+                loop = asyncio.new_event_loop()
+                try:
+                    dt = loop.run_until_complete(main())
+                finally:
+                    loop.close()
+
             return dt
 
         task = WorkerProcessTask(self, name, task_func, metadata)
