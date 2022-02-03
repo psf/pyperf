@@ -534,13 +534,15 @@ class Runner:
                     return dt
 
             import asyncio
-            try:
+            if hasattr(asyncio, 'run'):  # Python 3.7+
                 dt = asyncio.run(main())
-            except AttributeError:  # Python 3.6 doesn't have asyncio.run
+            else:  # Python 3.6
                 loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
                 try:
                     dt = loop.run_until_complete(main())
                 finally:
+                    asyncio.set_event_loop(None)
                     loop.close()
 
             return dt
