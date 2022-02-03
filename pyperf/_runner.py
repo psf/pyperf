@@ -496,6 +496,61 @@ class Runner:
         task.inner_loops = inner_loops
         return self._main(task)
 
+    def bench_async_func(self, name, func, *args, **kwargs):
+        """Benchmark await func(*args)"""
+
+        inner_loops = kwargs.pop('inner_loops', None)
+        metadata = kwargs.pop('metadata', None)
+        self._no_keyword_argument(kwargs)
+
+        if not self._check_worker_task():
+            return None
+
+        if args:
+            func = functools.partial(func, *args)
+
+        def task_func(task, loops):
+            if loops != 1:
+                async def main():
+                    # use fast local variables
+                    local_timer = time.perf_counter
+                    local_func = func
+                    range_it = range(loops)
+
+                    t0 = local_timer()
+                    for _ in range_it:
+                        await local_func()
+                    dt = local_timer() - t0
+                    return dt
+            else:
+                async def main():
+                    # use fast local variables
+                    local_timer = time.perf_counter
+                    local_func = func
+
+                    t0 = local_timer()
+                    await local_func()
+                    dt = local_timer() - t0
+                    return dt
+
+            import asyncio
+            if hasattr(asyncio, 'run'):  # Python 3.7+
+                dt = asyncio.run(main())
+            else:  # Python 3.6
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    dt = loop.run_until_complete(main())
+                finally:
+                    asyncio.set_event_loop(None)
+                    loop.close()
+
+            return dt
+
+        task = WorkerProcessTask(self, name, task_func, metadata)
+        task.inner_loops = inner_loops
+        return self._main(task)
+
     def timeit(self, name, stmt=None, setup="pass", teardown="pass",
                inner_loops=None, duplicate=None, metadata=None, globals=None):
 

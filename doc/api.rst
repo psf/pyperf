@@ -508,6 +508,7 @@ Runner class
    Methods to run benchmarks:
 
    * :meth:`bench_func`
+   * :meth:`bench_async_func`
    * :meth:`timeit`
    * :meth:`bench_command`
    * :meth:`bench_time_func`
@@ -537,6 +538,21 @@ Runner class
       Return a :class:`Benchmark` instance.
 
       See the :ref:`bench_func() example <bench_func_example>`.
+
+   .. method:: bench_async_func(name, func, \*args, inner_loops=None, metadata=None)
+
+      Benchmark the function ``await func(*args)`` in asyncio event loop.
+
+      *name* is the benchmark name, it must be unique in the same script.
+
+      The *inner_loops* parameter is used to normalize timing per loop
+      iteration.
+
+      To call ``func()`` with keyword arguments, use ``functools.partial``.
+
+      Return a :class:`Benchmark` instance.
+
+      See the :ref:`bench_async_func() example <bench_async_func_example>`.
 
    .. method:: timeit(name, stmt=None, setup="pass", teardown="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
 
