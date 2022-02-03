@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.3.1
+-------------
+
+* Add a ``Runner.bench_async_func()`` to benchmark an asyncio coroutine.
+  Patch by Inada Naoki.
+
 Version 2.3.0 (2021-09-28)
 --------------------------
 
