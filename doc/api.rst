@@ -552,6 +552,10 @@ Runner class
 
       Return a :class:`Benchmark` instance.
 
+      .. note::
+         If the ``func()`` leaves any tasks, it affects to next iteration.
+         So you should care about task leak for reliable benchmark.
+
       See the :ref:`bench_async_func() example <bench_async_func_example>`.
 
    .. method:: timeit(name, stmt=None, setup="pass", teardown="pass", inner_loops=None, duplicate=None, metadata=None, globals=None)
