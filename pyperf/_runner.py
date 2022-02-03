@@ -510,23 +510,31 @@ class Runner:
             func = functools.partial(func, *args)
 
         def task_func(task, loops):
-            import asyncio
-            # use fast local variables
-            local_timer = time.perf_counter
-            local_func = func
-            loop = asyncio.get_event_loop()
             if loops != 1:
-                range_it = range(loops)
+                async def main():
+                    # use fast local variables
+                    local_timer = time.perf_counter
+                    local_func = func
+                    range_it = range(loops)
 
-                t0 = local_timer()
-                for _ in range_it:
-                    loop.run_until_complete(local_func())
-                dt = local_timer() - t0
+                    t0 = local_timer()
+                    for _ in range_it:
+                        await local_func()
+                    dt = local_timer() - t0
+                    return dt
             else:
-                t0 = local_timer()
-                loop.run_until_complete(local_func())
-                dt = local_timer() - t0
+                async def main():
+                    # use fast local variables
+                    local_timer = time.perf_counter
+                    local_func = func
 
+                    t0 = local_timer()
+                    await local_func()
+                    dt = local_timer() - t0
+                    return dt
+
+            import asyncio
+            dt = asyncio.run(main())
             return dt
 
         task = WorkerProcessTask(self, name, task_func, metadata)
