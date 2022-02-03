@@ -496,6 +496,43 @@ class Runner:
         task.inner_loops = inner_loops
         return self._main(task)
 
+    def bench_async_func(self, name, func, *args, **kwargs):
+        """Benchmark await func(*args)"""
+
+        inner_loops = kwargs.pop('inner_loops', None)
+        metadata = kwargs.pop('metadata', None)
+        self._no_keyword_argument(kwargs)
+
+        if not self._check_worker_task():
+            return None
+
+        if args:
+            func = functools.partial(func, *args)
+
+        def task_func(task, loops):
+            import asyncio
+            # use fast local variables
+            local_timer = time.perf_counter
+            local_func = func
+            loop = asyncio.get_event_loop()
+            if loops != 1:
+                range_it = range(loops)
+
+                t0 = local_timer()
+                for _ in range_it:
+                    loop.run_until_complete(local_func())
+                dt = local_timer() - t0
+            else:
+                t0 = local_timer()
+                loop.run_until_complete(local_func())
+                dt = local_timer() - t0
+
+            return dt
+
+        task = WorkerProcessTask(self, name, task_func, metadata)
+        task.inner_loops = inner_loops
+        return self._main(task)
+
     def timeit(self, name, stmt=None, setup="pass", teardown="pass",
                inner_loops=None, duplicate=None, metadata=None, globals=None):
 

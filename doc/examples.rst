@@ -16,6 +16,16 @@ measure the time elapsed when sleeping 1 ms:
 ``time.sleep()`` is used to simulate a real workload taking at least 1 ms.
 
 
+.. _bench_async_func_example:
+
+bench_async_func() method
+-------------------------
+
+.. literalinclude:: examples/bench_async_func.py
+
+``asyncio.sleep()`` is used to simulate a real workload taking at least 1 ms.
+
+
 .. _timeit_example:
 
 timeit() method
