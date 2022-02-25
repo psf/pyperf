@@ -104,9 +104,6 @@ class Runner:
         # Set used to check that benchmark names are unique
         self._bench_names = set()
 
-        # result of argparser.parse_args()
-        self.args = None
-
         # callback used to prepare command line arguments to spawn a worker
         # child process. The callback is called with prepare(runner.args, cmd).
         # args must be modified in-place.
@@ -221,6 +218,9 @@ class Runner:
                             help='option used with --compare-to to name '
                                  'PYTHON as CHANGED_NAME '
                                  'and REF_PYTHON as REF_NAME in results')
+        parser.add_argument("--track-energy",
+                            dest="track_energy", action="store_true", default=False,
+                            help="Measure energy instead of wall clock time.")
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -229,6 +229,9 @@ class Runner:
                             help='Track memory usage using a thread')
 
         self.argparser = parser
+
+        # result of argparser.parse_args()
+        self.args = self.parse_args()
 
     def _multiline_output(self):
         return self.args.verbose or multiline_output(self.args)
