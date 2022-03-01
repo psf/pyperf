@@ -219,7 +219,7 @@ class Runner:
                                  'PYTHON as CHANGED_NAME '
                                  'and REF_PYTHON as REF_NAME in results')
         parser.add_argument("--track-energy",
-                            dest="track_energy", action="store_true", default=False,
+                            action="store_true", default=False,
                             help="Measure energy instead of wall clock time.")
 
         memory = parser.add_mutually_exclusive_group()
@@ -231,7 +231,7 @@ class Runner:
         self.argparser = parser
 
         # result of argparser.parse_args()
-        self.args = self.parse_args()
+        self.args = None
 
     def _multiline_output(self):
         return self.args.verbose or multiline_output(self.args)
@@ -494,6 +494,7 @@ class Runner:
                 dt = local_timer() - t0
 
             return dt
+              
 
         task = WorkerProcessTask(self, name, task_func, metadata)
         task.inner_loops = inner_loops

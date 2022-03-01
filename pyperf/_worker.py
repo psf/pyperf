@@ -15,6 +15,10 @@ MAX_LOOPS = 2 ** 32
 MAX_WARMUP_VALUES = 300
 WARMUP_SAMPLE_SIZE = 20
 
+# To invoke C in the context of --track-energy.
+import ctypes
+import pathlib
+
 
 class WorkerTask:
     def __init__(self, runner, name, task_func, func_metadata):
@@ -63,9 +67,22 @@ class WorkerTask:
         while True:
             if index > nvalue:
                 break
-
-            raw_value = self.task_func(self, self.loops)
+            
+            if self.args.track_energy:
+              print("Moment of truth begins . . .")
+              libname = pathlib.Path().absolute() / "libreaden.so"
+              c_lib = ctypes.CDLL(libname)
+              print("Lib found and parsed!")
+              e_0 = c_lib.readen(ctypes.c_char_p("energy.txt".encode('utf-8')))
+              print("First energy reading retrieved:")
+              print(e_0)
+              self.task_func(self, self.loops)
+              e_1 = c_lib.readen(ctypes.c_char_p("energy.txt".encode('utf-8'))) + 1
+              raw_value = float(e_1) - float(e_0)
+            else:
+              raw_value = self.task_func(self, self.loops)
             raw_value = float(raw_value)
+            print("Moment of truth ended!")
             value = raw_value / (self.loops * inner_loops)
 
             if not value and not calibrate_loops:
