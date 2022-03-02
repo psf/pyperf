@@ -67,7 +67,6 @@ class WorkerTask:
         while True:
             if index > nvalue:
                 break
-            
             if self.args.track_energy:
               print("Moment of truth begins . . .")
               libname = pathlib.Path().absolute() / "libreaden.so"
@@ -82,7 +81,6 @@ class WorkerTask:
             else:
               raw_value = self.task_func(self, self.loops)
             raw_value = float(raw_value)
-            print("Moment of truth ended!")
             value = raw_value / (self.loops * inner_loops)
 
             if not value and not calibrate_loops:

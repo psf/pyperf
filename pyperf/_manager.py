@@ -65,6 +65,8 @@ class Manager(object):
             cmd.append('--tracemalloc')
         if args.track_memory:
             cmd.append('--track-memory')
+        if args.track_energy:
+            cmd.append('--track-energy')
 
         if self.runner._add_cmdline_args:
             self.runner._add_cmdline_args(cmd, args)

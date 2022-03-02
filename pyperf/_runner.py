@@ -219,7 +219,7 @@ class Runner:
                                  'PYTHON as CHANGED_NAME '
                                  'and REF_PYTHON as REF_NAME in results')
         parser.add_argument("--track-energy",
-                            action="store_true", default=False,
+                            action="store_true",
                             help="Measure energy instead of wall clock time.")
 
         memory = parser.add_mutually_exclusive_group()
@@ -423,7 +423,7 @@ class Runner:
         if task.name in self._bench_names:
             raise ValueError("duplicated benchmark name: %r" % task.name)
         self._bench_names.add(task.name)
-
+        
         args = self.parse_args()
         try:
             if args.worker:
