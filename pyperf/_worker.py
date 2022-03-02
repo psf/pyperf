@@ -17,7 +17,7 @@ WARMUP_SAMPLE_SIZE = 20
 
 # To invoke C in the context of --track-energy.
 import ctypes
-import pathlib
+import os
 
 
 class WorkerTask:
@@ -68,15 +68,13 @@ class WorkerTask:
             if index > nvalue:
                 break
             if self.args.track_energy:
-              print("Moment of truth begins . . .")
-              libname = pathlib.Path().absolute() / "libreaden.so"
-              c_lib = ctypes.CDLL(libname)
-              print("Lib found and parsed!")
-              e_0 = c_lib.readen(ctypes.c_char_p("energy.txt".encode('utf-8')))
-              print("First energy reading retrieved:")
-              print(e_0)
+              # Use environment variable for where the readings are stored.
+              c_lib = ctypes.CDLL("/home/cappadokes/code/pyperf/pyperf/libreaden.so")
+              # Energy value is the difference between recorded energies
+              # before and after executing task function.
+              e_0 = c_lib.readen("/home/cappadokes/code/pyperf/pyperf/energy.txt".encode('utf-8'))
               self.task_func(self, self.loops)
-              e_1 = c_lib.readen(ctypes.c_char_p("energy.txt".encode('utf-8'))) + 1
+              e_1 = c_lib.readen("/home/cappadokes/code/pyperf/pyperf/energy.txt".encode('utf-8')) + 1
               raw_value = float(e_1) - float(e_0)
             else:
               raw_value = self.task_func(self, self.loops)
