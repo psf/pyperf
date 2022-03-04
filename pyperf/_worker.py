@@ -69,16 +69,15 @@ class WorkerTask:
                 break
             if self.args.track_energy:
               # Use environment variable for where the readings are stored.
-              c_lib = ctypes.CDLL("/home/cappadokes/code/pyperf/pyperf/libreaden.so")
+              c_lib = ctypes.CDLL(os.environ.get("READEN"))
               # Energy value is the difference between recorded energies
               # before and after executing task function.
-              e_0 = c_lib.readen("/home/cappadokes/code/pyperf/pyperf/energy.txt".encode('utf-8'))
+              e_0 = ctypes.c_ulonglong(c_lib.readen(os.environ.get("ENFILE").encode('utf-8')))
               self.task_func(self, self.loops)
-              e_1 = c_lib.readen("/home/cappadokes/code/pyperf/pyperf/energy.txt".encode('utf-8')) + 1
-              raw_value = float(e_1) - float(e_0)
+              e_1 = ctypes.c_ulonglong(c_lib.readen(os.environ.get("ENFILE").encode('utf-8')))
+              raw_value = float(e_1.value) - float(e_0.value)
             else:
-              raw_value = self.task_func(self, self.loops)
-            raw_value = float(raw_value)
+              raw_value = float(self.task_func(self, self.loops))
             value = raw_value / (self.loops * inner_loops)
 
             if not value and not calibrate_loops:
