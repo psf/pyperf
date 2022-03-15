@@ -278,7 +278,7 @@ class TestTimeit(unittest.TestCase):
         expected = textwrap.dedent(r'''
             ref: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us).*
             changed: \. [0-9.]+ (?:ms|us) \+- [0-9.]+ (?:ms|us).*
-            Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
+            Mean \+- std dev: \[ref\] .* -> \[changed\] .*: (?:[0-9]+\.[0-9][0-9][0-9]x (?:faster|slower)|no change)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
@@ -304,7 +304,7 @@ class TestTimeit(unittest.TestCase):
             Compare
             =======
 
-            Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)
+            Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9][0-9]x (?:faster|slower)|no change)
         ''').strip()
         expected = re.compile(expected, flags=re.DOTALL)
         self.assertRegex(cmd.stdout, expected)
@@ -314,7 +314,7 @@ class TestTimeit(unittest.TestCase):
         args += COMPARE_BENCH
         cmd = tests.get_output(args)
 
-        expected = r'(?:Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
+        expected = r'(?:Mean \+- std dev: .* -> .*: (?:[0-9]+\.[0-9][0-9][0-9]x (?:faster|slower)|no change)|Not significant!)'
         self.assertRegex(cmd.stdout, expected)
 
     def test_duplicate(self):
