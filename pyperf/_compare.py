@@ -39,9 +39,9 @@ def format_normalized_mean(norm_mean):
     if norm_mean == 1.0:
         return "no change"
     elif norm_mean < 1.0:
-        return "%.2fx faster" % (1.0 / norm_mean)
+        return "%.3fx faster" % (1.0 / norm_mean)
     else:
-        return "%.2fx slower" % norm_mean
+        return "%.3fx slower" % norm_mean
 
 
 def format_geometric_mean(norm_means):
