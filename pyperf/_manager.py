@@ -25,6 +25,27 @@ class Manager(object):
     def __init__(self, runner, python=None):
         self.runner = runner
         self.args = runner.args
+
+        # If --track-energy is used, check for and
+        # inherit LIBREADEN, ENFILE without explicit
+        # input from the user.
+        if self.args.track_energy:
+            if self.args.inherit_environ is None:
+                self.args.inherit_environ = []
+            from os import environ as curr_env
+            try:
+                lib = curr_env['LIBREADEN']
+                f = curr_env['ENFILE']
+                # pyperf could have been invoked by pyperformance
+                # and then the inheritance stuff would already be
+                # addressed.
+                if 'LIBREADEN' not in self.args.inherit_environ:
+                    self.args.inherit_environ.append('LIBREADEN')
+                if 'ENFILE' not in self.args.inherit_environ:
+                    self.args.inherit_environ.append('ENFILE')
+            except:
+                raise OSError('--track-energy needs LIBREADEN, ENFILE to function')
+
         if python:
             self.python = python
         else:
