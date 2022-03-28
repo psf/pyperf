@@ -36,6 +36,7 @@ class Manager(object):
             try:
                 lib = curr_env['LIBREADEN']
                 f = curr_env['ENFILE']
+                ld = curr_env['LD_LIBRARY_PATH']
                 # pyperf could have been invoked by pyperformance
                 # and then the inheritance stuff would already be
                 # addressed.
@@ -43,8 +44,10 @@ class Manager(object):
                     self.args.inherit_environ.append('LIBREADEN')
                 if 'ENFILE' not in self.args.inherit_environ:
                     self.args.inherit_environ.append('ENFILE')
+                if 'LD_LIBRARY_PATH' not in self.args.inherit_environ:
+                    self.args.inherit_environ.append('LD_LIBRARY_PATH')
             except:
-                raise OSError('--track-energy needs LIBREADEN, ENFILE to function')
+                raise OSError('--track-energy needs LIBREADEN, ENFILE, LD_LIBRARY_PATH to function')
 
         if python:
             self.python = python
