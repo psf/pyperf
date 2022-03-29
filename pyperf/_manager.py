@@ -27,27 +27,27 @@ class Manager(object):
         self.args = runner.args
 
         # If --track-energy is used, check for and
-        # inherit LIBREADEN, ENFILE without explicit
+        # inherit READEN, ENFILE without explicit
         # input from the user.
         if self.args.track_energy:
             if self.args.inherit_environ is None:
                 self.args.inherit_environ = []
             from os import environ as curr_env
             try:
-                lib = curr_env['LIBREADEN']
+                lib = curr_env['READEN']
                 f = curr_env['ENFILE']
                 ld = curr_env['LD_LIBRARY_PATH']
                 # pyperf could have been invoked by pyperformance
                 # and then the inheritance stuff would already be
                 # addressed.
-                if 'LIBREADEN' not in self.args.inherit_environ:
-                    self.args.inherit_environ.append('LIBREADEN')
+                if 'READEN' not in self.args.inherit_environ:
+                    self.args.inherit_environ.append('READEN')
                 if 'ENFILE' not in self.args.inherit_environ:
                     self.args.inherit_environ.append('ENFILE')
                 if 'LD_LIBRARY_PATH' not in self.args.inherit_environ:
                     self.args.inherit_environ.append('LD_LIBRARY_PATH')
             except:
-                raise OSError('--track-energy needs LIBREADEN, ENFILE, LD_LIBRARY_PATH to function')
+                raise OSError('--track-energy needs READEN, ENFILE, LD_LIBRARY_PATH to function')
 
         if python:
             self.python = python

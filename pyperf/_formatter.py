@@ -40,13 +40,13 @@ def format_filesizes(sizes):
 
 
 def format_energy(en):
-    if size < 10 * 1000:
-        return '%.0f uJ' % size
+    if en < 10 * 1000:
+        return '%.0f uJ' % en
 
-    if size > 10 * 1000 * 1000:
-        return '%.1f J' % (size / (1000.0 * 1000.0))
+    if en > 10 * 1000 * 1000:
+        return '%.1f J' % (en / (1000.0 * 1000.0))
 
-    return '%.1f mJ' % (size / 1000.0)
+    return '%.1f mJ' % (en / 1000.0)
 
 
 def format_energies(ens):
