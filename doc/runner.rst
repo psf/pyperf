@@ -100,6 +100,7 @@ Option::
     --no-locale
     --track-memory
     --tracemalloc
+    --track-energy
 
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``pyperf`` module
@@ -150,6 +151,12 @@ Option::
   ``/proc/self/smaps``. On Windows, get ``PeakPagefileUsage`` of
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process.
+* ``--track-energy``: get the energy consumption. Implementation based on the `Linux
+  power capping framework <https://www.kernel.org/doc/html/latest/power/powercap/powercap.html>`_.
+  User needs to export 2 environment variables prior to invoking ``pyperf`` with this option; ``ENFILE``,
+  the absolute path to a file containing the energy consumed by the component of interest (e.g. DRAM), and
+  ``READEN``, the absolute path to a shared C library containing a function ``readen`` for probing the aforementioned
+  file. A sample implementation is provided in ``pyperf/read_file.c``.
 
 
 Internal usage only
