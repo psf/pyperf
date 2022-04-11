@@ -39,6 +39,8 @@ class WorkerTask:
         if 'unit' not in self.metadata:
             # Set default unit to seconds
             self.metadata['unit'] = 'second'
+        if args.track_energy:
+            self.metadata['unit'] = 'joule'
 
         self.inner_loops = None
         self.warmups = None

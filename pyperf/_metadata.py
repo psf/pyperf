@@ -1,6 +1,6 @@
 import collections
 
-from pyperf._formatter import (format_number, format_seconds, format_filesize,
+from pyperf._formatter import (format_number, format_energy, format_seconds, format_filesize,
                                UNIT_FORMATTERS)
 
 
@@ -62,6 +62,7 @@ DATETIME = _MetadataInfo(format_noop, (str,), None, None)
 LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, 'integer')
 WARMUPS = _MetadataInfo(format_number, (int,), is_positive, 'integer')
 SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second')
+JOULES = _MetadataInfo(format_energy, NUMBER_TYPES, is_positive, 'joule')
 
 # Registry of metadata keys
 METADATA = {
