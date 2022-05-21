@@ -77,7 +77,7 @@ Check stability of a benchmark
 ------------------------------
 
 Download the `system_load.py
-<https://github.com/vstinner/misc/raw/master/bin/system_load.py>`_: script to
+<https://github.com/vstinner/misc/raw/main/bin/system_load.py>`_: script to
 simulate busy system, run enough dummy workers until the system load is higher
 than the minimum specified on the command line.
 
