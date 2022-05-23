@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.4.1
+-------------
+
+* Reject --tracemalloc in ``pyperf command``.
+  Patch by Yichen Yan
+
 Version 2.4.0 (2022-07-20)
 --------------------------
 

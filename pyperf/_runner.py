@@ -324,6 +324,8 @@ class Runner:
             self._only_in_worker("--worker-task")
 
         if args.tracemalloc:
+            if args.action == 'command':
+                raise CLIError('--tracemalloc cannot be used with pyperf command')
             try:
                 import tracemalloc   # noqa
             except ImportError as exc:
