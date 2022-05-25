@@ -42,6 +42,12 @@ def is_positive(value):
     return (value >= 0)
 
 
+def is_tags(value):
+    if not isinstance(value, list):
+        return False
+    return all(isinstance(x, str) and x not in ('all', '') for x in value)
+
+
 def parse_load_avg(value):
     if isinstance(value, NUMBER_TYPES):
         return value
@@ -62,6 +68,7 @@ DATETIME = _MetadataInfo(format_noop, (str,), None, None)
 LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, 'integer')
 WARMUPS = _MetadataInfo(format_number, (int,), is_positive, 'integer')
 SECONDS = _MetadataInfo(format_seconds, NUMBER_TYPES, is_positive, 'second')
+TAGS = _MetadataInfo(format_generic, (list,), is_tags, 'tag')
 
 # Registry of metadata keys
 METADATA = {
@@ -84,6 +91,7 @@ METADATA = {
     'recalibrate_loops': LOOPS,
     'calibrate_warmups': WARMUPS,
     'recalibrate_warmups': WARMUPS,
+    'tags': TAGS,
 }
 
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)

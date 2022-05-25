@@ -49,6 +49,10 @@ def format_geometric_mean(norm_means):
     return format_normalized_mean(geo_mean)
 
 
+def get_tags_for_result(result):
+    return result.ref.benchmark.get_metadata().get("tags", [])
+
+
 class CompareResult(object):
     def __init__(self, ref, changed, min_speed=None):
         # CompareData object
@@ -242,6 +246,12 @@ class CompareSuites:
 
         self.show_name = (len(grouped_by_name) > 1)
 
+        self.tags = set()
+        for results in self.all_results:
+            for result in results:
+                self.tags.update(get_tags_for_result(result))
+        self.tags = sorted(list(self.tags))
+
     def compare_benchmarks(self, name, benchmarks):
         min_speed = self.min_speed
 
@@ -258,11 +268,11 @@ class CompareSuites:
         return results
 
     @staticmethod
-    def display_not_signiticant(not_significant):
+    def display_not_significant(not_significant):
         print("Benchmark hidden because not significant (%s): %s"
               % (len(not_significant), ', '.join(not_significant)))
 
-    def compare_suites_table(self):
+    def compare_suites_table(self, all_results):
         if self.group_by_speed:
             def sort_key(results):
                 result = results[0]
@@ -280,7 +290,7 @@ class CompareSuites:
 
         rows = []
         not_significant = []
-        for results in self.all_results:
+        for results in all_results:
             row = [results.name]
 
             ref_bench = results[0].ref.benchmark
@@ -324,14 +334,14 @@ class CompareSuites:
         if not_significant:
             if rows:
                 print()
-            self.display_not_signiticant(not_significant)
+            self.display_not_significant(not_significant)
 
-    def compare_suites_by_speed(self):
+    def compare_suites_by_speed(self, all_results):
         not_significant = []
         slower = []
         faster = []
         same = []
-        for results in self.all_results:
+        for results in all_results:
             result = results[0]
             if not result.significant:
                 not_significant.append(results.name)
@@ -372,14 +382,14 @@ class CompareSuites:
         if not self.quiet and not_significant:
             if empty_line:
                 print()
-            self.display_not_signiticant(not_significant)
+            self.display_not_significant(not_significant)
 
-    def compare_suites_list(self):
+    def compare_suites_list(self, all_results):
         not_significant = []
         empty_line = False
         last_index = (len(self.all_results) - 1)
 
-        for index, results in enumerate(self.all_results):
+        for index, results in enumerate(all_results):
             significant = any(result.significant for result in results)
             lines = []
             for result in results:
@@ -406,7 +416,7 @@ class CompareSuites:
         if not self.quiet and not_significant:
             if empty_line:
                 print()
-            self.display_not_signiticant(not_significant)
+            self.display_not_significant(not_significant)
 
     def list_ignored(self):
         for suite, hidden in self.benchmarks.group_by_name_ignored():
@@ -416,9 +426,7 @@ class CompareSuites:
             print("Ignored benchmarks (%s) of %s: %s"
                   % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
 
-    def compare_geometric_mean(self):
-        all_results = self.all_results
-
+    def compare_geometric_mean(self, all_results):
         # use a list since two filenames can be identical,
         # even if results are different
         all_norm_means = []
@@ -443,16 +451,29 @@ class CompareSuites:
             geo_mean = format_geometric_mean(all_norm_means[0][1])
             print(f'Geometric mean: {geo_mean}')
 
-    def compare(self):
+    def compare_suites(self, results):
         if self.table:
-            self.compare_suites_table()
+            self.compare_suites_table(results)
         else:
             if self.group_by_speed:
-                self.compare_suites_by_speed()
+                self.compare_suites_by_speed(results)
             else:
-                self.compare_suites_list()
+                self.compare_suites_list(results)
 
-            self.compare_geometric_mean()
+            self.compare_geometric_mean(results)
+
+    def compare(self):
+        if len(self.tags):
+            for tag in self.tags:
+                display_title(f"Benchmarks with tag '{tag}':")
+                all_results = [
+                    results for results in self.all_results
+                    if tag is None or tag in get_tags_for_result(results[0])
+                ]
+                self.compare_suites(all_results)
+                print()
+            display_title(f"All benchmarks:")
+        self.compare_suites(self.all_results)
 
         if not self.quiet:
             self.list_ignored()

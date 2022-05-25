@@ -330,6 +330,83 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         """
         self.check_command(expected, 'compare_to', '--table', "--group-by-speed", py36, py37)
 
+    def test_compare_to_cli_tags(self):
+        py36 = os.path.join(TESTDIR, 'mult_list_py36_tags.json')
+        py37 = os.path.join(TESTDIR, 'mult_list_py37_tags.json')
+
+        # 2 files
+        expected = """
+            Benchmarks with tag 'bar':
+            ==========================
+
+            [1,2]*1000: Mean +- std dev: [mult_list_py36_tags] 3.70 us +- 0.05 us -> [mult_list_py37_tags] 5.28 us +- 0.09 us: 1.42x slower
+            [1,2,3]*1000: Mean +- std dev: [mult_list_py36_tags] 4.61 us +- 0.13 us -> [mult_list_py37_tags] 6.05 us +- 0.11 us: 1.31x slower
+
+            Geometric mean: 1.37x slower
+
+            Benchmarks with tag 'foo':
+            ==========================
+
+            [1]*1000: Mean +- std dev: [mult_list_py36_tags] 2.13 us +- 0.06 us -> [mult_list_py37_tags] 2.09 us +- 0.04 us: 1.02x faster
+            [1,2]*1000: Mean +- std dev: [mult_list_py36_tags] 3.70 us +- 0.05 us -> [mult_list_py37_tags] 5.28 us +- 0.09 us: 1.42x slower
+
+            Geometric mean: 1.18x slower
+
+            All benchmarks:
+            ===============
+
+            [1]*1000: Mean +- std dev: [mult_list_py36_tags] 2.13 us +- 0.06 us -> [mult_list_py37_tags] 2.09 us +- 0.04 us: 1.02x faster
+            [1,2]*1000: Mean +- std dev: [mult_list_py36_tags] 3.70 us +- 0.05 us -> [mult_list_py37_tags] 5.28 us +- 0.09 us: 1.42x slower
+            [1,2,3]*1000: Mean +- std dev: [mult_list_py36_tags] 4.61 us +- 0.13 us -> [mult_list_py37_tags] 6.05 us +- 0.11 us: 1.31x slower
+
+            Geometric mean: 1.22x slower
+        """
+        self.check_command(expected, 'compare_to', py36, py37)
+
+        expected = """
+            Benchmarks with tag 'bar':
+            ==========================
+
+            +----------------+---------------------+-----------------------+
+            | Benchmark      | mult_list_py36_tags | mult_list_py37_tags   |
+            +================+=====================+=======================+
+            | [1,2]*1000     | 3.70 us             | 5.28 us: 1.42x slower |
+            +----------------+---------------------+-----------------------+
+            | [1,2,3]*1000   | 4.61 us             | 6.05 us: 1.31x slower |
+            +----------------+---------------------+-----------------------+
+            | Geometric mean | (ref)               | 1.37x slower          |
+            +----------------+---------------------+-----------------------+
+
+            Benchmarks with tag 'foo':
+            ==========================
+
+            +----------------+---------------------+-----------------------+
+            | Benchmark      | mult_list_py36_tags | mult_list_py37_tags   |
+            +================+=====================+=======================+
+            | [1]*1000       | 2.13 us             | 2.09 us: 1.02x faster |
+            +----------------+---------------------+-----------------------+
+            | [1,2]*1000     | 3.70 us             | 5.28 us: 1.42x slower |
+            +----------------+---------------------+-----------------------+
+            | Geometric mean | (ref)               | 1.18x slower          |
+            +----------------+---------------------+-----------------------+
+
+            All benchmarks:
+            ===============
+
+            +----------------+---------------------+-----------------------+
+            | Benchmark      | mult_list_py36_tags | mult_list_py37_tags   |
+            +================+=====================+=======================+
+            | [1]*1000       | 2.13 us             | 2.09 us: 1.02x faster |
+            +----------------+---------------------+-----------------------+
+            | [1,2]*1000     | 3.70 us             | 5.28 us: 1.42x slower |
+            +----------------+---------------------+-----------------------+
+            | [1,2,3]*1000   | 4.61 us             | 6.05 us: 1.31x slower |
+            +----------------+---------------------+-----------------------+
+            | Geometric mean | (ref)               | 1.22x slower          |
+            +----------------+---------------------+-----------------------+
+        """
+        self.check_command(expected, 'compare_to', '--table', py36, py37)
+
     def test_compare_to_cli_min_speed(self):
         py36 = os.path.join(TESTDIR, 'mult_list_py36.json')
         py37 = os.path.join(TESTDIR, 'mult_list_py37.json')
