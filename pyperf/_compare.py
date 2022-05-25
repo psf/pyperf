@@ -1,5 +1,5 @@
 from pyperf._cli import display_title, format_result_value
-from pyperf._utils import is_significant, geometric_mean
+from pyperf._utils import is_significant, geometric_mean, percentage_less_than
 
 
 def is_significant_benchs(bench1, bench2):
@@ -18,6 +18,14 @@ def is_significant_benchs(bench1, bench2):
         # FIXME: fix the root bug, don't work around it
         return (True, None)
 
+def win_percentage_text(bench1, bench2):
+    values1 = bench1.get_values()
+    values2 = bench2.get_values()
+    p = percentage_less_than(values1, values2)
+    if p >= 0.5:
+        return " (slower on {:.0%} of runs)".format(p)
+    else:
+        return " (faster on {:.0%} of runs)".format(1 - p)
 
 class CompareData:
     def __init__(self, name, benchmark):
@@ -100,7 +108,8 @@ class CompareResult(object):
             self._compute_norm_mean()
         return self._norm_mean
 
-    def oneliner(self, verbose=True, show_name=True, check_significant=True):
+    def oneliner(self, verbose=True, show_name=True,
+                 check_significant=True, win_percentage=False):
         if check_significant and not self.significant:
             return "Not significant!"
 
@@ -119,10 +128,14 @@ class CompareResult(object):
             text = "%s -> %s" % (ref_text, chg_text)
 
         text = "%s: %s" % (text, format_normalized_mean(self.norm_mean))
+        if win_percentage:
+            text += win_percentage_text(self.ref.benchmark,
+                                        self.changed.benchmark)
         return text
 
-    def format(self, verbose=True, show_name=True):
-        text = self.oneliner(show_name=show_name, check_significant=False)
+    def format(self, verbose=True, show_name=True, win_percentage=False):
+        text = self.oneliner(show_name=show_name, check_significant=False,
+                             win_percentage=win_percentage)
         lines = [text]
 
         # significant?
@@ -228,6 +241,7 @@ class CompareSuites:
         self.group_by_speed = args.group_by_speed
         self.verbose = args.verbose
         self.quiet = args.quiet
+        self.win_percentage = args.win_percentage
 
         grouped_by_name = self.benchmarks.group_by_name()
         if not grouped_by_name:
@@ -297,6 +311,8 @@ class CompareSuites:
                         text = "%s: %s" % (bench.format_value(bench.mean()), text)
                 else:
                     text = "not significant"
+                if self.win_percentage:
+                    text += win_percentage_text(ref_bench, bench)
                 significants.append(significant)
                 all_norm_means[index].append(result.norm_mean)
                 row.append(text)
@@ -365,7 +381,8 @@ class CompareSuites:
                 print()
             print("%s (%s):" % (title, len(results)))
             for name, result in results:
-                text = result.oneliner(verbose=False)
+                text = result.oneliner(verbose=False,
+                                       win_percentage=self.win_percentage)
                 print("- %s: %s" % (name, text))
             empty_line = True
 
@@ -383,7 +400,8 @@ class CompareSuites:
             significant = any(result.significant for result in results)
             lines = []
             for result in results:
-                lines.extend(result.format(self.verbose))
+                lines.extend(result.format(self.verbose,
+                                           win_percentage=self.win_percentage))
 
             if not(significant or self.verbose):
                 not_significant.append(results.name)

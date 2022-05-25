@@ -74,6 +74,86 @@ class TestStatistics(unittest.TestCase):
         self.assertAlmostEqual(utils.geometric_mean([54, 24, 36]), 36.0)
 
 
+class TestWinPercentage(unittest.TestCase):
+
+    def test_count_pairs_less_than(self):
+        cplt = utils._count_pairs_less_than
+        self.assertEqual(cplt([], []), 0)
+        self.assertEqual(cplt([], [1]), 0)
+        self.assertEqual(cplt([], []), 0)
+        self.assertEqual(cplt([], [1]), 0)
+        self.assertEqual(cplt([], [1, 2]), 0)
+        self.assertEqual(cplt([1], []), 0)
+        self.assertEqual(cplt([1, 2], []), 0)
+        self.assertEqual(cplt([1], [1]), 0)
+        self.assertEqual(cplt([0], [1]), 1)
+        self.assertEqual(cplt([0, 1], [0, 1]), 1)
+        self.assertEqual(cplt([0, 1, 2, 3], [1, 1, 2, 2]), 6)
+
+        self.assertEqual(cplt([0, 1, 1, 2], [1, 2, 3, 4]), 12)
+        self.assertEqual(cplt([1, 2, 3, 4], [0, 1, 1, 2]), 1)
+        self.assertEqual(cplt([3, 4, 4, 5], [1, 2, 3, 4]), 1)
+        self.assertEqual(cplt([1, 2, 3, 4], [3, 4, 4, 5]), 12)
+
+        from random import random, randrange
+        from collections import Counter
+
+        for _ in range(1000):
+            # short test cases to brute-force
+            common = [random() for i in range(randrange(3))]
+            list1 = [random() for i in range(randrange(10))] + common
+            list2 = [random() for i in range(randrange(10))] + common
+            list1.sort()
+            list2.sort()
+
+            expected = sum(x < y for x in list1 for y in list2)
+            self.assertEqual(cplt(list1, list2), expected)
+
+        for _ in range(1000):
+            # longer test cases just to make sure things add up.
+            common = [random() for i in range(randrange(10))]
+            list1 = [random() for i in range(randrange(200))] + common
+            list2 = [random() for i in range(randrange(200))] + common
+            list1.sort()
+            list2.sort()
+
+            c1 = Counter(list1)
+            c2 = Counter(list2)
+            ties1 = sum(c2[t] * count1 for t, count1 in c1.items())
+            ties2 = sum(c1[t] * count2 for t, count2 in c2.items())
+            self.assertEqual(ties1, ties2)
+            self.assertGreaterEqual(ties1, len(common))
+
+            list1_less = cplt(list1, list2)
+            list2_less = cplt(list2, list1)
+            self.assertEqual(ties1 + list1_less + list2_less,
+                             len(list1) * len(list2))
+
+    def test_count_percentage_less_than(self):
+        plt = utils.percentage_less_than
+        self.assertRaises(ValueError, plt, [], [])
+        self.assertRaises(ValueError, plt, [1], [])
+        self.assertRaises(ValueError, plt, [], [1])
+        self.assertEqual(plt([0], [1]), 1.0)
+        self.assertEqual(plt([1], [0]), 0.0)
+        self.assertEqual(plt([0, 2], [1]), 0.5)
+        self.assertEqual(plt([0, 0], [1]), 1.0)
+        self.assertEqual(plt([0, 0], [1, 1]), 1.0)
+        self.assertEqual(plt([1, 2, 3], [2, 3]), 4.0/6)
+        self.assertEqual(plt([0, 0], [0, 1]), 0.75)
+        self.assertEqual(plt([0, 1], [0, 1]), 0.5)
+
+        from random import random, randrange
+        for _ in range(1000):
+            # no ties => count in the obvious way.
+            distinct = list({random() for i in range(randrange(20, 30))})
+            j = randrange(1, len(distinct))
+            left, right = distinct[:j], distinct[j:]
+            expected = (sum(x < y for x in left for y in right)
+                        / (len(left) * len(right)))
+            self.assertEqual(plt(left, right), expected)
+
+
 class TestUtils(unittest.TestCase):
     def test_parse_iso8601(self):
         # Default format using 'T' separator

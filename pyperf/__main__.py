@@ -108,6 +108,8 @@ def create_parser():
                      help='Absolute minimum of speed in percent to '
                           'consider that a benchmark is significant '
                           '(default: 0%%)')
+    cmd.add_argument('--win_percentage', action="store_true",
+                     help="Show how often a benchmark is faster.")
     cmd.add_argument('--table', action="store_true",
                      help='Render a table')
     cmd.add_argument("--table-format", type=str, default="rest",
