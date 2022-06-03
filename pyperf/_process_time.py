@@ -17,6 +17,7 @@ per process and writes it into stdout as a second line.
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 try:
@@ -35,10 +36,30 @@ def get_max_rss():
         return 0
 
 
-def bench_process(loops, args, kw):
+def merge_profile_stats_files(src, dst):
+    """
+    Merging one existing pstats file into another.
+    """
+    import pstats
+    if os.path.isfile(dst):
+        src_stats = pstats.Stats(src)
+        dst_stats = pstats.Stats(dst)
+        dst_stats.add(src_stats)
+        dst_stats.dump_stats(dst)
+        os.unlink(src)
+    else:
+        os.rename(src, dst)
+
+
+def bench_process(loops, args, kw, profile_filename=None):
     max_rss = 0
     range_it = range(loops)
     start_time = time.perf_counter()
+
+    if profile_filename:
+        with tempfile.NamedTemporaryFile(suffix=".profile", delete=False) as fh:
+            temp_profile_filename = fh.name
+        args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
     for loop in range_it:
         start_rss = get_max_rss()
@@ -51,12 +72,19 @@ def bench_process(loops, args, kw):
         if exitcode != 0:
             print("Command failed with exit code %s" % exitcode,
                   file=sys.stderr)
+            if profile_filename:
+                os.unlink(temp_profile_filename)
             sys.exit(exitcode)
 
         proc = None
 
         rss = get_max_rss() - start_rss
         max_rss = max(max_rss, rss)
+
+        if profile_filename:
+            merge_profile_stats_files(
+                temp_profile_filename, profile_filename
+            )
 
     dt = time.perf_counter() - start_time
     return (dt, max_rss)
@@ -70,9 +98,17 @@ def main():
         sys.exit(1)
 
     if len(sys.argv) < 3:
-        print("Usage: %s %s loops program [arg1 arg2 ...]"
+        print("Usage: %s %s loops program [arg1 arg2 ...] [--profile profile]"
               % (os.path.basename(sys.executable), __file__))
         sys.exit(1)
+
+    profile_idx = sys.argv.index("--profile")
+    if profile_idx != -1:
+        profile_filename = sys.argv[profile_idx + 1]
+        del sys.argv[profile_idx]
+        del sys.argv[profile_idx]
+    else:
+        profile_filename = None
 
     loops = int(sys.argv[1])
     args = sys.argv[2:]
@@ -88,7 +124,7 @@ def main():
         kw['stdout'] = devnull
     kw['stderr'] = subprocess.STDOUT
 
-    dt, max_rss = bench_process(loops, args, kw)
+    dt, max_rss = bench_process(loops, args, kw, profile_filename)
 
     if devnull is not None:
         devnull.close()

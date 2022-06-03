@@ -405,3 +405,24 @@ def geometric_mean(data):
     if not data:
         raise ValueError("empty data")
     return _geometric_mean(data)
+
+
+def merge_profile_stats(profiler, dst):
+    """
+    Save pstats by merging into an existing file.
+    """
+    import pstats
+    if os.path.isfile(dst):
+        try:
+            src_stats = pstats.Stats(profiler)
+        except TypeError:
+            # If no actual stats were collected, a TypeError is raised
+            # and we don't need to merge anything into the output.
+            return
+
+        dst_stats = pstats.Stats(dst)
+        dst_stats.add(src_stats)
+        dst_stats.dump_stats(dst)
+    else:
+        profiler.dump_stats(dst)
+
