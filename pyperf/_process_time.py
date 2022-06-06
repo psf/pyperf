@@ -102,8 +102,8 @@ def main():
               % (os.path.basename(sys.executable), __file__))
         sys.exit(1)
 
-    profile_idx = sys.argv.index("--profile")
-    if profile_idx != -1:
+    if "--profile" in sys.argv:
+        profile_idx = sys.argv.index("--profile")
         profile_filename = sys.argv[profile_idx + 1]
         del sys.argv[profile_idx]
         del sys.argv[profile_idx]
