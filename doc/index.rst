@@ -36,8 +36,9 @@ Features of the ``pyperf`` module:
   collect them.
 * ``--track-memory`` and ``--tracemalloc`` :ref:`options <runner_cli>` to track
   the memory usage of a benchmark.
+* ``--track-energy`` :ref:`option <runner_cli>` to track the energy consumption of a benchmark. Based on the `Linux power capping framework <https://www.kernel.org/doc/html/latest/power/powercap/powercap.html>`_, but simple to extend to other energy APIs.
 * :ref:`JSON format <json>` to store benchmark results.
-* Support multiple units: seconds, bytes and integer.
+* Support multiple units: seconds, bytes, integer and Joules.
 
 Quick Links:
 

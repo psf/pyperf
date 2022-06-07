@@ -15,6 +15,10 @@ MAX_LOOPS = 2 ** 32
 MAX_WARMUP_VALUES = 300
 WARMUP_SAMPLE_SIZE = 20
 
+# To invoke C in the context of --track-energy.
+import ctypes
+import os
+
 
 class WorkerTask:
     def __init__(self, runner, name, task_func, func_metadata):
@@ -35,6 +39,8 @@ class WorkerTask:
         if 'unit' not in self.metadata:
             # Set default unit to seconds
             self.metadata['unit'] = 'second'
+        if args.track_energy:
+            self.metadata['unit'] = 'joule'
 
         self.inner_loops = None
         self.warmups = None
@@ -63,9 +69,17 @@ class WorkerTask:
         while True:
             if index > nvalue:
                 break
-
-            raw_value = self.task_func(self, self.loops)
-            raw_value = float(raw_value)
+            if self.args.track_energy:
+              # Use environment variable for where the readings are stored.
+              c_lib = ctypes.CDLL(os.environ.get("READEN"))
+              # Energy value is the difference between recorded energies
+              # before and after executing task function.
+              e_0 = ctypes.c_ulonglong(c_lib.readen(os.environ.get("ENFILE").encode('utf-8')))
+              self.task_func(self, self.loops)
+              e_1 = ctypes.c_ulonglong(c_lib.readen(os.environ.get("ENFILE").encode('utf-8')))
+              raw_value = float(e_1.value) - float(e_0.value)
+            else:
+              raw_value = float(self.task_func(self, self.loops))
             value = raw_value / (self.loops * inner_loops)
 
             if not value and not calibrate_loops:

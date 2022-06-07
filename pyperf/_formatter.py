@@ -39,6 +39,20 @@ def format_filesizes(sizes):
     return tuple(format_filesize(size) for size in sizes)
 
 
+def format_energy(en):
+    if en < 10 * 1000:
+        return '%.0f uJ' % en
+
+    if en > 10 * 1000 * 1000:
+        return '%.1f J' % (en / (1000.0 * 1000.0))
+
+    return '%.1f mJ' % (en / 1000.0)
+
+
+def format_energies(ens):
+    return tuple(format_energy(en) for en in ens)
+
+
 def format_seconds(seconds):
     # Coarse but human readable duration
     if not seconds:
@@ -108,6 +122,7 @@ UNIT_FORMATTERS = {
     'second': format_timedeltas,
     'byte': format_filesizes,
     'integer': format_integers,
+    'joule': format_energies,
 }
 
 
