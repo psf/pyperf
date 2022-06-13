@@ -1,5 +1,6 @@
 import collections
 import os.path
+import pstats
 import sys
 import tempfile
 import textwrap
@@ -73,7 +74,7 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(bench.get_nrun(), 1)
 
         return Result(runner, bench, stdout)
-
+    
     def test_worker(self):
         result = self.exec_runner('--worker', '-l1', '-w1')
         self.assertRegex(result.stdout,
@@ -82,6 +83,47 @@ class TestRunner(unittest.TestCase):
     def test_debug_single_value(self):
         result = self.exec_runner('--debug-single-value', '--worker')
         self.assertEqual(result.bench.get_nvalue(), 1)
+
+    def test_profile_time_func(self):
+        with tempfile.NamedTemporaryFile('wb+') as tmp:
+            name = tmp.name
+        args = ['--worker', '-l1', '-w1', '--profile', name]
+        runner = self.create_runner(args)
+
+        def time_func(loops):
+            return 1.0
+
+        runner.bench_time_func('bench1', time_func)
+
+        try:
+            s = pstats.Stats(name)
+            assert len(s.get_stats_profile().func_profiles)
+        finally:
+            if os.path.isfile(name):
+                os.unlink(name)
+
+    def test_profile_func(self):
+        with tempfile.NamedTemporaryFile('wb+') as tmp:
+            name = tmp.name
+        args = ['--worker', '-l1', '-w1', '--profile', name]
+        runner = self.create_runner(args)
+
+        def external():
+            return [1] * 1000
+
+        def func():
+            external()
+            return 1.0
+
+        runner.bench_func('bench1', func)
+
+        try:
+            import pstats
+            s = pstats.Stats(name)
+            assert len(s.get_stats_profile().func_profiles)
+        finally:
+            if os.path.isfile(name):
+                os.unlink(name)
 
     def test_pipe(self):
         rpipe, wpipe = create_pipe()
