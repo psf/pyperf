@@ -207,6 +207,8 @@ def python_has_jit():
         return sys.pypy_translation_info["translation.jit"]
     elif implementation_name == 'graalpython':
         return True
+    elif hasattr(sys, "pyston_version_info") or "pyston_lite" in sys.modules:
+        return True
     return False
 
 
