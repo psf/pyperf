@@ -57,8 +57,7 @@ def bench_process(loops, args, kw, profile_filename=None):
     start_time = time.perf_counter()
 
     if profile_filename:
-        with tempfile.NamedTemporaryFile(suffix=".profile", delete=False) as fh:
-            temp_profile_filename = fh.name
+        temp_profile_filename = tempfile.mktemp()
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
     for loop in range_it:
