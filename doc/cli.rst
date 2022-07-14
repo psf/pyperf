@@ -491,6 +491,7 @@ Usage
         [--duplicate DUPLICATE]
         [-s SETUP]
         [--teardown TEARDOWN]
+        [--profile PROFILE]
         stmt [stmt ...]
 
 Options:
@@ -512,6 +513,7 @@ Options:
 * ``--duplicate=DUPLICATE``: Duplicate statements (``stmt`` statements, not
   ``SETUP``) to reduce the overhead of the outer loop and multiply
   inner loops by DUPLICATE (see ``--inner-loops`` option).
+* ``--profile=PROFILE``: Run the benchmark inside the cProfile profiler and output to the given file. This is a convenient way to profile a specific benchmark, but it will make the actual benchmark timings much less accurate.
 
 .. note::
    timeit ``-n`` (number) and ``-r`` (repeat) options become ``-l`` (loops) and

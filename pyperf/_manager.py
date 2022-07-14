@@ -66,6 +66,9 @@ class Manager(object):
         if args.track_memory:
             cmd.append('--track-memory')
 
+        if args.profile:
+            cmd.extend(['--profile', args.profile])
+
         if self.runner._add_cmdline_args:
             self.runner._add_cmdline_args(cmd, args)
 

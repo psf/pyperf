@@ -12,7 +12,8 @@ from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
                                set_highest_priority)
 from pyperf._formatter import format_timedelta
 from pyperf._utils import (MS_WINDOWS, MAC_OS, abs_executable,
-                           WritePipe, get_python_names)
+                           WritePipe, get_python_names,
+                           merge_profile_stats)
 from pyperf._worker import WorkerProcessTask
 
 
@@ -46,6 +47,19 @@ def parse_python_names(names):
     if len(parts) != 2:
         raise ValueError("syntax is REF_NAME:CHANGED_NAME")
     return parts
+
+
+def profiling_wrapper(func):
+    """
+    Wrap a function to collect profiling.
+    """
+    import cProfile
+    profiler = cProfile.Profile()
+
+    def profiling_func(*args):
+        return profiler.runcall(func, *args)
+
+    return profiler, profiling_func
 
 
 class CLIError(Exception):
@@ -221,6 +235,11 @@ class Runner:
                             help='option used with --compare-to to name '
                                  'PYTHON as CHANGED_NAME '
                                  'and REF_PYTHON as REF_NAME in results')
+
+        parser.add_argument('--profile',
+                            type=str,
+                            help='Collect profile data using cProfile '
+                                 'and output to the given file.')
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -454,12 +473,21 @@ class Runner:
         if not self._check_worker_task():
             return None
 
+        if self.args.profile:
+            profiler, time_func = profiling_wrapper(time_func)
+
         def task_func(task, loops):
             return time_func(loops, *args)
 
         task = WorkerProcessTask(self, name, task_func, metadata)
+
         task.inner_loops = inner_loops
-        return self._main(task)
+        result = self._main(task)
+
+        if self.args.profile:
+            merge_profile_stats(profiler, self.args.profile)
+
+        return result
 
     def bench_func(self, name, func, *args, **kwargs):
         """"Benchmark func(*args)."""
@@ -473,6 +501,9 @@ class Runner:
 
         if args:
             func = functools.partial(func, *args)
+
+        if self.args.profile:
+            profiler, func = profiling_wrapper(func)
 
         def task_func(task, loops):
             # use fast local variables
@@ -494,7 +525,12 @@ class Runner:
 
         task = WorkerProcessTask(self, name, task_func, metadata)
         task.inner_loops = inner_loops
-        return self._main(task)
+        result = self._main(task)
+
+        if self.args.profile:
+            merge_profile_stats(profiler, self.args.profile)
+
+        return result
 
     def bench_async_func(self, name, func, *args, **kwargs):
         """Benchmark await func(*args)"""
@@ -508,6 +544,9 @@ class Runner:
 
         if args:
             func = functools.partial(func, *args)
+
+        if self.args.profile:
+            profiler, func = profiling_wrapper(func)
 
         def task_func(task, loops):
             if loops != 1:
@@ -549,7 +588,12 @@ class Runner:
 
         task = WorkerProcessTask(self, name, task_func, metadata)
         task.inner_loops = inner_loops
-        return self._main(task)
+        result = self._main(task)
+
+        if self.args.profile:
+            merge_profile_stats(profiler, self.args.profile)
+
+        return result
 
     def timeit(self, name, stmt=None, setup="pass", teardown="pass",
                inner_loops=None, duplicate=None, metadata=None, globals=None):
@@ -670,6 +714,9 @@ class Runner:
     def bench_command(self, name, command):
         if not self._check_worker_task():
             return None
+
+        if self.args.profile:
+            command.extend(["--profile", self.args.profile])
 
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._command import BenchCommandTask
