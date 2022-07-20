@@ -1,12 +1,20 @@
 Changelog
 =========
 
+Version 2.4.0 (2022-07-20)
+--------------------------
+
+* pyperf now recognizes `pyston <https://github.com/pyston/pyston>`_ as the JIT-based implementation.
+  Patch by Kevin Modzelewski.
+* :ref:`Runner CLI <runner_cli>` now supports ``--profile=PROFILE`` option for profiling benchmarks.
+  Patch by Michael Droettboom.
+
 Version 2.3.1 (2022-02-03)
 --------------------------
 
 * Add a ``Runner.bench_async_func()`` to benchmark an asyncio coroutine.
   Patch by Inada Naoki.
-* pyperf now recognizes graalpython as the JIT-based implementation.
+* pyperf now recognizes `graalpython <https://github.com/oracle/graalpython>`_ as the JIT-based implementation.
   Patch by Tim Felgentreff.
 
 Version 2.3.0 (2021-09-28)

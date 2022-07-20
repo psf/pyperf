@@ -1,6 +1,6 @@
 from time import perf_counter
 
-VERSION = (2, 3, 1)
+VERSION = (2, 4, 0)
 __version__ = '.'.join(map(str, VERSION))
 
 # Export pyperf.perf_counter for backward compatibility with pyperf 1.7
