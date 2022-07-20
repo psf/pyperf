@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 2.4.0 (2022-07-xx)
+Version 2.4.0 (2022-07-20)
 --------------------------
 
 * pyperf now recognizes `pyston <https://github.com/pyston/pyston>`_ as the JIT-based implementation.
