@@ -24,7 +24,7 @@
 #  - git commit -a -m "post-release"
 #  - git push or send the PR to the repository
 
-VERSION = '2.4.0'
+VERSION = '2.4.1'
 
 DESCRIPTION = 'Python module to run and analyze benchmarks'
 CLASSIFIERS = [
