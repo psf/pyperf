@@ -865,6 +865,12 @@ class PowerSupply(Operation):
     def read_power_supply(self):
         # Python implementation of the on_ac_power shell script
         for name in os.listdir(self.path):
+            # Ignore "USB" and "Battery" types
+            filename = os.path.join(self.path, name, 'type')
+            sys_type = self.read_first_line(filename)
+            if sys_type.strip() != "Mains":
+                continue
+
             filename = os.path.join(self.path, name, 'online')
             if not os.path.exists(filename):
                 continue
