@@ -21,9 +21,3 @@ __all__.append('Runner')
 
 import sys
 
-# Reset the stats collection if running a --enable-pystats build
-try:
-    sys._stats_off()
-    sys._stats_clear()
-except AttributeError:
-    pass
