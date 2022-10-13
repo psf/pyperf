@@ -18,6 +18,3 @@ __all__.extend(('Run', 'Benchmark', 'BenchmarkSuite', 'add_runs'))
 
 from pyperf._runner import Runner   # noqa
 __all__.append('Runner')
-
-import sys
-
