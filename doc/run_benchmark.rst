@@ -201,4 +201,4 @@ Due to the overhead of collecting the statistics, it is unlikely the timing resu
 The `Tools/scripts/summarize_stats.py <https://github.com/python/cpython/blob/main/Tools/scripts/summarize_stats.py>`_ script can be used to summarize the statistics in a human-readable form.
 
 Statistics are not cleared between runs.
-If you need to delete statistics from a previous run, remove the files in `/tmp/py_stats` (Unix) or `C:\temp\py_stats` (Windows).
+If you need to delete statistics from a previous run, remove the files in ``/tmp/py_stats`` (Unix) or ``C:\temp\py_stats`` (Windows).
