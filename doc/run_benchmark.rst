@@ -198,7 +198,7 @@ If running benchmarks on a CPython built with the ``--enable-pystats`` flag, pyp
 
 Due to the overhead of collecting the statistics, it is unlikely the timing results will be useful.
 
-The `Tools/scripts/summarize_stats.py <https://github.com/python/cpython/blob/main/Tools/scripts/summarize_stats.py>`_ script to summarize the statistics in a human-readable form.
+The `Tools/scripts/summarize_stats.py <https://github.com/python/cpython/blob/main/Tools/scripts/summarize_stats.py>`_ script can be used to summarize the statistics in a human-readable form.
 
 Statistics are not cleared between runs.
 If you need to delete statistics from a previous run, remove the files in `/tmp/py_stats` (Unix) or `C:\temp\py_stats` (Windows).
