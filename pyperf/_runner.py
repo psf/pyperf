@@ -72,9 +72,10 @@ def stats_wrapper(func):
     if hasattr(sys, "_stats_on"):
         def stats_func(*args):
             sys._stats_on()
-            result = func(*args)
-            sys._stats_off()
-            return result
+            try:
+                return func(*args)
+            finally:
+                sys._stats_off()
         return stats_func
     else:
         return func
