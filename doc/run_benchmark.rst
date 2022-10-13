@@ -191,4 +191,14 @@ mentioned above. Running an arbitrary number of warmup values may also make
 the benchmark less reliable since two runs may use a different number of warmup
 values.
 
+Specializer statistics (`pystats`)
+==================================
 
+If running benchmarks on a CPython built with the ``--enable-pystats`` flag, pyperf will automatically collect statistics from about the bytecode specializer during the run of benchmark code.
+
+Due to the overhead of collecting the statistics, it is unlikely the timing results will be useful.
+
+The `Tools/scripts/summarize_stats.py <https://github.com/python/cpython/blob/main/Tools/scripts/summarize_stats.py>`_ script to summarize the statistics in a human-readable form.
+
+Statistics are not cleared between runs.
+If you need to delete statistics from a previous run, remove the files in `/tmp/py_stats` (Unix) or `C:\temp\py_stats` (Windows).
