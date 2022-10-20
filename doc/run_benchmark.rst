@@ -194,7 +194,7 @@ values.
 Specializer statistics (``pystats``)
 ==================================
 
-``pyperf`` has built-in support for `specializer statistics (``pystats``) <https://docs.python.org/dev/using/configure.html#cmdoption-enable-pystats>`__.
+``pyperf`` has built-in support for `specializer statistics (``pystats``) <https://docs.python.org/dev/using/configure.html#cmdoption-enable-pystats>`_.
 If running benchmarks on a CPython built with the ``--enable-pystats`` flag, pyperf will automatically collect ``pystats`` on the benchmark code by calling ``sys._stats_on`` immediately before the benchmark and calling ``sys._stats_off`` immediately after.
 
 Due to the overhead of collecting the statistics, the timing results will be meaningless.
