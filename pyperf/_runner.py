@@ -62,25 +62,6 @@ def profiling_wrapper(func):
     return profiler, profiling_func
 
 
-def stats_wrapper(func):
-    """
-    Wrap a function to turn on/off stats collection.
-
-    If this isn't an `--enable-pystats` build, the original function is returned
-    and has no overhead.
-    """
-    if hasattr(sys, "_stats_on"):
-        def stats_func(*args):
-            sys._stats_on()
-            try:
-                return func(*args)
-            finally:
-                sys._stats_off()
-        return stats_func
-    else:
-        return func
-
-
 class CLIError(Exception):
     pass
 
@@ -501,8 +482,6 @@ class Runner:
         if not self._check_worker_task():
             return None
 
-        time_func = stats_wrapper(time_func)
-
         if self.args.profile:
             profiler, time_func = profiling_wrapper(time_func)
 
@@ -528,8 +507,6 @@ class Runner:
 
         if not self._check_worker_task():
             return None
-
-        func = stats_wrapper(func)
 
         if args:
             func = functools.partial(func, *args)
@@ -573,8 +550,6 @@ class Runner:
 
         if not self._check_worker_task():
             return None
-
-        func = stats_wrapper(func)
 
         if args:
             func = functools.partial(func, *args)

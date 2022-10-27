@@ -56,6 +56,22 @@ class WorkerTask:
         else:
             value_name = 'Value'
 
+        task_func = self.task_func
+
+        # If we are on a pystats build, turn on stats collection around the
+        # actual work, but only if we aren't warming up or calibrating.
+        if hasattr(sys, "_stats_on") and not is_warmup and not calibrate_loops:
+            core_task_func = task_func
+
+            def stats_func(*args):
+                sys._stats_on()
+                try:
+                    return core_task_func(*args)
+                finally:
+                    sys._stats_off()
+
+            task_func = stats_func
+
         index = 1
         inner_loops = self.inner_loops
         if not inner_loops:
