@@ -118,7 +118,7 @@ def collect_python_metadata(metadata):
 
     # pystats enabled?
     if hasattr(sys, "_stats_clear"):
-        metadata['python_pystats'] = 'enabled'
+        metadata['pystats'] = 'enabled'
 
 
 def read_proc(path):
