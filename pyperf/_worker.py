@@ -80,7 +80,7 @@ class WorkerTask:
             if index > nvalue:
                 break
 
-            raw_value = self.task_func(self, self.loops)
+            raw_value = task_func(self, self.loops)
             raw_value = float(raw_value)
             value = raw_value / (self.loops * inner_loops)
 
