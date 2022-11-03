@@ -77,6 +77,13 @@ class Runner:
                  program_args=None, add_cmdline_args=None,
                  _argparser=None):
 
+        # Reset the stats collection if running a --enable-pystats build
+        try:
+            sys._stats_off()
+            sys._stats_clear()
+        except AttributeError:
+            pass
+
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad suprises
         cls = self.__class__

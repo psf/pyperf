@@ -116,6 +116,10 @@ def collect_python_metadata(metadata):
         if not gc.isenabled():
             metadata['python_gc'] = 'disabled'
 
+    # pystats enabled?
+    if hasattr(sys, "_stats_clear"):
+        metadata['pystats'] = 'enabled'
+
 
 def read_proc(path):
     path = proc_path(path)
