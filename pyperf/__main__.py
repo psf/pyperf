@@ -580,7 +580,7 @@ def cmd_hist(args):
                                      checks=checks):
             print(line)
 
-        if not(is_last or ignored):
+        if not (is_last or ignored):
             print()
 
     for suite, ignored in ignored:
@@ -691,7 +691,7 @@ def cmd_convert(args):
         for benchmark in suite:
             benchmark._remove_all_metadata()
 
-    compact = not(args.indent)
+    compact = not args.indent
     if args.output_filename:
         suite.dump(args.output_filename, compact=compact)
     else:

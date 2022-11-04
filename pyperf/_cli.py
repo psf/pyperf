@@ -255,7 +255,7 @@ def format_stats(bench, lines):
     else:
         text = "%s (average)" % total_loops
 
-    if not(isinstance(inner_loops, int) and inner_loops == 1):
+    if not (isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
             loops = format_number(loops, 'outer-loop')
         else:
@@ -324,7 +324,7 @@ def format_stats(bench, lines):
     iqr = q3 - q1
     outlier_min = (q1 - 1.5 * iqr)
     outlier_max = (q3 + 1.5 * iqr)
-    noutlier = sum(not(outlier_min <= value <= outlier_max)
+    noutlier = sum(not (outlier_min <= value <= outlier_max)
                    for value in values)
     bounds = bench.format_values((outlier_min, outlier_max))
     lines.append('Number of outlier (out of %s..%s): %s'

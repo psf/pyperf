@@ -74,6 +74,7 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(bench.get_nrun(), 1)
 
         return Result(runner, bench, stdout)
+
     def test_worker(self):
         result = self.exec_runner('--worker', '-l1', '-w1')
         self.assertRegex(result.stdout,

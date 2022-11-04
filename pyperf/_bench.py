@@ -93,7 +93,7 @@ class Run(object):
 
     def __init__(self, values, warmups=None,
                  metadata=None, collect_metadata=True):
-        if any(not(isinstance(value, NUMBER_TYPES) and value > 0)
+        if any(not (isinstance(value, NUMBER_TYPES) and value > 0)
                for value in values):
             raise ValueError("values must be a sequence of number > 0.0")
 
@@ -425,7 +425,7 @@ class Benchmark(object):
         return value
 
     def percentile(self, p):
-        if not(0 <= p <= 100):
+        if not (0 <= p <= 100):
             raise ValueError("p must be in the range [0; 100]")
         return percentile(self.get_values(), p / 100.0)
 

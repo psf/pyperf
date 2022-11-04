@@ -154,7 +154,6 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertEqual(stdout.rstrip(),
                          expected)
 
-
     def test_compare_to_md_table(self):
         ref_result = self.create_bench((1.0,),
                                        metadata={'name': 'telco'})
