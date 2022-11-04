@@ -371,7 +371,7 @@ def median_abs_dev(values):
 
 
 def percentile(values, p):
-    if not isinstance(p, float) or not(0.0 <= p <= 1.0):
+    if not isinstance(p, float) or not (0.0 <= p <= 1.0):
         raise ValueError("p must be a float in the range [0.0; 1.0]")
 
     values = sorted(values)
@@ -427,4 +427,3 @@ def merge_profile_stats(profiler, dst):
         dst_stats.dump_stats(dst)
     else:
         profiler.dump_stats(dst)
-

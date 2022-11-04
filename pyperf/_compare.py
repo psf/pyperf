@@ -395,7 +395,7 @@ class CompareSuites:
             for result in results:
                 lines.extend(result.format(self.verbose))
 
-            if not(significant or self.verbose):
+            if not (significant or self.verbose):
                 not_significant.append(results.name)
                 continue
 
@@ -472,7 +472,7 @@ class CompareSuites:
                 ]
                 self.compare_suites(all_results)
                 print()
-            display_title(f"All benchmarks:")
+            display_title("All benchmarks:")
         self.compare_suites(self.all_results)
 
         if not self.quiet:

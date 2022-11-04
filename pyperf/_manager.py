@@ -92,7 +92,7 @@ class Manager(object):
                     # bInheritHandles=True. For pass_handles, see
                     # http://bugs.python.org/issue19764
                     kw['close_fds'] = False
-                elif sys.version_info >= (3, 2):
+                else:
                     kw['pass_fds'] = [wpipe.fd]
 
                 proc = subprocess.Popen(cmd, env=env, **kw)

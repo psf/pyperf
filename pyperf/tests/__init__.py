@@ -15,10 +15,7 @@ from pyperf._utils import popen_communicate, popen_killer
 def _capture_stream(name):
     old_stream = getattr(sys, name)
     try:
-        if sys.version_info >= (3,):
-            stream = io.StringIO()
-        else:
-            stream = io.BytesIO()
+        stream = io.StringIO()
         setattr(sys, name, stream)
         yield stream
     finally:

@@ -133,7 +133,7 @@ class WorkerTask:
         iqr = q3 - q1
         outlier_max = (q3 + 1.5 * iqr)
         # only check maximum, not minimum
-        outlier = not(first_value <= outlier_max)
+        outlier = not (first_value <= outlier_max)
 
         mean1 = statistics.mean(sample1)
         mean2 = statistics.mean(sample2)
@@ -185,7 +185,7 @@ class WorkerTask:
 
         if outlier:
             return False
-        if not(-0.5 <= mean_diff <= 0.10):
+        if not (-0.5 <= mean_diff <= 0.10):
             return False
         if abs(mad_diff) > 0.10:
             return False
