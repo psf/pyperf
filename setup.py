@@ -13,7 +13,7 @@
 #
 # Release a new version:
 #
-#  - go to the Github release tab: https://github.com/psf/pyperf/releases
+#  - go to the GitHub release tab: https://github.com/psf/pyperf/releases
 #  - click "Draft a new release" and fill the contents
 #  - finally click the "Publish release" button! Done!
 #  - monitor the publish status: https://github.com/psf/pyperf/actions/workflows/publish.yml
@@ -39,7 +39,7 @@ CLASSIFIERS = [
 
 
 # put most of the code inside main() to be able to import setup.py in
-# test_tools.py, to ensure that VERSION is the same than
+# test_tools.py, to ensure that VERSION is the same as
 # pyperf.__version__.
 def main():
     from setuptools import setup
@@ -61,9 +61,6 @@ def main():
         'install_requires': [],
         # don't use environment markers in install_requires, but use weird
         # syntax of extras_require, to support setuptools 18
-        'extras_require': {
-            ":python_version < '3.4'": ["statistics"],
-        },
         'entry_points': {
             'console_scripts': ['pyperf=pyperf.__main__:main']
         }
