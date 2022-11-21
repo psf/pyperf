@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Unreleased
+Version 2.6.0 (2022-11-21)
 -------------
 
 * Inherit ``PYTHONPATH`` environment variable by default.
