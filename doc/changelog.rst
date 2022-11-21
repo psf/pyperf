@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Unreleased
+-------------
+
+* Inherit ``PYTHONPATH`` environment variable by default.
+  Patch by Theodore Ni.
+
 Version 2.5.0 (2022-11-04)
 -------------
 

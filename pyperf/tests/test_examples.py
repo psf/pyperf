@@ -27,7 +27,7 @@ class ExampleTests(unittest.TestCase):
         self.TESTED.add(script)
         script = os.path.join(EXAMPLES_DIR, script)
 
-        cmd = [sys.executable] + [script] + args + ["--inherit-env=PYTHONPATH"]
+        cmd = [sys.executable] + [script] + args
         proc = tests.get_output(cmd)
 
         self.assertRegex(proc.stdout,

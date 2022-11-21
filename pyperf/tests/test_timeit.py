@@ -237,8 +237,7 @@ class TestTimeit(unittest.TestCase):
 
             # Run benchmark to check if --python works
             args = ('--metadata',
-                    '--python', tmp_exe,
-                    '--inherit-env', 'PYTHONPATH')
+                    '--python', tmp_exe)
             args = PERF_TIMEIT + args + FAST_BENCH_ARGS
             cmd = tests.get_output(args, env=env)
         finally:
