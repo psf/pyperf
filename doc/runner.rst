@@ -118,9 +118,10 @@ Option::
   isolated CPUs are found. See :ref:`CPU pinning and CPU isolation <pin-cpu>`.
 * ``--inherit-environ=VARS``: ``VARS`` is a comma-separated list of environment
   variable names which are inherited by worker child processes. By default,
-  only the following variables are inherited: ``PATH``, ``HOME``, ``TEMP``,
-  ``COMSPEC``, ``SystemRoot`` and locale environment variables. See the
-  ``--no-locale`` below for locale environment variables.
+  only the following variables are inherited: ``PATH``, ``PYTHONPATH``,
+  ``HOME``, ``TEMP``, ``COMSPEC``, ``SystemRoot``, ``SystemDrive``, and locale
+  environment variables. See the ``--no-locale`` below for locale environment
+  variables.
 * ``--copy-env``: Inherit all environment variables.
 * ``--no-locale``: Don't inherit locale environment variables:
 
