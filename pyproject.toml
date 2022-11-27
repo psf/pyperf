@@ -56,4 +56,7 @@ version = {attr = "pyperf.__version__"}
 packages = ["pyperf", "pyperf.tests"]
 
 [project.optional-dependencies]
-dev = ["tox"]
+dev = [
+    'tox',
+    'importlib-metadata; python_version < "3.8"'
+]
