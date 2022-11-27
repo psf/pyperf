@@ -1,0 +1,59 @@
+# Prepare a release:
+#
+#  - git pull --rebase
+#  - update version in pyperf/__init__.py and doc/conf.py
+#  - set release date in doc/changelog.rst
+#  - git commit -a -m "prepare release x.y"
+#  - Remove untracked files/dirs: git clean -fdx
+#  - run tests: tox --parallel auto
+#  - git push or send the PR to the repository
+#  - check Github Action CI: https://github.com/psf/pyperf/actions/workflows/build.yml
+#
+# Release a new version:
+#
+#  - go to the GitHub release tab: https://github.com/psf/pyperf/releases
+#  - click "Draft a new release" and fill the contents
+#  - finally click the "Publish release" button! Done!
+#  - monitor the publish status: https://github.com/psf/pyperf/actions/workflows/publish.yml
+#
+# After the release:
+#
+#  - set version to n+1
+#  - git commit -a -m "post-release"
+#  - git push or send the PR to the repository
+
+[build-system]
+requires = ["setuptools >= 35.0.2", "setuptools_scm >= 2.0.0, <3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyperf"
+dynamic = ["version"]
+license = {text = "MIT license"}
+description = "Python module to run and analyze benchmarks"
+readme = "README.rst"
+urls = {Homepage = "https://github.com/psf/pyperf"}
+authors= [{name="Victor Stinner", email="vstinner@redhat.com"}]
+maintainers = [{name = "Dong-hee Na", email="donghee.na@python.org"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = ["psutil>=5.9.0"]
+
+[project.entry-points.console_scripts]
+pyperf = "pyperf.__main__:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "pyperf.__version__"}
+
+[tool.setuptools]
+packages = ["pyperf", "pyperf.tests"]
+
+[project.optional-dependencies]
+dev = ["tox"]
