@@ -29,7 +29,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyperf"
 dynamic = ["version"]
-license = {text = "MIT license"}
+license = {text = "MIT"}
 description = "Python module to run and analyze benchmarks"
 readme = "README.rst"
 urls = {Homepage = "https://github.com/psf/pyperf"}
@@ -44,9 +44,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
+requires-python = ">=3.7"
 dependencies = ["psutil>=5.9.0"]
 
-[project.entry-points.console_scripts]
+[project.optional-dependencies]
+dev = [
+    'tox',
+    'importlib-metadata; python_version < "3.8"'
+]
+
+[project.scripts]
 pyperf = "pyperf.__main__:main"
 
 [tool.setuptools.dynamic]
@@ -54,9 +61,3 @@ version = {attr = "pyperf.__version__"}
 
 [tool.setuptools]
 packages = ["pyperf", "pyperf.tests"]
-
-[project.optional-dependencies]
-dev = [
-    'tox',
-    'importlib-metadata; python_version < "3.8"'
-]
