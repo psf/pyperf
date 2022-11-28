@@ -109,7 +109,7 @@ Options:
 .. versionchanged:: 1.2
    The ``--benchmark`` option can now be specified multiple times.
 
-.. versionchnaged:: 2.3
+.. versionchanged:: 2.3
    The ``--table-format`` option now can designate format between reST and markdown.
 
 pyperf determines whether two samples differ significantly using a `Student's
