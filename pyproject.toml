@@ -33,8 +33,8 @@ license = {text = "MIT"}
 description = "Python module to run and analyze benchmarks"
 readme = "README.rst"
 urls = {Homepage = "https://github.com/psf/pyperf"}
-authors= [{name="Victor Stinner", email="vstinner@redhat.com"}]
-maintainers = [{name = "Dong-hee Na", email="donghee.na@python.org"}]
+authors= [{name = "Victor Stinner", email = "vstinner@redhat.com"}]
+maintainers = [{name = "Dong-hee Na", email = "donghee.na@python.org"}]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",

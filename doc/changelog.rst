@@ -2,13 +2,13 @@ Changelog
 =========
 
 Version 2.6.0 (2022-11-21)
--------------
+--------------------------
 
 * Inherit ``PYTHONPATH`` environment variable by default.
   Patch by Theodore Ni.
 
 Version 2.5.0 (2022-11-04)
--------------
+--------------------------
 
 * Support collecting specialization statistics from running benchmarks.
   Patch by Mike Droettboom.
@@ -17,7 +17,7 @@ Version 2.5.0 (2022-11-04)
   Patch by Michael Droettboom
 
 Version 2.4.1 (2022-08-07)
--------------
+--------------------------
 
 * Reject --tracemalloc in ``pyperf command``.
   Patch by Yichen Yan
