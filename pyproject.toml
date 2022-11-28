@@ -56,8 +56,8 @@ dev = [
 [project.scripts]
 pyperf = "pyperf.__main__:main"
 
-[tool.setuptools.dynamic]
-version = {attr = "pyperf.__version__"}
-
 [tool.setuptools]
 packages = ["pyperf", "pyperf.tests"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pyperf.__version__"}
