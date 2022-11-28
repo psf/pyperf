@@ -67,8 +67,13 @@ class MiscTests(unittest.TestCase):
         self.assertRaises(ValueError, parse_run_list, '1,')
 
     def test_setup_version(self):
-        import setup
-        self.assertEqual(pyperf.__version__, setup.VERSION)
+        try:
+            from importlib.metadata import version
+        except ModuleNotFoundError:
+            # Workaround for Python 3.7
+            from importlib_metadata import version
+
+        self.assertEqual(pyperf.__version__, version("pyperf"))
 
     def test_doc_version(self):
         doc_path = os.path.join(os.path.dirname(__file__), '..', '..', 'doc')
