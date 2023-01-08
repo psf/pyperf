@@ -1,4 +1,3 @@
-import datetime
 import io
 import time
 import unittest
@@ -75,16 +74,6 @@ class TestStatistics(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-    def test_parse_iso8601(self):
-        # Default format using 'T' separator
-        self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07'),
-                         datetime.datetime(2016, 7, 20, 14, 6, 7))
-        # Microseconds
-        self.assertEqual(utils.parse_iso8601('2016-07-20T14:06:07.608319'),
-                         datetime.datetime(2016, 7, 20, 14, 6, 7, 608319))
-        # Space separator
-        self.assertEqual(utils.parse_iso8601('2016-07-20 14:06:07'),
-                         datetime.datetime(2016, 7, 20, 14, 6, 7))
 
     def test_format_seconds(self):
         self.assertEqual(format_seconds(0),

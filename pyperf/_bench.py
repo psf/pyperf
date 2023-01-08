@@ -10,7 +10,7 @@ from pyperf._metadata import (NUMBER_TYPES, parse_metadata,
                               _common_metadata, get_metadata_info,
                               _exclude_common_metadata)
 from pyperf._formatter import DEFAULT_UNIT, format_values
-from pyperf._utils import parse_iso8601, median_abs_dev, percentile
+from pyperf._utils import median_abs_dev, percentile
 
 
 # JSON format history:
@@ -595,7 +595,7 @@ class Benchmark(object):
             run_start = run._get_date()
             if run_start is None:
                 continue
-            run_start = parse_iso8601(run_start)
+            run_start = datetime.datetime.fromisoformat(run_start)
 
             duration = run._get_duration()
             duration = int(math.ceil(duration))
