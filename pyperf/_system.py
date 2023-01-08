@@ -214,7 +214,7 @@ class TurboBoostMSR(Operation):
             fd = os.open(path, os.O_WRONLY)
             try:
                 if hasattr(os, 'pwrite'):
-                    data = os.pwrite(fd, data, reg_num)
+                    os.pwrite(fd, data, reg_num)
                 else:
                     os.lseek(fd, reg_num, os.SEEK_SET)
                     os.write(fd, data)

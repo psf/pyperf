@@ -233,7 +233,6 @@ def collect_cpu_freq(metadata, cpus):
                 # Example: "processor 0: version = 00,  identification = [...]"
                 match = re.match(r'^processor ([0-9]+): ', line)
                 if match is None:
-                    raise Exception
                     # unknown /proc/cpuinfo format: silently ignore and exit
                     return
 
@@ -410,9 +409,7 @@ def collect_cpu_metadata(metadata):
 
 
 def collect_metadata(process=True):
-    metadata = {}
-    metadata['perf_version'] = pyperf.__version__
-    metadata['date'] = format_datetime(datetime.datetime.now())
+    metadata = {'perf_version': pyperf.__version__, 'date': format_datetime(datetime.datetime.now())}
 
     collect_system_metadata(metadata)
     collect_cpu_metadata(metadata)

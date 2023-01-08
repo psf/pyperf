@@ -60,7 +60,7 @@ def bench_process(loops, args, kw, profile_filename=None):
         temp_profile_filename = tempfile.mktemp()
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
-    for loop in range_it:
+    for _ in range_it:
         start_rss = get_max_rss()
 
         proc = subprocess.Popen(args, **kw)
@@ -74,8 +74,6 @@ def bench_process(loops, args, kw, profile_filename=None):
             if profile_filename:
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
-
-        proc = None
 
         rss = get_max_rss() - start_rss
         max_rss = max(max_rss, rss)

@@ -71,7 +71,7 @@ class Runner:
 
     # Default parameters are chosen to have approximatively a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, values=None, warmups=None, processes=None,
+    def __init__(self, values=None, processes=None,
                  loops=0, min_time=0.1, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
@@ -485,7 +485,7 @@ class Runner:
         if self.args.profile:
             profiler, time_func = profiling_wrapper(time_func)
 
-        def task_func(task, loops):
+        def task_func(_, loops):
             return time_func(loops, *args)
 
         task = WorkerProcessTask(self, name, task_func, metadata)
@@ -514,7 +514,7 @@ class Runner:
         if self.args.profile:
             profiler, func = profiling_wrapper(func)
 
-        def task_func(task, loops):
+        def task_func(_, loops):
             # use fast local variables
             local_timer = time.perf_counter
             local_func = func
@@ -557,7 +557,7 @@ class Runner:
         if self.args.profile:
             profiler, func = profiling_wrapper(func)
 
-        def task_func(task, loops):
+        def task_func(_, loops):
             if loops != 1:
                 async def main():
                     # use fast local variables
