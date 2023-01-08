@@ -1,5 +1,4 @@
 import contextlib
-import datetime
 import math
 import os
 import statistics
@@ -13,21 +12,6 @@ MAC_OS = (sys.platform == 'darwin')
 
 if MS_WINDOWS:
     import msvcrt
-
-
-def parse_iso8601(date):
-    if '.' in date:
-        date, floatpart = date.split('.', 1)
-        floatpart = float('.' + floatpart)
-    else:
-        floatpart = 0
-    try:
-        dt = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
-    dt += datetime.timedelta(seconds=floatpart)
-    return dt
-
 
 # A table of 95% confidence intervals for a two-tailed t distribution, as a
 # function of the degrees of freedom. For larger degrees of freedom, we
