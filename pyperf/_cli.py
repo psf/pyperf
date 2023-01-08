@@ -382,8 +382,6 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
 
         value_width = max([len(bench.format_value(bucket * value_k))
                            for bucket in range(bucket_min, bucket_max + 1)])
-        width = columns - value_width
-
         line = ': %s #' % count_max
         width = columns - (value_width + len(line))
         if not extend:
