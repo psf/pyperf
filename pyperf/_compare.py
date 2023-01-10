@@ -284,9 +284,7 @@ class CompareSuites:
         for item in self.all_results[0]:
             headers.append(item.changed.name)
 
-        all_norm_means = []
-        for column in headers[2:]:
-            all_norm_means.append([])
+        all_norm_means = [[] for _ in range(len(headers[2:]))]
 
         rows = []
         not_significant = []

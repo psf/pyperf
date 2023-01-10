@@ -357,7 +357,7 @@ class Benchmarks:
                 yield (suite, ignored)
 
 
-def load_benchmarks(args, name=True):
+def load_benchmarks(args):
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
     if getattr(args, 'benchmarks', None):
@@ -681,7 +681,6 @@ def cmd_convert(args):
                       file=sys.stderr)
                 sys.exit(1)
             except TypeError:
-                raise
                 print("ERROR: Metadata %r of benchmark %r is not an integer"
                       % (name, benchmark.get_name()),
                       file=sys.stderr)
@@ -699,7 +698,7 @@ def cmd_convert(args):
 
 
 def cmd_slowest(args):
-    data = load_benchmarks(args, name=False)
+    data = load_benchmarks(args)
     nslowest = args.n
 
     use_title = (data.get_nsuite() > 1)

@@ -23,7 +23,7 @@ class ExampleTests(unittest.TestCase):
         if not_tested:
             raise Exception("not tested scripts: %s" % sorted(not_tested))
 
-    def check_command(self, script, args, nproc=3):
+    def check_command(self, script, args):
         self.TESTED.add(script)
         script = os.path.join(EXAMPLES_DIR, script)
 

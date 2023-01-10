@@ -87,7 +87,6 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
             loops, value = warmup
             raw_value = value * (loops * inner_loops)
             if raw:
-                text = format_value(raw_value)
                 text = ("%s (loops: %s)"
                         % (format_value(raw_value),
                            format_number(loops)))
@@ -273,8 +272,7 @@ def format_stats(bench, lines):
     lines.append('')
 
     # Minimum
-    table = []
-    table.append(("Minimum", bench.format_value(min(values))))
+    table = [("Minimum", bench.format_value(min(values)))]
 
     # Median +- MAD
     median = bench.median()
@@ -382,8 +380,6 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
 
         value_width = max([len(bench.format_value(bucket * value_k))
                            for bucket in range(bucket_min, bucket_max + 1)])
-        width = columns - value_width
-
         line = ': %s #' % count_max
         width = columns - (value_width + len(line))
         if not extend:
@@ -517,7 +513,7 @@ def format_result_value(bench):
     return _format_result_value(bench)
 
 
-def format_result(bench, prefix=True):
+def format_result(bench):
     loops = None
     warmups = None
     for run in bench._runs:

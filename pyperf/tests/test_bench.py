@@ -375,7 +375,7 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(bench.median_abs_dev(), 24.0)
 
     def test_stats_same(self):
-        values = [5.0 for i in range(10)]
+        values = [5.0 for _ in range(10)]
         run = create_run(values)
         bench = pyperf.Benchmark([run])
         self.assertEqual(bench.mean(), 5.0)

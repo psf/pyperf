@@ -521,8 +521,7 @@ class Benchmark(object):
         metadata = self._get_common_metadata()
         common_metadata = dict(metadata, **suite_metadata)
 
-        data = {}
-        data['runs'] = [run._as_json(common_metadata) for run in self._runs]
+        data = {'runs': [run._as_json(common_metadata) for run in self._runs]}
         metadata = _exclude_common_metadata(metadata, suite_metadata)
         if metadata:
             data['metadata'] = metadata

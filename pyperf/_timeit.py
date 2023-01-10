@@ -108,7 +108,7 @@ class Timer:
         exec(code, global_ns, local_ns)
         return local_ns["inner"]
 
-    def update_linecache(self, file=None):
+    def update_linecache(self):
         import linecache
 
         linecache.cache[self.filename] = (len(self.src),

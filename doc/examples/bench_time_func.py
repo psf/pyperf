@@ -6,7 +6,7 @@ def bench_dict(loops, mydict):
     range_it = range(loops)
     t0 = pyperf.perf_counter()
 
-    for loops in range_it:
+    for _ in range_it:
         mydict['0']
         mydict['100']
         mydict['200']
