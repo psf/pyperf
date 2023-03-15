@@ -546,6 +546,7 @@ class Runner:
 
         inner_loops = kwargs.pop('inner_loops', None)
         metadata = kwargs.pop('metadata', None)
+        loop_factory = kwargs.pop('loop_factory', None)
         self._no_keyword_argument(kwargs)
 
         if not self._check_worker_task():
@@ -582,16 +583,20 @@ class Runner:
                     return dt
 
             import asyncio
-            if hasattr(asyncio, 'run'):  # Python 3.7+
-                dt = asyncio.run(main())
-            else:  # Python 3.6
+            # using the lower level loop API instead of asyncio.run because
+            # asyncio.run gained the `loop_factory` arg only in Python 3.12.
+            # we can go back to asyncio.run when Python 3.12 is the oldest
+            # supported version for pyperf.
+            if loop_factory is None:
                 loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    dt = loop.run_until_complete(main())
-                finally:
-                    asyncio.set_event_loop(None)
-                    loop.close()
+            else:
+                loop = loop_factory()
+            asyncio.set_event_loop(loop)
+            try:
+                dt = loop.run_until_complete(main())
+            finally:
+                asyncio.set_event_loop(None)
+                loop.close()
 
             return dt
 
