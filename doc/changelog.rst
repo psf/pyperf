@@ -1,11 +1,14 @@
 Changelog
 =========
 
-Version 2.6.0 (2022-11-21)
+Version 2.6.0 (2023-03-22)
 --------------------------
 
 * Inherit ``PYTHONPATH`` environment variable by default.
   Patch by Theodore Ni.
+
+* ``Runner.bench_async_func()`` takes an optional ``loop_factory`` to support custom loop construction.
+  Patch by Itamar O.
 
 Version 2.5.0 (2022-11-04)
 --------------------------
