@@ -52,6 +52,12 @@ class ExampleTests(unittest.TestCase):
         args = ['-p2', '-w1', '--min-time=0.001']
         self.check_command(script, args)
 
+    def test_bench_async_func_with_loop_factory(self):
+        script = 'bench_async_func_with_loop_factory.py'
+        # Use -w1 --min-time=0.001 to reduce the duration of the test
+        args = ['-p2', '-w1', '--min-time=0.001']
+        self.check_command(script, args)
+
     def test_bench_time_func(self):
         script = 'bench_time_func.py'
         args = ['-p2', '-w1', '--min-time=0.001']

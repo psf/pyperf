@@ -539,7 +539,7 @@ Runner class
 
       See the :ref:`bench_func() example <bench_func_example>`.
 
-   .. method:: bench_async_func(name, func, \*args, inner_loops=None, metadata=None)
+   .. method:: bench_async_func(name, func, \*args, inner_loops=None, metadata=None, loop_factory=None)
 
       Benchmark the function ``await func(*args)`` in asyncio event loop.
 
@@ -547,6 +547,9 @@ Runner class
 
       The *inner_loops* parameter is used to normalize timing per loop
       iteration.
+
+      The *loop_factory* parameter, if specified, will be used to create the
+      event loop used by the benchmark.
 
       To call ``func()`` with keyword arguments, use ``functools.partial``.
 
