@@ -23,11 +23,11 @@ jobs:
           - os: ubuntu-latest
             python: '3.10'
           - os: ubuntu-latest
-            python: 'pypy-3.9'
+            python: 'pypy3.9'
           - os: ubuntu-latest
-            python: 'pypy-3.8'
+            python: 'pypy3.8'
           - os: ubuntu-latest
-            python: 'pypy-3.7'
+            python: 'pypy3.7'
 
     steps:
       - uses: actions/checkout@v3
