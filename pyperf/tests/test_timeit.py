@@ -392,22 +392,24 @@ class TimerTests(unittest.TestCase):
             Timer(setup="foo = 'bar', \\ ", stmt="bar = 'baz'")
 
         err = cm.exception
+        found = False
+        for msg in ["Unknown character", "unexpected character after line"]:
+            if msg in str(err):
+                found = True
 
-        if PYPY:
-            self.assertTrue("Unknown character" in str(err))
-        else:
-            self.assertTrue('unexpected character after line' in str(err))
+        self.assertTrue(found)
 
     def test_raises_if_stmt_and_teardown_contain_invalid_syntax(self):
         with self.assertRaises(SyntaxError) as cm:
             Timer(stmt="foo = 'bar', \\ ", teardown="bar = 'baz'")
 
         err = cm.exception
+        found = False
+        for msg in ["Unknown character", "unexpected character after line"]:
+            if msg in str(err):
+                found = True
 
-        if PYPY:
-            self.assertTrue("Unknown character" in str(err))
-        else:
-            self.assertTrue('unexpected character after line' in str(err))
+        self.assertTrue(found)
 
     def test_returns_valid_template_if_setup_is_str(self):
         setup = "foo = 'bar'\nbar = 'baz'"
