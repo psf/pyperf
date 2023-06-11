@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.6.1
+-------------
+
+* Fix a possible attribute error in argument parsing.
+  Patch by Colton Myers
+
 Version 2.6.0 (2023-03-22)
 --------------------------
 
