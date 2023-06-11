@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 2.6.1
+Version 2.6.1 (2023-06-12)
 -------------
 
 * Fix a possible attribute error in argument parsing.
