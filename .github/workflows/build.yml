@@ -15,11 +15,11 @@ jobs:
         python: ['3.12']
         include:
           - os: ubuntu-latest
+            python: 'pypy3.10'
+          - os: ubuntu-latest
             python: 'pypy3.9'
           - os: ubuntu-latest
             python: 'pypy3.8'
-          - os: ubuntu-latest
-            python: 'pypy3.7'
           - os: ubuntu-latest
             python: '3.8'
           - os: ubuntu-latest
