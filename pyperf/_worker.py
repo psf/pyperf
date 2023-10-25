@@ -59,8 +59,8 @@ class WorkerTask:
         task_func = self.task_func
 
         # If we are on a pystats build, turn on stats collection around the
-        # actual work, but only if we aren't warming up or calibrating.
-        if hasattr(sys, "_stats_on") and not is_warmup and not calibrate_loops:
+        # actual work, except when calibrating.
+        if hasattr(sys, "_stats_on") and not calibrate_loops:
             core_task_func = task_func
 
             def stats_func(*args):
