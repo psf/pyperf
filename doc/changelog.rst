@@ -4,7 +4,7 @@ Changelog
 Version 2.6.2 (2023-11-02)
 ---------------------------
 
-* Now, stats are collected during warmups.
+* Now, pystats stats are collected during warmups.
   Patch by Mike Droettboom.
 * system: Fix detection of battery.
   Patch by Victor Stinner
