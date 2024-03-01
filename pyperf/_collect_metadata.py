@@ -23,6 +23,7 @@ from pyperf._cpu_utils import (format_cpu_list,
                                get_logical_cpu_count, format_cpu_infos,
                                set_cpu_affinity)
 from pyperf._formatter import format_timedelta, format_datetime
+from pyperf._process_time import get_max_rss
 from pyperf._utils import (MS_WINDOWS,
                            open_text, read_first_line, sysfs_path, proc_path)
 if MS_WINDOWS:
@@ -199,10 +200,7 @@ def collect_system_metadata(metadata):
 
 def collect_memory_metadata(metadata):
     if resource is not None:
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        max_rss = usage.ru_maxrss
-        if max_rss:
-            metadata['mem_max_rss'] = max_rss * 1024
+        metadata["mem_max_rss"] = get_max_rss()
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
     # not accurate. See pyperf._linux_memory for more accurate memory metrics.
