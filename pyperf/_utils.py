@@ -7,7 +7,7 @@ import sysconfig
 from shlex import quote as shell_quote   # noqa
 from shutil import which
 
-IS_FREE_THREADING = bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
+FREE_THREADING = bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
 MS_WINDOWS = (sys.platform == 'win32')
 MAC_OS = (sys.platform == 'darwin')
 

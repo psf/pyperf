@@ -11,9 +11,11 @@ except ImportError:
     resource = None
 
 try:
-    from pyperf._utils import IS_FREE_THREADING
+    from pyperf._utils import FREE_THREADING
     # Optional dependency
-    if IS_FREE_THREADING:
+    # Currently there is a packaging issue for PEP-703,
+    # Until then psutil is disabled as a workaround.
+    if FREE_THREADING:
         psutil = None
     else:
         import psutil
