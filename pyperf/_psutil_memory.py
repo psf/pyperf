@@ -1,6 +1,10 @@
 import os
 try:
-    import psutil
+    from pyperf._utils import IS_FREE_THREADING
+    if IS_FREE_THREADING:
+        raise ImportError
+    else:
+        import psutil
 except ImportError:
     raise ImportError('psutil is not installed')
 import threading

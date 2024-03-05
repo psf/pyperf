@@ -11,8 +11,12 @@ except ImportError:
     resource = None
 
 try:
+    from pyperf._utils import IS_FREE_THREADING
     # Optional dependency
-    import psutil
+    if IS_FREE_THREADING:
+        psutil = None
+    else:
+        import psutil
 except ImportError:
     psutil = None
 
