@@ -3,7 +3,7 @@ try:
     from pyperf._utils import FREE_THREADING
     # Currently there is a packaging issue for PEP-703,
     # Until then psutil is disabled as a workaround.
-    if IS_FREE_THREADING:
+    if FREE_THREADING:
         raise ImportError
     else:
         import psutil
