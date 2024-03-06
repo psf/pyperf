@@ -1,9 +1,7 @@
 import os
 try:
-    from pyperf._utils import FREE_THREADING
-    # Currently there is a packaging issue for PEP-703,
-    # Until then psutil is disabled as a workaround.
-    if FREE_THREADING:
+    from pyperf._utils import USE_PSUTIL
+    if not USE_PSUTIL:
         raise ImportError
     else:
         import psutil

@@ -2,13 +2,10 @@ import collections
 import os
 import re
 
-from pyperf._utils import sysfs_path, proc_path, read_first_line, FREE_THREADING
+from pyperf._utils import sysfs_path, proc_path, read_first_line, USE_PSUTIL
 
 try:
-    # Optional dependency
-    # Currently there is a packaging issue for PEP-703,
-    # Until then psutil is disabled as a workaround.
-    if FREE_THREADING:
+    if not USE_PSUTIL:
         psutil = None
     else:
         import psutil
@@ -157,9 +154,7 @@ def set_cpu_affinity(cpus):
         return True
 
     try:
-        # Currently there is a packaging issue for PEP-703,
-        # Until then psutil is disabled as a workaround.
-        if FREE_THREADING:
+        if not USE_PSUTIL:
             return
         else:
             import psutil

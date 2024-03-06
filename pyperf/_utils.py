@@ -7,7 +7,10 @@ import sysconfig
 from shlex import quote as shell_quote   # noqa
 from shutil import which
 
-FREE_THREADING = bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
+# Currently there is a packaging issue for PEP-703,
+# Until then psutil is disabled as a workaround.
+# See: https://github.com/python/cpython/issues/116024
+USE_PSUTIL = not bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
 MS_WINDOWS = (sys.platform == 'win32')
 MAC_OS = (sys.platform == 'darwin')
 
