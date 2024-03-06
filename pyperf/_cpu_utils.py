@@ -171,9 +171,7 @@ def set_cpu_affinity(cpus):
 
 def set_highest_priority():
     try:
-        # Currently there is a packaging issue for PEP-703,
-        # Until then psutil is disabled as a workaround.
-        if FREE_THREADING:
+        if not USE_PSUTIL:
             return
         else:
             import psutil
