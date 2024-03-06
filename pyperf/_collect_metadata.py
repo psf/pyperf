@@ -11,8 +11,11 @@ except ImportError:
     resource = None
 
 try:
-    # Optional dependency
-    import psutil
+    from pyperf._utils import USE_PSUTIL
+    if not USE_PSUTIL:
+        psutil = None
+    else:
+        import psutil
 except ImportError:
     psutil = None
 

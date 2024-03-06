@@ -2,11 +2,13 @@ import collections
 import os
 import re
 
-from pyperf._utils import sysfs_path, proc_path, read_first_line
+from pyperf._utils import sysfs_path, proc_path, read_first_line, USE_PSUTIL
 
 try:
-    # Optional dependency
-    import psutil
+    if not USE_PSUTIL:
+        psutil = None
+    else:
+        import psutil
 except ImportError:
     psutil = None
 
@@ -152,7 +154,10 @@ def set_cpu_affinity(cpus):
         return True
 
     try:
-        import psutil
+        if not USE_PSUTIL:
+            return
+        else:
+            import psutil
     except ImportError:
         return
 
@@ -166,7 +171,10 @@ def set_cpu_affinity(cpus):
 
 def set_highest_priority():
     try:
-        import psutil
+        if not USE_PSUTIL:
+            return
+        else:
+            import psutil
     except ImportError:
         return
 

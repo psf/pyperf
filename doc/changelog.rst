@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 2.6.3 (2024-03-05)
+---------------------------
+
+* Support Free-threading CPython (PEP-703) by disabling psutil related features.
+  Relevant issue: https://github.com/python/cpython/issues/116024.
+  Patch by Donghee Na.
+* Fix mem_max_rss measurement on macOS.
+  Patch by Mike Droettboom.
+
 Version 2.6.2 (2023-11-02)
 ---------------------------
 
