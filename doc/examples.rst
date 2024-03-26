@@ -31,8 +31,9 @@ bench_async_func() method
 timeit() method
 ---------------
 
-Benchmark using the :meth:`Runner.timeit` method to performance of sorting a
-sorted list of 1000 numbers using a ``key`` function (which does nothing):
+Benchmark using the :meth:`Runner.timeit` method to measure the performance of
+sorting a sorted list of 1000 numbers using a ``key`` function (which does
+nothing):
 
 .. literalinclude:: examples/bench_timeit.py
 
