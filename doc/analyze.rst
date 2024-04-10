@@ -223,9 +223,15 @@ two-sample, two-tailed t-test
 
 Render a table using ``--table`` option::
 
-    $ python3 -m pyperf compare_to py36.json py38.json --table
-    +-----------+---------+------------------------------+
-    | Benchmark | py36    | py38                         |
-    +===========+=========+==============================+
-    | timeit    | 4.70 us | 4.22 us: 1.11x faster (-10%) |
-    +-----------+---------+------------------------------+
+    $ python3 -m pyperf compare_to mult_list_py36.json mult_list_py38.json --table
+    +----------------+----------------+-----------------------+
+    | Benchmark      | mult_list_py36 | mult_list_py38        |
+    +================+================+=======================+
+    | [1,2]*1000     | 3.70 us        | 3.18 us: 1.16x faster |
+    +----------------+----------------+-----------------------+
+    | [1,2,3]*1000   | 4.61 us        | 4.17 us: 1.11x faster |
+    +----------------+----------------+-----------------------+
+    | Geometric mean | (ref)          | 1.09x faster          |
+    +----------------+----------------+-----------------------+
+
+    Benchmark hidden because not significant (1): [1]*1000
