@@ -106,6 +106,11 @@ def collect_python_metadata(metadata):
         if cflags:
             cflags = normalize_text(cflags)
             metadata['python_cflags'] = cflags
+            
+        config_flags = sysconfig.get_config_var('CONFIG_ARGS')
+        if config_flags:
+            config_flags = normalize_text(config_flags)
+            metadata['python_config_args'] = config_flags
 
     # GC disabled?
     try:
