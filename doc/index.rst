@@ -4,7 +4,7 @@ Python pyperf module
 
 The Python ``pyperf`` module is a toolkit to write, run and analyze benchmarks.
 
-Documenation:
+Documentation:
 
 .. toctree::
    :maxdepth: 2

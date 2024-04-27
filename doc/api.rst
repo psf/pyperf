@@ -679,7 +679,7 @@ Benchmark:
 * ``inner_loops`` (``int >= 1``): number of inner-loops of the benchmark (``int``)
 * ``timer``: Implementation of ``time.perf_counter()``, and also resolution if
   available
-* ``tags``: (list of str, optional): A list of tags associated with the benchmark. If provided, the results output will be aggreggated by each tag.
+* ``tags``: (list of str, optional): A list of tags associated with the benchmark. If provided, the results output will be aggregated by each tag.
 
 Python metadata:
 

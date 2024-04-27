@@ -384,7 +384,7 @@ class CPUGovernorIntelPstate(Operation):
 
 class LinuxScheduler(Operation):
     """
-    Check isolcpus=cpus and rcu_nocbs=cpus paramaters of the Linux kernel
+    Check isolcpus=cpus and rcu_nocbs=cpus parameters of the Linux kernel
     command line.
     """
 
