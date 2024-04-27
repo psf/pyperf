@@ -69,7 +69,7 @@ class CLIError(Exception):
 class Runner:
     _created = set()
 
-    # Default parameters are chosen to have approximatively a run of 0.5 second
+    # Default parameters are chosen to have approximately a run of 0.5 second
     # and so a total duration of 5 seconds by default
     def __init__(self, values=None, processes=None,
                  loops=0, min_time=0.1, metadata=None,
@@ -85,7 +85,7 @@ class Runner:
             pass
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
-        # subclass) is created per process to prevent bad suprises
+        # subclass) is created per process to prevent bad surprises
         cls = self.__class__
         key = id(cls)
         if key in cls._created:

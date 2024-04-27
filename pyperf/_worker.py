@@ -288,7 +288,7 @@ class WorkerTask:
         else:
             self.compute_warmups_values()
 
-        # collect metatadata
+        # collect metadata
         metadata2 = self.collect_metadata()
         metadata2.update(self.metadata)
         self.metadata = metadata2
