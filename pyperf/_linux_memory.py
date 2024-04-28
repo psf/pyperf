@@ -54,7 +54,7 @@ def check_tracking_memory():
     mem_thread = PeakMemoryUsageThread()
     try:
         mem_thread.get()
-    except IOError as exc:
+    except OSError as exc:
         path = proc_path("self/smaps")
         return "unable to read %s: %s" % (path, exc)
 

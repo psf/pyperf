@@ -11,7 +11,7 @@ TESTDIR = os.path.dirname(__file__)
 TELCO = os.path.join(TESTDIR, 'telco.json')
 
 
-class BaseTestCase(object):
+class BaseTestCase:
     maxDiff = 100 * 80
 
     def create_bench(self, values, metadata=None):

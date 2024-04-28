@@ -86,7 +86,7 @@ def _cached_attr(func):
     return method
 
 
-class Run(object):
+class Run:
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
     __slots__ = ('_warmups', '_values', '_metadata')
@@ -319,7 +319,7 @@ class Run(object):
         return self._replace(metadata=metadata2)
 
 
-class Benchmark(object):
+class Benchmark:
     def __init__(self, runs):
         self._runs = []   # list of Run objects
         self._clear_runs_cache()
@@ -627,7 +627,7 @@ class Benchmark(object):
         self._replace_runs(new_runs)
 
 
-class BenchmarkSuite(object):
+class BenchmarkSuite:
     def __init__(self, benchmarks, filename=None):
         if not benchmarks:
             raise ValueError("benchmarks must be a non-empty "
@@ -727,7 +727,7 @@ class BenchmarkSuite(object):
         if isinstance(filename, bytes):
             suffix = b'.gz'
         else:
-            suffix = u'.gz'
+            suffix = '.gz'
 
         if filename.endswith(suffix):
             # Use lazy import to limit imports on 'import pyperf'
@@ -770,7 +770,7 @@ class BenchmarkSuite(object):
         if isinstance(filename, bytes):
             suffix = b'.gz'
         else:
-            suffix = u'.gz'
+            suffix = '.gz'
 
         if not replace and os.path.exists(filename):
             raise OSError(errno.EEXIST, "File already exists")

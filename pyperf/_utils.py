@@ -155,7 +155,7 @@ def read_first_line(path, error=False):
         with open_text(path) as fp:
             line = fp.readline()
         return line.rstrip()
-    except IOError:
+    except OSError:
         if error:
             raise
         else:
@@ -282,7 +282,7 @@ def create_environ(inherit_environ, locale, copy_all):
     return env
 
 
-class _Pipe(object):
+class _Pipe:
     _OPEN_MODE = "r"
 
     def __init__(self, fd):

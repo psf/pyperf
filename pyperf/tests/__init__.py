@@ -55,7 +55,7 @@ def temporary_directory():
 def benchmark_as_json(benchmark, compact=True):
     with temporary_file() as tmp_name:
         benchmark.dump(tmp_name, compact=compact)
-        with io.open(tmp_name, 'r', encoding='utf-8') as tmp:
+        with open(tmp_name, 'r', encoding='utf-8') as tmp:
             return tmp.read()
 
 

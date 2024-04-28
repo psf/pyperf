@@ -14,7 +14,7 @@ def get_raw_values(filename, run_id):
     return (run, raw_values)
 
 
-class Replay(object):
+class Replay:
     def __init__(self, runner, filename):
         self.runner = runner
         self.args = runner.args
