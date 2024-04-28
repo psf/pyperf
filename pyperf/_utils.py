@@ -129,8 +129,7 @@ def parse_run_list(run_list):
                 parts = part.split('-', 1)
                 first = int(parts[0])
                 last = int(parts[1])
-                for run in range(first, last + 1):
-                    runs.append(run)
+                runs.extend(range(first, last + 1))
             else:
                 runs.append(int(part))
         except ValueError:

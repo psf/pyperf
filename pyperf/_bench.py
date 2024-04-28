@@ -557,10 +557,7 @@ class Benchmark(object):
         if include:
             old_runs = self._runs
             max_index = len(old_runs) - 1
-            runs = []
-            for index in only_runs:
-                if index <= max_index:
-                    runs.append(old_runs[index])
+            runs = [old_runs[index] for index in only_runs if index <= max_index]
         else:
             runs = self._runs
             max_index = len(runs) - 1

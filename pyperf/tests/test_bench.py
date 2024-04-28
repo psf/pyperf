@@ -346,11 +346,9 @@ class BenchmarkTests(unittest.TestCase):
                          {'name': 'bench', 'unit': 'byte'})
 
     def test_update_metadata(self):
-        runs = []
-        for value in (1.0, 2.0, 3.0):
-            runs.append(pyperf.Run((value,),
-                                   metadata={'name': 'bench'},
-                                   collect_metadata=False))
+        runs = [pyperf.Run((value,),
+                           metadata={'name': 'bench'},
+                           collect_metadata=False) for value in (1.0, 2.0, 3.0)]
         bench = pyperf.Benchmark(runs)
         self.assertEqual(bench.get_metadata(),
                          {'name': 'bench'})

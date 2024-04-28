@@ -163,10 +163,7 @@ class ReSTTable:
                 self.widths[column] = max(self.widths[column], len(cell))
 
     def _render_line(self, char='-'):
-        parts = ['']
-        for width in self.widths:
-            parts.append(char * (width + 2))
-        parts.append('')
+        parts = [''] + [char * (width + 2) for width in self.widths] + ['']
         return '+'.join(parts)
 
     def _render_row(self, row):
@@ -250,7 +247,7 @@ class CompareSuites:
         for results in self.all_results:
             for result in results:
                 self.tags.update(get_tags_for_result(result))
-        self.tags = sorted(list(self.tags))
+        self.tags = sorted(self.tags)
 
     def compare_benchmarks(self, name, benchmarks):
         min_speed = self.min_speed
@@ -280,9 +277,9 @@ class CompareSuites:
 
             self.all_results.sort(key=sort_key)
 
-        headers = ['Benchmark', self.all_results[0][0].ref.name]
-        for item in self.all_results[0]:
-            headers.append(item.changed.name)
+        headers = ['Benchmark', self.all_results[0][0].ref.name] + [
+            item.changed.name for item in self.all_results[0]
+        ]
 
         all_norm_means = [[] for _ in range(len(headers[2:]))]
 
@@ -427,9 +424,7 @@ class CompareSuites:
     def compare_geometric_mean(self, all_results):
         # use a list since two filenames can be identical,
         # even if results are different
-        all_norm_means = []
-        for item in all_results[0]:
-            all_norm_means.append((item.changed.name, []))
+        all_norm_means = [(item.changed.name, []) for item in all_results[0]]
 
         for results in all_results:
             for index, result in enumerate(results):

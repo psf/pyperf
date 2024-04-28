@@ -349,11 +349,7 @@ class Benchmarks:
     def group_by_name_ignored(self):
         names = set(self._group_by_name_names())
         for suite in self.suites:
-            ignored = []
-            for bench in suite:
-                if bench.get_name() not in names:
-                    ignored.append(bench)
-            if ignored:
+            if ignored := [bench for bench in suite if bench.get_name() not in names]:
                 yield (suite, ignored)
 
 

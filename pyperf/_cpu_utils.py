@@ -90,8 +90,7 @@ def parse_cpu_list(cpu_list):
             parts = part.split('-', 1)
             first = int(parts[0])
             last = int(parts[1])
-            for cpu in range(first, last + 1):
-                cpus.append(cpu)
+            cpus.extend(range(first, last + 1))
         else:
             cpus.append(int(part))
     cpus.sort()
