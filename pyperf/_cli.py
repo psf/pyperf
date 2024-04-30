@@ -604,7 +604,7 @@ def catch_broken_pipe_error(file=None):
         # was closed by the consumer
         for file in files:
             file.flush()
-    except IOError as exc:
+    except OSError as exc:
         if exc.errno != errno.EPIPE:
             raise
         # got a broken pipe error: ignore it
@@ -615,5 +615,5 @@ def catch_broken_pipe_error(file=None):
         for file in files:
             try:
                 file.close()
-            except IOError:
+            except OSError:
                 pass

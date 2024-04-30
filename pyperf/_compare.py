@@ -53,7 +53,7 @@ def get_tags_for_result(result):
     return result.ref.benchmark.get_metadata().get("tags", [])
 
 
-class CompareResult(object):
+class CompareResult:
     def __init__(self, ref, changed, min_speed=None):
         # CompareData object
         self.ref = ref

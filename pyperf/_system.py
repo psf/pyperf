@@ -74,7 +74,7 @@ def use_intel_pstate():
     return (scaling_driver == 'intel_pstate')
 
 
-class Operation(object):
+class Operation:
     @staticmethod
     def available():
         return True
@@ -107,7 +107,7 @@ class Operation(object):
     def read_first_line(self, path):
         try:
             return read_first_line(path, error=True)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             return ''
 
@@ -219,7 +219,7 @@ class TurboBoostMSR(Operation):
                     os.write(fd, data)
             finally:
                 os.close(fd)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Failed to write %#x into MSR %#x using %s: %s"
                        % (value, reg_num, path, exc))
@@ -308,7 +308,7 @@ class TurboBoostIntelPstate(Operation):
         content = '0' if enable else '1'
         try:
             write_text(self.path, content)
-        except IOError as exc:
+        except OSError as exc:
             # don't log a permission error if the user is root: permission
             # error as root means that Turbo Boost is disabled in the BIOS
             if not is_root():
@@ -376,7 +376,7 @@ class CPUGovernorIntelPstate(Operation):
             return
         try:
             write_text(self.path, new_governor)
-        except IOError as exc:
+        except OSError as exc:
             self.error("Failed to set the CPU scaling governor: %s" % exc)
         else:
             self.log_action("CPU scaling governor set to %s" % new_governor)
@@ -495,7 +495,7 @@ class ASLR(Operation):
 
         try:
             write_text(self.path, new_value)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Failed to write into %s: %s" % (self.path, exc))
         else:
@@ -552,7 +552,7 @@ class CPUFrequency(Operation):
         try:
             with open(filename, "rb") as fp:
                 return fp.readline()
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             return None
 
@@ -579,7 +579,7 @@ class CPUFrequency(Operation):
         filename = os.path.join(cpu_path, "scaling_min_freq")
         try:
             return self.write_freq(filename, freq)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Unable to write scaling_max_freq of CPU %s: %s"
                        % (cpu, exc))
@@ -768,7 +768,7 @@ class IRQAffinity(Operation):
         mask = format_cpus_as_mask(new_affinity)
         try:
             write_text(self.default_affinity_path, mask)
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Failed to write %r into %s: %s"
                        % (mask, self.default_affinity_path, exc))
@@ -782,7 +782,7 @@ class IRQAffinity(Operation):
         try:
             write_text(path, mask)
             return True
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             # EIO means that the IRQ doesn't support SMP affinity:
             # ignore the error
@@ -937,7 +937,7 @@ class PerfEvent(Operation):
 
         try:
             write_text(self.path, str(new_rate))
-        except IOError as exc:
+        except OSError as exc:
             self.check_permission_error(exc)
             self.error("Failed to write into %s: %s" % (self.path, exc))
         else:

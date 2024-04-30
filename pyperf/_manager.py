@@ -12,7 +12,7 @@ from pyperf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
 MAX_CALIBRATION = 5
 
 
-class Manager(object):
+class Manager:
     """
     Manager process which spawns worker processes to:
     - calibrate warmups

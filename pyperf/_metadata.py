@@ -137,7 +137,7 @@ def format_metadata(name, value):
     return info.formatter(value)
 
 
-class Metadata(object):
+class Metadata:
     def __init__(self, name, value):
         self._name = name
         self._value = value

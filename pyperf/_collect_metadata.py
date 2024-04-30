@@ -136,7 +136,7 @@ def read_proc(path):
         with open_text(path) as fp:
             for line in fp:
                 yield line.rstrip()
-    except (OSError, IOError):
+    except OSError:
         return
 
 
@@ -332,7 +332,7 @@ def get_cpu_temperature(path, cpu_temp):
 
         try:
             temp_label = read_first_line(template % 'label', error=True)
-        except IOError:
+        except OSError:
             break
 
         temp_input = read_first_line(template % 'input', error=True)

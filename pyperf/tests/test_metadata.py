@@ -159,7 +159,7 @@ class CpuFunctionsTests(unittest.TestCase):
             elif filename.startswith('/sys/devices/system/cpu/nohz_full'):
                 data = nohz_full
             elif filename.startswith('/sys/devices/system/cpu/cpu2'):
-                raise IOError
+                raise OSError
             elif filename == '/sys/devices/system/cpu/cpuidle/current_driver':
                 data = 'IDLE_DRV\n'
             else:
@@ -194,7 +194,7 @@ class CpuFunctionsTests(unittest.TestCase):
             elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
                 data = 'GOVERNOR\n'
             elif filename.startswith('/sys/devices/system/cpu/cpu2'):
-                raise IOError
+                raise OSError
             else:
                 raise ValueError("unexpect open: %r" % filename)
             return io.StringIO(data)
