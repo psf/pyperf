@@ -1,5 +1,6 @@
 import errno
 import os.path
+import platform
 import re
 import struct
 import subprocess
@@ -125,7 +126,11 @@ class TurboBoostMSR(Operation):
 
     @staticmethod
     def available():
-        return (OS_LINUX and not use_intel_pstate())
+        return (
+            OS_LINUX and 
+            not use_intel_pstate() and 
+            platform.machine() not in ('x86', 'x86_64', 'amd64')
+        )
 
     def __init__(self, system):
         Operation.__init__(self, 'Turbo Boost (MSR)', system)
