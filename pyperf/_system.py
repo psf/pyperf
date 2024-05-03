@@ -129,7 +129,7 @@ class TurboBoostMSR(Operation):
         return (
             OS_LINUX and 
             not use_intel_pstate() and 
-            platform.machine() not in ('x86', 'x86_64', 'amd64')
+            platform.machine() in ('x86', 'x86_64', 'amd64')
         )
 
     def __init__(self, system):
