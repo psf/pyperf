@@ -61,11 +61,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Python
         uses: actions/setup-python@v5
-      - name: Set up Python ${{ matrix.python }} using deadsnakes
-        uses: deadsnakes/action@v3.1.0
         if: ${{ matrix.build != 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
+      - name: Set up Python ${{ matrix.python }} using deadsnakes
+        uses: deadsnakes/action@v3.1.0
         if: ${{ matrix.build == 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
