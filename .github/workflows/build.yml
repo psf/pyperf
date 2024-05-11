@@ -22,34 +22,54 @@ jobs:
       - run: tox -e ${{ matrix.tox-job }}
   build:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - ${{ matrix.python }} ${{ matrix.build }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ['3.13-dev']
+        build: ['']
         include:
           - os: ubuntu-latest
             python: 'pypy3.10'
+            build: ''
           - os: ubuntu-latest
             python: 'pypy3.9'
+            build: ''
           - os: ubuntu-latest
             python: 'pypy3.8'
+            build: ''
           - os: ubuntu-latest
             python: '3.8'
+            build: ''
           - os: ubuntu-latest
             python: '3.9'
+            build: ''
           - os: ubuntu-latest
             python: '3.10'
+            build: ''
           - os: ubuntu-latest
             python: '3.11'
+            build: ''
           - os: ubuntu-latest
             python: '3.12'
+            build: ''
+          - os: ubuntu-latest
+            python: '3.13-dev'
+            build: 'free-threading'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python }} using deadsnakes
+        uses: deadsnakes/action@v3.1.0
+        if: ${{ matrix.build != 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
+        if: ${{ matrix.build == 'free-threading' }}
+        with:
+          python-version: ${{ matrix.python }}
+          nogil: 1
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
