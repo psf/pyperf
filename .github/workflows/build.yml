@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ['3.13-dev']
+        python: ['3.12']
         build: ['']
         include:
           - os: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
         if: ${{ matrix.build == 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
-          nogil: 1
+          nogil: true
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
