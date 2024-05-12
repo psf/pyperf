@@ -267,8 +267,7 @@ def create_environ(inherit_environ, locale, copy_all):
         return os.environ
     env = {}
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive"]
-    # TODO: In the future, maybe we should manage CPython environment variables
-    # depending on the Python version.
+    # Python specific variables
     copy_env.extend(["PYTHONPATH", "PYTHON_CPU_COUNT", "PYTHON_GIL"])
     if locale:
         copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
