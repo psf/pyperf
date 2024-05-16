@@ -31,28 +31,20 @@ jobs:
         include:
           - os: ubuntu-latest
             python: 'pypy3.10'
-            build: ''
           - os: ubuntu-latest
             python: 'pypy3.9'
-            build: ''
           - os: ubuntu-latest
             python: 'pypy3.8'
-            build: ''
           - os: ubuntu-latest
             python: '3.8'
-            build: ''
           - os: ubuntu-latest
             python: '3.9'
-            build: ''
           - os: ubuntu-latest
             python: '3.10'
-            build: ''
           - os: ubuntu-latest
             python: '3.11'
-            build: ''
           - os: ubuntu-latest
             python: '3.12'
-            build: ''
           - os: ubuntu-latest
             python: '3.13-dev'
             build: 'free-threading'
