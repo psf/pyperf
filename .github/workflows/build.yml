@@ -62,6 +62,8 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           nogil: true
+      - name: Display Python version
+        run: python -VV
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
