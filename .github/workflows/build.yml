@@ -22,10 +22,12 @@ jobs:
       - run: tox -e ${{ matrix.tox-job }}
   build:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} - ${{ matrix.python }} ${{ matrix.build }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ['3.12']
+        build: ['']
         include:
           - os: ubuntu-latest
             python: 'pypy3.10'
@@ -41,13 +43,29 @@ jobs:
             python: '3.10'
           - os: ubuntu-latest
             python: '3.11'
+          - os: ubuntu-latest
+            python: '3.12'
+          - os: ubuntu-latest
+            python: '3.13-dev'
+            build: 'free-threading'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
+        if: ${{ matrix.build != 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
+      - name: Set up Python ${{ matrix.python }} using deadsnakes
+        uses: deadsnakes/action@v3.1.0
+        if: ${{ matrix.build == 'free-threading' }}
+        with:
+          python-version: ${{ matrix.python }}
+          nogil: true
+      - name: Display Python version
+        run: |
+          python -VV
+          python -c 'import sysconfig; print("Free threading?", "Yes" if sysconfig.get_config_var("Py_GIL_DISABLED") else "No")'
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
