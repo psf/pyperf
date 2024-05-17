@@ -63,7 +63,9 @@ jobs:
           python-version: ${{ matrix.python }}
           nogil: true
       - name: Display Python version
-        run: python -VV
+        run: |
+          python -VV
+          python -c 'import sysconfig; print("Free threading?", "Yes" if sysconfig.get_config_var("Py_GIL_DISABLED") else "No")'
       - name: Install Tox and any other packages
         run: pip install tox
       - name: Run Tox
