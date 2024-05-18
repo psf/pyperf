@@ -1,5 +1,16 @@
 Changelog
 =========
+Version 2.7.0 (2024-05-18)
+---------------------------
+
+* Fix logic in MSR availability test.
+  Patch by Mike Droettboom.
+* Disable tuning TurboBoost setting on non-Intel device.
+  Patch by Mike Droettboom.
+* Include CONFIG_ARGS in Metadata.
+  Patch by Jeff Glass.
+* Support environment variables PYTHON_GIL / PYTHON_CPU_COUNT.
+  Patch by Donghee Na.
 
 Version 2.6.3 (2024-03-05)
 ---------------------------
