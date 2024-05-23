@@ -126,99 +126,6 @@ class IntelPstateOperation(Operation):
         return use_intel_pstate()
 
 
-class TurboBoostIntelPstate(IntelPstateOperation):
-    """
-    Get/Set Turbo Boost mode of Intel CPUs by reading from/writing into
-    /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
-    """
-
-    def __init__(self, system):
-        IntelPstateOperation.__init__(self, 'Turbo Boost (intel_pstate)', system)
-        self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
-        self.enabled = None
-
-    def read_turbo_boost(self):
-        no_turbo = self.read_first_line(self.path)
-        if no_turbo == '1':
-            self.enabled = False
-        elif no_turbo == '0':
-            self.enabled = True
-        else:
-            self.error("Invalid no_turbo value: %r" % no_turbo)
-            self.enabled = None
-
-    def show(self):
-        self.read_turbo_boost()
-        if self.enabled is not None:
-            state = 'enabled' if self.enabled else 'disabled'
-            self.log_state("Turbo Boost %s" % state)
-
-            self.tuned_for_benchmarks = (not self.enabled)
-            if self.enabled:
-                self.advice('Disable Turbo Boost to get more reliable '
-                            'CPU frequency')
-
-    def write(self, tune):
-        enable = (not tune)
-
-        self.read_turbo_boost()
-        if self.enabled == enable:
-            # no_turbo already set to the expected value
-            return
-
-        content = '0' if enable else '1'
-        try:
-            write_text(self.path, content)
-        except OSError as exc:
-            # don't log a permission error if the user is root: permission
-            # error as root means that Turbo Boost is disabled in the BIOS
-            if not is_root():
-                self.check_permission_error(exc)
-
-            action = 'enable' if enable else 'disable'
-            msg = "Failed to %s Turbo Boost" % action
-            disabled_in_bios = is_permission_error(exc) and is_root()
-            if disabled_in_bios:
-                msg += " (Turbo Boost disabled in the BIOS?)"
-            msg = "%s: failed to write into %s: %s" % (msg, self.path, exc)
-
-            if disabled_in_bios:
-                self.log_action("WARNING: %s" % msg)
-            else:
-                self.error(msg)
-            return
-
-        msg = "%r written into %s" % (content, self.path)
-        action = 'enabled' if enable else 'disabled'
-        self.log_action("Turbo Boost %s: %s" % (action, msg))
-
-
-class CheckNOHZFullIntelPstate(IntelPstateOperation):
-
-    def __init__(self, system):
-        IntelPstateOperation.__init__(self, 'Check nohz_full', system)
-
-    def show(self):
-        nohz_full = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
-        if not nohz_full:
-            return
-
-        nohz_full = parse_cpu_list(nohz_full)
-        if not nohz_full:
-            return
-
-        used = set(self.system.cpus) | set(nohz_full)
-        if not used:
-            return
-
-        self.advice("WARNING: nohz_full is enabled on CPUs %s which use the "
-                    "intel_pstate driver, whereas intel_pstate is incompatible "
-                    "with nohz_full"
-                    % format_cpu_list(used))
-        self.advice("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
-        self.tuned_for_benchmarks = False
-
-
 class TurboBoostMSR(Operation):
     """
     Get/Set Turbo Boost mode of X86 CPUs using /dev/cpu/N/msr
@@ -229,7 +136,7 @@ class TurboBoostMSR(Operation):
         return OS_LINUX and PLATFORM_X86 and not use_intel_pstate()
 
     def __init__(self, system):
-        Operation.__init__(self, 'Turbo Boost (MSR)', system)
+        super().__init__('Turbo Boost (MSR)', system)
         self.cpu_states = {}
         self.have_device = True
 
@@ -362,20 +269,87 @@ class TurboBoostMSR(Operation):
                 break
 
 
+class TurboBoostIntelPstate(IntelPstateOperation):
+    """
+    Get/Set Turbo Boost mode of Intel CPUs by reading from/writing into
+    /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
+    """
+
+    def __init__(self, system):
+        super().__init__('Turbo Boost (intel_pstate)', system)
+        self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
+        self.enabled = None
+
+    def read_turbo_boost(self):
+        no_turbo = self.read_first_line(self.path)
+        if no_turbo == '1':
+            self.enabled = False
+        elif no_turbo == '0':
+            self.enabled = True
+        else:
+            self.error("Invalid no_turbo value: %r" % no_turbo)
+            self.enabled = None
+
+    def show(self):
+        self.read_turbo_boost()
+        if self.enabled is not None:
+            state = 'enabled' if self.enabled else 'disabled'
+            self.log_state("Turbo Boost %s" % state)
+
+            self.tuned_for_benchmarks = (not self.enabled)
+            if self.enabled:
+                self.advice('Disable Turbo Boost to get more reliable '
+                            'CPU frequency')
+
+    def write(self, tune):
+        enable = (not tune)
+
+        self.read_turbo_boost()
+        if self.enabled == enable:
+            # no_turbo already set to the expected value
+            return
+
+        content = '0' if enable else '1'
+        try:
+            write_text(self.path, content)
+        except OSError as exc:
+            # don't log a permission error if the user is root: permission
+            # error as root means that Turbo Boost is disabled in the BIOS
+            if not is_root():
+                self.check_permission_error(exc)
+
+            action = 'enable' if enable else 'disable'
+            msg = "Failed to %s Turbo Boost" % action
+            disabled_in_bios = is_permission_error(exc) and is_root()
+            if disabled_in_bios:
+                msg += " (Turbo Boost disabled in the BIOS?)"
+            msg = "%s: failed to write into %s: %s" % (msg, self.path, exc)
+
+            if disabled_in_bios:
+                self.log_action("WARNING: %s" % msg)
+            else:
+                self.error(msg)
+            return
+
+        msg = "%r written into %s" % (content, self.path)
+        action = 'enabled' if enable else 'disabled'
+        self.log_action("Turbo Boost %s: %s" % (action, msg))
+
+
 class CPUGovernor(Operation):
     """
     Get/Set CPU scaling governor
     """
     BENCHMARK_GOVERNOR = 'performance'
 
-    @classmethod
-    def available(cls):
+    @staticmethod
+    def available():
         return os.path.exists(
             sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
         )
 
     def __init__(self, system):
-        Operation.__init__(self, 'CPU scaling governor', system)
+        super().__init__('CPU scaling governor', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
 
     def read_governor(self, cpu):
@@ -461,7 +435,7 @@ class LinuxScheduler(Operation):
         return OS_LINUX
 
     def __init__(self, system):
-        Operation.__init__(self, 'Linux scheduler', system)
+        super().__init__('Linux scheduler', system)
         self.ncpu = None
         self.linux_version = None
 
@@ -536,7 +510,7 @@ class ASLR(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'ASLR', system)
+        super().__init__('ASLR', system)
 
     def show(self):
         line = self.read_first_line(self.path)
@@ -582,7 +556,7 @@ class CPUFrequency(Operation):
         return os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq"))
 
     def __init__(self, system):
-        Operation.__init__(self, 'CPU Frequency', system)
+        super().__init__('CPU Frequency', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
 
     def read_cpu(self, cpu):
@@ -680,7 +654,7 @@ class IRQAffinity(Operation):
         return os.path.exists(cls.irq_path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'IRQ affinity', system)
+        super().__init__('IRQ affinity', system)
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
@@ -891,6 +865,32 @@ class IRQAffinity(Operation):
         self.write_irqs(cpus)
 
 
+class CheckNOHZFullIntelPstate(IntelPstateOperation):
+
+    def __init__(self, system):
+        super().__init__('Check nohz_full', system)
+
+    def show(self):
+        nohz_full = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+        if not nohz_full:
+            return
+
+        nohz_full = parse_cpu_list(nohz_full)
+        if not nohz_full:
+            return
+
+        used = set(self.system.cpus) | set(nohz_full)
+        if not used:
+            return
+
+        self.advice("WARNING: nohz_full is enabled on CPUs %s which use the "
+                    "intel_pstate driver, whereas intel_pstate is incompatible "
+                    "with nohz_full"
+                    % format_cpu_list(used))
+        self.advice("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
+        self.tuned_for_benchmarks = False
+
+
 class PowerSupply(Operation):
     path = sysfs_path('class/power_supply')
 
@@ -899,7 +899,7 @@ class PowerSupply(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'Power supply', system)
+        super().__init__('Power supply', system)
 
     def read_power_supply(self):
         # Python implementation of the on_ac_power shell script
@@ -946,7 +946,7 @@ class PerfEvent(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'Perf event', system)
+        super().__init__('Perf event', system)
 
     def read_max_sample_rate(self):
         line = self.read_first_line(self.path)
@@ -991,12 +991,15 @@ OPERATIONS = [
     CPUFrequency,
     IRQAffinity,
     PowerSupply,
+
     # Setting the CPU scaling governor resets no_turbo
     # and so must be set before Turbo Boost
     CPUGovernor,
+
     # Intel Pstate Operations
     TurboBoostIntelPstate,
     CheckNOHZFullIntelPstate,
+
     # X86 Operations
     TurboBoostMSR,
 ]
