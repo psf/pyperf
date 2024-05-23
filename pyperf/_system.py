@@ -128,7 +128,7 @@ class IntelPstateOperation(Operation):
 
 class TurboBoostMSR(Operation):
     """
-    Get/Set Turbo Boost mode of X86 CPUs using /dev/cpu/N/msr
+    Get/Set Turbo Boost mode of x86 CPUs using /dev/cpu/N/msr
     """
 
     @staticmethod
