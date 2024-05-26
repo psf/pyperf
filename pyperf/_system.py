@@ -19,6 +19,7 @@ MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
 
 OS_LINUX = sys.platform.startswith('linux')
+PLATFORM_X86 = platform.machine() in ('x86', 'x86_64', 'amd64')
 
 
 def is_root():
@@ -119,21 +120,23 @@ class Operation:
         pass
 
 
+class IntelPstateOperation(Operation):
+    @staticmethod
+    def available():
+        return use_intel_pstate()
+
+
 class TurboBoostMSR(Operation):
     """
-    Get/Set Turbo Boost mode of Intel CPUs using /dev/cpu/N/msr.
+    Get/Set Turbo Boost mode of x86 CPUs using /dev/cpu/N/msr
     """
 
     @staticmethod
     def available():
-        return (
-            OS_LINUX and 
-            not use_intel_pstate() and 
-            platform.machine() in ('x86', 'x86_64', 'amd64')
-        )
+        return OS_LINUX and PLATFORM_X86 and not use_intel_pstate()
 
     def __init__(self, system):
-        Operation.__init__(self, 'Turbo Boost (MSR)', system)
+        super().__init__('Turbo Boost (MSR)', system)
         self.cpu_states = {}
         self.have_device = True
 
@@ -266,18 +269,14 @@ class TurboBoostMSR(Operation):
                 break
 
 
-class TurboBoostIntelPstate(Operation):
+class TurboBoostIntelPstate(IntelPstateOperation):
     """
     Get/Set Turbo Boost mode of Intel CPUs by reading from/writing into
     /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
     """
 
-    @staticmethod
-    def available():
-        return use_intel_pstate()
-
     def __init__(self, system):
-        Operation.__init__(self, 'Turbo Boost (intel_pstate)', system)
+        super().__init__('Turbo Boost (intel_pstate)', system)
         self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
         self.enabled = None
 
@@ -337,54 +336,92 @@ class TurboBoostIntelPstate(Operation):
         self.log_action("Turbo Boost %s: %s" % (action, msg))
 
 
-class CPUGovernorIntelPstate(Operation):
+class CPUGovernor(Operation):
     """
-    Get/Set CPU scaling governor of the intel_pstate driver.
+    Get/Set CPU scaling governor
     """
     BENCHMARK_GOVERNOR = 'performance'
 
     @staticmethod
     def available():
-        return use_intel_pstate()
+        return os.path.exists(
+            sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        )
 
     def __init__(self, system):
-        Operation.__init__(self, 'CPU scaling governor (intel_pstate)',
-                           system)
-        self.path = sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
-        self.governor = None
+        super().__init__('CPU scaling governor', system)
+        self.device_syspath = sysfs_path("devices/system/cpu")
 
-    def read_governor(self):
-        governor = self.read_first_line(self.path)
-        if governor:
-            self.governor = governor
-        else:
-            self.error("Unable to read CPU scaling governor from %s" % self.path)
+    def read_governor(self, cpu):
+        filename = os.path.join(self.device_syspath, 'cpu%s/cpufreq/scaling_governor' % cpu)
+        try:
+            with open(filename, "r") as fp:
+                return fp.readline().rstrip()
+        except OSError as exc:
+            self.check_permission_error(exc)
+            self.error("Unable to read CPU scaling governor from %s" % filename)
+            return None
 
     def show(self):
-        self.read_governor()
-        if not self.governor:
-            return
+        cpus = {}
+        for cpu in range(self.system.logical_cpu_count):
+            governor = self.read_governor(cpu)
+            if governor is not None:
+                cpus[cpu] = governor
 
-        self.log_state(self.governor)
-        self.tuned_for_benchmarks = (self.governor == self.BENCHMARK_GOVERNOR)
+        infos = format_cpu_infos(cpus)
+        if not infos:
+            return
+        self.log_state('; '.join(infos))
+
+        self.tuned_for_benchmarks = all(
+            governor == self.BENCHMARK_GOVERNOR for governor in cpus.values()
+        )
         if not self.tuned_for_benchmarks:
             self.advice('Use CPU scaling governor %r'
                         % self.BENCHMARK_GOVERNOR)
 
-    def write(self, tune):
-        self.read_governor()
-        if not self.governor:
-            return
+    def write_governor(self, filename, new_governor):
+        with open(filename, "r") as fp:
+            governor = fp.readline().rstrip()
 
-        new_governor = 'performance' if tune else 'powersave'
-        if new_governor == self.governor:
-            return
+        if new_governor == governor:
+            return False
+
+        with open(filename, "w") as fp:
+            fp.write(new_governor)
+        return True
+
+    def write_cpu(self, cpu, tune):
+        governor = self.read_governor(cpu)
+        if not governor:
+            self.warning("Unable to read governor of CPU %s" % (cpu))
+            return False
+
+        new_governor = self.BENCHMARK_GOVERNOR if tune else "powersave"
+        filename = os.path.join(self.device_syspath, 'cpu%s/cpufreq/scaling_governor' % cpu)
         try:
-            write_text(self.path, new_governor)
+            return self.write_governor(filename, new_governor)
         except OSError as exc:
-            self.error("Failed to set the CPU scaling governor: %s" % exc)
-        else:
-            self.log_action("CPU scaling governor set to %s" % new_governor)
+            self.check_permission_error(exc)
+            self.error("Unable to write governor of CPU %s: %s"
+                       % (cpu, exc))
+
+    def write(self, tune):
+        modified = []
+        for cpu in self.system.cpus:
+            if self.write_cpu(cpu, tune):
+                modified.append(cpu)
+            if self.permission_error:
+                break
+
+        if modified:
+            cpus = format_cpu_list(modified)
+            if tune:
+                action = "set to performance"
+            else:
+                action = "reset to powersave"
+            self.log_action("CPU scaling governor of CPUs %s %s" % (cpus, action))
 
 
 class LinuxScheduler(Operation):
@@ -398,7 +435,7 @@ class LinuxScheduler(Operation):
         return OS_LINUX
 
     def __init__(self, system):
-        Operation.__init__(self, 'Linux scheduler', system)
+        super().__init__('Linux scheduler', system)
         self.ncpu = None
         self.linux_version = None
 
@@ -473,7 +510,7 @@ class ASLR(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'ASLR', system)
+        super().__init__('ASLR', system)
 
     def show(self):
         line = self.read_first_line(self.path)
@@ -519,7 +556,7 @@ class CPUFrequency(Operation):
         return os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq"))
 
     def __init__(self, system):
-        Operation.__init__(self, 'CPU Frequency', system)
+        super().__init__('CPU Frequency', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
 
     def read_cpu(self, cpu):
@@ -617,7 +654,7 @@ class IRQAffinity(Operation):
         return os.path.exists(cls.irq_path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'IRQ affinity', system)
+        super().__init__('IRQ affinity', system)
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
@@ -828,13 +865,10 @@ class IRQAffinity(Operation):
         self.write_irqs(cpus)
 
 
-class CheckNOHZFullIntelPstate(Operation):
-    @staticmethod
-    def available():
-        return use_intel_pstate()
+class CheckNOHZFullIntelPstate(IntelPstateOperation):
 
     def __init__(self, system):
-        Operation.__init__(self, 'Check nohz_full', system)
+        super().__init__('Check nohz_full', system)
 
     def show(self):
         nohz_full = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
@@ -865,7 +899,7 @@ class PowerSupply(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'Power supply', system)
+        super().__init__('Power supply', system)
 
     def read_power_supply(self):
         # Python implementation of the on_ac_power shell script
@@ -912,7 +946,7 @@ class PerfEvent(Operation):
         return os.path.exists(cls.path)
 
     def __init__(self, system):
-        Operation.__init__(self, 'Perf event', system)
+        super().__init__('Perf event', system)
 
     def read_max_sample_rate(self):
         line = self.read_first_line(self.path)
@@ -950,18 +984,24 @@ class PerfEvent(Operation):
 
 
 OPERATIONS = [
+    # Generic operations
     PerfEvent,
     ASLR,
     LinuxScheduler,
     CPUFrequency,
-    # Setting the CPU scaling governor resets no_turbo
-    # and so must be set before Turbo Boost
-    CPUGovernorIntelPstate,
-    TurboBoostIntelPstate,
-    CheckNOHZFullIntelPstate,
-    TurboBoostMSR,
     IRQAffinity,
     PowerSupply,
+
+    # Setting the CPU scaling governor resets no_turbo
+    # and so must be set before Turbo Boost
+    CPUGovernor,
+
+    # Intel Pstate Operations
+    TurboBoostIntelPstate,
+    CheckNOHZFullIntelPstate,
+
+    # X86 Operations
+    TurboBoostMSR,
 ]
 
 
