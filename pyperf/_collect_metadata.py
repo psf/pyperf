@@ -208,7 +208,7 @@ def collect_system_metadata(metadata):
 
 def collect_memory_metadata(metadata):
     if resource is not None:
-        metadata["mem_max_rss"] = get_max_rss(resource.RUSAGE_SELF)
+        metadata["mem_max_rss"] = get_max_rss(children=False)
 
     # Note: Don't collect VmPeak of /proc/self/status on Linux because it is
     # not accurate. See pyperf._linux_memory for more accurate memory metrics.

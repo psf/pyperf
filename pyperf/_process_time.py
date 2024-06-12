@@ -26,8 +26,12 @@ except ImportError:
     resource = None
 
 
-def get_max_rss(resource_type):
+def get_max_rss(children=False):
     if resource is not None:
+        if children:
+            resource_type = resource.RUSAGE_CHILDREN
+        else:
+            resource_type = resource.RUSAGE_SELF
         usage = resource.getrusage(resource_type)
         if sys.platform == 'darwin':
             return usage.ru_maxrss
@@ -52,11 +56,6 @@ def merge_profile_stats_files(src, dst):
 
 
 def bench_process(loops, args, kw, profile_filename=None):
-    if resource is not None:
-        rusage_children = resource.RUSAGE_CHILDREN
-    else:
-        rusage_children = 0
-
     max_rss = 0
     range_it = range(loops)
     start_time = time.perf_counter()
@@ -66,7 +65,7 @@ def bench_process(loops, args, kw, profile_filename=None):
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
     for _ in range_it:
-        start_rss = get_max_rss(rusage_children)
+        start_rss = get_max_rss(children=True)
 
         proc = subprocess.Popen(args, **kw)
         with proc:
@@ -80,7 +79,7 @@ def bench_process(loops, args, kw, profile_filename=None):
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
 
-        rss = get_max_rss(rusage_children) - start_rss
+        rss = get_max_rss(children=True) - start_rss
         max_rss = max(max_rss, rss)
 
         if profile_filename:
