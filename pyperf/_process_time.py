@@ -26,7 +26,7 @@ except ImportError:
     resource = None
 
 
-def get_max_rss(children=False):
+def get_max_rss(*, children):
     if resource is not None:
         if children:
             resource_type = resource.RUSAGE_CHILDREN
