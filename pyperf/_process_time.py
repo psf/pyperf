@@ -26,9 +26,13 @@ except ImportError:
     resource = None
 
 
-def get_max_rss():
+def get_max_rss(*, children):
     if resource is not None:
-        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        if children:
+            resource_type = resource.RUSAGE_CHILDREN
+        else:
+            resource_type = resource.RUSAGE_SELF
+        usage = resource.getrusage(resource_type)
         if sys.platform == 'darwin':
             return usage.ru_maxrss
         return usage.ru_maxrss * 1024
@@ -61,7 +65,7 @@ def bench_process(loops, args, kw, profile_filename=None):
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
     for _ in range_it:
-        start_rss = get_max_rss()
+        start_rss = get_max_rss(children=True)
 
         proc = subprocess.Popen(args, **kw)
         with proc:
@@ -75,7 +79,7 @@ def bench_process(loops, args, kw, profile_filename=None):
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
 
-        rss = get_max_rss() - start_rss
+        rss = get_max_rss(children=True) - start_rss
         max_rss = max(max_rss, rss)
 
         if profile_filename:
