@@ -26,8 +26,10 @@ except ImportError:
     resource = None
 
 
-def get_max_rss(resource_type=resource.RUSAGE_CHILDREN):
+def get_max_rss(resource_type=None):
     if resource is not None:
+        if resource_type is None:
+            resource_type = resource.RUSAGE_CHILDREN
         usage = resource.getrusage(resource_type)
         if sys.platform == 'darwin':
             return usage.ru_maxrss
