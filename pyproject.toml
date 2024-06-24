@@ -45,7 +45,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 requires-python = ">=3.7"
-dependencies = ["psutil>=5.9.0"]
+dependencies = ["psutil>=5.9.0", "setuptools"]
 
 [project.optional-dependencies]
 dev = [
