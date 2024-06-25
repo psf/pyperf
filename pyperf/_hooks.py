@@ -3,14 +3,12 @@
 # benchmarking code is run.
 
 
+import importlib.metadata
 import sys
 
 
-import pkg_resources
-
-
 def get_hooks():
-    return (x.load() for x in pkg_resources.iter_entry_points(group="pyperf.hook", name=None))
+    return (x.load() for x in importlib.metadata.entry_points(group="pyperf.hook"))
 
 
 def get_hook_names():
