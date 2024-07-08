@@ -14,7 +14,7 @@ def get_hooks():
     if sys.version_info[:2] < (3, 10):
         group = entry_points[hook_prefix]
     else:
-        group = entry_points.select(hook_prefix)
+        group = entry_points.select(group=hook_prefix)
     return (x.load() for x in group)
 
 
