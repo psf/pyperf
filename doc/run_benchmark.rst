@@ -198,7 +198,7 @@ Specializer statistics (``pystats``)
 If running benchmarks on a CPython built with the ``--enable-pystats`` flag, when you pass ``--hook pystats``, pyperf will collect ``pystats`` on the benchmark code by calling ``sys._stats_on`` immediately before the benchmark and calling ``sys._stats_off`` immediately after.
 Stats are not collected when running ``pyperf``'s own code or when warming up or calibrating the benchmarks.
 
-**New in X.YY:** The ``--hook pystats`` flag must be given to collect pystats.
+**New in 2.8.0:** The ``--hook pystats`` flag must be given to collect pystats.
 
 Due to the overhead of collecting the statistics, the timing results will be meaningless.
 
