@@ -242,8 +242,12 @@ class Runner:
                             help='Collect profile data using cProfile '
                                  'and output to the given file.')
 
-        parser.add_argument('--hook', nargs="*", choices=list(get_hook_names()),
-                            help='Use the given pyperf hooks')
+        hook_names = list(get_hook_names())
+        parser.add_argument(
+            '--hook', nargs="*", choices=hook_names,
+            metavar=f"{', '.join(x for x in hook_names if not x.startswith('_'))}",
+            help='Use the given pyperf hooks'
+        )
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",

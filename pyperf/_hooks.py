@@ -3,6 +3,7 @@
 # benchmarking code is run.
 
 
+import abc
 import importlib.metadata
 import sys
 
@@ -19,21 +20,59 @@ def get_selected_hooks(hook_names):
     if hook_names is None:
         return
 
-    for hook in get_hooks():
-        if hook.__name__ in hook_names:
-            yield hook
-
-
-def collect_hook_metadata(metadata, hook_names):
-    for hook in get_selected_hooks(hook_names):
-        hook.collect_metadata(metadata)
+    hook_mapping = {hook.__name__: hook for hook in get_hooks()}
+    for hook_name in hook_names:
+        yield hook_mapping[hook_name]
 
 
 class HookError(Exception):
     pass
 
 
-class pystats:
+class HookBase(abc.ABC):
+    def __init__(self):
+        """
+        Create a new instance of the hook.
+        """
+        pass
+
+    def teardown(self, _metadata):
+        """
+        Called when the hook is completed for a process. May add any information
+        collected to the passed-in `metadata` dictionary.
+        """
+        pass
+
+    def __enter__(self):
+        """
+        Called immediately before running benchmark code.
+
+        May be called multiple times per instance.
+        """
+        pass
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        """
+        Called immediately after running benchmark code.
+        """
+        pass
+
+
+class _test_hook(HookBase):
+    def __init__(self):
+        self._count = 0
+
+    def teardown(self, metadata):
+        metadata["_test_hook"] = self._count
+
+    def __enter__(self):
+        self._count += 1
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        pass
+
+
+class pystats(HookBase):
     def __init__(self):
         if not hasattr(sys, "_pystats_on"):
             raise HookError(
@@ -42,8 +81,7 @@ class pystats:
         sys._stats_off()
         sys._stats_clear()
 
-    @staticmethod
-    def collect_hook_metadata(metadata):
+    def teardown(self, metadata):
         metadata["pystats"] = "enabled"
 
     def __enter__(self):

@@ -6,7 +6,7 @@ import time
 import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
-from pyperf._hooks import collect_hook_metadata, get_selected_hooks, HookError
+from pyperf._hooks import get_selected_hooks, HookError
 from pyperf._utils import MS_WINDOWS, MAC_OS, percentile, median_abs_dev
 
 
@@ -117,11 +117,12 @@ class WorkerTask:
 
             index += 1
 
+        for hook in hook_managers:
+            hook.teardown(self.metadata)
+
     def collect_metadata(self):
         from pyperf._collect_metadata import collect_metadata
-        metadata = collect_metadata(process=False)
-        collect_hook_metadata(self.args.hook, metadata)
-        return metadata
+        return collect_metadata(process=False)
 
     def test_calibrate_warmups(self, nwarmup, unit):
         half = nwarmup + (len(self.warmups) - nwarmup) // 2
@@ -384,6 +385,4 @@ class WorkerProcessTask(WorkerTask):
 
     def collect_metadata(self):
         from pyperf._collect_metadata import collect_metadata
-        metadata = collect_metadata()
-        collect_hook_metadata(self.args.hook, metadata)
-        return metadata
+        return collect_metadata()
