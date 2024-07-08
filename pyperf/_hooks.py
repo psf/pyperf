@@ -9,7 +9,8 @@ import sys
 
 
 def get_hooks():
-    return (x.load() for x in importlib.metadata.entry_points(group="pyperf.hook"))
+    entry_points = importlib.metadata.entry_points()
+    return (x.load() for x in entry_points.select(group="pyperf.hook"))
 
 
 def get_hook_names():
