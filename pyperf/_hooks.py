@@ -9,8 +9,13 @@ import sys
 
 
 def get_hooks():
+    hook_prefix = "pyperf.hook"
     entry_points = importlib.metadata.entry_points()
-    return (x.load() for x in entry_points.select(group="pyperf.hook"))
+    if sys.version_info[:2] < (3, 10):
+        group = entry_points[hook_prefix]
+    else:
+        group = entry_points.select(hook_prefix)
+    return (x.load() for x in group)
 
 
 def get_hook_names():
