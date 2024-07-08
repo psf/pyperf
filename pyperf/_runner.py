@@ -244,7 +244,7 @@ class Runner:
 
         hook_names = list(get_hook_names())
         parser.add_argument(
-            '--hook', nargs="*", choices=hook_names,
+            '--hook', action="append", choices=hook_names,
             metavar=f"{', '.join(x for x in hook_names if not x.startswith('_'))}",
             help='Use the given pyperf hooks'
         )
