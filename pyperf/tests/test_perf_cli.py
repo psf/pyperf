@@ -730,6 +730,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             bench = pyperf.Benchmark.load(tmp_name)
         metadata = bench.get_metadata()
         assert metadata.get("_test_hook", 0) > 0
+        assert metadata.get("hooks", None) == "_test_hook"
 
 
 class TestConvert(BaseTestCase, unittest.TestCase):

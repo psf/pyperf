@@ -60,14 +60,16 @@ class WorkerTask:
 
         task_func = self.task_func
 
-        hook_managers = []
+        hook_managers = {}
         for hook in get_selected_hooks(args.hook):
             try:
-                hook_managers.append(hook())
+                hook_managers[hook.__name__] = hook()
             except HookError as e:
                 print(f"ERROR setting up hook '{hook.__name__}:'", file=sys.stderr)
                 print(str(e), file=sys.stderr)
                 sys.exit(1)
+        if len(hook_managers):
+            self.metadata["hooks"] = ", ".join(hook_managers.keys())
 
         index = 1
         inner_loops = self.inner_loops
@@ -78,7 +80,7 @@ class WorkerTask:
                 break
 
             with contextlib.ExitStack() as stack:
-                for hook in hook_managers:
+                for hook in hook_managers.values():
                     stack.enter_context(hook)
                 raw_value = task_func(self, self.loops)
 
@@ -117,7 +119,7 @@ class WorkerTask:
 
             index += 1
 
-        for hook in hook_managers:
+        for hook in hook_managers.values():
             hook.teardown(self.metadata)
 
     def collect_metadata(self):
