@@ -80,7 +80,7 @@ class _test_hook(HookBase):
 
 class pystats(HookBase):
     def __init__(self):
-        if not hasattr(sys, "_pystats_on"):
+        if not hasattr(sys, "_stats_on"):
             raise HookError(
                 "Can not collect pystats because python was not built with --enable-pystats"
             )
