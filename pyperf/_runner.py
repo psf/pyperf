@@ -75,7 +75,7 @@ class Runner:
                  loops=0, min_time=0.1, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
-                 _argparser=None):
+                 _argparser=None, warmups=1):
 
         # Reset the stats collection if running a --enable-pystats build
         try:
@@ -165,7 +165,7 @@ class Runner:
                             help='number of values per process (default: %s)'
                                  % values)
         parser.add_argument('-w', '--warmups',
-                            type=positive_or_nul,
+                            type=positive_or_nul, default=warmups,
                             help='number of skipped values per run used '
                                  'to warmup the benchmark')
         parser.add_argument('-l', '--loops',
