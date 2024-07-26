@@ -19,14 +19,14 @@ def get_hooks():
 
 
 def get_hook_names():
-    return (x.__name__ for x in get_hooks())
+    return (x.name for x in get_hooks())
 
 
 def get_selected_hooks(hook_names):
     if hook_names is None:
         return
 
-    hook_mapping = {hook.__name__: hook for hook in get_hooks()}
+    hook_mapping = {hook.name: hook for hook in get_hooks()}
     for hook_name in hook_names:
         yield hook_mapping[hook_name]
 

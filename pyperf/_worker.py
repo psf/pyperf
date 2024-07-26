@@ -63,7 +63,7 @@ class WorkerTask:
         hook_managers = {}
         for hook in get_selected_hooks(args.hook):
             try:
-                hook_managers[hook.__name__] = hook.load()()
+                hook_managers[hook.name] = hook.load()()
             except HookError as e:
                 print(f"ERROR setting up hook '{hook.__name__}:'", file=sys.stderr)
                 print(str(e), file=sys.stderr)
