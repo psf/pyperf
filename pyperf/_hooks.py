@@ -15,7 +15,7 @@ def get_hooks():
         group = entry_points[hook_prefix]
     else:
         group = entry_points.select(group=hook_prefix)
-    return (x.load() for x in group)
+    return group
 
 
 def get_hook_names():
