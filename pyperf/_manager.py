@@ -69,6 +69,10 @@ class Manager:
         if args.profile:
             cmd.extend(['--profile', args.profile])
 
+        if args.hook:
+            for hook in args.hook:
+                cmd.extend(['--hook', hook])
+
         if self.runner._add_cmdline_args:
             self.runner._add_cmdline_args(cmd, args)
 

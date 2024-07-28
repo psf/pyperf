@@ -719,6 +719,19 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         self._check_track_memory_bench(bench, loops=2)
 
+    def test_hook(self):
+        with tests.temporary_file() as tmp_name:
+            self.run_command('timeit',
+                             '--hook',
+                             '_test_hook',
+                             '-p2', '-w1', '-l5', '-n3',
+                             '[1,2]*1000',
+                             '-o', tmp_name)
+            bench = pyperf.Benchmark.load(tmp_name)
+        metadata = bench.get_metadata()
+        assert metadata.get("_test_hook", 0) > 0
+        assert metadata.get("hooks", None) == "_test_hook"
+
 
 class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):

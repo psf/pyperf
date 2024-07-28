@@ -11,6 +11,7 @@ from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
                                get_isolated_cpus, set_cpu_affinity,
                                set_highest_priority)
 from pyperf._formatter import format_timedelta
+from pyperf._hooks import get_hook_names
 from pyperf._utils import (MS_WINDOWS, MAC_OS, abs_executable,
                            WritePipe, get_python_names,
                            merge_profile_stats)
@@ -76,13 +77,6 @@ class Runner:
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
                  _argparser=None, warmups=1):
-
-        # Reset the stats collection if running a --enable-pystats build
-        try:
-            sys._stats_off()
-            sys._stats_clear()
-        except AttributeError:
-            pass
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad surprises
@@ -247,6 +241,13 @@ class Runner:
                             type=str,
                             help='Collect profile data using cProfile '
                                  'and output to the given file.')
+
+        hook_names = list(get_hook_names())
+        parser.add_argument(
+            '--hook', action="append", choices=hook_names,
+            metavar=f"{', '.join(x for x in hook_names if not x.startswith('_'))}",
+            help='Use the given pyperf hooks'
+        )
 
         memory = parser.add_mutually_exclusive_group()
         memory.add_argument('--tracemalloc', action="store_true",
@@ -731,6 +732,10 @@ class Runner:
 
         if self.args.profile:
             command.extend(["--profile", self.args.profile])
+
+        if self.args.hook:
+            for hook in self.args.hook:
+                command.extend(["--hook", hook])
 
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._command import BenchCommandTask

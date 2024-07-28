@@ -56,6 +56,10 @@ dev = [
 [project.scripts]
 pyperf = "pyperf.__main__:main"
 
+[project.entry-points."pyperf.hook"]
+pystats = "pyperf._hooks:pystats"
+_test_hook = "pyperf._hooks:_test_hook"
+
 [tool.setuptools]
 packages = ["pyperf", "pyperf.tests"]
 

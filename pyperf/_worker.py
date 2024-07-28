@@ -1,3 +1,4 @@
+import contextlib
 import statistics
 import sys
 import time
@@ -5,6 +6,7 @@ import time
 import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
+from pyperf._hooks import get_selected_hooks, HookError
 from pyperf._utils import MS_WINDOWS, MAC_OS, percentile, median_abs_dev
 
 
@@ -58,19 +60,16 @@ class WorkerTask:
 
         task_func = self.task_func
 
-        # If we are on a pystats build, turn on stats collection around the
-        # actual work, except when calibrating.
-        if hasattr(sys, "_stats_on") and not calibrate_loops:
-            core_task_func = task_func
-
-            def stats_func(*args):
-                sys._stats_on()
-                try:
-                    return core_task_func(*args)
-                finally:
-                    sys._stats_off()
-
-            task_func = stats_func
+        hook_managers = {}
+        for hook in get_selected_hooks(args.hook):
+            try:
+                hook_managers[hook.name] = hook.load()()
+            except HookError as e:
+                print(f"ERROR setting up hook '{hook.__name__}:'", file=sys.stderr)
+                print(str(e), file=sys.stderr)
+                sys.exit(1)
+        if len(hook_managers):
+            self.metadata["hooks"] = ", ".join(hook_managers.keys())
 
         index = 1
         inner_loops = self.inner_loops
@@ -80,7 +79,11 @@ class WorkerTask:
             if index > nvalue:
                 break
 
-            raw_value = task_func(self, self.loops)
+            with contextlib.ExitStack() as stack:
+                for hook in hook_managers.values():
+                    stack.enter_context(hook)
+                raw_value = task_func(self, self.loops)
+
             raw_value = float(raw_value)
             value = raw_value / (self.loops * inner_loops)
 
@@ -115,6 +118,9 @@ class WorkerTask:
                 nvalue += 1
 
             index += 1
+
+        for hook in hook_managers.values():
+            hook.teardown(self.metadata)
 
     def collect_metadata(self):
         from pyperf._collect_metadata import collect_metadata
