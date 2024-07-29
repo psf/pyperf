@@ -1,4 +1,5 @@
 import functools
+import json
 import os.path
 import subprocess
 import sys
@@ -23,18 +24,22 @@ def bench_command(command, task, loops):
                         % proc.returncode)
 
     rss = None
+    metadata = {}
     try:
         lines = output.splitlines()
         timing = float(lines[0])
-        if len(lines) >= 2:
-            rss = int(lines[1])
+        rss = int(lines[1])
+        metadata = json.loads(lines[2])
     except ValueError:
         raise ValueError("failed to parse script output: %r" % output)
 
-    if rss:
+    if rss and rss > 0:
         # store the maximum
         max_rss = task.metadata.get('command_max_rss', 0)
         task.metadata['command_max_rss'] = max(max_rss, rss)
+
+    task.metadata.update(metadata)
+
     return timing
 
 
