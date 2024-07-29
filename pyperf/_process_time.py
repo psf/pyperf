@@ -14,6 +14,8 @@ Measure wall-time, not CPU time.
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
+import contextlib
+import json
 import os
 import subprocess
 import sys
@@ -91,6 +93,27 @@ def bench_process(loops, args, kw, profile_filename=None):
     return (dt, max_rss)
 
 
+def load_hooks(metadata):
+    hook_names = []
+    while "--hook" in sys.argv:
+        hook_idx = sys.argv.index("--hook")
+        hook_name = sys.argv[hook_idx + 1]
+        hook_names.append(hook_name)
+        del sys.argv[hook_idx]
+        del sys.argv[hook_idx]
+
+    if len(hook_names):
+        # Only import pyperf if we know we have hooks
+        import pyperf._hooks
+
+        hook_managers = pyperf._hooks.instantiate_selected_hooks(hook_names)
+        metadata["hooks"] = ", ".join(hook_managers.values())
+    else:
+        hook_managers = {}
+
+    return hook_managers
+
+
 def main():
     # Make sure that the pyperf module wasn't imported
     if 'pyperf' in sys.modules:
@@ -111,6 +134,9 @@ def main():
     else:
         profile_filename = None
 
+    metadata = {}
+    hook_managers = load_hooks(metadata)
+
     loops = int(sys.argv[1])
     args = sys.argv[2:]
 
@@ -125,15 +151,21 @@ def main():
         kw['stdout'] = devnull
     kw['stderr'] = subprocess.STDOUT
 
-    dt, max_rss = bench_process(loops, args, kw, profile_filename)
+    with contextlib.ExitStack() as stack:
+        for hook in hook_managers.values():
+            stack.enter_context(hook)
+        dt, max_rss = bench_process(loops, args, kw, profile_filename)
 
     if devnull is not None:
         devnull.close()
 
+    for hook in hook_managers.values():
+        hook.teardown(metadata)
+
     # Write timing in seconds into stdout
     print(dt)
-    if max_rss:
-        print(max_rss)
+    print(max_rss or -1)
+    print(json.dumps(metadata))
 
 
 if __name__ == "__main__":
