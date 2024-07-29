@@ -15,7 +15,6 @@ If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
 import contextlib
-import importlib.metadata
 import json
 import os
 import subprocess
