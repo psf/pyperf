@@ -55,7 +55,7 @@ class CpuFunctionsTests(unittest.TestCase):
         stepping\t: 9
         microcode\t: 0x1c
         cpu MHz\t\t: 1287.554
-        cache size\t: 4096 KB
+        cache size\t: 4096 KiB
         physical id\t: 0
         siblings\t: 4
         core id\t\t: 0
@@ -82,7 +82,7 @@ class CpuFunctionsTests(unittest.TestCase):
         stepping\t: 9
         microcode\t: 0x1c
         cpu MHz\t\t: 1225.363
-        cache size\t: 4096 KB
+        cache size\t: 4096 KiB
         physical id\t: 0
         siblings\t: 4
         core id\t\t: 0
@@ -109,7 +109,7 @@ class CpuFunctionsTests(unittest.TestCase):
         stepping\t: 9
         microcode\t: 0x1c
         cpu MHz\t\t: 1200.101
-        cache size\t: 4096 KB
+        cache size\t: 4096 KiB
         physical id\t: 0
         siblings\t: 4
         core id\t\t: 1
