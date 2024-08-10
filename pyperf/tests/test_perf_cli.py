@@ -556,13 +556,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_dump_track_memory(self):
         expected = """
             Run 1: calibrate the number of loops: 2^15
-            - calibrate 1: 7188.0 kiB (loops: 2^15)
+            - calibrate 1: 7188.0 KiB (loops: 2^15)
             Run 2: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7188.0 kiB
+            - value 1: 7188.0 KiB
             Run 3: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7192.0 kiB
+            - value 1: 7192.0 KiB
             Run 4: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7208.0 kiB
+            - value 1: 7208.0 KiB
         """
         filename = os.path.join(TESTDIR, 'track_memory.json')
         stdout = self.run_command('dump', filename)

@@ -146,7 +146,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(format_filesize(1),
                          '1 byte')
         self.assertEqual(format_filesize(10 * 1024),
-                         '10.0 kiB')
+                         '10.0 KiB')
         self.assertEqual(format_filesize(12.4 * 1024 * 1024),
                          '12.4 MiB')
 

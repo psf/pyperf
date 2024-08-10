@@ -32,7 +32,7 @@ def format_filesize(size):
     if size > 10 * 1024 * 1024:
         return '%.1f MiB' % (size / (1024.0 * 1024.0))
 
-    return '%.1f kiB' % (size / 1024.0)
+    return '%.1f KiB' % (size / 1024.0)
 
 
 def format_filesizes(sizes):
