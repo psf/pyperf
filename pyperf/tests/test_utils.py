@@ -146,9 +146,9 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(format_filesize(1),
                          '1 byte')
         self.assertEqual(format_filesize(10 * 1024),
-                         '10.0 kB')
+                         '10.0 KiB')
         self.assertEqual(format_filesize(12.4 * 1024 * 1024),
-                         '12.4 MB')
+                         '12.4 MiB')
 
     def test_get_python_names(self):
         self.assertEqual(utils.get_python_names('/usr/bin/python3.6',

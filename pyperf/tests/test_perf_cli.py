@@ -556,13 +556,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def test_dump_track_memory(self):
         expected = """
             Run 1: calibrate the number of loops: 2^15
-            - calibrate 1: 7188.0 kB (loops: 2^15)
+            - calibrate 1: 7188.0 KiB (loops: 2^15)
             Run 2: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7188.0 kB
+            - value 1: 7188.0 KiB
             Run 3: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7192.0 kB
+            - value 1: 7192.0 KiB
             Run 4: 0 warmups, 1 value, 2^15 loops
-            - value 1: 7208.0 kB
+            - value 1: 7208.0 KiB
         """
         filename = os.path.join(TESTDIR, 'track_memory.json')
         stdout = self.run_command('dump', filename)
@@ -595,7 +595,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               date: 2016-10-21 03:14:19.670631
               duration: 338 ms
               load_avg_1min: 0.29
-              mem_max_rss: 13.4 MB
+              mem_max_rss: 13.4 MiB
               runnable_threads: 1
               uptime: 2 day 2 hour 4 min
             Run 2: 1 warmup, 3 values, 8 loops
@@ -609,7 +609,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               date: 2016-10-21 03:14:20.496710
               duration: 723 ms
               load_avg_1min: 0.29
-              mem_max_rss: 13.5 MB
+              mem_max_rss: 13.5 MiB
               runnable_threads: 1
               uptime: 2 day 2 hour 4 min
         """
@@ -689,7 +689,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                              '[1,2]*1000',
                              '-o', tmp_name)
             bench = pyperf.Benchmark.load(tmp_name)
-
+        
         self._check_track_memory_bench(bench, loops=5)
 
     def test_track_memory(self):
