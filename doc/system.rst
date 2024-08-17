@@ -23,7 +23,7 @@ be checked in benchmark metadata: it is enabled if the ``cpu_affinity``
 
 :func:`os.sched_setaffinity` is used to pin processes.
 
-Even if no CPU is isolated, CPU pining makes benchmarks more stable: use the
+Even if no CPU is isolated, CPU pinning makes benchmarks more stable: use the
 ``--affinity`` command line option.
 
 Check the CPU topology for HyperThreading and NUMA for best performances.
