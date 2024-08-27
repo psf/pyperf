@@ -31,6 +31,19 @@ def get_selected_hooks(hook_names):
         yield hook_mapping[hook_name]
 
 
+def instantiate_selected_hooks(hook_names):
+    hook_managers = {}
+    for hook in get_selected_hooks(hook_names):
+        try:
+            hook_managers[hook.name] = hook.load()()
+        except HookError as e:
+            print(f"ERROR setting up hook '{hook.name}':", file=sys.stderr)
+            print(str(e), file=sys.stderr)
+            sys.exit(1)
+
+    return hook_managers
+
+
 class HookError(Exception):
     pass
 

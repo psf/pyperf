@@ -6,7 +6,7 @@ import time
 import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
-from pyperf._hooks import get_selected_hooks, HookError
+from pyperf._hooks import instantiate_selected_hooks
 from pyperf._utils import MS_WINDOWS, MAC_OS, percentile, median_abs_dev
 
 
@@ -60,14 +60,7 @@ class WorkerTask:
 
         task_func = self.task_func
 
-        hook_managers = {}
-        for hook in get_selected_hooks(args.hook):
-            try:
-                hook_managers[hook.name] = hook.load()()
-            except HookError as e:
-                print(f"ERROR setting up hook '{hook.__name__}:'", file=sys.stderr)
-                print(str(e), file=sys.stderr)
-                sys.exit(1)
+        hook_managers = instantiate_selected_hooks(args.hook)
         if len(hook_managers):
             self.metadata["hooks"] = ", ".join(hook_managers.keys())
 
