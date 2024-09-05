@@ -115,15 +115,15 @@ def load_hooks(metadata):
 
 
 def write_data(dt, max_rss, metadata, out=sys.stdout):
-    # The data that is communicated back to the main orchestration process.
+    # Write the data that is communicated back to the main orchestration process.
     # It is three lines containing:
     #    - The runtime (in seconds)
     #    - max_rss (or -1, if not able to compute)
     #    - The metadata to add to the benchmark entry, as a JSON dictionary
-    # Write timing in seconds into stdout
     print(dt, file=out)
     print(max_rss or -1, file=out)
-    print(json.dumps(metadata), file=out)
+    json.dump(metadata, fp=out)
+    print(file=out)
 
 
 def main():
