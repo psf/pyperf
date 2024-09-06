@@ -8,6 +8,26 @@ from pyperf._utils import shell_quote, popen_communicate
 from pyperf._worker import WorkerTask
 
 
+def parse_subprocess_data(output):
+    # Parse the data send from the subprocess.
+    # It is three lines containing:
+    #    - The runtime (in seconds)
+    #    - max_rss (or -1, if not able to compute)
+    #    - The metadata to add to the benchmark entry, as a JSON dictionary
+
+    rss = None
+    metadata = {}
+    try:
+        lines = output.splitlines()
+        timing = float(lines[0])
+        rss = int(lines[1])
+        metadata = json.loads(lines[2])
+    except ValueError:
+        raise ValueError("failed to parse worker output: %r" % output)
+
+    return timing, rss, metadata
+
+
 def bench_command(command, task, loops):
     path = os.path.dirname(__file__)
     script = os.path.join(path, '_process_time.py')
@@ -23,15 +43,7 @@ def bench_command(command, task, loops):
         raise Exception("Command failed with exit code %s"
                         % proc.returncode)
 
-    rss = None
-    metadata = {}
-    try:
-        lines = output.splitlines()
-        timing = float(lines[0])
-        rss = int(lines[1])
-        metadata = json.loads(lines[2])
-    except ValueError:
-        raise ValueError("failed to parse script output: %r" % output)
+    timing, rss, metadata = parse_subprocess_data(output)
 
     if rss and rss > 0:
         # store the maximum
