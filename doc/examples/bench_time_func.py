@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+import time
 import pyperf
 
 
 def bench_dict(loops, mydict):
     range_it = range(loops)
-    t0 = pyperf.perf_counter()
+    t0 = time.perf_counter()
 
     for _ in range_it:
         mydict['0']
@@ -18,7 +19,7 @@ def bench_dict(loops, mydict):
         mydict['800']
         mydict['900']
 
-    return pyperf.perf_counter() - t0
+    return time.perf_counter() - t0
 
 
 runner = pyperf.Runner()
