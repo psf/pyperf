@@ -23,7 +23,7 @@ def parse_subprocess_data(output):
         rss = int(lines[1])
         metadata = json.loads(lines[2])
     except ValueError:
-        raise ValueError("failed to parse script output: %r" % output)
+        raise ValueError("failed to parse worker output: %r" % output)
 
     return timing, rss, metadata
 
