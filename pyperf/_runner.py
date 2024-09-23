@@ -183,6 +183,10 @@ class Runner:
                                  'value, used to calibrate the number of '
                                  'loops (default: %s)'
                             % format_timedelta(min_time))
+        parser.add_argument('--timeout',
+                            help='Specify a timeout in seconds for a single '
+                                 'benchmark execution (default: disabled)',
+                            type=strictly_positive)
         parser.add_argument('--worker', action='store_true',
                             help='Worker process, run the benchmark.')
         parser.add_argument('--worker-task', type=positive_or_nul, metavar='TASK_ID',

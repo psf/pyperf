@@ -69,6 +69,9 @@ class Manager:
         if args.profile:
             cmd.extend(['--profile', args.profile])
 
+        if args.timeout:
+            cmd.extend(['--timeout', str(args.timeout)])
+
         if args.hook:
             for hook in args.hook:
                 cmd.extend(['--hook', hook])
@@ -83,7 +86,7 @@ class Manager:
                              self.args.locale,
                              self.args.copy_env)
 
-        rpipe, wpipe = create_pipe()
+        rpipe, wpipe = create_pipe(timeout=self.args.timeout)
         with rpipe:
             with wpipe:
                 warg = wpipe.to_subprocess()
@@ -102,10 +105,12 @@ class Manager:
                 proc = subprocess.Popen(cmd, env=env, **kw)
 
             with popen_killer(proc):
-                with rpipe.open_text() as rfile:
-                    bench_json = rfile.read()
-
-                exitcode = proc.wait()
+                try:
+                    bench_json = rpipe.read_text()
+                    exitcode = proc.wait()
+                except TimeoutError as exc:
+                    print(exc)
+                    sys.exit(124)
 
         if exitcode:
             raise RuntimeError("%s failed with exit code %s"

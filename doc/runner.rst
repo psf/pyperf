@@ -98,6 +98,7 @@ Option::
     --inherit-environ=VARS
     --copy-env
     --no-locale
+    --timeout TIMEOUT
     --track-memory
     --tracemalloc
 
@@ -140,6 +141,9 @@ Option::
   - ``LC_TELEPHONE``
   - ``LC_TIME``
 
+* ``--timeout``: set a timeout in seconds for an execution of the benchmark.
+  If the benchmark execution times out, pyperf exits with error code 124.
+  There is no time out by default.
 * ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
   allocation and get the peak of memory usage in metadata
   (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
