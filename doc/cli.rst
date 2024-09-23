@@ -229,8 +229,8 @@ Example::
 Values:
 
 * `Median <https://en.wikipedia.org/wiki/Median>`_
-* "std dev": `Standard deviation (standard error)
-  <https://en.wikipedia.org/wiki/Standard_error>`_
+* "std dev": `Standard deviation
+  <https://en.wikipedia.org/wiki/Standard_deviation>`_
 
 See also `Outlier (Wikipedia) <https://en.wikipedia.org/wiki/Outlier>`_.
 

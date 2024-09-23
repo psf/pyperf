@@ -192,7 +192,7 @@ the benchmark less reliable since two runs may use a different number of warmup
 values.
 
 Specializer statistics (``pystats``)
-==================================
+====================================
 
 ``pyperf`` has built-in support for `specializer statistics (``pystats``) <https://docs.python.org/dev/using/configure.html#cmdoption-enable-pystats>`_.
 If running benchmarks on a CPython built with the ``--enable-pystats`` flag, when you pass ``--hook pystats``, pyperf will collect ``pystats`` on the benchmark code by calling ``sys._stats_on`` immediately before the benchmark and calling ``sys._stats_off`` immediately after.
