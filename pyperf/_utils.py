@@ -327,26 +327,25 @@ class ReadPipe(_Pipe):
 
     def read_text(self):
         with self.open_text() as rfile:
-            if self._timeout:
-              return self._read_text_timeout(rfile, self._timeout)
+            if self._timeout is not None:
+                return self._read_text_timeout(rfile, self._timeout)
             else:
                 return rfile.read()
 
     def _read_text_timeout(self, rfile, timeout):
-        start_time = time.time()
+        start_time = time.monotonic()
+        output = []
         while True:
-            if time.time() - start_time > timeout:
+            if time.monotonic() - start_time > timeout:
                 raise TimeoutError(f"Timed out after {timeout} seconds")
             ready, _, _ = select.select([rfile], [], [], timeout)
-            if ready:
-                data = rfile.read()
-                if data:
-                    return data
-                else:
-                    break
-            else:
-                pass
-
+            if not ready:
+                continue
+            data = rfile.read(1024)
+            if not data:
+                break
+            output.append(data)
+        return "".join(output)
 
 
 class WritePipe(_Pipe):

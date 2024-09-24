@@ -150,7 +150,7 @@ class TestRunner(unittest.TestCase):
                          tests.benchmark_as_json(result.bench))
 
     def test_pipe_with_timeout(self):
-        rpipe, wpipe = create_pipe(timeout=1)
+        rpipe, wpipe = create_pipe(timeout=0.1)
         with rpipe:
             with wpipe:
                 arg = wpipe.to_subprocess()
@@ -165,7 +165,7 @@ class TestRunner(unittest.TestCase):
                 with self.assertRaises(TimeoutError) as cm:
                     rpipe.read_text()
                 self.assertEqual(str(cm.exception),
-                         'Timed out after 1 seconds')
+                         'Timed out after 0.1 seconds')
 
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:

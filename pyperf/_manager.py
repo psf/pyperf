@@ -7,6 +7,8 @@ from pyperf._formatter import format_number
 from pyperf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
 
 
+EXIT_TIMEOUT = 60
+
 # Limit to 5 calibration processes
 # (10 if calibration is needed for loops and warmups)
 MAX_CALIBRATION = 5
@@ -107,7 +109,7 @@ class Manager:
             with popen_killer(proc):
                 try:
                     bench_json = rpipe.read_text()
-                    exitcode = proc.wait()
+                    exitcode = proc.wait(timeout=EXIT_TIMEOUT)
                 except TimeoutError as exc:
                     print(exc)
                     sys.exit(124)
