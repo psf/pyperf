@@ -26,6 +26,9 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 
 
 class TestRunner(unittest.TestCase):
+
+    maxDiff = None
+
     def create_runner(self, args, **kwargs):
         # hack to be able to create multiple instances per process
         pyperf.Runner._created.clear()
