@@ -88,7 +88,7 @@ class Manager:
                              self.args.locale,
                              self.args.copy_env)
 
-        rpipe, wpipe = create_pipe(timeout=self.args.timeout)
+        rpipe, wpipe = create_pipe()
         with rpipe:
             with wpipe:
                 warg = wpipe.to_subprocess()
@@ -108,7 +108,7 @@ class Manager:
 
             with popen_killer(proc):
                 try:
-                    bench_json = rpipe.read_text()
+                    bench_json = rpipe.read_text(timeout=self.args.timeout)
                     exitcode = proc.wait(timeout=EXIT_TIMEOUT)
                 except TimeoutError as exc:
                     print(exc)

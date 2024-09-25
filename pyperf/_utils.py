@@ -288,9 +288,8 @@ def create_environ(inherit_environ, locale, copy_all):
 class _Pipe:
     _OPEN_MODE = "r"
 
-    def __init__(self, fd, timeout=None):
+    def __init__(self, fd):
         self._fd = fd
-        self._timeout = timeout
         self._file = None
         if MS_WINDOWS:
             self._handle = msvcrt.get_osfhandle(fd)
@@ -320,32 +319,38 @@ class _Pipe:
 class ReadPipe(_Pipe):
     def open_text(self):
         file = open(self._fd, "r", encoding="utf8")
-        if self._timeout:
-            os.set_blocking(file.fileno(), False)
         self._file = file
         return file
 
-    def read_text(self):
-        with self.open_text() as rfile:
-            if self._timeout is not None:
-                return self._read_text_timeout(rfile, self._timeout)
-            else:
+    def read_text(self, timeout=None):
+        if timeout is not None:
+            return self._read_text_timeout(timeout)
+        else:
+            with self.open_text() as rfile:
                 return rfile.read()
 
-    def _read_text_timeout(self, rfile, timeout):
+    def _read_text_timeout(self, timeout):
+        fd = self.fd
+        os.set_blocking(fd, False)
+
         start_time = time.monotonic()
         output = []
         while True:
             if time.monotonic() - start_time > timeout:
                 raise TimeoutError(f"Timed out after {timeout} seconds")
-            ready, _, _ = select.select([rfile], [], [], timeout)
+            ready, _, _ = select.select([fd], [], [], timeout)
             if not ready:
                 continue
-            data = rfile.read(1024)
+            try:
+                data = os.read(fd, 1024)
+            except BlockingIOError:
+                continue
             if not data:
                 break
             output.append(data)
-        return "".join(output)
+
+        data = b"".join(output)
+        return data.decode("utf8")
 
 
 class WritePipe(_Pipe):
@@ -373,9 +378,9 @@ class WritePipe(_Pipe):
         return file
 
 
-def create_pipe(timeout=None):
+def create_pipe():
     rfd, wfd = os.pipe()
-    rpipe = ReadPipe(rfd, timeout)
+    rpipe = ReadPipe(rfd)
     wpipe = WritePipe(wfd)
     return (rpipe, wpipe)
 
