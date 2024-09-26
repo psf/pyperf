@@ -174,7 +174,7 @@ class TestRunner(unittest.TestCase):
                             return_value=(True, False, False)):
                 bench_json = rpipe.read_text(timeout=0.1)
                 self.assertEqual(bench_json.rstrip(),
-                                tests.benchmark_as_json(result.bench).rstrip())
+                                 tests.benchmark_as_json(result.bench).rstrip())
 
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
