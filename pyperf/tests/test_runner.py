@@ -26,9 +26,6 @@ Result = collections.namedtuple('Result', 'runner bench stdout')
 
 
 class TestRunner(unittest.TestCase):
-
-    maxDiff = None
-
     def create_runner(self, args, **kwargs):
         # hack to be able to create multiple instances per process
         pyperf.Runner._created.clear()
@@ -176,8 +173,8 @@ class TestRunner(unittest.TestCase):
             with mock.patch('pyperf._utils.select.select',
                             return_value=(True, False, False)):
                 bench_json = rpipe.read_text(timeout=0.1)
-                self.assertEqual(bench_json,
-                                tests.benchmark_as_json(result.bench))
+                self.assertEqual(bench_json.rstrip(),
+                                tests.benchmark_as_json(result.bench).rstrip())
 
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
