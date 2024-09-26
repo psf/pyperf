@@ -1,9 +1,11 @@
 import contextlib
 import math
 import os
+import select
 import statistics
 import sys
 import sysconfig
+import time
 from shlex import quote as shell_quote   # noqa
 from shutil import which
 
@@ -319,6 +321,36 @@ class ReadPipe(_Pipe):
         file = open(self._fd, "r", encoding="utf8")
         self._file = file
         return file
+
+    def read_text(self, timeout=None):
+        if timeout is not None:
+            return self._read_text_timeout(timeout)
+        else:
+            with self.open_text() as rfile:
+                return rfile.read()
+
+    def _read_text_timeout(self, timeout):
+        fd = self.fd
+        os.set_blocking(fd, False)
+
+        start_time = time.monotonic()
+        output = []
+        while True:
+            if time.monotonic() - start_time > timeout:
+                raise TimeoutError(f"Timed out after {timeout} seconds")
+            ready, _, _ = select.select([fd], [], [], timeout)
+            if not ready:
+                continue
+            try:
+                data = os.read(fd, 1024)
+            except BlockingIOError:
+                continue
+            if not data:
+                break
+            output.append(data)
+
+        data = b"".join(output)
+        return data.decode("utf8")
 
 
 class WritePipe(_Pipe):
