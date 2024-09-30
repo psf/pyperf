@@ -1,6 +1,22 @@
 Changelog
 =========
 
+* Benchmarks now have a timeout.
+  Patch by Diego Russo.
+* The example code in bench_time_func.py uses the more modern `time.perf_counter()`.
+  Patch by Hajime Senuma.
+* pystats are now correctly collected in subprocesses.
+  Patch by Michael Droettboom.
+* pyperf now supports "hooks" to add custom functionality around each benchmarking call.
+  pystats are no longer collected automatically, and you must pass `--hook pystats`.
+  Patch by Michael Droettboom.
+* Memory units are now correctly stated in KiB and MiB.
+  Patch by Ungve Mardal Moe.
+* max_mem_rss is now correctly measured on macOS.
+  Patch by Michael Droettboom.
+* `pyperf system tune` now works correctly on aarch64.
+  Patch by Diego Russo.
+
 Version 2.7.0 (2024-05-18)
 ---------------------------
 
