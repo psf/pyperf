@@ -97,10 +97,7 @@ class TestRunner(unittest.TestCase):
 
         try:
             s = pstats.Stats(name)
-            if sys.version_info < (3, 9):
-                assert len(s.stats)
-            else:
-                assert len(s.get_stats_profile().func_profiles)
+            assert len(s.get_stats_profile().func_profiles)
         finally:
             if os.path.isfile(name):
                 os.unlink(name)
@@ -123,10 +120,7 @@ class TestRunner(unittest.TestCase):
         try:
             import pstats
             s = pstats.Stats(name)
-            if sys.version_info < (3, 9):
-                assert len(s.stats)
-            else:
-                assert len(s.get_stats_profile().func_profiles)
+            assert len(s.get_stats_profile().func_profiles)
         finally:
             if os.path.isfile(name):
                 os.unlink(name)

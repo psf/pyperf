@@ -44,13 +44,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 dependencies = ["psutil>=5.9.0"]
 
 [project.optional-dependencies]
 dev = [
     'tox',
-    'importlib-metadata; python_version < "3.8"'
 ]
 
 [project.scripts]
