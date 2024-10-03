@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Set up Python ${{ matrix.python }} using deadsnakes
-        uses: deadsnakes/action@v3.1.0
+        uses: deadsnakes/action@v3.2.0
         if: ${{ matrix.build == 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
