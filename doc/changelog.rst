@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Version 2.8.1 (2024-11-13)
+--------------------------
+
+* Bugfix: Hooks now work correctly in subprocess benchmarks (`bench.run_command`).
+  Patch by Michael Droettboom
+* Python 3.8 is now unsupported.
+  Patch by Hugo van Kemenade
+
+Version 2.8.0 (2024-09-30)
+--------------------------
+
 * Benchmarks now have a timeout.
   Patch by Diego Russo.
 * The example code in bench_time_func.py uses the more modern `time.perf_counter()`.
