@@ -107,7 +107,7 @@ def load_hooks(metadata):
         import pyperf._hooks
 
         hook_managers = pyperf._hooks.instantiate_selected_hooks(hook_names)
-        metadata["hooks"] = ", ".join(hook_managers.values())
+        metadata["hooks"] = ", ".join(hook_managers.keys())
     else:
         hook_managers = {}
 

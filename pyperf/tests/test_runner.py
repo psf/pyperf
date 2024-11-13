@@ -506,6 +506,18 @@ class TestRunner(unittest.TestCase):
         self.assertEqual(bench.get_metadata()['command'],
                          ' '.join(map(shell_quote, args)))
 
+    def test_hook_command(self):
+        args = [sys.executable, '-c', 'pass']
+
+        runner = self.create_runner('-l1 -w0 -n1 --worker --hook _test_hook'.split())
+        with tests.capture_stdout():
+            bench = runner.bench_command('bench', args)
+
+        self.assertEqual(bench.get_metadata()['command'],
+                         ' '.join(map(shell_quote, args)))
+        self.assertEqual(bench.get_metadata()["hooks"],
+                         "_test_hook")
+
     def test_single_instance(self):
         runner1 = self.create_runner([])   # noqa
         with self.assertRaises(RuntimeError):
