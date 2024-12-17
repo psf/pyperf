@@ -413,7 +413,7 @@ def format_checks(bench, lines=None):
     warnings = []
     warn = warnings.append
 
-    required_nsamples = bench.required_samples()
+    required_nsamples = bench.required_nsamples()
 
     # Display a warning if the standard deviation is greater than 10%
     # of the mean
