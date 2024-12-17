@@ -413,6 +413,8 @@ def format_checks(bench, lines=None):
     warnings = []
     warn = warnings.append
 
+    required_nsamples = bench.required_samples()
+
     # Display a warning if the standard deviation is greater than 10%
     # of the mean
     if len(values) >= 2:
@@ -421,6 +423,10 @@ def format_checks(bench, lines=None):
         if percent >= 10.0:
             warn("the standard deviation (%s) is %.0f%% of the mean (%s)"
                  % (bench.format_value(stdev), percent, bench.format_value(mean)))
+        else:
+            # display a warning if the number of samples isn't enough to get a stable result
+            if required_nsamples > len(bench._runs):
+                warn("Not enough samples to get a stable result (95% certainly of less than 1% variation)")
 
     # Minimum and maximum, detect obvious outliers
     for minimum, value in (
@@ -456,6 +462,13 @@ def format_checks(bench, lines=None):
                      % os.path.basename(sys.executable))
         lines.append("Use pyperf stats, pyperf dump and pyperf hist to analyze results.")
         lines.append("Use --quiet option to hide these warnings.")
+
+    if required_nsamples < len(bench._runs) * 0.75:
+        lines.append("Benchmark was run more times than necessary to get a stable result.")
+        lines.append(
+            "Consider passing processes=%d to the Runner constructor to save time." %
+            required_nsamples
+        )
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:

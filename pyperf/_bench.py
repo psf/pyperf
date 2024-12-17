@@ -424,6 +424,35 @@ class Benchmark:
             raise ValueError("MAD must be >= 0")
         return value
 
+    def required_nsamples(self):
+        """
+        Determines the number of samples that would be required to have 95%
+        certainty that the samples have a variance of less than 1%.
+
+        This is described in this Wikipedia article about estimating the sampling of
+        a mean:
+
+        https://en.wikipedia.org/wiki/Sample_size_determination#Estimation_of_a_mean
+        """
+        # Get the means of the values per run
+        values = []
+        for run in self._runs:
+            values.append(statistics.mean(run.values))
+
+        total = math.fsum(values)
+        mean = total / len(values)
+        stddev = statistics.stdev(values)
+        # Normalize the stddev so we can target "percentage changed" rather than
+        # absolute time
+        sigma = stddev / mean
+
+        # 95% certainty
+        Z = 1.96
+        # 1% variation
+        W = 0.01
+
+        return int(math.ceil((4 * Z ** 2 * sigma ** 2) / (W ** 2)))
+
     def percentile(self, p):
         if not (0 <= p <= 100):
             raise ValueError("p must be in the range [0; 100]")
