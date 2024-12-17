@@ -478,11 +478,16 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             22.8 ms:  3 ##############
             22.9 ms:  4 ###################
             22.9 ms:  4 ###################
+            Benchmark was run more times than necessary to get a stable result.
+            Consider passing processes=7 to the Runner constructor to save time.
         """)
         self.check_command(expected, 'hist', TELCO, env=env)
 
     def test_show(self):
         expected = ("""
+            Benchmark was run more times than necessary to get a stable result.
+            Consider passing processes=7 to the Runner constructor to save time.
+
             Mean +- std dev: 22.5 ms +- 0.2 ms
         """)
         self.check_command(expected, 'show', TELCO)
@@ -518,6 +523,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             100th percentile: 22.9 ms (+2% of the mean) -- maximum
 
             Number of outlier (out of 22.0 ms..23.0 ms): 0
+            Benchmark was run more times than necessary to get a stable result.
+            Consider passing processes=7 to the Runner constructor to save time.
         """)
         self.check_command(expected, 'stats', TELCO)
 
@@ -628,8 +635,10 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_check_stable(self):
         stdout = self.run_command('check', TELCO)
-        self.assertEqual(stdout.rstrip(),
-                         'The benchmark seems to be stable')
+        self.assertTrue(
+            'The benchmark seems to be stable' in
+            stdout.rstrip()
+        )
 
     def test_command(self):
         command = [sys.executable, '-c', 'pass']
@@ -689,7 +698,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                              '[1,2]*1000',
                              '-o', tmp_name)
             bench = pyperf.Benchmark.load(tmp_name)
-        
+
         self._check_track_memory_bench(bench, loops=5)
 
     def test_track_memory(self):

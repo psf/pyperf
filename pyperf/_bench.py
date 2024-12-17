@@ -437,7 +437,11 @@ class Benchmark:
         # Get the means of the values per run
         values = []
         for run in self._runs:
-            values.append(statistics.mean(run.values))
+            if len(run.values):
+                values.append(statistics.mean(run.values))
+
+        if len(values) < 2:
+            return None
 
         total = math.fsum(values)
         mean = total / len(values)

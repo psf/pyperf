@@ -425,7 +425,10 @@ def format_checks(bench, lines=None):
                  % (bench.format_value(stdev), percent, bench.format_value(mean)))
         else:
             # display a warning if the number of samples isn't enough to get a stable result
-            if required_nsamples > len(bench._runs):
+            if (
+                required_nsamples is not None and
+                required_nsamples > len(bench._runs)
+            ):
                 warn("Not enough samples to get a stable result (95% certainly of less than 1% variation)")
 
     # Minimum and maximum, detect obvious outliers
@@ -463,7 +466,10 @@ def format_checks(bench, lines=None):
         lines.append("Use pyperf stats, pyperf dump and pyperf hist to analyze results.")
         lines.append("Use --quiet option to hide these warnings.")
 
-    if required_nsamples < len(bench._runs) * 0.75:
+    if (
+        required_nsamples is not None and
+        required_nsamples < len(bench._runs) * 0.75
+    ):
         lines.append("Benchmark was run more times than necessary to get a stable result.")
         lines.append(
             "Consider passing processes=%d to the Runner constructor to save time." %
