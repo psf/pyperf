@@ -455,7 +455,8 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                                            dump=dump,
                                            checks=checks,
                                            result=result,
-                                           display_runs_args=display_runs_args)
+                                           display_runs_args=display_runs_args,
+                                           only_checks=only_checks)
 
             if bench_lines:
                 empty_line(lines)

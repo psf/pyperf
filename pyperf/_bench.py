@@ -424,17 +424,23 @@ class Benchmark:
             raise ValueError("MAD must be >= 0")
         return value
 
-    def required_nsamples(self):
+    def required_nprocesses(self):
         """
-        Determines the number of samples that would be required to have 95%
-        certainty that the samples have a variance of less than 1%.
+        Determines the number of separate process runs that would be required
+        achieve stable results. Specifically, the target is to have 95%
+        certainty that there is a variance of less than 1%. If the result is
+        greater than the number of processes recorded in the input data, the
+        value is meaningless and only means "more samples are required".
 
-        This is described in this Wikipedia article about estimating the sampling of
-        a mean:
+        The method used is described in this Wikipedia article about estimating
+        the sampling of a mean:
 
         https://en.wikipedia.org/wiki/Sample_size_determination#Estimation_of_a_mean
         """
-        # Get the means of the values per run
+        # Get the means of the values per process. The values within the process
+        # often vary considerably (e.g. due to cache effects), but the variances
+        # between processes should be fairly consistent. Additionally, this
+        # value is intended to be advice for the number of processes to run.
         values = []
         for run in self._runs:
             if len(run.values):
@@ -446,6 +452,7 @@ class Benchmark:
         total = math.fsum(values)
         mean = total / len(values)
         stddev = statistics.stdev(values)
+
         # Normalize the stddev so we can target "percentage changed" rather than
         # absolute time
         sigma = stddev / mean
@@ -455,6 +462,7 @@ class Benchmark:
         # 1% variation
         W = 0.01
 
+        # (4Z²σ²)/(W²)
         return int(math.ceil((4 * Z ** 2 * sigma ** 2) / (W ** 2)))
 
     def percentile(self, p):
