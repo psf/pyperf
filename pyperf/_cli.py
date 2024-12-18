@@ -412,8 +412,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
     mean = bench.mean()
     warnings = []
     warn = warnings.append
-
-    required_nprocesses = bench.required_nprocesses()
+    required_nprocesses = None
 
     # Display a warning if the standard deviation is greater than 10%
     # of the mean
@@ -425,6 +424,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
                  % (bench.format_value(stdev), percent, bench.format_value(mean)))
         else:
             # display a warning if the number of samples isn't enough to get a stable result
+            required_nprocesses = bench.required_nprocesses()
             if (
                 required_nprocesses is not None and
                 required_nprocesses > len(bench._runs)
@@ -466,16 +466,18 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
         lines.append("Use pyperf stats, pyperf dump and pyperf hist to analyze results.")
         lines.append("Use --quiet option to hide these warnings.")
 
-    if (
-        check_too_many_processes and
-        required_nprocesses is not None and
-        required_nprocesses < len(bench._runs) * 0.75
-    ):
-        lines.append("Benchmark was run more times than necessary to get a stable result.")
-        lines.append(
-            "Consider passing processes=%d to the Runner constructor to save time." %
-            required_nprocesses
-        )
+    if check_too_many_processes:
+        if required_nprocesses is None:
+            required_nprocesses = bench.required_nprocesses()
+        if (
+            required_nprocesses is not None and
+            required_nprocesses < len(bench._runs) * 0.75
+        ):
+            lines.append("Benchmark was run more times than necessary to get a stable result.")
+            lines.append(
+                "Consider passing processes=%d to the Runner constructor to save time." %
+                required_nprocesses
+            )
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:
