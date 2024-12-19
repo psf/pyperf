@@ -463,7 +463,7 @@ class Benchmark:
         W = 0.01
 
         # (4Z²σ²)/(W²)
-        return int(math.ceil((4 * Z ** 2 * sigma ** 2) / (W ** 2)))
+        return math.ceil((4 * Z ** 2 * sigma ** 2) / (W ** 2))
 
     def percentile(self, p):
         if not (0 <= p <= 100):
