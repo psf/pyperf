@@ -628,8 +628,18 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_check_stable(self):
         stdout = self.run_command('check', TELCO)
-        self.assertEqual(stdout.rstrip(),
-                         'The benchmark seems to be stable')
+        self.assertIn(
+            textwrap.dedent(
+                """
+                Benchmark was run more times than necessary to get a stable result.
+                Consider passing processes=7 to the Runner constructor to save time.
+                """
+            ).strip(), stdout.rstrip()
+        )
+        self.assertIn(
+            'The benchmark seems to be stable',
+            stdout.rstrip()
+        )
 
     def test_command(self):
         command = [sys.executable, '-c', 'pass']
@@ -689,7 +699,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                              '[1,2]*1000',
                              '-o', tmp_name)
             bench = pyperf.Benchmark.load(tmp_name)
-        
+
         self._check_track_memory_bench(bench, loops=5)
 
     def test_track_memory(self):

@@ -345,6 +345,19 @@ Benchmark class
 
       Raise an exception if the benchmark has no values.
 
+   .. method:: required_nprocesses()
+
+      Determines the number of separate process runs that would be required
+      achieve stable results. Specifically, the target is to have 95% certainty
+      that there is a variance of less than 1%. If the result is greater than
+      the number of processes recorded in the input data, the value is
+      meaningless and only means "more samples are required".
+
+      The method used is described in this Wikipedia article about estimating
+      the sampling of a mean:
+
+      https://en.wikipedia.org/wiki/Sample_size_determination#Estimation_of_a_mean
+
    .. method:: update_metadata(metadata: dict)
 
       Update metadata of all runs of the benchmark.

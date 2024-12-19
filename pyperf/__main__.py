@@ -455,7 +455,8 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                                            dump=dump,
                                            checks=checks,
                                            result=result,
-                                           display_runs_args=display_runs_args)
+                                           display_runs_args=display_runs_args,
+                                           only_checks=only_checks)
 
             if bench_lines:
                 empty_line(lines)
@@ -491,10 +492,13 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
                 empty_line(output)
                 output.extend(lines)
 
+        contains_warning = False
         for line in output:
+            if line.startswith("WARNING:"):
+                contains_warning = True
             print(line)
 
-        if not output and only_checks:
+        if not contains_warning and only_checks:
             if len(data) == 1:
                 print("The benchmark seems to be stable")
             else:
