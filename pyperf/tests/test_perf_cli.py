@@ -628,16 +628,16 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_check_stable(self):
         stdout = self.run_command('check', TELCO)
-        self.assertTrue(
+        self.assertIn(
             textwrap.dedent(
                 """
                 Benchmark was run more times than necessary to get a stable result.
                 Consider passing processes=7 to the Runner constructor to save time.
                 """
-            ).strip() in stdout.rstrip()
+            ).strip(), stdout.rstrip()
         )
-        self.assertTrue(
-            'The benchmark seems to be stable' in
+        self.assertIn(
+            'The benchmark seems to be stable',
             stdout.rstrip()
         )
 
