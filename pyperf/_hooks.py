@@ -119,12 +119,13 @@ class perf_record(HookBase):
     """Profile the benchmark using perf-record.
 
     Profile data is written to the current directory directory by default, or
-    the `PYPERF_PERF_RECORD_DATA_DIR` environment if it is provided.
+    to the value of the `PYPERF_PERF_RECORD_DATA_DIR` environment variable, if
+    it is provided.
 
     Profile data files have a basename of the form `perf.data.<uuid>`
 
-    The value of the `PYPERF_PERF_RECORD_EXTRA_OPTS` is appended to the command line
-    of perf-record, if provided.
+    The value of the `PYPERF_PERF_RECORD_EXTRA_OPTS` environment variable is
+    appended to the command line of perf-record, if provided.
     """
 
     def mkfifo(self, tmpdir, basename):
