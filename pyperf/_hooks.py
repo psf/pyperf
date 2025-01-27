@@ -115,16 +115,16 @@ class pystats(HookBase):
         sys._stats_off()
 
 
-class perf(HookBase):
+class perf_record(HookBase):
     """Profile the benchmark using perf-record.
 
     Profile data is written to the current directory directory by default, or
-    the `PYPERF_PERF_DATA_DIR` environment if it is provided.
+    the `PYPERF_PERF_RECORD_DATA_DIR` environment if it is provided.
 
     Profile data files have a basename of the form `perf.data.<uuid>`
 
-    The value of the `PYPERF_PERF_EXTRA_OPTS` is appended to the command line
-    of perf, if provided.
+    The value of the `PYPERF_PERF_RECORD_EXTRA_OPTS` is appended to the command line
+    of perf-record, if provided.
     """
 
     def mkfifo(self, tmpdir, basename):
@@ -141,13 +141,13 @@ class perf(HookBase):
         self.tempdir = tempfile.TemporaryDirectory()
         self.ctl_fifo = self.mkfifo(self.tempdir.name, "ctl_fifo")
         self.ack_fifo = self.mkfifo(self.tempdir.name, "ack_fifo")
-        perf_data_dir = os.environ.get("PYPERF_PERF_DATA_DIR", "")
+        perf_data_dir = os.environ.get("PYPERF_PERF_RECORD_DATA_DIR", "")
         perf_data_basename = f"perf.data.{uuid.uuid4()}"
         cmd = ["perf", "record",
                "--pid", str(os.getpid()),
                "--output", os.path.join(perf_data_dir, perf_data_basename),
                "--control", f"fifo:{self.ctl_fifo},{self.ack_fifo}"]
-        extra_opts = os.environ.get("PYPERF_PERF_EXTRA_OPTS", "")
+        extra_opts = os.environ.get("PYPERF_PERF_RECORD_EXTRA_OPTS", "")
         cmd += shlex.split(extra_opts)
         self.perf = subprocess.Popen(
             cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

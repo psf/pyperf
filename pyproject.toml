@@ -56,7 +56,7 @@ dev = [
 pyperf = "pyperf.__main__:main"
 
 [project.entry-points."pyperf.hook"]
-perf = "pyperf._hooks:perf"
+perf_record = "pyperf._hooks:perf_record"
 pystats = "pyperf._hooks:pystats"
 _test_hook = "pyperf._hooks:_test_hook"
 
