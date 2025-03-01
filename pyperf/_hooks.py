@@ -167,4 +167,4 @@ class perf_record(HookBase):
     def exec_perf_cmd(self, cmd):
         self.ctl_fd.write(f"{cmd}\n")
         self.ctl_fd.flush()
-        res = self.ack_fd.readline()
+        self.ack_fd.readline()
