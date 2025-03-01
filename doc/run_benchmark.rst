@@ -206,3 +206,17 @@ The `Tools/scripts/summarize_stats.py <https://github.com/python/cpython/blob/ma
 
 Statistics are not cleared between runs.
 If you need to delete statistics from a previous run, remove the files in ``/tmp/py_stats`` (Unix) or ``C:\temp\py_stats`` (Windows).
+
+Profiling benchmarks using ``perf record``
+==========================================
+``pyperf`` supports profiling benchmark execution using ``perf
+record``. ``perf`` is only enabled while the benchmark is running to avoid
+profiling unrelated parts of ``pyperf`` itself.
+
+One profile data file is generated for each benchmark run.  These files have
+the basename of ``perf.data.<uuid>`` and are written to the current directory
+by default. The directory can be overridden by setting the
+``PYPERF_PERF_RECORD_DATA_DIR`` environment variable.
+
+The value of the ``PYPERF_PERF_RECORD_EXTRA_OPTS`` environment variable is
+appended to the command line of ``perf record`` if it is provided.

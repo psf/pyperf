@@ -5,7 +5,12 @@
 
 import abc
 import importlib.metadata
+import os.path
+import shlex
+import subprocess
 import sys
+import tempfile
+import uuid
 
 
 def get_hooks():
@@ -108,3 +113,58 @@ class pystats(HookBase):
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
         sys._stats_off()
+
+
+class perf_record(HookBase):
+    """Profile the benchmark using perf-record.
+
+    Profile data is written to the current directory directory by default, or
+    to the value of the `PYPERF_PERF_RECORD_DATA_DIR` environment variable, if
+    it is provided.
+
+    Profile data files have a basename of the form `perf.data.<uuid>`
+
+    The value of the `PYPERF_PERF_RECORD_EXTRA_OPTS` environment variable is
+    appended to the command line of perf-record, if provided.
+    """
+
+    def __init__(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.ctl_fifo = self.mkfifo(self.tempdir.name, "ctl_fifo")
+        self.ack_fifo = self.mkfifo(self.tempdir.name, "ack_fifo")
+        perf_data_dir = os.environ.get("PYPERF_PERF_RECORD_DATA_DIR", "")
+        perf_data_basename = f"perf.data.{uuid.uuid4()}"
+        cmd = ["perf", "record",
+               "--pid", str(os.getpid()),
+               "--output", os.path.join(perf_data_dir, perf_data_basename),
+               "--control", f"fifo:{self.ctl_fifo},{self.ack_fifo}"]
+        extra_opts = os.environ.get("PYPERF_PERF_RECORD_EXTRA_OPTS", "")
+        cmd += shlex.split(extra_opts)
+        self.perf = subprocess.Popen(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.ctl_fd = open(self.ctl_fifo, "w")
+        self.ack_fd = open(self.ack_fifo, "r")
+
+    def __enter__(self):
+        self.exec_perf_cmd("enable")
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self.exec_perf_cmd("disable")
+
+    def teardown(self, metadata):
+        try:
+            self.exec_perf_cmd("stop")
+            self.perf.wait(timeout=120)
+        finally:
+            self.ctl_fd.close()
+            self.ack_fd.close()
+
+    def mkfifo(self, tmpdir, basename):
+        path = os.path.join(tmpdir, basename)
+        os.mkfifo(path)
+        return path
+
+    def exec_perf_cmd(self, cmd):
+        self.ctl_fd.write(f"{cmd}\n")
+        self.ctl_fd.flush()
+        self.ack_fd.readline()
