@@ -128,16 +128,6 @@ class perf_record(HookBase):
     appended to the command line of perf-record, if provided.
     """
 
-    def mkfifo(self, tmpdir, basename):
-        path = os.path.join(tmpdir, basename)
-        os.mkfifo(path)
-        return path
-
-    def exec_perf_cmd(self, cmd):
-        self.ctl_fd.write(f"{cmd}\n")
-        self.ctl_fd.flush()
-        res = self.ack_fd.readline()
-
     def __init__(self):
         self.tempdir = tempfile.TemporaryDirectory()
         self.ctl_fifo = self.mkfifo(self.tempdir.name, "ctl_fifo")
@@ -168,3 +158,13 @@ class perf_record(HookBase):
         finally:
             self.ctl_fd.close()
             self.ack_fd.close()
+
+    def mkfifo(self, tmpdir, basename):
+        path = os.path.join(tmpdir, basename)
+        os.mkfifo(path)
+        return path
+
+    def exec_perf_cmd(self, cmd):
+        self.ctl_fd.write(f"{cmd}\n")
+        self.ctl_fd.flush()
+        res = self.ack_fd.readline()
