@@ -270,7 +270,10 @@ def create_environ(inherit_environ, locale, copy_all):
     env = {}
     copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive",
                 # Python specific variables
-                "PYTHONPATH", "PYTHON_CPU_COUNT", "PYTHON_GIL"]
+                "PYTHONPATH", "PYTHON_CPU_COUNT", "PYTHON_GIL",
+                # Pyperf specific variables
+                "PYPERF_PERF_RECORD_DATA_DIR", "PYPERF_PERF_RECORD_EXTRA_OPTS",
+                ]
     if locale:
         copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
                          'LC_CTYPE', 'LC_IDENTIFICATION', 'LC_MEASUREMENT',
