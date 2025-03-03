@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 2.9.0 (2025-03-03)
+--------------------------
+
+* Feature: A new hook, ``perf_record``, is available to turn Linux perf profiling on and off around the benchmark code.
+  To use it, pass ``--hook perf_record``.
+  Patch by Matt Page.
+* Feature: pyperf will now warn if you are collecting too few or too many samples for stable results.
+  Patch by Michael Droettboom
+
 Version 2.8.1 (2024-11-13)
 --------------------------
 
