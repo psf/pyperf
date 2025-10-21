@@ -15,6 +15,7 @@ from shutil import which
 USE_PSUTIL = not bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
 MS_WINDOWS = (sys.platform == 'win32')
 MAC_OS = (sys.platform == 'darwin')
+BSD = ('bsd' in sys.platform)
 
 if MS_WINDOWS:
     import msvcrt

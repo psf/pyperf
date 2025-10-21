@@ -1,6 +1,6 @@
 import os
 try:
-    from pyperf._utils import USE_PSUTIL
+    from pyperf._utils import USE_PSUTIL, BSD
     if not USE_PSUTIL:
         raise ImportError
     else:
@@ -21,7 +21,10 @@ class PeakMemoryUsageThread(threading.Thread):
         self._quit = False
 
     def get(self):
-        usage = self.process.memory_full_info().uss
+        if BSD:
+            usage = self.process.memory_info().rss
+        else:
+            usage = self.process.memory_full_info().uss
         self.peak_usage = max(self.peak_usage, usage)
 
     def run(self):

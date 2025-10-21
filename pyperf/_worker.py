@@ -7,7 +7,7 @@ import pyperf
 from pyperf._formatter import (format_number, format_value, format_values,
                                format_timedelta)
 from pyperf._hooks import instantiate_selected_hooks
-from pyperf._utils import MS_WINDOWS, MAC_OS, percentile, median_abs_dev
+from pyperf._utils import MS_WINDOWS, MAC_OS, BSD, percentile, median_abs_dev
 
 
 MAX_LOOPS = 2 ** 32
@@ -328,6 +328,10 @@ class MemoryUsage:
             from pyperf._win_memory import get_peak_pagefile_usage
             self.get_peak_profile_usage = get_peak_pagefile_usage
         elif MAC_OS:
+            from pyperf._psutil_memory import PeakMemoryUsageThread
+            self.mem_thread = PeakMemoryUsageThread()
+            self.mem_thread.start()
+        elif BSD:
             from pyperf._psutil_memory import PeakMemoryUsageThread
             self.mem_thread = PeakMemoryUsageThread()
             self.mem_thread.start()
