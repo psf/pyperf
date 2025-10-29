@@ -22,6 +22,7 @@ class PeakMemoryUsageThread(threading.Thread):
 
     def get(self):
         if BSD:
+            # uss (Unique Set Size) not supported on BSD, uses rss (Resident Set Size) instead
             usage = self.process.memory_info().rss
         else:
             usage = self.process.memory_full_info().uss

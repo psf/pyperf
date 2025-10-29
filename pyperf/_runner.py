@@ -12,9 +12,10 @@ from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
                                set_highest_priority)
 from pyperf._formatter import format_timedelta
 from pyperf._hooks import get_hook_names
-from pyperf._utils import (MS_WINDOWS, MAC_OS, BSD, abs_executable,
+from pyperf._utils import (MS_WINDOWS, abs_executable,
                            WritePipe, get_python_names,
                            merge_profile_stats)
+from pyperf._system import OS_LINUX
 from pyperf._worker import WorkerProcessTask
 
 
@@ -346,12 +347,10 @@ class Runner:
         if args.track_memory:
             if MS_WINDOWS:
                 from pyperf._win_memory import check_tracking_memory
-            elif MAC_OS:
-                from pyperf._psutil_memory import check_tracking_memory
-            elif BSD:
-                from pyperf._psutil_memory import check_tracking_memory
-            else:
+            elif OS_LINUX:
                 from pyperf._linux_memory import check_tracking_memory
+            else:
+                from pyperf._psutil_memory import check_tracking_memory
             err_msg = check_tracking_memory()
             if err_msg:
                 raise CLIError("unable to track the memory usage "
