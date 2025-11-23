@@ -1,7 +1,9 @@
-.. _api:
-
 API
 ===
+
+.. module:: pyperf
+
+The module version...
 
 The module version can be read from ``pyperf.VERSION`` (tuple of int) or
 ``pyperf.__version__`` (str).
@@ -193,9 +195,11 @@ Benchmark class
 
       Format values including the unit.
 
-   .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
+   .. method:: get_dates()
 
       Get the start date of the first run and the end date of the last run.
+
+      Return ``(datetime.datetime, datetime.datetime)`` or ``None``.
 
       Return a ``(start, end)`` tuple where start and end are
       ``datetime.datetime`` objects if a least one run has a date metadata.
@@ -222,7 +226,7 @@ Benchmark class
 
       Get the total number of values.
 
-   .. method:: get_nwarmup() -> int or float
+   .. method:: get_nwarmup() -> int | float
 
       Get the number of warmup values per run.
 
@@ -244,7 +248,7 @@ Benchmark class
       Use the ``duration`` metadata of runs, or compute the sum of their
       raw values including warmup values.
 
-   .. method:: get_loops() -> int or float
+   .. method:: get_loops() -> int | float
 
       Get the number of outer loop iterations of runs.
 
@@ -253,7 +257,7 @@ Benchmark class
 
       .. versionadded:: 1.3
 
-   .. method:: get_inner_loops() -> int or float
+   .. method:: get_inner_loops() -> int | float
 
       Get the number of inner loop iterations of runs.
 
@@ -262,7 +266,7 @@ Benchmark class
 
       .. versionadded:: 1.3
 
-   .. method:: get_total_loops() -> int or float
+   .. method:: get_total_loops() -> int | float
 
       Get the total number of loops per value (outer-loops x inner-loops).
 
@@ -686,7 +690,7 @@ The :class:`Run` class collects metadata by default.
 Benchmark:
 
 * ``date`` (str): date when the benchmark run started, formatted as ISO 8601
-* ``duration`` (int or float >= 0): total duration of the benchmark run in seconds (``float``)
+* ``duration`` (int | float >= 0): total duration of the benchmark run in seconds (``float``)
 * ``name`` (non-empty str): benchmark name
 * ``loops`` (``int >= 1``): number of outer-loops per value (``int``)
 * ``inner_loops`` (``int >= 1``): number of inner-loops of the benchmark (``int``)
@@ -733,14 +737,14 @@ System metadata:
 * ``boot_time`` (str): Date and time of the system boot
 * ``hostname``: Host name
 * ``platform``: short string describing the platform
-* ``load_avg_1min`` (int or float >= 0): Load average figures giving the number of jobs in the run
+* ``load_avg_1min`` (int | float >= 0): Load average figures giving the number of jobs in the run
   queue (state ``R``) or waiting for disk I/O (state ``D``) averaged over 1
   minute
 * ``runnable_threads``: number of currently runnable kernel scheduling entities
   (processes, threads). The value comes from the 4th field of
   ``/proc/loadavg``: ``1`` in ``0.20 0.22 0.24 1/596 10123`` for example
   (``596`` is the total number of threads).
-* ``uptime`` (int or float >= 0): Duration since the system boot (``float``, number of seconds
+* ``uptime`` (int | float >= 0): Duration since the system boot (``float``, number of seconds
   since ``boot_time``)
 
 Other:
