@@ -54,7 +54,7 @@ def get_tags_for_result(result):
 
 
 class CompareResult:
-    def __init__(self, ref, changed, min_speed=None):
+    def __init__(self, ref, changed, min_speed=None, extra_metadata=None):
         # CompareData object
         self.ref = ref
         # CompareData object
@@ -63,6 +63,7 @@ class CompareResult:
         self._significant = None
         self._t_score = None
         self._norm_mean = None
+        self.extra_metadata = extra_metadata or []
 
     def __repr__(self):
         return '<CompareResult ref=%r changed=%r>' % (self.ref, self.changed)
@@ -110,21 +111,36 @@ class CompareResult:
 
         ref_text = format_result_value(self.ref.benchmark)
         chg_text = format_result_value(self.changed.benchmark)
+
         if verbose:
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
-            if (self.ref.benchmark.get_nvalue() > 1
-               or self.changed.benchmark.get_nvalue() > 1):
+
+            if (self.ref.benchmark.get_nvalue() > 1 or self.changed.benchmark.get_nvalue() > 1):
                 text = "Mean +- std dev: %s -> %s" % (ref_text, chg_text)
             else:
                 text = "%s -> %s" % (ref_text, chg_text)
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
+            # normalized mean
         text = "%s: %s" % (text, format_normalized_mean(self.norm_mean))
-        return text
 
+    # EXTRA METADATA SUPPORT
+        if self.extra_metadata:
+            ref_meta = self.ref.benchmark.get_metadata()
+            chg_meta = self.changed.benchmark.get_metadata()
+            meta_parts = []
+            for key in self.extra_metadata:
+                if key in ref_meta:
+                    meta_parts.append(f"{key}={ref_meta[key]}")
+                if key in chg_meta:
+                    meta_parts.append(f"{key}={chg_meta[key]}")           
+            if meta_parts:
+                text += " [" + ", ".join(meta_parts) + "]"
+        return text            
+        
     def format(self, verbose=True, show_name=True):
         text = self.oneliner(show_name=show_name, check_significant=False)
         lines = [text]
@@ -225,7 +241,13 @@ class CompareError(Exception):
 class CompareSuites:
     def __init__(self, benchmarks, args):
         self.benchmarks = benchmarks
-
+        self.extra_metadata = getattr(args, "extra_metadata", None)
+        if self.extra_metadata:
+            self.extra_metadata = [
+                key.strip() for key in self.extra_metadata.split(",")
+            ]
+        else:
+            self.extra_metadata = []
         self.table = args.table
         self.table_format = args.table_format
         self.min_speed = args.min_speed
@@ -269,7 +291,12 @@ class CompareSuites:
 
         for item in benchmarks[1:]:
             changed = CompareData(item.filename, item.benchmark)
-            result = CompareResult(ref, changed, min_speed)
+            result = CompareResult(
+            ref,
+            changed,
+            min_speed,
+            extra_metadata=self.extra_metadata
+            )
             results.append(result)
 
         return results
