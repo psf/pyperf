@@ -742,6 +742,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         assert metadata.get("_test_hook", 0) > 0
         assert metadata.get("hooks", None) == "_test_hook"
 
+    def test_compare_to_extra_metadata(self):
+        ref_result = self.create_bench((1.0,), metadata={'name': 'bench', 'os': 'linux', 'cpu': 'amd'})
+        changed_result = self.create_bench((1.0,), metadata={'name': 'bench', 'os': 'linux', 'cpu': 'intel'})
+        stdout = self.compare('compare_to', ref_result, changed_result, '--extra-metadata=os,cpu')
+        self.assertIn('os=linux', stdout)
+        self.assertIn('cpu=amd', stdout)
+        self.assertIn('cpu=intel', stdout)    
 
 class TestConvert(BaseTestCase, unittest.TestCase):
     def test_stdout(self):

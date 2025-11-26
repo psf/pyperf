@@ -117,7 +117,8 @@ class CompareResult:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
 
-            if (self.ref.benchmark.get_nvalue() > 1 or self.changed.benchmark.get_nvalue() > 1):
+            if (self.ref.benchmark.get_nvalue() > 1 
+            or self.changed.benchmark.get_nvalue() > 1):
                 text = "Mean +- std dev: %s -> %s" % (ref_text, chg_text)
             else:
                 text = "%s -> %s" % (ref_text, chg_text)
@@ -127,7 +128,7 @@ class CompareResult:
             # normalized mean
         text = "%s: %s" % (text, format_normalized_mean(self.norm_mean))
 
-    # EXTRA METADATA SUPPORT
+    # Extra metadata support
         if self.extra_metadata:
             ref_meta = self.ref.benchmark.get_metadata()
             chg_meta = self.changed.benchmark.get_metadata()
@@ -291,12 +292,8 @@ class CompareSuites:
 
         for item in benchmarks[1:]:
             changed = CompareData(item.filename, item.benchmark)
-            result = CompareResult(
-            ref,
-            changed,
-            min_speed,
-            extra_metadata=self.extra_metadata
-            )
+            result = CompareResult(ref,changed,min_speed,
+                                   extra_metadata=self.extra_metadata)
             results.append(result)
 
         return results

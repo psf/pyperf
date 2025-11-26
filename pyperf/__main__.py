@@ -113,13 +113,9 @@ def create_parser():
     cmd.add_argument("--table-format", type=str, default="rest",
                      choices=["rest", "md"],
                      help="Format of table rendering")
-    cmd.add_argument(
-         "--extra-metadata",
-         type=str,
-        help="Comma-separated metadata keys to include in comparison output."
-)
-              
->>>>>>> 868272e (Temp: save working changes before branch switch)
+    cmd.add_argument("--extra-metadata", type=str,
+                     help="Comma-separated metadata keys to include in comparison output")
+                     
     input_filenames(cmd)
 
     # stats
