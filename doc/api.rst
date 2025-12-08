@@ -3,8 +3,6 @@ API
 
 .. module:: pyperf
 
-The module version...
-
 The module version can be read from ``pyperf.VERSION`` (tuple of int) or
 ``pyperf.__version__`` (str).
 
@@ -195,7 +193,7 @@ Benchmark class
 
       Format values including the unit.
 
-   .. method:: get_dates()
+   .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
 
       Get the start date of the first run and the end date of the last run.
 
@@ -653,6 +651,10 @@ Runner class
       Return a :class:`Benchmark` instance.
 
       See the :ref:`bench_time_func() example <bench_time_func_example>`.
+
+   .. method:: is_worker()
+
+      Return True if the current process was started with --worker, and False otherwise.
 
    .. method:: parse_args(args=None)
 
