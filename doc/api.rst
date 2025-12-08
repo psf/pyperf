@@ -651,11 +651,7 @@ Runner class
       Return a :class:`Benchmark` instance.
 
       See the :ref:`bench_time_func() example <bench_time_func_example>`.
-
-   .. method:: is_worker()
-
-      Return True if the current process was started with --worker, and False otherwise.
-
+   
    .. method:: parse_args(args=None)
 
       Parse command line arguments using :attr:`argparser` and put the result
