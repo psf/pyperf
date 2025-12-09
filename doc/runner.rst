@@ -2,6 +2,8 @@
 
 Runner CLI
 ==========
+.. module:: pyperf
+  :noindex:
 
 Command line options of the :class:`pyperf.Runner` class.
 

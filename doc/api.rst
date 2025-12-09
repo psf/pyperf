@@ -1,3 +1,5 @@
+.. _api:
+
 API
 ===
 
@@ -193,7 +195,8 @@ Benchmark class
 
       Format values including the unit.
 
-   .. method:: get_dates() -> (datetime.datetime, datetime.datetime) or None
+   .. method:: get_dates()
+      Return (datetime.datetime, datetime.datetime) or None.
 
       Get the start date of the first run and the end date of the last run.
 

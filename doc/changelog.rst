@@ -1,5 +1,7 @@
 Changelog
 =========
+.. module:: pyperf
+  :noindex:
 
 Version 2.9.0 (2025-03-03)
 --------------------------
