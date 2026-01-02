@@ -23,11 +23,11 @@ def _capture_stream(name):
 
 
 def capture_stdout():
-    return _capture_stream('stdout')
+    return _capture_stream("stdout")
 
 
 def capture_stderr():
-    return _capture_stream('stderr')
+    return _capture_stream("stderr")
 
 
 @contextlib.contextmanager
@@ -55,7 +55,7 @@ def temporary_directory():
 def benchmark_as_json(benchmark, compact=True):
     with temporary_file() as tmp_name:
         benchmark.dump(tmp_name, compact=compact)
-        with open(tmp_name, 'r', encoding='utf-8') as tmp:
+        with open(tmp_name, "r", encoding="utf-8") as tmp:
             return tmp.read()
 
 
@@ -65,15 +65,17 @@ def compare_benchmarks(testcase, bench1, bench2):
     testcase.assertEqual(json1, json2)
 
 
-ProcResult = collections.namedtuple('ProcResult', 'returncode stdout stderr')
+ProcResult = collections.namedtuple("ProcResult", "returncode stdout stderr")
 
 
 def get_output(cmd, **kw):
-    proc = subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            universal_newlines=True,
-                            **kw)
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        **kw,
+    )
     stdout, stderr = popen_communicate(proc)
     return ProcResult(proc.returncode, stdout, stderr)
 

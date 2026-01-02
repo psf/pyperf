@@ -4,14 +4,18 @@ import sys
 import time
 
 import pyperf
-from pyperf._formatter import (format_number, format_value, format_values,
-                               format_timedelta)
+from pyperf._formatter import (
+    format_number,
+    format_value,
+    format_values,
+    format_timedelta,
+)
 from pyperf._hooks import instantiate_selected_hooks
 from pyperf._utils import MS_WINDOWS, percentile, median_abs_dev
 from pyperf._system import OS_LINUX
 
 
-MAX_LOOPS = 2 ** 32
+MAX_LOOPS = 2**32
 
 # Parameters to calibrate and recalibrate warmups
 
@@ -35,19 +39,18 @@ class WorkerTask:
         self.metadata = dict(runner.metadata)
         if func_metadata:
             self.metadata.update(func_metadata)
-        if 'unit' not in self.metadata:
+        if "unit" not in self.metadata:
             # Set default unit to seconds
-            self.metadata['unit'] = 'second'
+            self.metadata["unit"] = "second"
 
         self.inner_loops = None
         self.warmups = None
         self.values = ()
 
-    def _compute_values(self, values, nvalue,
-                        is_warmup=False,
-                        calibrate_loops=False,
-                        start=0):
-        unit = self.metadata.get('unit')
+    def _compute_values(
+        self, values, nvalue, is_warmup=False, calibrate_loops=False, start=0
+    ):
+        unit = self.metadata.get("unit")
         args = self.args
         if nvalue < 1:
             raise ValueError("nvalue must be >= 1")
@@ -55,9 +58,9 @@ class WorkerTask:
             raise ValueError("loops must be >= 1")
 
         if is_warmup:
-            value_name = 'Warmup'
+            value_name = "Warmup"
         else:
-            value_name = 'Value'
+            value_name = "Value"
 
         task_func = self.task_func
 
@@ -92,20 +95,25 @@ class WorkerTask:
             if args.verbose:
                 text = format_value(unit, value)
                 if is_warmup:
-                    text = ('%s (loops: %s, raw: %s)'
-                            % (text,
-                               format_number(self.loops),
-                               format_value(unit, raw_value)))
+                    text = "%s (loops: %s, raw: %s)" % (
+                        text,
+                        format_number(self.loops),
+                        format_value(unit, raw_value),
+                    )
                 print("%s %s: %s" % (value_name, start + index, text))
 
             if calibrate_loops and raw_value < args.min_time:
                 if self.loops * 2 > MAX_LOOPS:
                     print("ERROR: failed to calibrate the number of loops")
-                    print("Raw timing %s with %s is still smaller than "
-                          "the minimum time of %s"
-                          % (format_value(unit, raw_value),
-                             format_number(self.loops, 'loop'),
-                             format_timedelta(args.min_time)))
+                    print(
+                        "Raw timing %s with %s is still smaller than "
+                        "the minimum time of %s"
+                        % (
+                            format_value(unit, raw_value),
+                            format_number(self.loops, "loop"),
+                            format_timedelta(args.min_time),
+                        )
+                    )
                     sys.exit(1)
                 self.loops *= 2
                 # need more values for the calibration
@@ -118,6 +126,7 @@ class WorkerTask:
 
     def collect_metadata(self):
         from pyperf._collect_metadata import collect_metadata
+
         return collect_metadata(process=False)
 
     def test_calibrate_warmups(self, nwarmup, unit):
@@ -131,7 +140,7 @@ class WorkerTask:
         q1 = percentile(values, 0.25)
         q3 = percentile(values, 0.75)
         iqr = q3 - q1
-        outlier_max = (q3 + 1.5 * iqr)
+        outlier_max = q3 + 1.5 * iqr
         # only check maximum, not minimum
         outlier = not (first_value <= outlier_max)
 
@@ -159,29 +168,46 @@ class WorkerTask:
             sample1_str = format_values(unit, (s1_q1, mean1, s1_q3, stdev1, mad1))
             sample2_str = format_values(unit, (s2_q1, mean2, s2_q3, stdev2, mad2))
             print("Calibration: warmups=%s" % format_number(nwarmup))
-            print("  first value: %s, outlier? %s (max: %s)"
-                  % (format_value(unit, first_value), outlier,
-                     format_value(unit, outlier_max)))
-            print("  sample1(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
-                  % (len(sample1),
-                     sample1_str[0],
-                     sample1_str[1],
-                     sample1_str[2],
-                     sample1_str[3],
-                     sample1_str[4]))
-            print("  sample2(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
-                  % (len(sample2),
-                     sample2_str[0],
-                     sample2_str[1],
-                     sample2_str[2],
-                     sample2_str[3],
-                     sample2_str[4]))
-            print("  diff: Q1=%+.0f%% mean=%+.0f%% Q3=%+.0f%% stdev=%+.0f%% MAD=%+.0f%%"
-                  % (q1_diff * 100,
-                     mean_diff * 100,
-                     q3_diff * 100,
-                     stdev_diff * 100,
-                     mad_diff * 100))
+            print(
+                "  first value: %s, outlier? %s (max: %s)"
+                % (
+                    format_value(unit, first_value),
+                    outlier,
+                    format_value(unit, outlier_max),
+                )
+            )
+            print(
+                "  sample1(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
+                % (
+                    len(sample1),
+                    sample1_str[0],
+                    sample1_str[1],
+                    sample1_str[2],
+                    sample1_str[3],
+                    sample1_str[4],
+                )
+            )
+            print(
+                "  sample2(%s): Q1=%s mean=%s Q3=%s stdev=%s MAD=%s"
+                % (
+                    len(sample2),
+                    sample2_str[0],
+                    sample2_str[1],
+                    sample2_str[2],
+                    sample2_str[3],
+                    sample2_str[4],
+                )
+            )
+            print(
+                "  diff: Q1=%+.0f%% mean=%+.0f%% Q3=%+.0f%% stdev=%+.0f%% MAD=%+.0f%%"
+                % (
+                    q1_diff * 100,
+                    mean_diff * 100,
+                    q3_diff * 100,
+                    stdev_diff * 100,
+                    mad_diff * 100,
+                )
+            )
 
         if outlier:
             return False
@@ -205,16 +231,14 @@ class WorkerTask:
         else:
             nwarmup = 1
 
-        unit = self.metadata.get('unit')
+        unit = self.metadata.get("unit")
         start = 0
         # test_calibrate_warmups() requires at least 2 values per sample
         while True:
             total = nwarmup + WARMUP_SAMPLE_SIZE * 2
             nvalue = total - len(self.warmups)
             if nvalue:
-                self._compute_values(self.warmups, nvalue,
-                                     is_warmup=True,
-                                     start=start)
+                self._compute_values(self.warmups, nvalue, is_warmup=True, start=start)
                 start += nvalue
 
             if self.test_calibrate_warmups(nwarmup, unit):
@@ -222,9 +246,8 @@ class WorkerTask:
 
             if len(self.warmups) >= MAX_WARMUP_VALUES:
                 print("ERROR: failed to calibrate the number of warmups")
-                values = [format_value(unit, value)
-                          for loops, value in self.warmups]
-                print("Values (%s): %s" % (len(values), ', '.join(values)))
+                values = [format_value(unit, value) for loops, value in self.warmups]
+                print("Values (%s): %s" % (len(values), ", ".join(values)))
                 sys.exit(1)
             nwarmup += 1
 
@@ -233,9 +256,9 @@ class WorkerTask:
             print()
 
         if self.args.recalibrate_warmups:
-            self.metadata['recalibrate_warmups'] = nwarmup
+            self.metadata["recalibrate_warmups"] = nwarmup
         else:
-            self.metadata['calibrate_warmups'] = nwarmup
+            self.metadata["calibrate_warmups"] = nwarmup
 
     def calibrate_loops(self):
         args = self.args
@@ -247,9 +270,7 @@ class WorkerTask:
         else:
             nvalue = 1
         nvalue += args.values
-        self._compute_values(self.warmups, nvalue,
-                             is_warmup=True,
-                             calibrate_loops=True)
+        self._compute_values(self.warmups, nvalue, is_warmup=True, calibrate_loops=True)
 
         if args.verbose:
             print()
@@ -257,9 +278,9 @@ class WorkerTask:
             print()
 
         if args.recalibrate_loops:
-            self.metadata['recalibrate_loops'] = self.loops
+            self.metadata["recalibrate_loops"] = self.loops
         else:
-            self.metadata['calibrate_loops'] = self.loops
+            self.metadata["calibrate_loops"] = self.loops
 
     def compute_warmups_values(self):
         args = self.args
@@ -275,9 +296,9 @@ class WorkerTask:
     def compute(self):
         args = self.args
 
-        self.metadata['name'] = self.name
+        self.metadata["name"] = self.name
         if self.inner_loops is not None:
-            self.metadata['inner_loops'] = self.inner_loops
+            self.metadata["inner_loops"] = self.inner_loops
         self.warmups = []
         self.values = []
 
@@ -293,23 +314,25 @@ class WorkerTask:
         metadata2.update(self.metadata)
         self.metadata = metadata2
 
-        self.metadata['loops'] = self.loops
+        self.metadata["loops"] = self.loops
 
     def create_run(self):
         start_time = time.monotonic()
         self.compute()
-        self.metadata['duration'] = time.monotonic() - start_time
+        self.metadata["duration"] = time.monotonic() - start_time
 
-        return pyperf.Run(self.values,
-                          warmups=self.warmups,
-                          metadata=self.metadata,
-                          collect_metadata=False)
+        return pyperf.Run(
+            self.values,
+            warmups=self.warmups,
+            metadata=self.metadata,
+            collect_metadata=False,
+        )
 
     def _set_memory_value(self, value):
-        is_calibration = (not self.values)
-        self.metadata['unit'] = 'byte'
-        self.metadata['warmups'] = len(self.warmups)
-        self.metadata['values'] = len(self.values)
+        is_calibration = not self.values
+        self.metadata["unit"] = "byte"
+        self.metadata["warmups"] = len(self.warmups)
+        self.metadata["values"] = len(self.values)
         if is_calibration:
             values = ((self.loops, value),)
             self.warmups = values
@@ -327,13 +350,16 @@ class MemoryUsage:
     def start(self):
         if MS_WINDOWS:
             from pyperf._win_memory import get_peak_pagefile_usage
+
             self.get_peak_profile_usage = get_peak_pagefile_usage
         elif OS_LINUX:
             from pyperf._linux_memory import PeakMemoryUsageThread
+
             self.mem_thread = PeakMemoryUsageThread()
             self.mem_thread.start()
         else:
             from pyperf._psutil_memory import PeakMemoryUsageThread
+
             self.mem_thread = PeakMemoryUsageThread()
             self.mem_thread.start()
 
@@ -359,6 +385,7 @@ class WorkerProcessTask(WorkerTask):
 
         if args.tracemalloc:
             import tracemalloc
+
             tracemalloc.start()
 
         WorkerTask.compute(self)
@@ -368,8 +395,9 @@ class WorkerProcessTask(WorkerTask):
             tracemalloc.stop()
 
             if not traced_peak:
-                raise RuntimeError("tracemalloc didn't trace any Python "
-                                   "memory allocation")
+                raise RuntimeError(
+                    "tracemalloc didn't trace any Python memory allocation"
+                )
 
             # drop timings, replace them with the memory peak
             self._set_memory_value(traced_peak)
@@ -381,4 +409,5 @@ class WorkerProcessTask(WorkerTask):
 
     def collect_metadata(self):
         from pyperf._collect_metadata import collect_metadata
+
         return collect_metadata()

@@ -4,8 +4,13 @@ import unittest
 from unittest import mock
 
 import pyperf
-from pyperf._formatter import (format_filesize, format_seconds, format_timedelta,
-                               format_timedeltas, format_number)
+from pyperf._formatter import (
+    format_filesize,
+    format_seconds,
+    format_timedelta,
+    format_timedeltas,
+    format_number,
+)
 from pyperf import _cpu_utils as cpu_utils
 from pyperf import _utils as utils
 
@@ -74,18 +79,12 @@ class TestStatistics(unittest.TestCase):
 
 
 class TestUtils(unittest.TestCase):
-
     def test_format_seconds(self):
-        self.assertEqual(format_seconds(0),
-                         "0 sec")
-        self.assertEqual(format_seconds(316e-4),
-                         "31.6 ms")
-        self.assertEqual(format_seconds(15.9),
-                         "15.9 sec")
-        self.assertEqual(format_seconds(3 * 60 + 15.9),
-                         "3 min 15.9 sec")
-        self.assertEqual(format_seconds(404683.5876653),
-                         "4 day 16 hour 24 min")
+        self.assertEqual(format_seconds(0), "0 sec")
+        self.assertEqual(format_seconds(316e-4), "31.6 ms")
+        self.assertEqual(format_seconds(15.9), "15.9 sec")
+        self.assertEqual(format_seconds(3 * 60 + 15.9), "3 min 15.9 sec")
+        self.assertEqual(format_seconds(404683.5876653), "4 day 16 hour 24 min")
 
     def test_format_timedelta(self):
         fmt_delta = format_timedelta
@@ -115,118 +114,97 @@ class TestUtils(unittest.TestCase):
 
     def test_format_number(self):
         # plural
-        self.assertEqual(format_number(0, 'unit'), '0 units')
-        self.assertEqual(format_number(1, 'unit'), '1 unit')
-        self.assertEqual(format_number(2, 'unit'), '2 units')
-        self.assertEqual(format_number(123, 'unit'), '123 units')
+        self.assertEqual(format_number(0, "unit"), "0 units")
+        self.assertEqual(format_number(1, "unit"), "1 unit")
+        self.assertEqual(format_number(2, "unit"), "2 units")
+        self.assertEqual(format_number(123, "unit"), "123 units")
 
         # powers of 10
-        self.assertEqual(format_number(10 ** 3, 'unit'),
-                         '1000 units')
-        self.assertEqual(format_number(10 ** 4, 'unit'),
-                         '10^4 units')
-        self.assertEqual(format_number(10 ** 4 + 1, 'unit'),
-                         '10001 units')
-        self.assertEqual(format_number(33 * 10 ** 4, 'unit'),
-                         '330000 units')
+        self.assertEqual(format_number(10**3, "unit"), "1000 units")
+        self.assertEqual(format_number(10**4, "unit"), "10^4 units")
+        self.assertEqual(format_number(10**4 + 1, "unit"), "10001 units")
+        self.assertEqual(format_number(33 * 10**4, "unit"), "330000 units")
 
         # powers of 10
-        self.assertEqual(format_number(2 ** 10, 'unit'),
-                         '1024 units')
-        self.assertEqual(format_number(2 ** 15, 'unit'),
-                         '2^15 units')
-        self.assertEqual(format_number(2 ** 15),
-                         '2^15')
-        self.assertEqual(format_number(2 ** 10 + 1, 'unit'),
-                         '1025 units')
+        self.assertEqual(format_number(2**10, "unit"), "1024 units")
+        self.assertEqual(format_number(2**15, "unit"), "2^15 units")
+        self.assertEqual(format_number(2**15), "2^15")
+        self.assertEqual(format_number(2**10 + 1, "unit"), "1025 units")
 
     def test_format_filesize(self):
-        self.assertEqual(format_filesize(0),
-                         '0 bytes')
-        self.assertEqual(format_filesize(1),
-                         '1 byte')
-        self.assertEqual(format_filesize(10 * 1024),
-                         '10.0 KiB')
-        self.assertEqual(format_filesize(12.4 * 1024 * 1024),
-                         '12.4 MiB')
+        self.assertEqual(format_filesize(0), "0 bytes")
+        self.assertEqual(format_filesize(1), "1 byte")
+        self.assertEqual(format_filesize(10 * 1024), "10.0 KiB")
+        self.assertEqual(format_filesize(12.4 * 1024 * 1024), "12.4 MiB")
 
     def test_get_python_names(self):
-        self.assertEqual(utils.get_python_names('/usr/bin/python3.6',
-                                                '/usr/bin/python3.8'),
-                         ('python3.6', 'python3.8'))
+        self.assertEqual(
+            utils.get_python_names("/usr/bin/python3.6", "/usr/bin/python3.8"),
+            ("python3.6", "python3.8"),
+        )
 
-        self.assertEqual(utils.get_python_names('/bin/python3.6',
-                                                '/usr/bin/python3.6'),
-                         ('/bin/python3.6', '/usr/bin/python3.6'))
+        self.assertEqual(
+            utils.get_python_names("/bin/python3.6", "/usr/bin/python3.6"),
+            ("/bin/python3.6", "/usr/bin/python3.6"),
+        )
 
 
 class CPUToolsTests(unittest.TestCase):
     def test_parse_cpu_list(self):
         parse_cpu_list = cpu_utils.parse_cpu_list
 
-        self.assertIsNone(parse_cpu_list(''))
-        self.assertIsNone(parse_cpu_list('\x00'))
-        self.assertEqual(parse_cpu_list('0'),
-                         [0])
-        self.assertEqual(parse_cpu_list('0-1,5-6'),
-                         [0, 1, 5, 6])
-        self.assertEqual(parse_cpu_list('1,3,7'),
-                         [1, 3, 7])
+        self.assertIsNone(parse_cpu_list(""))
+        self.assertIsNone(parse_cpu_list("\x00"))
+        self.assertEqual(parse_cpu_list("0"), [0])
+        self.assertEqual(parse_cpu_list("0-1,5-6"), [0, 1, 5, 6])
+        self.assertEqual(parse_cpu_list("1,3,7"), [1, 3, 7])
 
         # tolerate spaces
-        self.assertEqual(parse_cpu_list(' 1 , 2 '),
-                         [1, 2])
+        self.assertEqual(parse_cpu_list(" 1 , 2 "), [1, 2])
 
         # errors
-        self.assertRaises(ValueError, parse_cpu_list, 'x')
-        self.assertRaises(ValueError, parse_cpu_list, '1,')
+        self.assertRaises(ValueError, parse_cpu_list, "x")
+        self.assertRaises(ValueError, parse_cpu_list, "1,")
 
     def test_format_cpu_list(self):
-        self.assertEqual(cpu_utils.format_cpu_list([0]),
-                         '0')
-        self.assertEqual(cpu_utils.format_cpu_list([0, 1, 5, 6]),
-                         '0-1,5-6')
-        self.assertEqual(cpu_utils.format_cpu_list([1, 3, 7]),
-                         '1,3,7')
+        self.assertEqual(cpu_utils.format_cpu_list([0]), "0")
+        self.assertEqual(cpu_utils.format_cpu_list([0, 1, 5, 6]), "0-1,5-6")
+        self.assertEqual(cpu_utils.format_cpu_list([1, 3, 7]), "1,3,7")
 
     def test_get_isolated_cpus(self):
         def check_get(line):
             def mock_open(*args, **kw):
                 return io.StringIO(line)
 
-            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
+            with mock.patch("pyperf._utils.open", create=True, side_effect=mock_open):
                 return cpu_utils.get_isolated_cpus()
 
         # no isolated CPU
-        self.assertIsNone(check_get(''))
+        self.assertIsNone(check_get(""))
 
         # isolated CPUs
-        self.assertEqual(check_get('1-2'), [1, 2])
+        self.assertEqual(check_get("1-2"), [1, 2])
 
         # /sys/devices/system/cpu/isolated doesn't exist (ex: Windows)
-        with mock.patch('builtins.open', side_effect=IOError):
+        with mock.patch("builtins.open", side_effect=IOError):
             self.assertIsNone(cpu_utils.get_isolated_cpus())
 
     def test_parse_cpu_mask(self):
         parse_cpu_mask = cpu_utils.parse_cpu_mask
-        self.assertEqual(parse_cpu_mask('f0'),
-                         0xf0)
-        self.assertEqual(parse_cpu_mask('fedcba00,12345678'),
-                         0xfedcba0012345678)
-        self.assertEqual(parse_cpu_mask('ffffffff,ffffffff,ffffffff,ffffffff'),
-                         2**128 - 1)
+        self.assertEqual(parse_cpu_mask("f0"), 0xF0)
+        self.assertEqual(parse_cpu_mask("fedcba00,12345678"), 0xFEDCBA0012345678)
+        self.assertEqual(
+            parse_cpu_mask("ffffffff,ffffffff,ffffffff,ffffffff"), 2**128 - 1
+        )
 
     def test_format_cpu_mask(self):
         format_cpu_mask = cpu_utils.format_cpu_mask
-        self.assertEqual(format_cpu_mask(0xf0),
-                         '000000f0')
-        self.assertEqual(format_cpu_mask(0xfedcba0012345678),
-                         'fedcba00,12345678')
+        self.assertEqual(format_cpu_mask(0xF0), "000000f0")
+        self.assertEqual(format_cpu_mask(0xFEDCBA0012345678), "fedcba00,12345678")
 
     def test_format_cpus_as_mask(self):
         format_cpus_as_mask = cpu_utils.format_cpus_as_mask
-        self.assertEqual(format_cpus_as_mask({4, 5, 6, 7}),
-                         '000000f0')
+        self.assertEqual(format_cpus_as_mask({4, 5, 6, 7}), "000000f0")
 
 
 if __name__ == "__main__":

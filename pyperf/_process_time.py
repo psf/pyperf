@@ -14,6 +14,7 @@ Measure wall-time, not CPU time.
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
+
 import contextlib
 import json
 import os
@@ -35,7 +36,7 @@ def get_max_rss(*, children):
         else:
             resource_type = resource.RUSAGE_SELF
         usage = resource.getrusage(resource_type)
-        if sys.platform == 'darwin':
+        if sys.platform == "darwin":
             return usage.ru_maxrss
         return usage.ru_maxrss * 1024
     else:
@@ -47,6 +48,7 @@ def merge_profile_stats_files(src, dst):
     Merging one existing pstats file into another.
     """
     import pstats
+
     if os.path.isfile(dst):
         src_stats = pstats.Stats(src)
         dst_stats = pstats.Stats(dst)
@@ -75,8 +77,7 @@ def bench_process(loops, args, kw, profile_filename=None):
 
         exitcode = proc.returncode
         if exitcode != 0:
-            print("Command failed with exit code %s" % exitcode,
-                  file=sys.stderr)
+            print("Command failed with exit code %s" % exitcode, file=sys.stderr)
             if profile_filename:
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
@@ -85,9 +86,7 @@ def bench_process(loops, args, kw, profile_filename=None):
         max_rss = max(max_rss, rss)
 
         if profile_filename:
-            merge_profile_stats_files(
-                temp_profile_filename, profile_filename
-            )
+            merge_profile_stats_files(temp_profile_filename, profile_filename)
 
     dt = time.perf_counter() - start_time
     return (dt, max_rss)
@@ -128,14 +127,18 @@ def write_data(dt, max_rss, metadata, out=sys.stdout):
 
 def main():
     # Make sure that the pyperf module wasn't imported
-    if 'pyperf' in sys.modules:
-        print("ERROR: don't run %s -m pyperf._process, run the .py script"
-              % os.path.basename(sys.executable))
+    if "pyperf" in sys.modules:
+        print(
+            "ERROR: don't run %s -m pyperf._process, run the .py script"
+            % os.path.basename(sys.executable)
+        )
         sys.exit(1)
 
     if len(sys.argv) < 3:
-        print("Usage: %s %s loops program [arg1 arg2 ...] [--profile profile]"
-              % (os.path.basename(sys.executable), __file__))
+        print(
+            "Usage: %s %s loops program [arg1 arg2 ...] [--profile profile]"
+            % (os.path.basename(sys.executable), __file__)
+        )
         sys.exit(1)
 
     if "--profile" in sys.argv:
@@ -153,15 +156,15 @@ def main():
     args = sys.argv[2:]
 
     kw = {}
-    if hasattr(subprocess, 'DEVNULL'):
+    if hasattr(subprocess, "DEVNULL"):
         devnull = None
-        kw['stdin'] = subprocess.DEVNULL
-        kw['stdout'] = subprocess.DEVNULL
+        kw["stdin"] = subprocess.DEVNULL
+        kw["stdout"] = subprocess.DEVNULL
     else:
-        devnull = open(os.devnull, 'w+', 0)
-        kw['stdin'] = devnull
-        kw['stdout'] = devnull
-    kw['stderr'] = subprocess.STDOUT
+        devnull = open(os.devnull, "w+", 0)
+        kw["stdin"] = devnull
+        kw["stdout"] = devnull
+    kw["stderr"] = subprocess.STDOUT
 
     with contextlib.ExitStack() as stack:
         for hook in hook_managers.values():
