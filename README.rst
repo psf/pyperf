@@ -6,6 +6,10 @@ pyperf
    :alt: Latest release on the Python Cheeseshop (PyPI)
    :target: https://pypi.python.org/pypi/pyperf
 
+.. image:: https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fpsf%2Fpyperf%2Frefs%2Fheads%2Fmain%2Fpyproject.toml
+   :alt: Supported Python versions
+   :target: https://pypi.python.org/pypi/pyperf
+
 .. image:: https://github.com/psf/pyperf/actions/workflows/build.yml/badge.svg
    :alt: Build status of pyperf on GitHub Actions
    :target: https://github.com/psf/pyperf/actions
