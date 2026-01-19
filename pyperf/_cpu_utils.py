@@ -17,20 +17,10 @@ def get_logical_cpu_count():
     if psutil is not None:
         # Number of logical CPUs
         cpu_count = psutil.cpu_count()
-    elif hasattr(os, 'cpu_count'):
-        # Python 3.4
-        cpu_count = os.cpu_count()
     else:
-        cpu_count = None
-        try:
-            import multiprocessing
-        except ImportError:
-            pass
-        else:
-            try:
-                cpu_count = multiprocessing.cpu_count()
-            except NotImplementedError:
-                pass
+        # Python 3.4
+        # Python 3.13+: capped by -X cpu_count=n or $PYTHON_CPU_COUNT if set
+        cpu_count = os.cpu_count()
 
     if cpu_count is not None and cpu_count < 1:
         return None
@@ -148,7 +138,7 @@ def get_isolated_cpus():
 
 
 def set_cpu_affinity(cpus):
-    # Python 3.3 or newer?
+    # Availability: some Unix platforms
     if hasattr(os, 'sched_setaffinity'):
         os.sched_setaffinity(0, cpus)
         return True
@@ -161,6 +151,8 @@ def set_cpu_affinity(cpus):
     except ImportError:
         return
 
+    # Availability: Linux, Windows, FreeBSD (psutil 2.2.0+)
+    # https://psutil.rtfd.io/en/latest/index.html#psutil.Process.cpu_affinity
     proc = psutil.Process()
     if not hasattr(proc, 'cpu_affinity'):
         return
