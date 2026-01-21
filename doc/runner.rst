@@ -146,7 +146,7 @@ Option::
   There is no time out by default.
 * ``--tracemalloc``: Use the ``tracemalloc`` module to track Python memory
   allocation and get the peak of memory usage in metadata
-  (``tracemalloc_peak``). The module is only available on Python 3.4 and newer.
+  (``tracemalloc_peak``).
   See the `tracemalloc module
   <https://docs.python.org/dev/library/tracemalloc.html>`_.
 * ``--track-memory``: get the memory peak usage. it is less accurate than
