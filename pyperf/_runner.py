@@ -527,14 +527,20 @@ class Runner:
         else:
             if not isolated:
                 print("ERROR: CPU affinity not available.", file=sys.stderr)
-                print("Use Python 3.3 or newer, or install psutil dependency")
+                print(
+                    "Install psutil dependency and check "
+                    "psutil.Process.cpu_affinity is available on your OS."
+                )
                 sys.exit(1)
             elif not self.args.quiet:
                 print(
                     "WARNING: unable to pin worker processes to "
                     "isolated CPUs, CPU affinity not available"
                 )
-                print("Use Python 3.3 or newer, or install psutil dependency")
+                print(
+                    "Install psutil dependency and check "
+                    "psutil.Process.cpu_affinity is available on your OS."
+                )
 
     def _process_priority(self):
         if not MS_WINDOWS:

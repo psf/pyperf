@@ -44,6 +44,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
+# Also update: README.rst, docs/run_benchmark.rst
 requires-python = ">=3.9"
 dependencies = ["psutil>=5.9.0"]
 

@@ -23,7 +23,7 @@ Optional dependencies:
 * Python module ``psutil``. Install: ``python3 -m pip install -U psutil``.
 * When you are using macOS, you need to install ``psutil`` if you want to use ``--track-memory`` option.
 
-pyperf requires Python 3.6 or newer.
+pyperf requires Python 3.9 or newer.
 
 Python 2.7 users can use pyperf 1.7.1 which is the last version compatible with
 Python 2.7.
