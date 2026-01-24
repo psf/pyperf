@@ -113,6 +113,9 @@ def create_parser():
     cmd.add_argument("--table-format", type=str, default="rest",
                      choices=["rest", "md"],
                      help="Format of table rendering")
+    cmd.add_argument("--extra-metadata", type=str,
+                     help="Comma-separated metadata keys to include in comparison output")
+                     
     input_filenames(cmd)
 
     # stats
@@ -389,6 +392,9 @@ def cmd_compare_to(args):
     from pyperf._compare import compare_suites, CompareError
 
     data = load_benchmarks(args)
+    if getattr(args, "extra_metadata", None):
+        display_title("Benchmark")
+        print()
     if data.get_nsuite() < 2:
         print("ERROR: need at least two benchmark files")
         sys.exit(1)
