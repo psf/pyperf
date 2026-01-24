@@ -59,6 +59,7 @@ pyperf = "pyperf.__main__:main"
 [project.entry-points."pyperf.hook"]
 perf_record = "pyperf._hooks:perf_record"
 pystats = "pyperf._hooks:pystats"
+tachyon = "pyperf._hooks:tachyon"
 _test_hook = "pyperf._hooks:_test_hook"
 
 [tool.setuptools]

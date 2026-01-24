@@ -5,8 +5,10 @@
 
 import abc
 import importlib.metadata
+import os
 import os.path
 import shlex
+import signal
 import subprocess
 import sys
 import tempfile
@@ -168,3 +170,159 @@ class perf_record(HookBase):
         self.ctl_fd.write(f"{cmd}\n")
         self.ctl_fd.flush()
         self.ack_fd.readline()
+
+
+class tachyon(HookBase):
+    """Profile the benchmark using sampling profiler (Tachyon).
+
+    Profile data is written to the current directory by default, or
+    to the value of the `PYPERF_TACHYON_DATA_DIR` environment variable.
+
+    Profile data files have a basename `tachyon.<uuid>.<ext>`.
+
+    Configuration environment variables:
+        PYPERF_TACHYON_DATA_DIR: Output directory (default: current)
+        PYPERF_TACHYON_FORMAT: Output format - pstats, collapsed, flamegraph,
+                               gecko, heatmap, binary (default: pstats)
+        PYPERF_TACHYON_MODE: Profiling mode - wall, cpu, gil, exception
+                             (default: cpu)
+        PYPERF_TACHYON_INTERVAL: Sampling interval in microseconds (default: 1000)
+        PYPERF_TACHYON_ALL_THREADS: Set to "1" to profile all threads
+        PYPERF_TACHYON_NATIVE: Set to "1" to include the native frames
+        PYPERF_TACHYON_ASYNC_AWARE: Set to "1" for async-aware profiling
+    """
+
+    FORMAT_EXTENSIONS = {
+        "pstats": "pstats",
+        "collapsed": "txt",
+        "flamegraph": "html",
+        "gecko": "json",
+        "heatmap": "",
+        "binary": "bin",
+    }
+    VALID_MODES = {"wall", "cpu", "gil", "exception"}
+
+    def __init__(self):
+        if sys.platform == "win32":
+            raise HookError("tachyon hook is not supported on Windows")
+
+        if sys.version_info < (3, 15):
+            raise HookError(
+                "tachyon hook requires Python 3.15+, "
+                "current version: %s.%s"
+                % (sys.version_info.major, sys.version_info.minor)
+            )
+
+        try:
+            import profiling.sampling  # noqa: F401
+        except ImportError:
+            raise HookError("profiling.sampling module not available")
+
+        self.format = os.environ.get("PYPERF_TACHYON_FORMAT", "pstats")
+        self.mode = os.environ.get("PYPERF_TACHYON_MODE", "cpu")
+        self.interval = int(os.environ.get("PYPERF_TACHYON_INTERVAL", "1000"))
+        self.data_dir = os.environ.get("PYPERF_TACHYON_DATA_DIR", "")
+        self.all_threads = os.environ.get("PYPERF_TACHYON_ALL_THREADS", "") == "1"
+        self.native = os.environ.get("PYPERF_TACHYON_NATIVE", "") == "1"
+        self.async_aware = os.environ.get("PYPERF_TACHYON_ASYNC_AWARE", "") == "1"
+
+        if self.format not in self.FORMAT_EXTENSIONS:
+            raise HookError(
+                "Invalid PYPERF_TACHYON_FORMAT: %s (valid: %s)"
+                % (self.format, ", ".join(sorted(self.FORMAT_EXTENSIONS)))
+            )
+
+        if self.mode not in self.VALID_MODES:
+            raise HookError(
+                "Invalid PYPERF_TACHYON_MODE: %s (valid: %s)"
+                % (self.mode, ", ".join(sorted(self.VALID_MODES)))
+            )
+
+        if self.format == "gecko" and "PYPERF_TACHYON_MODE" in os.environ:
+            raise HookError("--mode is not compatible with gecko output")
+
+        if self.async_aware:
+            if self.native:
+                raise HookError("--async-aware is incompatible with --native")
+            if self.all_threads:
+                raise HookError("--async-aware is incompatible with --all-threads")
+            if self.mode in ("cpu", "gil"):
+                raise HookError("--async-aware is incompatible with --mode=cpu or --mode=gil")
+
+        self._proc = None
+        self.output_paths = []
+
+    def __enter__(self):
+        if self._proc is not None:
+            self._stop_profiler()
+
+        if self.data_dir:
+            os.makedirs(self.data_dir, exist_ok=True)
+
+        ext = self.FORMAT_EXTENSIONS[self.format]
+        basename = f"tachyon.{uuid.uuid4()}"
+        if ext:
+            basename = f"{basename}.{ext}"
+        output_path = os.path.join(self.data_dir, basename)
+
+        cmd = [
+            sys.executable,
+            "-m", "profiling.sampling",
+            "attach",
+            str(os.getpid()),
+            "-i", str(self.interval),
+        ]
+
+        if self.format == "gecko":
+            cmd.append("--gecko")
+        else:
+            cmd.append(f"--{self.format}")
+            cmd.extend(["--mode", self.mode])
+
+        cmd.extend(["-o", output_path])
+
+        if self.all_threads:
+            cmd.append("-a")
+        if self.native:
+            cmd.append("--native")
+        if self.async_aware:
+            cmd.append("--async-aware")
+
+        self._proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.output_paths.append(output_path)
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self._stop_profiler()
+
+    def _stop_profiler(self):
+        if not self._proc:
+            return
+
+        if self._proc.poll() is None:
+            self._proc.send_signal(signal.SIGINT)
+            try:
+                self._proc.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                self._proc.terminate()
+                try:
+                    self._proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    self._proc.kill()
+                    self._proc.wait()
+
+        self._proc = None
+
+    def teardown(self, metadata):
+        self._stop_profiler()
+        if self.output_paths:
+            metadata["tachyon_profiles"] = os.pathsep.join(self.output_paths)
+            metadata["tachyon_output_dir"] = self.data_dir or "."
+            metadata["tachyon_format"] = self.format
+            if self.format != "gecko":
+                metadata["tachyon_mode"] = self.mode
+            metadata["tachyon_interval"] = self.interval
+            metadata["tachyon_async_aware"] = int(self.async_aware)
