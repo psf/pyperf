@@ -175,32 +175,18 @@ class perf_record(HookBase):
 class tachyon(HookBase):
     """Profile the benchmark using sampling profiler (Tachyon).
 
-    Profile data is written to the current directory by default, or
-    to the value of the `PYPERF_TACHYON_DATA_DIR` environment variable.
+    The value of the `PYPERF_TACHYON_EXTRA_OPTS` environment variable is
+    appended to the `profiling.sampling attach` command line.
 
-    Profile data files have a basename `tachyon.<uuid>.<ext>`.
+    This hook does not generate output filenames. Use -o or --output in
+    `PYPERF_TACHYON_EXTRA_OPTS` to control output. For most formats, -o can
+    point at an existing directory and the profiler will auto-generate a
+    filename inside it.
 
     Configuration environment variables:
-        PYPERF_TACHYON_DATA_DIR: Output directory (default: current)
-        PYPERF_TACHYON_FORMAT: Output format - pstats, collapsed, flamegraph,
-                               gecko, heatmap, binary (default: pstats)
-        PYPERF_TACHYON_MODE: Profiling mode - wall, cpu, gil, exception
-                             (default: cpu)
-        PYPERF_TACHYON_INTERVAL: Sampling interval in microseconds (default: 1000)
-        PYPERF_TACHYON_ALL_THREADS: Set to "1" to profile all threads
-        PYPERF_TACHYON_NATIVE: Set to "1" to include the native frames
-        PYPERF_TACHYON_ASYNC_AWARE: Set to "1" for async-aware profiling
+        PYPERF_TACHYON_EXTRA_OPTS: Extra arguments passed to
+            `python -m profiling.sampling attach`.
     """
-
-    FORMAT_EXTENSIONS = {
-        "pstats": "pstats",
-        "collapsed": "txt",
-        "flamegraph": "html",
-        "gecko": "json",
-        "heatmap": "",
-        "binary": "bin",
-    }
-    VALID_MODES = {"wall", "cpu", "gil", "exception"}
 
     def __init__(self):
         if sys.platform == "win32":
@@ -218,82 +204,27 @@ class tachyon(HookBase):
         except ImportError:
             raise HookError("profiling.sampling module not available")
 
-        self.format = os.environ.get("PYPERF_TACHYON_FORMAT", "pstats")
-        self.mode = os.environ.get("PYPERF_TACHYON_MODE", "cpu")
-        self.interval = int(os.environ.get("PYPERF_TACHYON_INTERVAL", "1000"))
-        self.data_dir = os.environ.get("PYPERF_TACHYON_DATA_DIR", "")
-        self.all_threads = os.environ.get("PYPERF_TACHYON_ALL_THREADS", "") == "1"
-        self.native = os.environ.get("PYPERF_TACHYON_NATIVE", "") == "1"
-        self.async_aware = os.environ.get("PYPERF_TACHYON_ASYNC_AWARE", "") == "1"
-
-        if self.format not in self.FORMAT_EXTENSIONS:
-            raise HookError(
-                "Invalid PYPERF_TACHYON_FORMAT: %s (valid: %s)"
-                % (self.format, ", ".join(sorted(self.FORMAT_EXTENSIONS)))
-            )
-
-        if self.mode not in self.VALID_MODES:
-            raise HookError(
-                "Invalid PYPERF_TACHYON_MODE: %s (valid: %s)"
-                % (self.mode, ", ".join(sorted(self.VALID_MODES)))
-            )
-
-        if self.format == "gecko" and "PYPERF_TACHYON_MODE" in os.environ:
-            raise HookError("--mode is not compatible with gecko output")
-
-        if self.async_aware:
-            if self.native:
-                raise HookError("--async-aware is incompatible with --native")
-            if self.all_threads:
-                raise HookError("--async-aware is incompatible with --all-threads")
-            if self.mode in ("cpu", "gil"):
-                raise HookError("--async-aware is incompatible with --mode=cpu or --mode=gil")
+        self.extra_opts = os.environ.get("PYPERF_TACHYON_EXTRA_OPTS", "")
 
         self._proc = None
-        self.output_paths = []
 
     def __enter__(self):
         if self._proc is not None:
             self._stop_profiler()
-
-        if self.data_dir:
-            os.makedirs(self.data_dir, exist_ok=True)
-
-        ext = self.FORMAT_EXTENSIONS[self.format]
-        basename = f"tachyon.{uuid.uuid4()}"
-        if ext:
-            basename = f"{basename}.{ext}"
-        output_path = os.path.join(self.data_dir, basename)
 
         cmd = [
             sys.executable,
             "-m", "profiling.sampling",
             "attach",
             str(os.getpid()),
-            "-i", str(self.interval),
         ]
-
-        if self.format == "gecko":
-            cmd.append("--gecko")
-        else:
-            cmd.append(f"--{self.format}")
-            cmd.extend(["--mode", self.mode])
-
-        cmd.extend(["-o", output_path])
-
-        if self.all_threads:
-            cmd.append("-a")
-        if self.native:
-            cmd.append("--native")
-        if self.async_aware:
-            cmd.append("--async-aware")
+        cmd += shlex.split(self.extra_opts)
 
         self._proc = subprocess.Popen(
             cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        self.output_paths.append(output_path)
 
     def __exit__(self, _exc_type, _exc_value, _traceback):
         self._stop_profiler()
@@ -318,11 +249,5 @@ class tachyon(HookBase):
 
     def teardown(self, metadata):
         self._stop_profiler()
-        if self.output_paths:
-            metadata["tachyon_profiles"] = os.pathsep.join(self.output_paths)
-            metadata["tachyon_output_dir"] = self.data_dir or "."
-            metadata["tachyon_format"] = self.format
-            if self.format != "gecko":
-                metadata["tachyon_mode"] = self.mode
-            metadata["tachyon_interval"] = self.interval
-            metadata["tachyon_async_aware"] = int(self.async_aware)
+        if self.extra_opts:
+            metadata["tachyon_extra_opts"] = self.extra_opts
