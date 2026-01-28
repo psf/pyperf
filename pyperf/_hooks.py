@@ -175,16 +175,16 @@ class perf_record(HookBase):
 class tachyon(HookBase):
     """Profile the benchmark using sampling profiler (Tachyon).
 
-    The value of the `PYPERF_TACHYON_EXTRA_OPTS` environment variable is
+    The value of the `PYPERF_TACHYON_OPTS` environment variable is
     appended to the `profiling.sampling attach` command line.
 
     This hook does not generate output filenames. Use -o or --output in
-    `PYPERF_TACHYON_EXTRA_OPTS` to control output. For most formats, -o can
+    `PYPERF_TACHYON_OPTS` to control output. For most formats, -o can
     point at an existing directory and the profiler will auto-generate a
     filename inside it.
 
     Configuration environment variables:
-        PYPERF_TACHYON_EXTRA_OPTS: Extra arguments passed to
+        PYPERF_TACHYON_OPTS: Extra arguments passed to
             `python -m profiling.sampling attach`.
     """
 
@@ -204,7 +204,7 @@ class tachyon(HookBase):
         except ImportError:
             raise HookError("profiling.sampling module not available")
 
-        self.extra_opts = os.environ.get("PYPERF_TACHYON_EXTRA_OPTS", "")
+        self.extra_opts = os.environ.get("PYPERF_TACHYON_OPTS", "")
 
         self._proc = None
 
