@@ -184,7 +184,8 @@ def python_has_jit():
     elif implementation_name in ['graalpython', 'graalpy']:
         return True
     elif implementation_name == 'cpython':
-        if (jit_module := getattr(sys, '_jit')) is not None:
+        jit_module = getattr(sys, '_jit', None)
+        if jit_module is not None:
             return jit_module.is_enabled()
         return False
     elif hasattr(sys, "pyston_version_info") or "pyston_lite" in sys.modules:
