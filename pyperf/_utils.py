@@ -209,8 +209,8 @@ def python_has_jit():
         return sys.pypy_translation_info["translation.jit"]
     elif implementation_name in ["graalpython", "graalpy"]:
         return True
-    elif implementation_name == 'cpython':
-        jit_module = getattr(sys, '_jit', None)
+    elif implementation_name == "cpython":
+        jit_module = getattr(sys, "_jit", None)
         if jit_module is not None:
             return jit_module.is_enabled()
         return False
