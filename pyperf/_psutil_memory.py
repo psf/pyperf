@@ -1,12 +1,14 @@
 import os
+
 try:
     from pyperf._utils import USE_PSUTIL, BSD
+
     if not USE_PSUTIL:
         raise ImportError
     else:
         import psutil
 except ImportError:
-    raise ImportError('psutil is not installed')
+    raise ImportError("psutil is not installed")
 import threading
 import time
 
@@ -17,7 +19,7 @@ class PeakMemoryUsageThread(threading.Thread):
         self.process = psutil.Process(os.getpid())
         self.peak_usage = 0
         self._done = threading.Event()
-        self.sleep = 0.010   # 10 ms
+        self.sleep = 0.010  # 10 ms
         self._quit = False
 
     def get(self):

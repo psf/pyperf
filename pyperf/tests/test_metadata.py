@@ -8,12 +8,9 @@ from pyperf import _collect_metadata as perf_metadata
 from pyperf._metadata import METADATA_VALUE_TYPES
 
 
-MANDATORY_METADATA = [
-    'date',
-    'python_implementation', 'python_version',
-    'platform']
-if sys.platform.startswith('linux'):
-    MANDATORY_METADATA.append('aslr')
+MANDATORY_METADATA = ["date", "python_implementation", "python_version", "platform"]
+if sys.platform.startswith("linux"):
+    MANDATORY_METADATA.append("aslr")
 
 
 class TestMetadata(unittest.TestCase):
@@ -26,23 +23,23 @@ class TestMetadata(unittest.TestCase):
         for key, value in metadata.items():
             # test key
             self.assertIsInstance(key, str)
-            self.assertRegex(key, '^[a-z][a-z0-9_]+$')
+            self.assertRegex(key, "^[a-z][a-z0-9_]+$")
 
             # test value
             self.assertIsInstance(value, METADATA_VALUE_TYPES)
-            self.assertNotEqual(value, '')
+            self.assertNotEqual(value, "")
             if isinstance(value, str):
                 self.assertEqual(value.strip(), value)
-                self.assertNotIn('\n', value)
+                self.assertNotIn("\n", value)
 
     def test_collect_cpu_affinity(self):
         metadata = {}
         perf_metadata.collect_cpu_affinity(metadata, {2, 3}, 4)
-        self.assertEqual(metadata['cpu_affinity'], '2-3')
+        self.assertEqual(metadata["cpu_affinity"], "2-3")
 
         metadata = {}
         perf_metadata.collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
-        self.assertNotIn('cpu_affinity', metadata)
+        self.assertNotIn("cpu_affinity", metadata)
 
 
 class CpuFunctionsTests(unittest.TestCase):
@@ -148,83 +145,81 @@ class CpuFunctionsTests(unittest.TestCase):
     """)
 
     def test_cpu_config(self):
-        nohz_full = '2-3\n'
+        nohz_full = "2-3\n"
 
         def mock_open(filename, *args, **kw):
-            filename = filename.replace('\\', '/')
-            if filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
-                data = 'DRIVER\n'
-            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
-                data = 'GOVERNOR\n'
-            elif filename.startswith('/sys/devices/system/cpu/nohz_full'):
+            filename = filename.replace("\\", "/")
+            if filename == "/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver":
+                data = "DRIVER\n"
+            elif filename == "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor":
+                data = "GOVERNOR\n"
+            elif filename.startswith("/sys/devices/system/cpu/nohz_full"):
                 data = nohz_full
-            elif filename.startswith('/sys/devices/system/cpu/cpu2'):
+            elif filename.startswith("/sys/devices/system/cpu/cpu2"):
                 raise OSError
-            elif filename == '/sys/devices/system/cpu/cpuidle/current_driver':
-                data = 'IDLE_DRV\n'
+            elif filename == "/sys/devices/system/cpu/cpuidle/current_driver":
+                data = "IDLE_DRV\n"
             else:
                 raise ValueError("unexpect open: %r" % filename)
             return io.StringIO(data)
 
-        with mock.patch('pyperf._collect_metadata.get_isolated_cpus', return_value=[2]):
-            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch("pyperf._collect_metadata.get_isolated_cpus", return_value=[2]):
+            with mock.patch("pyperf._utils.open", create=True, side_effect=mock_open):
                 metadata = {}
                 perf_metadata.collect_cpu_config(metadata, [0, 2])
-        self.assertEqual(metadata['cpu_config'],
-                         '0=driver:DRIVER, governor:GOVERNOR; '
-                         '2=nohz_full, isolated; '
-                         'idle:IDLE_DRV')
+        self.assertEqual(
+            metadata["cpu_config"],
+            "0=driver:DRIVER, governor:GOVERNOR; 2=nohz_full, isolated; idle:IDLE_DRV",
+        )
 
-        nohz_full = '  (null)\n'
-        with mock.patch('pyperf._collect_metadata.get_isolated_cpus'):
-            with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
+        nohz_full = "  (null)\n"
+        with mock.patch("pyperf._collect_metadata.get_isolated_cpus"):
+            with mock.patch("pyperf._utils.open", create=True, side_effect=mock_open):
                 metadata = {}
                 perf_metadata.collect_cpu_config(metadata, [0, 2])
-        self.assertEqual(metadata['cpu_config'],
-                         '0=driver:DRIVER, governor:GOVERNOR; '
-                         'idle:IDLE_DRV')
+        self.assertEqual(
+            metadata["cpu_config"], "0=driver:DRIVER, governor:GOVERNOR; idle:IDLE_DRV"
+        )
 
     def test_intel_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
-            filename = filename.replace('\\', '/')
-            if filename == '/proc/cpuinfo':
+            filename = filename.replace("\\", "/")
+            if filename == "/proc/cpuinfo":
                 data = self.INTEL_CPU_INFO
-            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver':
-                data = 'DRIVER\n'
-            elif filename == '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor':
-                data = 'GOVERNOR\n'
-            elif filename.startswith('/sys/devices/system/cpu/cpu2'):
+            elif filename == "/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver":
+                data = "DRIVER\n"
+            elif filename == "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor":
+                data = "GOVERNOR\n"
+            elif filename.startswith("/sys/devices/system/cpu/cpu2"):
                 raise OSError
             else:
                 raise ValueError("unexpect open: %r" % filename)
             return io.StringIO(data)
 
-        with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch("pyperf._utils.open", create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 2])
             perf_metadata.collect_cpu_model(metadata)
-            self.assertEqual(metadata['cpu_freq'],
-                             '0=1288 MHz; 2=1200 MHz')
-            self.assertEqual(metadata['cpu_model_name'],
-                             'Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz')
+            self.assertEqual(metadata["cpu_freq"], "0=1288 MHz; 2=1200 MHz")
+            self.assertEqual(
+                metadata["cpu_model_name"], "Intel(R) Core(TM) i7-3520M CPU @ 2.90GHz"
+            )
 
     def test_power8_cpu_frequencies(self):
         def mock_open(filename, *args, **kw):
-            filename = filename.replace('\\', '/')
-            if filename == '/proc/cpuinfo':
+            filename = filename.replace("\\", "/")
+            if filename == "/proc/cpuinfo":
                 data = self.POWER8_CPUINFO
             else:
                 raise ValueError("unexpect open: %r" % filename)
             return io.StringIO(data)
 
-        with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
+        with mock.patch("pyperf._utils.open", create=True, side_effect=mock_open):
             metadata = {}
             perf_metadata.collect_cpu_freq(metadata, [0, 159])
             perf_metadata.collect_cpu_model(metadata)
-            self.assertEqual(metadata['cpu_freq'],
-                             '0,159=3425 MHz')
-            self.assertEqual(metadata['cpu_machine'],
-                             'PowerNV 8247-22L')
+            self.assertEqual(metadata["cpu_freq"], "0,159=3425 MHz")
+            self.assertEqual(metadata["cpu_machine"], "PowerNV 8247-22L")
 
 
 if __name__ == "__main__":

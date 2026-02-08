@@ -6,9 +6,13 @@ import sys
 
 import statistics
 
-from pyperf._metadata import (NUMBER_TYPES, parse_metadata,
-                              _common_metadata, get_metadata_info,
-                              _exclude_common_metadata)
+from pyperf._metadata import (
+    NUMBER_TYPES,
+    parse_metadata,
+    _common_metadata,
+    get_metadata_info,
+    _exclude_common_metadata,
+)
 from pyperf._formatter import DEFAULT_UNIT, format_values
 from pyperf._utils import median_abs_dev, percentile
 
@@ -27,24 +31,25 @@ from pyperf._utils import median_abs_dev, percentile
 # 3 - (pyperf 0.7) add Run class
 # 2 - (pyperf 0.6) support multiple benchmarks per file
 # 1 - first version
-_JSON_VERSION = '1.0'
-_JSON_MAP_VERSION = {5: (0, 8, 3), 6: (0, 9, 6), '1.0': (1, 0)}
+_JSON_VERSION = "1.0"
+_JSON_MAP_VERSION = {5: (0, 8, 3), 6: (0, 9, 6), "1.0": (1, 0)}
 
 # Metadata checked by add_run(): all runs have must have the same
 # value for these metadata (or no run must have this metadata)
 _CHECKED_METADATA = (
-    'aslr',
-    'cpu_count',
-    'cpu_model_name',
-    'hostname',
-    'inner_loops',
-    'name',
-    'platform',
-    'python_executable',
-    'python_implementation',
-    'python_unicode',
-    'python_version',
-    'unit')
+    "aslr",
+    "cpu_count",
+    "cpu_model_name",
+    "hostname",
+    "inner_loops",
+    "name",
+    "platform",
+    "python_executable",
+    "python_implementation",
+    "python_unicode",
+    "python_version",
+    "unit",
+)
 
 
 _UNSET = object()
@@ -72,7 +77,7 @@ def _check_warmups(warmups):
 
 
 def _cached_attr(func):
-    attr = '_' + func.__name__
+    attr = "_" + func.__name__
 
     def method(self):
         value = getattr(self, attr)
@@ -89,18 +94,18 @@ def _cached_attr(func):
 class Run:
     # Run is immutable, so it can be shared/exchanged between two benchmarks
 
-    __slots__ = ('_warmups', '_values', '_metadata')
+    __slots__ = ("_warmups", "_values", "_metadata")
 
-    def __init__(self, values, warmups=None,
-                 metadata=None, collect_metadata=True):
-        if any(not (isinstance(value, NUMBER_TYPES) and value > 0)
-               for value in values):
+    def __init__(self, values, warmups=None, metadata=None, collect_metadata=True):
+        if any(not (isinstance(value, NUMBER_TYPES) and value > 0) for value in values):
             raise ValueError("values must be a sequence of number > 0.0")
 
         if warmups is not None and not _check_warmups(warmups):
-            raise ValueError("warmups must be a sequence of (loops, value) "
-                             "where loops is a int >= 1 and value "
-                             "is a float >= 0.0")
+            raise ValueError(
+                "warmups must be a sequence of (loops, value) "
+                "where loops is a int >= 1 and value "
+                "is a float >= 0.0"
+            )
 
         # tuple of (loops: int, value) items
         if warmups:
@@ -145,36 +150,41 @@ class Run:
     def _is_calibration(self):
         # Run used to calibrate or recalibration the number of loops,
         # or to calibrate the number of warmups
-        return (not self._values)
+        return not self._values
 
     def _is_calibration_loops(self):
         if not self._is_calibration():
             return False
-        if self._has_metadata('calibrate_loops'):
+        if self._has_metadata("calibrate_loops"):
             return True
         # backward compatibility with pyperf 1.1 and older
-        return not any(self._has_metadata(name)
-                       for name in ('recalibrate_loops', 'calibrate_warmups',
-                                    'recalibrate_warmups'))
+        return not any(
+            self._has_metadata(name)
+            for name in (
+                "recalibrate_loops",
+                "calibrate_warmups",
+                "recalibrate_warmups",
+            )
+        )
 
     def _is_recalibration_loops(self):
-        return self._is_calibration() and self._has_metadata('recalibrate_loops')
+        return self._is_calibration() and self._has_metadata("recalibrate_loops")
 
     def _is_calibration_warmups(self):
-        return self._is_calibration() and self._has_metadata('calibrate_warmups')
+        return self._is_calibration() and self._has_metadata("calibrate_warmups")
 
     def _is_recalibration_warmups(self):
-        return self._is_calibration() and self._has_metadata('recalibrate_warmups')
+        return self._is_calibration() and self._has_metadata("recalibrate_warmups")
 
     def _has_metadata(self, name):
-        return (name in self._metadata)
+        return name in self._metadata
 
     def _get_calibration_loops(self):
         metadata = self._metadata
-        if 'calibrate_loops' in metadata:
-            return metadata['calibrate_loops']
-        if 'recalibrate_loops' in metadata:
-            return metadata['recalibrate_loops']
+        if "calibrate_loops" in metadata:
+            return metadata["calibrate_loops"]
+        if "recalibrate_loops" in metadata:
+            return metadata["recalibrate_loops"]
 
         if self._is_calibration_loops():
             # backward compatibility with pyperf 1.1 and older
@@ -184,14 +194,14 @@ class Run:
 
     def _get_calibration_warmups(self):
         metadata = self._metadata
-        if 'calibrate_warmups' in metadata:
-            return metadata['calibrate_warmups']
-        if 'recalibrate_warmups' in metadata:
-            return metadata['recalibrate_warmups']
+        if "calibrate_warmups" in metadata:
+            return metadata["calibrate_warmups"]
+        if "recalibrate_warmups" in metadata:
+            return metadata["recalibrate_warmups"]
         raise ValueError("run is not a warmup calibration")
 
     def _get_name(self):
-        return self._metadata.get('name', None)
+        return self._metadata.get("name", None)
 
     def get_metadata(self):
         return dict(self._metadata)
@@ -208,10 +218,10 @@ class Run:
         return self._values
 
     def get_loops(self):
-        return self._metadata.get('loops', 1)
+        return self._metadata.get("loops", 1)
 
     def get_inner_loops(self):
-        return self._metadata.get('inner_loops', 1)
+        return self._metadata.get("inner_loops", 1)
 
     def get_total_loops(self):
         return self.get_loops() * self.get_inner_loops()
@@ -221,8 +231,9 @@ class Run:
 
         if warmups and self._warmups:
             inner_loops = self.get_inner_loops()
-            raw_values.extend(value * (loops * inner_loops)
-                              for loops, value in self._warmups)
+            raw_values.extend(
+                value * (loops * inner_loops) for loops, value in self._warmups
+            )
 
         total_loops = self.get_total_loops()
         raw_values.extend(value * total_loops for value in self._values)
@@ -235,50 +246,49 @@ class Run:
         return self._replace(warmups=False)
 
     def _get_duration(self):
-        duration = self._metadata.get('duration', None)
+        duration = self._metadata.get("duration", None)
         if duration is not None:
             return duration
         raw_values = self._get_raw_values(warmups=True)
         return math.fsum(raw_values)
 
     def _get_date(self):
-        return self._metadata.get('date', None)
+        return self._metadata.get("date", None)
 
     def _as_json(self, common_metadata):
         data = {}
         if self._warmups:
-            data['warmups'] = self._warmups
+            data["warmups"] = self._warmups
         if self._values:
-            data['values'] = self._values
+            data["values"] = self._values
 
         metadata = _exclude_common_metadata(self._metadata, common_metadata)
         if metadata:
-            data['metadata'] = metadata
+            data["metadata"] = metadata
         return data
 
     @classmethod
     def _json_load(cls, version, run_data, common_metadata):
-        metadata = run_data.get('metadata', {})
+        metadata = run_data.get("metadata", {})
         if common_metadata:
             metadata = dict(common_metadata, **metadata)
 
-        warmups = run_data.get('warmups', None)
+        warmups = run_data.get("warmups", None)
         if warmups:
             if version >= (1, 0):
                 warmups = [tuple(item) for item in warmups]
             else:
-                inner_loops = metadata.get('inner_loops', 1)
-                warmups = [(loops, raw_value / (loops * inner_loops))
-                           for loops, raw_value in warmups]
+                inner_loops = metadata.get("inner_loops", 1)
+                warmups = [
+                    (loops, raw_value / (loops * inner_loops))
+                    for loops, raw_value in warmups
+                ]
         if version >= (0, 9, 6):
-            values = run_data.get('values', ())
+            values = run_data.get("values", ())
         else:
-            values = run_data['samples']
+            values = run_data["samples"]
 
-        return cls(values,
-                   warmups=warmups,
-                   metadata=metadata,
-                   collect_metadata=False)
+        return cls(values, warmups=warmups, metadata=metadata, collect_metadata=False)
 
     def _extract_metadata(self, name):
         value = self._metadata.get(name, None)
@@ -292,26 +302,27 @@ class Run:
             metadata = None
 
         if not isinstance(value, NUMBER_TYPES):
-            raise TypeError("metadata %r value is not an integer: got %s"
-                            % (name, type(value).__name__))
+            raise TypeError(
+                "metadata %r value is not an integer: got %s"
+                % (name, type(value).__name__)
+            )
 
         return self._replace(values=(value,), warmups=False, metadata=metadata)
 
     def _remove_all_metadata(self):
-        name = self._metadata.get('name', None)
-        unit = self._metadata.get('unit', None)
+        name = self._metadata.get("name", None)
+        unit = self._metadata.get("unit", None)
         metadata = {}
         if name:
-            metadata['name'] = name
+            metadata["name"] = name
         if unit:
-            metadata['unit'] = unit
+            metadata["unit"] = unit
         return self._replace(metadata=metadata)
 
     def _update_metadata(self, metadata):
-        if 'inner_loops' in metadata:
-            inner_loops = self._metadata.get('inner_loops', None)
-            if (inner_loops is not None
-               and metadata['inner_loops'] != inner_loops):
+        if "inner_loops" in metadata:
+            inner_loops = self._metadata.get("inner_loops", None)
+            if inner_loops is not None and metadata["inner_loops"] != inner_loops:
                 raise ValueError("inner_loops metadata cannot be modified")
 
         metadata2 = dict(self._metadata)
@@ -321,23 +332,23 @@ class Run:
 
 class Benchmark:
     def __init__(self, runs):
-        self._runs = []   # list of Run objects
+        self._runs = []  # list of Run objects
         self._clear_runs_cache()
 
         if not runs:
             raise ValueError("runs must be a non-empty sequence of Run objects")
 
         # A benchmark must have a name
-        if not runs[0]._has_metadata('name'):
-            raise ValueError("A benchmark must have a name: "
-                             "the first run has no name metadata")
+        if not runs[0]._has_metadata("name"):
+            raise ValueError(
+                "A benchmark must have a name: the first run has no name metadata"
+            )
 
         for run in runs:
             self.add_run(run)
 
     def __repr__(self):
-        return ('<Benchmark %r with %s runs>'
-                % (self.get_name(), len(self._runs)))
+        return "<Benchmark %r with %s runs>" % (self.get_name(), len(self._runs))
 
     def get_name(self):
         run = self._runs[0]
@@ -358,8 +369,7 @@ class Benchmark:
 
     def _get_run_property(self, get_property):
         # ignore calibration runs
-        values = [get_property(run) for run in self._runs
-                  if not run._is_calibration()]
+        values = [get_property(run) for run in self._runs if not run._is_calibration()]
         if len(set(values)) == 1:
             return values[0]
 
@@ -463,7 +473,7 @@ class Benchmark:
         W = 0.01
 
         # (4Z²σ²)/(W²)
-        return math.ceil((4 * Z ** 2 * sigma ** 2) / (W ** 2))
+        return math.ceil((4 * Z**2 * sigma**2) / (W**2))
 
     def percentile(self, p):
         if not (0 <= p <= 100):
@@ -482,9 +492,10 @@ class Benchmark:
                 value = metadata.get(key, None)
                 run_value = run_metata.get(key, None)
                 if run_value != value:
-                    raise ValueError("incompatible benchmark, metadata %s is "
-                                     "different: current=%s, run=%s"
-                                     % (key, value, run_value))
+                    raise ValueError(
+                        "incompatible benchmark, metadata %s is "
+                        "different: current=%s, run=%s" % (key, value, run_value)
+                    )
 
         if self._common_metadata is not None:
             # Update common metadata
@@ -497,7 +508,7 @@ class Benchmark:
 
     def get_unit(self):
         run = self._runs[0]
-        return run._metadata.get('unit', DEFAULT_UNIT)
+        return run._metadata.get("unit", DEFAULT_UNIT)
 
     def format_values(self, values):
         unit = self.get_unit()
@@ -541,15 +552,15 @@ class Benchmark:
     @classmethod
     def _json_load(cls, version, data, suite_metadata):
         if version >= (0, 9, 6):
-            metadata = data.get('metadata', {})
+            metadata = data.get("metadata", {})
         else:
-            metadata = data.get('common_metadata', {})
+            metadata = data.get("common_metadata", {})
         metadata = parse_metadata(metadata)
         if suite_metadata:
             metadata = dict(suite_metadata, **metadata)
 
         runs = []
-        for run_data in data['runs']:
+        for run_data in data["runs"]:
             run = Run._json_load(version, run_data, metadata)
             # Don't call add_run() to avoid O(n) complexity:
             # expect that runs were already validated before being written
@@ -562,10 +573,10 @@ class Benchmark:
         metadata = self._get_common_metadata()
         common_metadata = dict(metadata, **suite_metadata)
 
-        data = {'runs': [run._as_json(common_metadata) for run in self._runs]}
+        data = {"runs": [run._as_json(common_metadata) for run in self._runs]}
         metadata = _exclude_common_metadata(metadata, suite_metadata)
         if metadata:
-            data['metadata'] = metadata
+            data["metadata"] = metadata
         return data
 
     @staticmethod
@@ -616,8 +627,7 @@ class Benchmark:
 
     def add_runs(self, benchmark):
         if not isinstance(benchmark, Benchmark):
-            raise TypeError("expected Benchmark, got %s"
-                            % type(benchmark).__name__)
+            raise TypeError("expected Benchmark, got %s" % type(benchmark).__name__)
 
         if benchmark is self:
             raise ValueError("cannot add a benchmark to itself")
@@ -671,8 +681,9 @@ class Benchmark:
 class BenchmarkSuite:
     def __init__(self, benchmarks, filename=None):
         if not benchmarks:
-            raise ValueError("benchmarks must be a non-empty "
-                             "sequence of Benchmark objects")
+            raise ValueError(
+                "benchmarks must be a non-empty sequence of Benchmark objects"
+            )
 
         self.filename = filename
         self._benchmarks = []
@@ -683,8 +694,7 @@ class BenchmarkSuite:
         return [bench.get_name() for bench in self]
 
     def get_metadata(self):
-        benchs_metadata = [bench._get_common_metadata()
-                           for bench in self._benchmarks]
+        benchs_metadata = [bench._get_common_metadata() for bench in self._benchmarks]
         return _common_metadata(benchs_metadata)
 
     def __len__(self):
@@ -709,8 +719,9 @@ class BenchmarkSuite:
             for benchmark in result:
                 self._add_benchmark_runs(benchmark)
         else:
-            raise TypeError("expect Benchmark or BenchmarkSuite, got %s"
-                            % type(result).__name__)
+            raise TypeError(
+                "expect Benchmark or BenchmarkSuite, got %s" % type(result).__name__
+            )
 
     def get_benchmark(self, name):
         for bench in self._benchmarks:
@@ -732,21 +743,20 @@ class BenchmarkSuite:
             except KeyError:
                 pass
             else:
-                raise ValueError("the suite has already a benchmark called %r"
-                                 % name)
+                raise ValueError("the suite has already a benchmark called %r" % name)
 
         self._benchmarks.append(benchmark)
 
     @classmethod
     def _json_load(cls, filename, data):
-        version = data.get('version')
+        version = data.get("version")
         version_info = _JSON_MAP_VERSION.get(version)
         if not version_info:
             raise ValueError("file format version %r not supported" % version)
-        benchmarks_json = data['benchmarks']
+        benchmarks_json = data["benchmarks"]
 
         if version_info >= (0, 9, 6):
-            metadata = data.get('metadata', {})
+            metadata = data.get("metadata", {})
             if metadata is not None:
                 metadata = parse_metadata(metadata)
         else:
@@ -766,13 +776,14 @@ class BenchmarkSuite:
     @staticmethod
     def _load_open(filename):
         if isinstance(filename, bytes):
-            suffix = b'.gz'
+            suffix = b".gz"
         else:
-            suffix = '.gz'
+            suffix = ".gz"
 
         if filename.endswith(suffix):
             # Use lazy import to limit imports on 'import pyperf'
             import gzip
+
             return gzip.open(filename, "rt", encoding="utf-8")
         else:
             return open(filename, "r", encoding="utf-8")
@@ -783,17 +794,17 @@ class BenchmarkSuite:
         import json
 
         if isinstance(file, (bytes, str)):
-            if file != '-':
+            if file != "-":
                 filename = file
                 fp = cls._load_open(filename)
                 with fp:
                     data = json.load(fp)
             else:
-                filename = '<stdin>'
+                filename = "<stdin>"
                 data = json.load(sys.stdin)
         else:
             # file is a file object
-            filename = getattr(file, 'name', None)
+            filename = getattr(file, "name", None)
             data = json.load(file)
 
         return cls._json_load(filename, data)
@@ -809,9 +820,9 @@ class BenchmarkSuite:
     @staticmethod
     def _dump_open(filename, replace):
         if isinstance(filename, bytes):
-            suffix = b'.gz'
+            suffix = b".gz"
         else:
-            suffix = '.gz'
+            suffix = ".gz"
 
         if not replace and os.path.exists(filename):
             raise OSError(errno.EEXIST, "File already exists")
@@ -826,11 +837,10 @@ class BenchmarkSuite:
 
     def _as_json(self):
         metadata = self.get_metadata()
-        benchmarks = [benchmark._as_json(metadata)
-                      for benchmark in self._benchmarks]
-        data = {'version': _JSON_VERSION, 'benchmarks': benchmarks}
+        benchmarks = [benchmark._as_json(metadata) for benchmark in self._benchmarks]
+        data = {"version": _JSON_VERSION, "benchmarks": benchmarks}
         if metadata:
-            data['metadata'] = metadata
+            data["metadata"] = metadata
         return data
 
     def dump(self, file, compact=True, replace=False):
@@ -842,9 +852,9 @@ class BenchmarkSuite:
         def dump(data, fp, compact):
             kw = {}
             if compact:
-                kw['separators'] = (',', ':')
+                kw["separators"] = (",", ":")
             else:
-                kw['indent'] = 4
+                kw["indent"] = 4
             json.dump(data, fp, sort_keys=True, **kw)
             fp.write("\n")
             fp.flush()
@@ -865,16 +875,14 @@ class BenchmarkSuite:
 
     def _convert_include_benchmark(self, names):
         name_set = set(names)
-        benchmarks = [bench for bench in self
-                      if bench.get_name() in name_set]
+        benchmarks = [bench for bench in self if bench.get_name() in name_set]
         if not benchmarks:
             raise KeyError("no benchmark found with name in %r" % names)
         self._replace_benchmarks(benchmarks)
 
     def _convert_exclude_benchmark(self, names):
         name_set = set(names)
-        benchmarks = [bench for bench in self
-                      if bench.get_name() not in name_set]
+        benchmarks = [bench for bench in self if bench.get_name() not in name_set]
         self._replace_benchmarks(benchmarks)
 
     def get_total_duration(self):

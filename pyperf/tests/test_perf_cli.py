@@ -8,7 +8,7 @@ from pyperf import tests
 
 
 TESTDIR = os.path.dirname(__file__)
-TELCO = os.path.join(TESTDIR, 'telco.json')
+TELCO = os.path.join(TESTDIR, "telco.json")
 
 
 class BaseTestCase:
@@ -16,37 +16,35 @@ class BaseTestCase:
 
     def create_bench(self, values, metadata=None):
         if metadata is None:
-            metadata = {'name': 'bench'}
-        elif 'name' not in metadata:
-            metadata['name'] = 'bench'
+            metadata = {"name": "bench"}
+        elif "name" not in metadata:
+            metadata["name"] = "bench"
         runs = []
         for value in values:
-            run = pyperf.Run([value],
-                             metadata=metadata,
-                             collect_metadata=False)
+            run = pyperf.Run([value], metadata=metadata, collect_metadata=False)
             runs.append(run)
         return pyperf.Benchmark(runs)
 
     def run_command(self, *args, **kwargs):
-        cmd = [sys.executable, '-m', 'pyperf']
+        cmd = [sys.executable, "-m", "pyperf"]
         cmd.extend(args)
 
         proc = tests.get_output(cmd, **kwargs)
-        self.assertEqual(proc.stderr, '')
+        self.assertEqual(proc.stderr, "")
         self.assertEqual(proc.returncode, 0)
         return proc.stdout
 
 
 class TestPerfCLI(BaseTestCase, unittest.TestCase):
     def create_suite(self):
-        bench1 = self.create_bench((1.0, 1.5, 2.0),
-                                   metadata={'hostname': 'toto',
-                                             'python_version': '2.7',
-                                             'name': 'py36'})
-        bench2 = self.create_bench((1.5, 2.0, 2.5),
-                                   metadata={'hostname': 'toto',
-                                             'python_version': '3.4',
-                                             'name': 'py38'})
+        bench1 = self.create_bench(
+            (1.0, 1.5, 2.0),
+            metadata={"hostname": "toto", "python_version": "2.7", "name": "py36"},
+        )
+        bench2 = self.create_bench(
+            (1.5, 2.0, 2.5),
+            metadata={"hostname": "toto", "python_version": "3.4", "name": "py38"},
+        )
         return pyperf.BenchmarkSuite([bench1, bench2])
 
     def test_show_common_metadata(self):
@@ -54,7 +52,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
-            stdout = self.run_command('show', '-q', '--metadata', tmp_name)
+            stdout = self.run_command("show", "-q", "--metadata", tmp_name)
 
         expected = textwrap.dedent("""
             Common metadata
@@ -85,7 +83,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
-            stdout = self.run_command('metadata', '-q', tmp_name)
+            stdout = self.run_command("metadata", "-q", tmp_name)
 
         expected = textwrap.dedent("""
             Common metadata
@@ -109,8 +107,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def compare(self, action, ref_result, changed_result, *args):
         with tests.temporary_directory() as tmpdir:
-            ref_name = os.path.join(tmpdir, 'ref.json')
-            changed_name = os.path.join(tmpdir, 'changed.json')
+            ref_name = os.path.join(tmpdir, "ref.json")
+            changed_name = os.path.join(tmpdir, "changed.json")
 
             ref_result.dump(ref_name)
             changed_result.dump(changed_name)
@@ -120,118 +118,106 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         return stdout
 
     def test_compare_to(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       metadata={'name': 'telco'})
+        ref_result = self.create_bench((1.0, 1.5, 2.0), metadata={"name": "telco"})
 
-        changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           metadata={'name': 'telco'})
+        changed_result = self.create_bench((1.5, 2.0, 2.5), metadata={"name": "telco"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
+        stdout = self.compare("compare_to", ref_result, changed_result, "-v")
 
-        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
-                    'Not significant!')
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        expected = (
+            "Mean +- std dev: [ref] 1.50 sec +- 0.50 sec "
+            "-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n"
+            "Not significant!"
+        )
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_rest_table(self):
-        ref_result = self.create_bench((1.0,),
-                                       metadata={'name': 'telco'})
+        ref_result = self.create_bench((1.0,), metadata={"name": "telco"})
 
-        changed_result = self.create_bench((2.0,),
-                                           metadata={'name': 'telco'})
+        changed_result = self.create_bench((2.0,), metadata={"name": "telco"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '--table')
+        stdout = self.compare("compare_to", ref_result, changed_result, "--table")
 
-        expected = textwrap.dedent('''
+        expected = textwrap.dedent("""
             +-----------+----------+------------------------+
             | Benchmark | ref      | changed                |
             +===========+==========+========================+
             | telco     | 1.00 sec | 2.00 sec: 2.00x slower |
             +-----------+----------+------------------------+
-        ''').strip()
+        """).strip()
 
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_md_table(self):
-        ref_result = self.create_bench((1.0,),
-                                       metadata={'name': 'telco'})
+        ref_result = self.create_bench((1.0,), metadata={"name": "telco"})
 
-        changed_result = self.create_bench((2.0,),
-                                           metadata={'name': 'telco'})
+        changed_result = self.create_bench((2.0,), metadata={"name": "telco"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '--table',
-                              '--table-format', 'md')
+        stdout = self.compare(
+            "compare_to", ref_result, changed_result, "--table", "--table-format", "md"
+        )
 
-        expected = textwrap.dedent('''
+        expected = textwrap.dedent("""
             | Benchmark | ref      | changed                |
             |-----------|:--------:|:----------------------:|
             | telco     | 1.00 sec | 2.00 sec: 2.00x slower |
-        ''').strip()
+        """).strip()
 
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_table_not_significant(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       metadata={'name': 'telco'})
+        ref_result = self.create_bench((1.0, 1.5, 2.0), metadata={"name": "telco"})
 
-        changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           metadata={'name': 'telco'})
+        changed_result = self.create_bench((1.5, 2.0, 2.5), metadata={"name": "telco"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '--table')
+        stdout = self.compare("compare_to", ref_result, changed_result, "--table")
         expected = "Benchmark hidden because not significant (1): telco"
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_not_significant(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       metadata={'name': 'name'})
-        changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           metadata={'name': 'name'})
+        ref_result = self.create_bench((1.0, 1.5, 2.0), metadata={"name": "name"})
+        changed_result = self.create_bench((1.5, 2.0, 2.5), metadata={"name": "name"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result)
+        stdout = self.compare("compare_to", ref_result, changed_result)
 
-        expected = 'Benchmark hidden because not significant (1): name'
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        expected = "Benchmark hidden because not significant (1): name"
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_not_significant_verbose(self):
-        ref_result = self.create_bench((1.0, 1.5, 2.0),
-                                       metadata={'name': 'name'})
-        changed_result = self.create_bench((1.5, 2.0, 2.5),
-                                           metadata={'name': 'name'})
+        ref_result = self.create_bench((1.0, 1.5, 2.0), metadata={"name": "name"})
+        changed_result = self.create_bench((1.5, 2.0, 2.5), metadata={"name": "name"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
+        stdout = self.compare("compare_to", ref_result, changed_result, "-v")
 
-        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n'
-                    'Not significant!')
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        expected = (
+            "Mean +- std dev: [ref] 1.50 sec +- 0.50 sec "
+            "-> [changed] 2.00 sec +- 0.50 sec: 1.33x slower\n"
+            "Not significant!"
+        )
+        self.assertEqual(stdout.rstrip(), expected)
 
     def test_compare_to_same(self):
         values = (1.0, 1.5, 2.0)
-        ref_result = self.create_bench(values, metadata={'name': 'name'})
-        changed_result = self.create_bench(values, metadata={'name': 'name'})
+        ref_result = self.create_bench(values, metadata={"name": "name"})
+        changed_result = self.create_bench(values, metadata={"name": "name"})
 
-        stdout = self.compare('compare_to', ref_result, changed_result, '-v')
+        stdout = self.compare("compare_to", ref_result, changed_result, "-v")
 
-        expected = ('Mean +- std dev: [ref] 1.50 sec +- 0.50 sec '
-                    '-> [changed] 1.50 sec +- 0.50 sec: no change\n'
-                    'Not significant!')
-        self.assertEqual(stdout.rstrip(),
-                         expected)
+        expected = (
+            "Mean +- std dev: [ref] 1.50 sec +- 0.50 sec "
+            "-> [changed] 1.50 sec +- 0.50 sec: no change\n"
+            "Not significant!"
+        )
+        self.assertEqual(stdout.rstrip(), expected)
 
     def check_command(self, expected, *args, **kwargs):
         stdout = self.run_command(*args, **kwargs)
         self.assertEqual(stdout, textwrap.dedent(expected).lstrip())
 
     def test_compare_to_cli(self):
-        py36 = os.path.join(TESTDIR, 'mult_list_py36.json')
-        py37 = os.path.join(TESTDIR, 'mult_list_py37.json')
-        py38 = os.path.join(TESTDIR, 'mult_list_py38.json')
+        py36 = os.path.join(TESTDIR, "mult_list_py36.json")
+        py37 = os.path.join(TESTDIR, "mult_list_py37.json")
+        py38 = os.path.join(TESTDIR, "mult_list_py38.json")
 
         # 2 files
         expected = """
@@ -241,7 +227,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.22x slower
         """
-        self.check_command(expected, 'compare_to', py36, py37)
+        self.check_command(expected, "compare_to", py36, py37)
 
         # 2 files grouped by speed
         expected = """
@@ -254,7 +240,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.22x slower
         """
-        self.check_command(expected, 'compare_to', "--group-by-speed", py36, py37)
+        self.check_command(expected, "compare_to", "--group-by-speed", py36, py37)
 
         # 2 files grouped by speed (with not significant)
         expected = """
@@ -266,7 +252,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.09x faster
         """
-        self.check_command(expected, 'compare_to', "--group-by-speed", py36, py38)
+        self.check_command(expected, "compare_to", "--group-by-speed", py36, py38)
 
         # 3 files
         expected = """
@@ -295,7 +281,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             mult_list_py37: 1.22x slower
             mult_list_py38: 1.09x faster
         """
-        self.check_command(expected, 'compare_to', py36, py37, py38)
+        self.check_command(expected, "compare_to", py36, py37, py38)
 
         # 3 files as table
         expected = """
@@ -311,7 +297,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             | Geometric mean | (ref)          | 1.22x slower          | 1.09x faster          |
             +----------------+----------------+-----------------------+-----------------------+
         """
-        self.check_command(expected, 'compare_to', '--table', py36, py37, py38)
+        self.check_command(expected, "compare_to", "--table", py36, py37, py38)
 
         # 3 files as table grouped by speed
         expected = """
@@ -327,11 +313,13 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             | Geometric mean | (ref)          | 1.22x slower          |
             +----------------+----------------+-----------------------+
         """
-        self.check_command(expected, 'compare_to', '--table', "--group-by-speed", py36, py37)
+        self.check_command(
+            expected, "compare_to", "--table", "--group-by-speed", py36, py37
+        )
 
     def test_compare_to_cli_tags(self):
-        py36 = os.path.join(TESTDIR, 'mult_list_py36_tags.json')
-        py37 = os.path.join(TESTDIR, 'mult_list_py37_tags.json')
+        py36 = os.path.join(TESTDIR, "mult_list_py36_tags.json")
+        py37 = os.path.join(TESTDIR, "mult_list_py37_tags.json")
 
         # 2 files
         expected = """
@@ -360,7 +348,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.22x slower
         """
-        self.check_command(expected, 'compare_to', py36, py37)
+        self.check_command(expected, "compare_to", py36, py37)
 
         expected = """
             Benchmarks with tag 'bar':
@@ -404,12 +392,12 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             | Geometric mean | (ref)               | 1.22x slower          |
             +----------------+---------------------+-----------------------+
         """
-        self.check_command(expected, 'compare_to', '--table', py36, py37)
+        self.check_command(expected, "compare_to", "--table", py36, py37)
 
     def test_compare_to_cli_min_speed(self):
-        py36 = os.path.join(TESTDIR, 'mult_list_py36.json')
-        py37 = os.path.join(TESTDIR, 'mult_list_py37.json')
-        py38 = os.path.join(TESTDIR, 'mult_list_py38.json')
+        py36 = os.path.join(TESTDIR, "mult_list_py36.json")
+        py37 = os.path.join(TESTDIR, "mult_list_py37.json")
+        py38 = os.path.join(TESTDIR, "mult_list_py38.json")
 
         # 2 files, min-speed=10
         expected = """
@@ -420,7 +408,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.22x slower
         """
-        self.check_command(expected, 'compare_to', "--min-speed=10", py36, py37)
+        self.check_command(expected, "compare_to", "--min-speed=10", py36, py37)
 
         # 2 files, min-speed=40
         expected = """
@@ -430,7 +418,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Geometric mean: 1.22x slower
         """
-        self.check_command(expected, 'compare_to', "--min-speed=40", py36, py37)
+        self.check_command(expected, "compare_to", "--min-speed=40", py36, py37)
 
         # 3 files as table, min-speed=10
         expected = """
@@ -446,15 +434,17 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
             Benchmark hidden because not significant (1): [1]*1000
         """
-        self.check_command(expected, 'compare_to', '--table', "--min-speed=10", py36, py37, py38)
+        self.check_command(
+            expected, "compare_to", "--table", "--min-speed=10", py36, py37, py38
+        )
 
     def test_hist(self):
         # Force terminal size on Python 3 for shutil.get_terminal_size()
         env = dict(os.environ)
-        env['COLUMNS'] = '80'
-        env['LINES'] = '25'
+        env["COLUMNS"] = "80"
+        env["LINES"] = "25"
 
-        expected = ("""
+        expected = """
             22.1 ms:  1 #####
             22.1 ms:  0 |
             22.2 ms:  1 #####
@@ -478,17 +468,17 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             22.8 ms:  3 ##############
             22.9 ms:  4 ###################
             22.9 ms:  4 ###################
-        """)
-        self.check_command(expected, 'hist', TELCO, env=env)
+        """
+        self.check_command(expected, "hist", TELCO, env=env)
 
     def test_show(self):
-        expected = ("""
+        expected = """
             Mean +- std dev: 22.5 ms +- 0.2 ms
-        """)
-        self.check_command(expected, 'show', TELCO)
+        """
+        self.check_command(expected, "show", TELCO)
 
     def test_stats(self):
-        expected = ("""
+        expected = """
             Total duration: 29.2 sec
             Start date: 2016-10-21 03:14:19
             End date: 2016-10-21 03:14:53
@@ -518,8 +508,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             100th percentile: 22.9 ms (+2% of the mean) -- maximum
 
             Number of outlier (out of 22.0 ms..23.0 ms): 0
-        """)
-        self.check_command(expected, 'stats', TELCO)
+        """
+        self.check_command(expected, "stats", TELCO)
 
     def test_dump_raw(self):
         expected = """
@@ -534,7 +524,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - raw value 2: 180 ms
             - raw value 3: 181 ms
         """
-        stdout = self.run_command('dump', '--raw', TELCO)
+        stdout = self.run_command("dump", "--raw", TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump(self):
@@ -550,7 +540,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - value 2: 22.5 ms
             - value 3: 22.6 ms
         """
-        stdout = self.run_command('dump', TELCO)
+        stdout = self.run_command("dump", TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_track_memory(self):
@@ -564,8 +554,8 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             Run 4: 0 warmups, 1 value, 2^15 loops
             - value 1: 7208.0 KiB
         """
-        filename = os.path.join(TESTDIR, 'track_memory.json')
-        stdout = self.run_command('dump', filename)
+        filename = os.path.join(TESTDIR, "track_memory.json")
+        stdout = self.run_command("dump", filename)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_quiet(self):
@@ -579,7 +569,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             - value 2: 22.4 ms
             - value 3: 22.3 ms
         """
-        stdout = self.run_command('dump', '--quiet', TELCO)
+        stdout = self.run_command("dump", "--quiet", TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_dump_verbose(self):
@@ -613,46 +603,41 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
               runnable_threads: 1
               uptime: 2 day 2 hour 4 min
         """
-        stdout = self.run_command('dump', '--verbose', TELCO)
+        stdout = self.run_command("dump", "--verbose", TELCO)
         self.assertIn(textwrap.dedent(expected).strip(), stdout)
 
     def test_collect_metadata(self):
-        stdout = self.run_command('collect_metadata')
-        self.assertRegex(stdout,
-                         r'^Metadata:\n(- [^:]+: .*\n)+$')
+        stdout = self.run_command("collect_metadata")
+        self.assertRegex(stdout, r"^Metadata:\n(- [^:]+: .*\n)+$")
 
     def test_slowest(self):
-        stdout = self.run_command('slowest', TELCO)
-        self.assertEqual(stdout.rstrip(),
-                         '#1: telco (29.2 sec)')
+        stdout = self.run_command("slowest", TELCO)
+        self.assertEqual(stdout.rstrip(), "#1: telco (29.2 sec)")
 
     def test_check_stable(self):
-        stdout = self.run_command('check', TELCO)
+        stdout = self.run_command("check", TELCO)
         self.assertIn(
             textwrap.dedent(
                 """
                 Benchmark was run more times than necessary to get a stable result.
                 Consider passing processes=7 to the Runner constructor to save time.
                 """
-            ).strip(), stdout.rstrip()
+            ).strip(),
+            stdout.rstrip(),
         )
-        self.assertIn(
-            'The benchmark seems to be stable',
-            stdout.rstrip()
-        )
+        self.assertIn("The benchmark seems to be stable", stdout.rstrip())
 
     def test_command(self):
-        command = [sys.executable, '-c', 'pass']
-        stdout = self.run_command('command', '--debug-single-value', *command)
-        self.assertRegex(stdout,
-                         r'^\.\ncommand: [0-9.]+ (?:ms|sec)$')
+        command = [sys.executable, "-c", "pass"]
+        stdout = self.run_command("command", "--debug-single-value", *command)
+        self.assertRegex(stdout, r"^\.\ncommand: [0-9.]+ (?:ms|sec)$")
 
     def test_check_unstable(self):
         suite = self.create_suite()
 
         with tests.temporary_file() as tmp_name:
             suite.dump(tmp_name)
-            stdout = self.run_command('check', tmp_name)
+            stdout = self.run_command("check", tmp_name)
 
         expected = textwrap.dedent("""
             py36
@@ -688,41 +673,52 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
             self.assertIsInstance(run.values[0], int)
             self.assertEqual(run.get_loops(), loops)
             metadata = run.get_metadata()
-            self.assertEqual(metadata['warmups'], 1)
-            self.assertEqual(metadata['values'], 3)
+            self.assertEqual(metadata["warmups"], 1)
+            self.assertEqual(metadata["values"], 3)
 
     def _check_track_memory(self, track_option):
         with tests.temporary_file() as tmp_name:
-            self.run_command('timeit',
-                             track_option,
-                             '-p2', '-w1', '-l5', '-n3',
-                             '[1,2]*1000',
-                             '-o', tmp_name)
+            self.run_command(
+                "timeit",
+                track_option,
+                "-p2",
+                "-w1",
+                "-l5",
+                "-n3",
+                "[1,2]*1000",
+                "-o",
+                tmp_name,
+            )
             bench = pyperf.Benchmark.load(tmp_name)
 
         self._check_track_memory_bench(bench, loops=5)
 
     def test_track_memory(self):
-        self._check_track_memory('--track-memory')
+        self._check_track_memory("--track-memory")
 
     def test_tracemalloc(self):
         try:
-            import tracemalloc   # noqa
+            import tracemalloc  # noqa
         except ImportError:
-            self.skipTest('tracemalloc module not available')
+            self.skipTest("tracemalloc module not available")
 
-        self._check_track_memory('--tracemalloc')
+        self._check_track_memory("--tracemalloc")
 
-    @unittest.skipIf(sys.platform == 'win32',
-                     'https://github.com/psf/pyperf/issues/97')
+    @unittest.skipIf(sys.platform == "win32", "https://github.com/psf/pyperf/issues/97")
     def test_command_track_memory(self):
-        cmd = (sys.executable, '-c', 'pass')
+        cmd = (sys.executable, "-c", "pass")
         with tests.temporary_file() as tmp_name:
-            args = ('command',
-                    '--track-memory',
-                    '-p2', '-w1', '-l2', '-n3',
-                    '-o', tmp_name,
-                    '--')
+            args = (
+                "command",
+                "--track-memory",
+                "-p2",
+                "-w1",
+                "-l2",
+                "-n3",
+                "-o",
+                tmp_name,
+                "--",
+            )
             args += cmd
             self.run_command(*args)
             bench = pyperf.Benchmark.load(tmp_name)
@@ -731,12 +727,18 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
 
     def test_hook(self):
         with tests.temporary_file() as tmp_name:
-            self.run_command('timeit',
-                             '--hook',
-                             '_test_hook',
-                             '-p2', '-w1', '-l5', '-n3',
-                             '[1,2]*1000',
-                             '-o', tmp_name)
+            self.run_command(
+                "timeit",
+                "--hook",
+                "_test_hook",
+                "-p2",
+                "-w1",
+                "-l5",
+                "-n3",
+                "[1,2]*1000",
+                "-o",
+                tmp_name,
+            )
             bench = pyperf.Benchmark.load(tmp_name)
         metadata = bench.get_metadata()
         assert metadata.get("_test_hook", 0) > 0
@@ -749,28 +751,25 @@ class TestConvert(BaseTestCase, unittest.TestCase):
 
         with tests.temporary_file() as tmp_name:
             bench.dump(tmp_name)
-            stdout = self.run_command('convert', tmp_name, '--stdout')
+            stdout = self.run_command("convert", tmp_name, "--stdout")
 
-        self.assertEqual(stdout,
-                         tests.benchmark_as_json(bench))
+        self.assertEqual(stdout, tests.benchmark_as_json(bench))
 
     def test_indent(self):
         bench = self.create_bench((1.0, 1.5, 2.0))
 
         with tests.temporary_file() as tmp_name:
             bench.dump(tmp_name)
-            stdout = self.run_command('convert', tmp_name,
-                                      '--indent', '--stdout')
+            stdout = self.run_command("convert", tmp_name, "--indent", "--stdout")
 
-        self.assertEqual(stdout,
-                         tests.benchmark_as_json(bench, compact=False))
+        self.assertEqual(stdout, tests.benchmark_as_json(bench, compact=False))
 
     def test_convert(self):
         bench = pyperf.Benchmark.load(TELCO)
 
         with tests.temporary_directory() as tmpdir:
-            filename = os.path.join(tmpdir, 'test.json')
-            self.run_command('convert', TELCO, '-o', filename)
+            filename = os.path.join(tmpdir, "test.json")
+            self.run_command("convert", TELCO, "-o", filename)
 
             bench2 = pyperf.Benchmark.load(filename)
 
@@ -780,50 +779,48 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         values = (1.0, 1.5, 2.0)
         benchmarks = []
         for name in ("call_simple", "go", "telco"):
-            bench = self.create_bench(values, metadata={'name': name})
+            bench = self.create_bench(values, metadata={"name": name})
             benchmarks.append(bench)
         suite = pyperf.BenchmarkSuite(benchmarks)
 
         with tests.temporary_directory() as tmpdir:
-            filename = os.path.join(tmpdir, 'test.json')
+            filename = os.path.join(tmpdir, "test.json")
             suite.dump(filename)
 
-            stdout = self.run_command('convert', filename,
-                                      '--include-benchmark', 'go', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--include-benchmark", "go", "--stdout"
+            )
             suite2 = pyperf.BenchmarkSuite.loads(stdout)
 
-            stdout = self.run_command('convert', filename,
-                                      '--exclude-benchmark', 'go', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--exclude-benchmark", "go", "--stdout"
+            )
             suite3 = pyperf.BenchmarkSuite.loads(stdout)
 
-        self.assertEqual(suite2.get_benchmark_names(),
-                         ['go'])
+        self.assertEqual(suite2.get_benchmark_names(), ["go"])
 
-        self.assertEqual(suite3.get_benchmark_names(),
-                         ['call_simple', 'telco'])
+        self.assertEqual(suite3.get_benchmark_names(), ["call_simple", "telco"])
 
     def test_remove_warmups(self):
         values = [1.0, 2.0, 3.0]
         raw_values = [5.0] + values
-        run = pyperf.Run(values, warmups=[(1, 5.0)],
-                         metadata={'name': 'bench'})
+        run = pyperf.Run(values, warmups=[(1, 5.0)], metadata={"name": "bench"})
         bench = pyperf.Benchmark([run])
 
         self.assertEqual(bench._get_nwarmup(), 1)
-        self.assertEqual(bench._get_raw_values(warmups=True),
-                         raw_values)
+        self.assertEqual(bench._get_raw_values(warmups=True), raw_values)
 
         with tests.temporary_directory() as tmpdir:
-            filename = os.path.join(tmpdir, 'test.json')
+            filename = os.path.join(tmpdir, "test.json")
             bench.dump(filename)
 
-            stdout = self.run_command('convert', filename,
-                                      '--remove-warmups', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--remove-warmups", "--stdout"
+            )
             bench2 = pyperf.Benchmark.loads(stdout)
 
         self.assertEqual(bench2._get_nwarmup(), 0)
-        self.assertEqual(bench2._get_raw_values(warmups=True),
-                         raw_values[1:])
+        self.assertEqual(bench2._get_raw_values(warmups=True), raw_values[1:])
 
     def test_filter_runs(self):
         runs = (1.0, 2.0, 3.0, 4.0, 5.0)
@@ -832,19 +829,22 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         self.assertEqual(bench.get_values(), runs)
 
         with tests.temporary_directory() as tmpdir:
-            filename = os.path.join(tmpdir, 'test.json')
+            filename = os.path.join(tmpdir, "test.json")
             bench.dump(filename)
 
-            stdout = self.run_command('convert', filename,
-                                      '--include-runs', '4', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--include-runs", "4", "--stdout"
+            )
             bench2 = pyperf.Benchmark.loads(stdout)
 
-            stdout = self.run_command('convert', filename,
-                                      '--include-runs', '1-3,5', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--include-runs", "1-3,5", "--stdout"
+            )
             bench3 = pyperf.Benchmark.loads(stdout)
 
-            stdout = self.run_command('convert', filename,
-                                      '--exclude-runs', '2,4', '--stdout')
+            stdout = self.run_command(
+                "convert", filename, "--exclude-runs", "2,4", "--stdout"
+            )
             bench4 = pyperf.Benchmark.loads(stdout)
 
         self.assertEqual(bench2.get_values(), (4.0,))

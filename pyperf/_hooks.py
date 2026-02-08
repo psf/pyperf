@@ -134,14 +134,21 @@ class perf_record(HookBase):
         self.ack_fifo = self.mkfifo(self.tempdir.name, "ack_fifo")
         perf_data_dir = os.environ.get("PYPERF_PERF_RECORD_DATA_DIR", "")
         perf_data_basename = f"perf.data.{uuid.uuid4()}"
-        cmd = ["perf", "record",
-               "--pid", str(os.getpid()),
-               "--output", os.path.join(perf_data_dir, perf_data_basename),
-               "--control", f"fifo:{self.ctl_fifo},{self.ack_fifo}"]
+        cmd = [
+            "perf",
+            "record",
+            "--pid",
+            str(os.getpid()),
+            "--output",
+            os.path.join(perf_data_dir, perf_data_basename),
+            "--control",
+            f"fifo:{self.ctl_fifo},{self.ack_fifo}",
+        ]
         extra_opts = os.environ.get("PYPERF_PERF_RECORD_EXTRA_OPTS", "")
         cmd += shlex.split(extra_opts)
         self.perf = subprocess.Popen(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         self.ctl_fd = open(self.ctl_fifo, "w")
         self.ack_fd = open(self.ack_fifo, "r")
 

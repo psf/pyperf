@@ -14,29 +14,26 @@ def create_run(values=None, warmups=None, metadata=None):
     if values is None:
         values = (1.0,)
     if metadata is None:
-        metadata = {'name': 'bench'}
-    elif 'name' not in metadata:
-        metadata['name'] = 'bench'
-    return pyperf.Run(values, warmups,
-                      metadata=metadata,
-                      collect_metadata=False)
+        metadata = {"name": "bench"}
+    elif "name" not in metadata:
+        metadata["name"] = "bench"
+    return pyperf.Run(values, warmups, metadata=metadata, collect_metadata=False)
 
 
 class RunTests(unittest.TestCase):
     def test_attr(self):
-        run = pyperf.Run((2.0, 3.0),
-                         warmups=((4, 0.5),),
-                         metadata={'loops': 2, 'inner_loops': 5},
-                         collect_metadata=False)
+        run = pyperf.Run(
+            (2.0, 3.0),
+            warmups=((4, 0.5),),
+            metadata={"loops": 2, "inner_loops": 5},
+            collect_metadata=False,
+        )
         self.assertEqual(run.get_loops(), 2)
         self.assertEqual(run.get_inner_loops(), 5)
         self.assertEqual(run.get_total_loops(), 2 * 5)
-        self.assertEqual(run.values,
-                         (2.0, 3.0))
-        self.assertEqual(run._get_raw_values(),
-                         [20.0, 30.0])
-        self.assertEqual(run._get_raw_values(warmups=True),
-                         [10.0, 20.0, 30.0])
+        self.assertEqual(run.values, (2.0, 3.0))
+        self.assertEqual(run._get_raw_values(), [20.0, 30.0])
+        self.assertEqual(run._get_raw_values(warmups=True), [10.0, 20.0, 30.0])
 
         run = pyperf.Run((2.0, 3.0), warmups=((1, 1.0),))
         self.assertEqual(run.get_loops(), 1)
@@ -52,27 +49,26 @@ class RunTests(unittest.TestCase):
 
         # number of loops
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'loops': -1}, collect_metadata=False)
+            pyperf.Run([1.0], metadata={"loops": -1}, collect_metadata=False)
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'inner_loops': 0}, collect_metadata=False)
+            pyperf.Run([1.0], metadata={"inner_loops": 0}, collect_metadata=False)
 
         # loops type error
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'loops': 1.0}, collect_metadata=False)
+            pyperf.Run([1.0], metadata={"loops": 1.0}, collect_metadata=False)
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'inner_loops': 1.0}, collect_metadata=False)
+            pyperf.Run([1.0], metadata={"inner_loops": 1.0}, collect_metadata=False)
 
         # metadata value must not be an empty string
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'name': ''}, collect_metadata=False)
-        run = pyperf.Run([1.0], metadata={'load_avg_1min': 0.0},
-                         collect_metadata=False)
-        self.assertEqual(run.get_metadata()['load_avg_1min'], 0.0)
+            pyperf.Run([1.0], metadata={"name": ""}, collect_metadata=False)
+        run = pyperf.Run([1.0], metadata={"load_avg_1min": 0.0}, collect_metadata=False)
+        self.assertEqual(run.get_metadata()["load_avg_1min"], 0.0)
 
     def test_name(self):
         # name must be non-empty
         with self.assertRaises(ValueError):
-            pyperf.Run([1.0], metadata={'name': '   '})
+            pyperf.Run([1.0], metadata={"name": "   "})
 
     def test_number_types(self):
         # ensure that all types of numbers are accepted
@@ -80,15 +76,13 @@ class RunTests(unittest.TestCase):
             run = pyperf.Run([number_type(1)], collect_metadata=False)
             self.assertIsInstance(run.values[0], number_type)
 
-            run = pyperf.Run([5], warmups=[(4, number_type(3))],
-                             collect_metadata=False)
+            run = pyperf.Run([5], warmups=[(4, number_type(3))], collect_metadata=False)
             self.assertEqual(run.warmups, ((4, 3),))
             self.assertIsInstance(run.warmups[0][1], number_type)
 
     def test_get_date(self):
-        date = datetime.datetime.now().isoformat(' ')
-        run = pyperf.Run([1.0], metadata={'date': date},
-                         collect_metadata=False)
+        date = datetime.datetime.now().isoformat(" ")
+        run = pyperf.Run([1.0], metadata={"date": date}, collect_metadata=False)
         self.assertEqual(run._get_date(), date)
 
         run = pyperf.Run([1.0], collect_metadata=False)
@@ -110,7 +104,7 @@ class BenchmarkTests(unittest.TestCase):
             pyperf.Benchmark([run])
 
     def test_add_run(self):
-        metadata = {'name': 'bench', 'hostname': 'toto'}
+        metadata = {"name": "bench", "hostname": "toto"}
         runs = [create_run(metadata=metadata)]
         bench = pyperf.Benchmark(runs)
 
@@ -120,17 +114,17 @@ class BenchmarkTests(unittest.TestCase):
         bench.add_run(create_run(metadata=metadata))
 
         # incompatible: name is different
-        metadata = {'name': 'bench2', 'hostname': 'toto'}
+        metadata = {"name": "bench2", "hostname": "toto"}
         with self.assertRaises(ValueError):
             bench.add_run(create_run(metadata=metadata))
 
         # incompatible: hostname is different
-        metadata = {'name': 'bench', 'hostname': 'homer'}
+        metadata = {"name": "bench", "hostname": "homer"}
         with self.assertRaises(ValueError):
             bench.add_run(create_run(metadata=metadata))
 
         # compatible (same metadata)
-        metadata = {'name': 'bench', 'hostname': 'toto'}
+        metadata = {"name": "bench", "hostname": "toto"}
         bench.add_run(create_run(metadata=metadata))
 
     def test_benchmark(self):
@@ -138,18 +132,22 @@ class BenchmarkTests(unittest.TestCase):
         raw_values = tuple(value * 3 * 20 for value in values)
         runs = []
         for value in values:
-            run = pyperf.Run([value],
-                             warmups=[(1, 3.0)],
-                             metadata={'key': 'value',
-                                       'loops': 20,
-                                       'inner_loops': 3,
-                                       'name': 'mybench'},
-                             collect_metadata=False)
+            run = pyperf.Run(
+                [value],
+                warmups=[(1, 3.0)],
+                metadata={
+                    "key": "value",
+                    "loops": 20,
+                    "inner_loops": 3,
+                    "name": "mybench",
+                },
+                collect_metadata=False,
+            )
             runs.append(run)
         bench = pyperf.Benchmark(runs)
 
         self.assertEqual(bench.get_values(), values)
-        self.assertEqual(bench.get_unit(), 'second')
+        self.assertEqual(bench.get_unit(), "second")
         self.assertEqual(bench._get_raw_values(), list(raw_values))
         self.assertEqual(bench.get_nrun(), 3)
 
@@ -165,20 +163,18 @@ class BenchmarkTests(unittest.TestCase):
         self.check_runs(bench, [(1, 3.0)], values)
 
         self.assertEqual(bench.get_name(), "mybench")
-        self.assertEqual(bench.get_metadata(),
-                         {'key': 'value',
-                          'name': 'mybench',
-                          'loops': 20,
-                          'inner_loops': 3})
-        self.assertEqual(repr(bench),
-                         "<Benchmark 'mybench' with 3 runs>")
+        self.assertEqual(
+            bench.get_metadata(),
+            {"key": "value", "name": "mybench", "loops": 20, "inner_loops": 3},
+        )
+        self.assertEqual(repr(bench), "<Benchmark 'mybench' with 3 runs>")
 
     def test_get_unit(self):
-        run = pyperf.Run((1.0,),
-                         metadata={'name': 'bench', 'unit': 'byte'},
-                         collect_metadata=False)
+        run = pyperf.Run(
+            (1.0,), metadata={"name": "bench", "unit": "byte"}, collect_metadata=False
+        )
         bench = pyperf.Benchmark([run])
-        self.assertEqual(bench.get_unit(), 'byte')
+        self.assertEqual(bench.get_unit(), "byte")
 
     def create_dummy_benchmark(self):
         runs = [create_run()]
@@ -215,10 +211,10 @@ class BenchmarkTests(unittest.TestCase):
     def test_dump_gzip(self):
         bench = self.create_dummy_benchmark()
 
-        with tests.temporary_file(suffix='.gz') as tmp_name:
+        with tests.temporary_file(suffix=".gz") as tmp_name:
             bench.dump(tmp_name)
 
-            with gzip.open(tmp_name, 'rt', encoding='utf-8') as fp:
+            with gzip.open(tmp_name, "rt", encoding="utf-8") as fp:
                 json = fp.read()
 
         expected = tests.benchmark_as_json(bench)
@@ -227,7 +223,7 @@ class BenchmarkTests(unittest.TestCase):
     def test_load_gzip(self):
         bench = self.create_dummy_benchmark()
 
-        with tests.temporary_file(suffix='.gz') as tmp_name:
+        with tests.temporary_file(suffix=".gz") as tmp_name:
             bench.dump(tmp_name)
             bench2 = pyperf.Benchmark.load(tmp_name)
 
@@ -245,16 +241,14 @@ class BenchmarkTests(unittest.TestCase):
 
     def test__get_nvalue_per_run(self):
         # exact
-        runs = [create_run([1.0, 2.0, 3.0]),
-                create_run([4.0, 5.0, 6.0])]
+        runs = [create_run([1.0, 2.0, 3.0]), create_run([4.0, 5.0, 6.0])]
         bench = pyperf.Benchmark(runs)
         nvalue = bench._get_nvalue_per_run()
         self.assertEqual(nvalue, 3)
         self.assertIsInstance(nvalue, int)
 
         # average
-        runs = [create_run([1.0, 2.0, 3.0, 4.0]),
-                create_run([5.0, 6.0])]
+        runs = [create_run([1.0, 2.0, 3.0, 4.0]), create_run([5.0, 6.0])]
         bench = pyperf.Benchmark(runs)
         nvalue = bench._get_nvalue_per_run()
         self.assertEqual(nvalue, 3.0)
@@ -262,16 +256,20 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_get_warmups(self):
         # exact
-        runs = [create_run((1.0, 2.0, 3.0), warmups=[(1, 1.0)]),
-                create_run((5.0, 6.0), warmups=[(1, 4.0)])]
+        runs = [
+            create_run((1.0, 2.0, 3.0), warmups=[(1, 1.0)]),
+            create_run((5.0, 6.0), warmups=[(1, 4.0)]),
+        ]
         bench = pyperf.Benchmark(runs)
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
         self.assertIsInstance(nwarmup, int)
 
         # average
-        runs = [create_run([3.0], warmups=[(1, 1.0), (1, 2.0)]),
-                create_run([4.0, 5.0, 6.0])]
+        runs = [
+            create_run([3.0], warmups=[(1, 1.0), (1, 2.0)]),
+            create_run([4.0, 5.0, 6.0]),
+        ]
         bench = pyperf.Benchmark(runs)
         nwarmup = bench._get_nwarmup()
         self.assertEqual(nwarmup, 1)
@@ -293,8 +291,10 @@ class BenchmarkTests(unittest.TestCase):
 
     def test_get_total_duration(self):
         # use duration metadata
-        runs = [create_run([0.1], metadata={'duration': 1.0}),
-                create_run([0.1], metadata={'duration': 2.0})]
+        runs = [
+            create_run([0.1], metadata={"duration": 1.0}),
+            create_run([0.1], metadata={"duration": 2.0}),
+        ]
         bench = pyperf.Benchmark(runs)
         self.assertEqual(bench.get_total_duration(), 3.0)
 
@@ -306,64 +306,80 @@ class BenchmarkTests(unittest.TestCase):
         bench = pyperf.Benchmark([create_run()])
         self.assertIsNone(bench.get_dates())
 
-        metadata = {'date': '2016-07-20T14:06:00', 'duration': 60.0}
+        metadata = {"date": "2016-07-20T14:06:00", "duration": 60.0}
         bench = pyperf.Benchmark([create_run(metadata=metadata)])
-        self.assertEqual(bench.get_dates(),
-                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
-                          datetime.datetime(2016, 7, 20, 14, 7, 0)))
+        self.assertEqual(
+            bench.get_dates(),
+            (
+                datetime.datetime(2016, 7, 20, 14, 6, 0),
+                datetime.datetime(2016, 7, 20, 14, 7, 0),
+            ),
+        )
 
-        metadata = {'date': '2016-07-20T14:10:00', 'duration': 60.0}
+        metadata = {"date": "2016-07-20T14:10:00", "duration": 60.0}
         bench.add_run(create_run(metadata=metadata))
-        self.assertEqual(bench.get_dates(),
-                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
-                          datetime.datetime(2016, 7, 20, 14, 11, 0)))
+        self.assertEqual(
+            bench.get_dates(),
+            (
+                datetime.datetime(2016, 7, 20, 14, 6, 0),
+                datetime.datetime(2016, 7, 20, 14, 11, 0),
+            ),
+        )
 
     def test_extract_metadata(self):
         warmups = ((1, 5.0),)
-        runs = [pyperf.Run((1.0,), warmups=warmups,
-                           metadata={'name': 'bench', 'mem_usage': 5},
-                           collect_metadata=False),
-                pyperf.Run((2.0,), warmups=warmups,
-                           metadata={'name': 'bench', 'mem_usage': 13},
-                           collect_metadata=False)]
+        runs = [
+            pyperf.Run(
+                (1.0,),
+                warmups=warmups,
+                metadata={"name": "bench", "mem_usage": 5},
+                collect_metadata=False,
+            ),
+            pyperf.Run(
+                (2.0,),
+                warmups=warmups,
+                metadata={"name": "bench", "mem_usage": 13},
+                collect_metadata=False,
+            ),
+        ]
         bench = pyperf.Benchmark(runs)
 
-        bench._extract_metadata('mem_usage')
+        bench._extract_metadata("mem_usage")
         self.assertEqual(bench.get_values(), (5, 13))
         for run in bench.get_runs():
             self.assertEqual(run.warmups, ())
 
     def test_remove_all_metadata(self):
-        run = pyperf.Run((1.0,),
-                         metadata={'name': 'bench', 'os': 'win', 'unit': 'byte'},
-                         collect_metadata=False)
+        run = pyperf.Run(
+            (1.0,),
+            metadata={"name": "bench", "os": "win", "unit": "byte"},
+            collect_metadata=False,
+        )
         bench = pyperf.Benchmark([run])
-        self.assertEqual(bench.get_metadata(),
-                         {'name': 'bench', 'os': 'win', 'unit': 'byte'})
+        self.assertEqual(
+            bench.get_metadata(), {"name": "bench", "os": "win", "unit": "byte"}
+        )
 
         bench._remove_all_metadata()
-        self.assertEqual(bench.get_metadata(),
-                         {'name': 'bench', 'unit': 'byte'})
+        self.assertEqual(bench.get_metadata(), {"name": "bench", "unit": "byte"})
 
     def test_update_metadata(self):
         runs = []
         for value in (1.0, 2.0, 3.0):
-            runs.append(pyperf.Run((value,),
-                                   metadata={'name': 'bench'},
-                                   collect_metadata=False))
+            runs.append(
+                pyperf.Run((value,), metadata={"name": "bench"}, collect_metadata=False)
+            )
         bench = pyperf.Benchmark(runs)
-        self.assertEqual(bench.get_metadata(),
-                         {'name': 'bench'})
+        self.assertEqual(bench.get_metadata(), {"name": "bench"})
 
-        bench.update_metadata({'os': 'linux'})
-        self.assertEqual(bench.get_metadata(),
-                         {'os': 'linux', 'name': 'bench'})
+        bench.update_metadata({"os": "linux"})
+        self.assertEqual(bench.get_metadata(), {"os": "linux", "name": "bench"})
 
     def test_update_metadata_inner_loops(self):
-        run = create_run(metadata={'inner_loops': 5})
+        run = create_run(metadata={"inner_loops": 5})
         bench = pyperf.Benchmark([run])
         with self.assertRaises(ValueError):
-            bench.update_metadata({'inner_loops': 8})
+            bench.update_metadata({"inner_loops": 8})
 
     def test_stats(self):
         values = [float(value) for value in range(1, 96)]
@@ -403,33 +419,33 @@ class BenchmarkTests(unittest.TestCase):
 
 class TestBenchmarkSuite(unittest.TestCase):
     def benchmark(self, name):
-        run = pyperf.Run([1.0, 1.5, 2.0],
-                         metadata={'name': name},
-                         collect_metadata=False)
+        run = pyperf.Run(
+            [1.0, 1.5, 2.0], metadata={"name": name}, collect_metadata=False
+        )
         return pyperf.Benchmark([run])
 
     def test_suite(self):
-        telco = self.benchmark('telco')
-        go = self.benchmark('go')
+        telco = self.benchmark("telco")
+        go = self.benchmark("go")
         suite = pyperf.BenchmarkSuite([telco, go])
 
         self.assertIsNone(suite.filename)
         self.assertEqual(len(suite), 2)
         self.assertEqual(suite.get_benchmarks(), [telco, go])
-        self.assertEqual(suite.get_benchmark('go'), go)
+        self.assertEqual(suite.get_benchmark("go"), go)
         with self.assertRaises(KeyError):
-            suite.get_benchmark('non_existent')
+            suite.get_benchmark("non_existent")
 
     def create_dummy_suite(self):
-        telco = self.benchmark('telco')
-        go = self.benchmark('go')
+        telco = self.benchmark("telco")
+        go = self.benchmark("go")
         return pyperf.BenchmarkSuite([telco, go])
 
     def check_dummy_suite(self, suite):
         benchmarks = suite.get_benchmarks()
         self.assertEqual(len(benchmarks), 2)
-        self.assertEqual(benchmarks[0].get_name(), 'telco')
-        self.assertEqual(benchmarks[1].get_name(), 'go')
+        self.assertEqual(benchmarks[0].get_name(), "telco")
+        self.assertEqual(benchmarks[1].get_name(), "go")
 
     def test_json(self):
         suite = self.create_dummy_suite()
@@ -459,17 +475,17 @@ class TestBenchmarkSuite(unittest.TestCase):
     def test_add_runs(self):
         # bench 1
         values = (1.0, 2.0, 3.0)
-        run = pyperf.Run(values, metadata={'name': "bench"})
+        run = pyperf.Run(values, metadata={"name": "bench"})
         bench = pyperf.Benchmark([run])
         suite = pyperf.BenchmarkSuite([bench])
 
         # bench 2
         values2 = (4.0, 5.0, 6.0)
-        run = pyperf.Run(values2, metadata={'name': "bench"})
+        run = pyperf.Run(values2, metadata={"name": "bench"})
         bench2 = pyperf.Benchmark([run])
         suite.add_runs(bench2)
 
-        bench = suite.get_benchmark('bench')
+        bench = suite.get_benchmark("bench")
         self.assertEqual(bench.get_values(), values + values2)
 
     def test_get_total_duration(self):
@@ -484,36 +500,43 @@ class TestBenchmarkSuite(unittest.TestCase):
         self.assertEqual(suite.get_total_duration(), 3.0)
 
     def test_get_dates(self):
-        run = create_run(metadata={'date': '2016-07-20T14:06:00',
-                                   'duration': 60.0,
-                                   'name': 'bench1'})
+        run = create_run(
+            metadata={"date": "2016-07-20T14:06:00", "duration": 60.0, "name": "bench1"}
+        )
         bench = pyperf.Benchmark([run])
         suite = pyperf.BenchmarkSuite([bench])
-        self.assertEqual(suite.get_dates(),
-                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
-                          datetime.datetime(2016, 7, 20, 14, 7, 0)))
+        self.assertEqual(
+            suite.get_dates(),
+            (
+                datetime.datetime(2016, 7, 20, 14, 6, 0),
+                datetime.datetime(2016, 7, 20, 14, 7, 0),
+            ),
+        )
 
-        run = create_run(metadata={'date': '2016-07-20T14:10:00',
-                                   'duration': 60.0,
-                                   'name': 'bench2'})
+        run = create_run(
+            metadata={"date": "2016-07-20T14:10:00", "duration": 60.0, "name": "bench2"}
+        )
         bench = pyperf.Benchmark([run])
         suite.add_benchmark(bench)
-        self.assertEqual(suite.get_dates(),
-                         (datetime.datetime(2016, 7, 20, 14, 6, 0),
-                          datetime.datetime(2016, 7, 20, 14, 11, 0)))
+        self.assertEqual(
+            suite.get_dates(),
+            (
+                datetime.datetime(2016, 7, 20, 14, 6, 0),
+                datetime.datetime(2016, 7, 20, 14, 11, 0),
+            ),
+        )
 
     def test_get_metadata(self):
         benchmarks = []
-        for name in ('a', 'b'):
-            run = pyperf.Run([1.0],
-                             metadata={'name': name, 'os': 'linux'},
-                             collect_metadata=False)
+        for name in ("a", "b"):
+            run = pyperf.Run(
+                [1.0], metadata={"name": name, "os": "linux"}, collect_metadata=False
+            )
             bench = pyperf.Benchmark([run])
             benchmarks.append(bench)
 
         suite = pyperf.BenchmarkSuite(benchmarks)
-        self.assertEqual(suite.get_metadata(),
-                         {'os': 'linux'})
+        self.assertEqual(suite.get_metadata(), {"os": "linux"})
 
 
 if __name__ == "__main__":

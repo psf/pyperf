@@ -25,7 +25,10 @@ class CompareData:
         self.benchmark = benchmark
 
     def __repr__(self):
-        return '<CompareData name=%r value#=%s>' % (self.name, self.benchmark.get_nvalue())
+        return "<CompareData name=%r value#=%s>" % (
+            self.name,
+            self.benchmark.get_nvalue(),
+        )
 
 
 def compute_normalized_mean(bench, ref):
@@ -65,7 +68,7 @@ class CompareResult:
         self._norm_mean = None
 
     def __repr__(self):
-        return '<CompareResult ref=%r changed=%r>' % (self.ref, self.changed)
+        return "<CompareResult ref=%r changed=%r>" % (self.ref, self.changed)
 
     def _set_significant(self):
         bench1 = self.ref.benchmark
@@ -114,8 +117,10 @@ class CompareResult:
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
-            if (self.ref.benchmark.get_nvalue() > 1
-               or self.changed.benchmark.get_nvalue() > 1):
+            if (
+                self.ref.benchmark.get_nvalue() > 1
+                or self.changed.benchmark.get_nvalue() > 1
+            ):
                 text = "Mean +- std dev: %s -> %s" % (ref_text, chg_text)
             else:
                 text = "%s -> %s" % (ref_text, chg_text)
@@ -150,7 +155,7 @@ class CompareResults(list):
         self.name = name
 
     def __repr__(self):
-        return '<CompareResult %r>' % (list(self),)
+        return "<CompareResult %r>" % (list(self),)
 
 
 class ReSTTable:
@@ -162,27 +167,27 @@ class ReSTTable:
             for column, cell in enumerate(row):
                 self.widths[column] = max(self.widths[column], len(cell))
 
-    def _render_line(self, char='-'):
-        parts = ['']
+    def _render_line(self, char="-"):
+        parts = [""]
         for width in self.widths:
             parts.append(char * (width + 2))
-        parts.append('')
-        return '+'.join(parts)
+        parts.append("")
+        return "+".join(parts)
 
     def _render_row(self, row):
-        parts = ['']
+        parts = [""]
         for width, cell in zip(self.widths, row):
-            parts.append(' %s ' % cell.ljust(width))
-        parts.append('')
-        return '|'.join(parts)
+            parts.append(" %s " % cell.ljust(width))
+        parts.append("")
+        return "|".join(parts)
 
     def render(self, write_line):
-        write_line(self._render_line('-'))
+        write_line(self._render_line("-"))
         write_line(self._render_row(self.headers))
-        write_line(self._render_line('='))
+        write_line(self._render_line("="))
         for row in self.rows:
             write_line(self._render_row(row))
-            write_line(self._render_line('-'))
+            write_line(self._render_line("-"))
 
 
 class MarkDownTable:
@@ -194,26 +199,26 @@ class MarkDownTable:
             for column, cell in enumerate(row):
                 self.widths[column] = max(self.widths[column], len(cell))
 
-    def _render_line(self, char='-'):
-        parts = ['']
+    def _render_line(self, char="-"):
+        parts = [""]
         for idx, width in enumerate(self.widths):
             if idx == 0:
                 parts.append(char * (width + 2))
             else:
-                parts.append(f':{char * width}:')
-        parts.append('')
-        return '|'.join(parts)
+                parts.append(f":{char * width}:")
+        parts.append("")
+        return "|".join(parts)
 
     def _render_row(self, row):
-        parts = ['']
+        parts = [""]
         for width, cell in zip(self.widths, row):
             parts.append(" %s " % cell.ljust(width))
-        parts.append('')
-        return '|'.join(parts)
+        parts.append("")
+        return "|".join(parts)
 
     def render(self, write_line):
         write_line(self._render_row(self.headers))
-        write_line(self._render_line('-'))
+        write_line(self._render_line("-"))
         for row in self.rows:
             write_line(self._render_row(row))
 
@@ -244,7 +249,7 @@ class CompareSuites:
             results = self.compare_benchmarks(item.name, cmp_benchmarks)
             self.all_results.append(results)
 
-        self.show_name = (len(grouped_by_name) > 1)
+        self.show_name = len(grouped_by_name) > 1
 
         self.tags = set()
         for results in self.all_results:
@@ -269,18 +274,21 @@ class CompareSuites:
 
     @staticmethod
     def display_not_significant(not_significant):
-        print("Benchmark hidden because not significant (%s): %s"
-              % (len(not_significant), ', '.join(not_significant)))
+        print(
+            "Benchmark hidden because not significant (%s): %s"
+            % (len(not_significant), ", ".join(not_significant))
+        )
 
     def compare_suites_table(self, all_results):
         if self.group_by_speed:
+
             def sort_key(results):
                 result = results[0]
                 return result.norm_mean
 
             self.all_results.sort(key=sort_key)
 
-        headers = ['Benchmark', self.all_results[0][0].ref.name]
+        headers = ["Benchmark", self.all_results[0][0].ref.name]
         for item in self.all_results[0]:
             headers.append(item.changed.name)
 
@@ -317,13 +325,13 @@ class CompareSuites:
         # only compute the geometric mean if there is at least two benchmarks
         # and if at least one is signicant.
         if len(all_norm_means[0]) > 1 and rows:
-            row = ['Geometric mean', '(ref)']
+            row = ["Geometric mean", "(ref)"]
             for norm_means in all_norm_means:
                 row.append(format_geometric_mean(norm_means))
             rows.append(row)
 
         if rows:
-            if self.table_format == 'rest':
+            if self.table_format == "rest":
                 table = ReSTTable(headers, rows)
             else:
                 table = MarkDownTable(headers, rows)
@@ -362,9 +370,9 @@ class CompareSuites:
 
         empty_line = False
         for title, results, sort_reverse in (
-            ('Slower', slower, True),
-            ('Faster', faster, False),
-            ('Same speed', same, False),
+            ("Slower", slower, True),
+            ("Faster", faster, False),
+            ("Same speed", same, False),
         ):
             if not results:
                 continue
@@ -385,7 +393,7 @@ class CompareSuites:
     def compare_suites_list(self, all_results):
         not_significant = []
         empty_line = False
-        last_index = (len(self.all_results) - 1)
+        last_index = len(self.all_results) - 1
 
         for index, results in enumerate(all_results):
             significant = any(result.significant for result in results)
@@ -407,7 +415,7 @@ class CompareSuites:
             else:
                 text = lines[0]
                 if self.show_name:
-                    text = '%s: %s' % (results.name, text)
+                    text = "%s: %s" % (results.name, text)
                 print(text)
             empty_line = True
 
@@ -421,8 +429,10 @@ class CompareSuites:
             if not hidden:
                 continue
             hidden_names = [bench.get_name() for bench in hidden]
-            print("Ignored benchmarks (%s) of %s: %s"
-                  % (len(hidden), suite.filename, ', '.join(sorted(hidden_names))))
+            print(
+                "Ignored benchmarks (%s) of %s: %s"
+                % (len(hidden), suite.filename, ", ".join(sorted(hidden_names)))
+            )
 
     def compare_geometric_mean(self, all_results):
         # use a list since two filenames can be identical,
@@ -441,13 +451,13 @@ class CompareSuites:
 
         print()
         if len(all_norm_means) > 1:
-            display_title('Geometric mean')
+            display_title("Geometric mean")
             for name, norm_means in all_norm_means:
                 geo_mean = format_geometric_mean(norm_means)
-                print(f'{name}: {geo_mean}')
+                print(f"{name}: {geo_mean}")
         else:
             geo_mean = format_geometric_mean(all_norm_means[0][1])
-            print(f'Geometric mean: {geo_mean}')
+            print(f"Geometric mean: {geo_mean}")
 
     def compare_suites(self, results):
         if self.table:
@@ -465,7 +475,8 @@ class CompareSuites:
             for tag in self.tags:
                 display_title(f"Benchmarks with tag '{tag}':")
                 all_results = [
-                    results for results in self.all_results
+                    results
+                    for results in self.all_results
                     if tag is None or tag in get_tags_for_result(results[0])
                 ]
                 self.compare_suites(all_results)

@@ -6,16 +6,16 @@ import statistics
 import sys
 import sysconfig
 import time
-from shlex import quote as shell_quote   # noqa
+from shlex import quote as shell_quote  # noqa
 from shutil import which
 
 # Currently there is a packaging issue for PEP-703,
 # Until then psutil is disabled as a workaround.
 # See: https://github.com/python/cpython/issues/116024
-USE_PSUTIL = not bool(sysconfig.get_config_var('Py_GIL_DISABLED'))
-MS_WINDOWS = (sys.platform == 'win32')
-MAC_OS = (sys.platform == 'darwin')
-BSD = ('bsd' in sys.platform)
+USE_PSUTIL = not bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+MS_WINDOWS = sys.platform == "win32"
+MAC_OS = sys.platform == "darwin"
+BSD = "bsd" in sys.platform
 
 if MS_WINDOWS:
     import msvcrt
@@ -25,13 +25,39 @@ if MS_WINDOWS:
 # approximate. While this may look less elegant than simply calculating the
 # critical value, those calculations suck. Look at
 # http://www.math.unb.ca/~knight/utility/t-table.htm if you need more values.
-_T_DIST_95_CONF_LEVELS = [0, 12.706, 4.303, 3.182, 2.776,
-                          2.571, 2.447, 2.365, 2.306, 2.262,
-                          2.228, 2.201, 2.179, 2.160, 2.145,
-                          2.131, 2.120, 2.110, 2.101, 2.093,
-                          2.086, 2.080, 2.074, 2.069, 2.064,
-                          2.060, 2.056, 2.052, 2.048, 2.045,
-                          2.042]
+_T_DIST_95_CONF_LEVELS = [
+    0,
+    12.706,
+    4.303,
+    3.182,
+    2.776,
+    2.571,
+    2.447,
+    2.365,
+    2.306,
+    2.262,
+    2.228,
+    2.201,
+    2.179,
+    2.160,
+    2.145,
+    2.131,
+    2.120,
+    2.110,
+    2.101,
+    2.093,
+    2.086,
+    2.080,
+    2.074,
+    2.069,
+    2.064,
+    2.060,
+    2.056,
+    2.052,
+    2.048,
+    2.045,
+    2.042,
+]
 
 
 def tdist95conf_level(df):
@@ -125,11 +151,11 @@ def parse_run_list(run_list):
     run_list = run_list.strip()
 
     runs = []
-    for part in run_list.split(','):
+    for part in run_list.split(","):
         part = part.strip()
         try:
-            if '-' in part:
-                parts = part.split('-', 1)
+            if "-" in part:
+                parts = part.split("-", 1)
                 first = int(parts[0])
                 last = int(parts[1])
                 for run in range(first, last + 1):
@@ -162,7 +188,7 @@ def read_first_line(path, error=False):
         if error:
             raise
         else:
-            return ''
+            return ""
 
 
 def proc_path(path):
@@ -179,12 +205,12 @@ def python_implementation():
 
 def python_has_jit():
     implementation_name = python_implementation()
-    if implementation_name == 'pypy':
+    if implementation_name == "pypy":
         return sys.pypy_translation_info["translation.jit"]
-    elif implementation_name in ['graalpython', 'graalpy']:
+    elif implementation_name in ["graalpython", "graalpy"]:
         return True
-    elif implementation_name == 'cpython':
-        jit_module = getattr(sys, '_jit', None)
+    elif implementation_name == "cpython":
+        jit_module = getattr(sys, "_jit", None)
         if jit_module is not None:
             return jit_module.is_enabled()
         return False
@@ -197,7 +223,7 @@ def python_has_jit():
 def popen_killer(proc):
     try:
         yield
-    except:   # noqa: E722
+    except:  # noqa: E722
         # Close pipes
         if proc.stdin:
             proc.stdin.close()
@@ -259,17 +285,40 @@ def create_environ(inherit_environ, locale, copy_all):
     if copy_all:
         return os.environ
     env = {}
-    copy_env = ["PATH", "HOME", "TEMP", "COMSPEC", "SystemRoot", "SystemDrive",
-                # Python specific variables
-                "PYTHONPATH", "PYTHON_CPU_COUNT", "PYTHON_GIL",
-                # Pyperf specific variables
-                "PYPERF_PERF_RECORD_DATA_DIR", "PYPERF_PERF_RECORD_EXTRA_OPTS",
-                ]
+    copy_env = [
+        "PATH",
+        "HOME",
+        "TEMP",
+        "COMSPEC",
+        "SystemRoot",
+        "SystemDrive",
+        # Python specific variables
+        "PYTHONPATH",
+        "PYTHON_CPU_COUNT",
+        "PYTHON_GIL",
+        # Pyperf specific variables
+        "PYPERF_PERF_RECORD_DATA_DIR",
+        "PYPERF_PERF_RECORD_EXTRA_OPTS",
+    ]
     if locale:
-        copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
-                         'LC_CTYPE', 'LC_IDENTIFICATION', 'LC_MEASUREMENT',
-                         'LC_MESSAGES', 'LC_MONETARY', 'LC_NAME', 'LC_NUMERIC',
-                         'LC_PAPER', 'LC_TELEPHONE', 'LC_TIME'))
+        copy_env.extend(
+            (
+                "LANG",
+                "LC_ADDRESS",
+                "LC_ALL",
+                "LC_COLLATE",
+                "LC_CTYPE",
+                "LC_IDENTIFICATION",
+                "LC_MEASUREMENT",
+                "LC_MESSAGES",
+                "LC_MONETARY",
+                "LC_NAME",
+                "LC_NUMERIC",
+                "LC_PAPER",
+                "LC_TELEPHONE",
+                "LC_TIME",
+            )
+        )
     if inherit_environ:
         copy_env.extend(inherit_environ)
 
@@ -404,9 +453,10 @@ def percentile(values, p):
         return values[int(k)]
 
 
-if hasattr(statistics, 'geometric_mean'):
+if hasattr(statistics, "geometric_mean"):
     _geometric_mean = statistics.geometric_mean
 else:
+
     def _geometric_mean(data):
         # Compute exp(fmean(map(log, data))) using floats
         data = list(map(math.log, data))
@@ -429,6 +479,7 @@ def merge_profile_stats(profiler, dst):
     Save pstats by merging into an existing file.
     """
     import pstats
+
     if os.path.isfile(dst):
         try:
             src_stats = pstats.Stats(profiler)
