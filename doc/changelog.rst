@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 2.10.0 (2026-02-07)
+---------------------------
+
+* Feature: JIT builds of CPython are now recognized as a JIT implementation by :func:`perf.python_has_jit`.
+  Patch by Ken Jin.
+* Feature: Memory tracker now supports BSD.
+  Patch by Laurent Cheylus and Victor Stinner.
+* Maintenance: ``pyperf`` now requires Python 3.9 or higher.
+  Patch by Alex Willmer.
+
 Version 2.9.0 (2025-03-03)
 --------------------------
 
