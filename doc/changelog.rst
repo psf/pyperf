@@ -190,7 +190,7 @@ a Python binding called "perf" as well.
 Version 1.6.0 (2019-01-11)
 --------------------------
 
-* Add *teardown* optional parameter to :class:`Runner.timeit` and ``--teardown``
+* Add *teardown* optional parameter to ``Runner.timeit`` and ``--teardown``
   option to the :ref:`perf timeit <timeit_cmd>` command. Patch by **Alex
   Khomchenko**.
 * ``Runner.timeit(stmt)`` can now be used to use the statement as the benchmark
@@ -571,8 +571,8 @@ Version 0.7.10 (2016-09-17)
 Version 0.7.9 (2016-09-17)
 --------------------------
 
-* Add :meth:`Benchmark.get_unit` method
-* Add :meth:`BenchmarkSuite.get_metadata` method
+* Add ``Benchmark.get_unit`` method
+* Add ``BenchmarkSuite.get_metadata`` method
 * metadata: add ``nohz_full`` and ``isolated`` to ``cpu_config``
 * add ``--affinity`` option to the ``metadata`` command
 * ``convert``: fix ``--remove-all-metadata``, keep the unit
@@ -624,7 +624,7 @@ Version 0.7.4 (2016-08-18)
 
 * Support PyPy
 * metadata: add ``mem_max_rss`` and ``python_hash_seed``
-* Add :func:`perf.python_implementation` and :func:`perf.python_has_jit`
+* Add ``perf.python_implementation`` and ``perf.python_has_jit``
   functions
 * In workers, calibration samples are now stored as warmup samples.
 * With a JIT (PyPy), the calibration is now done in each worker. The warmup
@@ -721,7 +721,7 @@ Changes:
   and TextRunner.
 * A single JSON file can now contain multiple benchmarks
 * Add a dependency to the ``six`` module
-  :meth:`Benchmark.add_run` now raises an exception if a sample is zero.
+  ``Benchmark.add_run`` now raises an exception if a sample is zero.
 * Benchmark.name becomes a property and is now stored in metadata
 * TextRunner now uses powers of 2, rather than powers of 10, to calibrate the
   number of loops
@@ -735,9 +735,9 @@ Changes:
 * The ``hist`` command now accepts multiple files
 * ``hist`` and ``hist_scipy`` commands got a new ``--bins`` option
 * Replace mean with median
-* Add :meth:`perf.Benchmark.median` method, remove ``Benchmark.mean()`` method
+* Add ``perf.Benchmark.median`` method, remove ``Benchmark.mean()`` method
 * ``Benchmark.get_metadata()`` method removed: use directly the
-  :attr:`perf.Benchmark.metadata` attribute
+  ``perf.Benchmark.metadata`` attribute
 * Add ``timer`` metadata. ``python_version`` now also contains the architecture
   (32 or 64 bits).
 
@@ -784,23 +784,22 @@ Version 0.3 (2016-06-10)
 * If TextRunner detects isolated CPUs, it sets automatically the CPU affinity
   to these isolated CPUs
 * Add ``--json-file`` command line option
-* Add :meth:`TextRunner.bench_sample_func` method
+* Add ``TextRunner.bench_sample_func`` method
 * Add examples of the API to the documentation. Split also the documentation
   into subpages.
 * Add metadata ``cpu_affinity``
-* Add :func:`perf.is_significant` function
-* Move metadata from :class:`~perf.Benchmark` to ``RunResult``
-* Rename the ``Results`` class to :class:`~perf.Benchmark`
-* Add :attr:`~TextRunner.inner_loops` attribute to
-  :class:`TextRunner`, used for microbenchmarks when an
-  instruction is manually duplicated multiple times
+* Add ``perf.is_significant`` function
+* Move metadata from ``perf.Benchmark`` to ``RunResult``
+* Rename the ``Results`` class to ``perf.Benchmark``
+* Add ``TextRunner.inner_loops`` attribute to
+  ``TextRunner``, used for microbenchmarks when an
 
 Version 0.2 (2016-06-07)
 ------------------------
 
 * use JSON to exchange results between processes
 * new ``python3 -m perf`` CLI
-* new :class:`TextRunner` class
+* new ``TextRunner`` class
 * huge enhancement of the timeit module
 * timeit has a better output format in verbose mode and now also supports a
   ``-vv`` (very verbose) mode. Minimum and maximum are not more shown in
