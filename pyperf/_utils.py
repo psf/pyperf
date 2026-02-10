@@ -264,6 +264,7 @@ def create_environ(inherit_environ, locale, copy_all):
                 "PYTHONPATH", "PYTHON_CPU_COUNT", "PYTHON_GIL",
                 # Pyperf specific variables
                 "PYPERF_PERF_RECORD_DATA_DIR", "PYPERF_PERF_RECORD_EXTRA_OPTS",
+                "PYPERF_TACHYON_OPTS",
                 ]
     if locale:
         copy_env.extend(('LANG', 'LC_ADDRESS', 'LC_ALL', 'LC_COLLATE',
