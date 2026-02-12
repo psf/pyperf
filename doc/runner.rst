@@ -2,8 +2,10 @@
 
 Runner CLI
 ==========
+.. module:: pyperf
+  :noindex:
 
-Command line options of the :class:`Runner` class.
+Command line options of the :class:`pyperf.Runner` class.
 
 Loop iterations
 ---------------
