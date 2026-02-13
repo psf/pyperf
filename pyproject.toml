@@ -46,7 +46,7 @@ classifiers = [
 ]
 # Also update: README.rst, docs/run_benchmark.rst
 requires-python = ">=3.9"
-dependencies = ["psutil>=5.9.0"]
+dependencies = ["psutil>=5.9.0; platform_machine != 'wasm32'"]
 
 [project.optional-dependencies]
 dev = [
