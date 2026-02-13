@@ -1,5 +1,4 @@
 import os.path
-import tempfile
 import unittest
 from unittest import mock
 
@@ -38,7 +37,7 @@ class TestInProcess(unittest.TestCase):
 
             return ClockInfo()
 
-        args = ["--in-process", "-p1", "-l1", "-w1"] + list(extra_args)
+        args = ["--in-process", "-p1", "-n3", "-l1", "-w1"] + list(extra_args)
         runner = self.create_runner(args, **kwargs)
 
         with mock.patch("time.perf_counter", self.fake_timer):
