@@ -65,3 +65,23 @@ jobs:
       - name: Run Tox
         # Run tox using the version of Python in `PATH`
         run: tox -e py
+  pyodide:
+    runs-on: ubuntu-latest
+    env:
+      PYODIDE_VERSION: '0.29.2'
+      PYTHON_VERSION: '3.13'
+      NODE_VERSION: '24'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install pyodide-build to run integration tests
+        run: |
+          pip install pyodide-build
+          pyodide xbuildenv install ${{ env.PYODIDE_VERSION }}
+      - name: Run Pyodide integration tests
+        run: ./pyperf/tests/test_pyodide.sh
