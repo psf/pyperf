@@ -109,7 +109,14 @@ assert bench.get_nvalue() == 2, f'Expected 2 values, got {bench.get_nvalue()}'
 print('OK: bench_func works')
 "
 
-# --- Test 3: python -m pyperf show ---
+# --- Test 3: python -m pyperf timeit --in-process ---
+
+echo "==> Running python -m pyperf timeit --in-process"
+python -m pyperf timeit --in-process -p1 -n3 -l1 -w1 \
+    -s "import math" \
+    "sum(math.sqrt(i) for i in range(1000))"
+
+# --- Test 4: python -m pyperf subcommands ---
 
 echo "==> Running python -m pyperf show"
 python -m pyperf show "$RESULT_FILE"
@@ -120,4 +127,4 @@ python -m pyperf stats "$RESULT_FILE"
 echo "==> Running python -m pyperf dump --quiet"
 python -m pyperf dump --quiet "$RESULT_FILE"
 
-echo "OK: python -m pyperf works"
+echo "OK: all tests passed"
