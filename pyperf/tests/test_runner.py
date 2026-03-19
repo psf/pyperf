@@ -10,6 +10,7 @@ from unittest import mock
 
 import pyperf
 from pyperf import tests
+from pyperf._hooks import HookBase
 from pyperf._utils import create_pipe, MS_WINDOWS, shell_quote
 
 
@@ -517,6 +518,47 @@ class TestRunner(unittest.TestCase):
                          ' '.join(map(shell_quote, args)))
         self.assertEqual(bench.get_metadata()["hooks"],
                          "_test_hook")
+
+    def test_custom_hook(self):
+        class State:
+            inited = 0
+            entered = 0
+            exited = 0
+
+        s = State()
+
+        class CustomHook(HookBase):
+            name = "custom_hook"
+
+            @staticmethod
+            def load():
+                return lambda: CustomHook(s)
+
+            def __init__(self, state):
+                self.state = state
+                self.state.inited += 1
+
+            def __enter__(self):
+                self.state.entered += 1
+
+            def __exit__(self, _exc_type, _exc_value, _traceback):
+                self.state.exited += 1
+
+            def teardown(self, _metadata):
+                _metadata[self.name] = "done"
+
+        kwargs = {"hooks" : [CustomHook]}
+        args = '-l1 -w0 -n1 --worker --verbose --hook custom_hook'.split()
+        runner = self.create_runner(args, **kwargs)
+        def time_func(loops):
+            return 1.0
+
+        bench = runner.bench_time_func('bench1', time_func)
+        self.assertEqual(bench.get_metadata()["hooks"], CustomHook.name)
+        self.assertEqual(bench.get_metadata()[CustomHook.name], "done")
+        self.assertEqual(s.inited, 1)
+        self.assertEqual(s.entered, 1)
+        self.assertEqual(s.exited, 1)
 
     def test_single_instance(self):
         runner1 = self.create_runner([])   # noqa

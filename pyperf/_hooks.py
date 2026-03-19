@@ -29,18 +29,18 @@ def get_hook_names():
     return (x.name for x in get_hooks())
 
 
-def get_selected_hooks(hook_names):
+def get_selected_hooks(hook_names, hooks = None):
     if hook_names is None:
         return
 
-    hook_mapping = {hook.name: hook for hook in get_hooks()}
+    hook_mapping = {hook.name: hook for hook in get_hooks() + tuple(hooks or ())}
     for hook_name in hook_names:
         yield hook_mapping[hook_name]
 
 
-def instantiate_selected_hooks(hook_names):
+def instantiate_selected_hooks(hook_names, hooks = None):
     hook_managers = {}
-    for hook in get_selected_hooks(hook_names):
+    for hook in get_selected_hooks(hook_names, hooks):
         try:
             hook_managers[hook.name] = hook.load()()
         except HookError as e:

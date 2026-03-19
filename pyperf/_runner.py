@@ -77,7 +77,7 @@ class Runner:
                  loops=0, min_time=0.1, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
-                 _argparser=None, warmups=1):
+                 _argparser=None, warmups=1, hooks=None):
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad surprises
@@ -247,7 +247,11 @@ class Runner:
                             help='Collect profile data using cProfile '
                                  'and output to the given file.')
 
-        hook_names = list(get_hook_names())
+        self._custom_hooks = hooks or []
+        if not isinstance(self._custom_hooks, (list, tuple)):
+            raise RuntimeError("hooks parameter should be list, tuple or None")
+
+        hook_names = list(get_hook_names()) + [hook.name for hook in self._custom_hooks]
         parser.add_argument(
             '--hook', action="append", choices=hook_names,
             metavar=f"{', '.join(x for x in hook_names if not x.startswith('_'))}",

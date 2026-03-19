@@ -31,6 +31,7 @@ class WorkerTask:
         self.args = args
         self.task_func = task_func
         self.loops = args.loops
+        self._custom_hooks = runner._custom_hooks
 
         self.metadata = dict(runner.metadata)
         if func_metadata:
@@ -61,7 +62,7 @@ class WorkerTask:
 
         task_func = self.task_func
 
-        hook_managers = instantiate_selected_hooks(args.hook)
+        hook_managers = instantiate_selected_hooks(args.hook, self._custom_hooks)
         if len(hook_managers):
             self.metadata["hooks"] = ", ".join(hook_managers.keys())
 
