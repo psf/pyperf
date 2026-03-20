@@ -485,6 +485,35 @@ BenchmarkSuite class
       It can be ``None``.
 
 
+HookBase class
+--------------
+
+.. class:: HookBase()
+
+   Hook used to do some actions before and after benchmark's run. It can collect
+   statistics, run external tools.
+
+   Methods:
+
+   .. method:: __enter__()
+
+      Called immediately before runnig benchmark code.
+
+      May be called multiple times per instance.
+
+   .. method:: __exit__(exc_type, exc_value, traceback):
+
+      Called immediately after runnig benchmark code.
+
+      May be called multiple times per instance.
+
+   .. method:: teardown(metadata)
+
+      Called when the hook is completed for a process.
+
+      May add any information collected to the passed-in ``metadata`` dictionary.
+
+
 Runner class
 ------------
 
@@ -512,8 +541,9 @@ Runner class
    (``list``) which must be modified in place and *args* is the :attr:`args`
    attribute of the runner.
 
-   *hooks* is a list or tuple of custom hooks. Each hook should implement ``HookBase`` and
-   have ``name`` attribute and ``load`` method that returns instance of the hook.
+   *hooks* is a list or tuple of custom hooks. Each hook should implement
+   :class:`HookBase` and have ``name`` attribute and ``load`` method that
+   returns instance of the hook.
 
    If *show_name* is true, displays the benchmark name.
 
