@@ -512,7 +512,7 @@ Runner class
    (``list``) which must be modified in place and *args* is the :attr:`args`
    attribute of the runner.
 
-   *hooks* is a list of custom hooks. Each hook should implement ``HookBase`` and
+   *hooks* is a list or tuple of custom hooks. Each hook should implement ``HookBase`` and
    have ``name`` attribute and ``load`` method that returns instance of the hook.
 
    If *show_name* is true, displays the benchmark name.

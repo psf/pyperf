@@ -247,7 +247,7 @@ class Runner:
                             help='Collect profile data using cProfile '
                                  'and output to the given file.')
 
-        self._custom_hooks = hooks or []
+        self._custom_hooks = hooks or ()
         if not isinstance(self._custom_hooks, (list, tuple)):
             raise RuntimeError("hooks parameter should be list, tuple or None")
 

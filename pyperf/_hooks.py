@@ -29,7 +29,7 @@ def get_hook_names():
     return (x.name for x in get_hooks())
 
 
-def get_selected_hooks(hook_names, hooks = None):
+def get_selected_hooks(hook_names, hooks=None):
     if hook_names is None:
         return
 
@@ -38,7 +38,7 @@ def get_selected_hooks(hook_names, hooks = None):
         yield hook_mapping[hook_name]
 
 
-def instantiate_selected_hooks(hook_names, hooks = None):
+def instantiate_selected_hooks(hook_names, hooks=None):
     hook_managers = {}
     for hook in get_selected_hooks(hook_names, hooks):
         try:

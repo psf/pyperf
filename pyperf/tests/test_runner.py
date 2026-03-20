@@ -544,12 +544,11 @@ class TestRunner(unittest.TestCase):
             def __exit__(self, _exc_type, _exc_value, _traceback):
                 self.state.exited += 1
 
-            def teardown(self, _metadata):
-                _metadata[self.name] = "done"
+            def teardown(self, metadata):
+                metadata[self.name] = "done"
 
-        kwargs = {"hooks" : [CustomHook]}
         args = '-l1 -w0 -n1 --worker --verbose --hook custom_hook'.split()
-        runner = self.create_runner(args, **kwargs)
+        runner = self.create_runner(args, hooks=[CustomHook])
         def time_func(loops):
             return 1.0
 
