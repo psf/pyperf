@@ -503,7 +503,7 @@ HookBase class
 
    .. method:: __exit__(exc_type, exc_value, traceback):
 
-      Called immediately after runnig benchmark code.
+      Called immediately after running benchmark code.
 
       May be called multiple times per instance.
 
@@ -542,7 +542,7 @@ Runner class
    attribute of the runner.
 
    *hooks* is a list or tuple of custom hooks. Each hook should implement
-   :class:`HookBase` and have ``name`` attribute and ``load`` method that
+   :class:`HookBase` and have ``name`` attribute and ``load()`` method that
    returns instance of the hook.
 
    If *show_name* is true, displays the benchmark name.
