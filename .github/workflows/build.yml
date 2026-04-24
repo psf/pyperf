@@ -1,8 +1,11 @@
 name: Build
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request, workflow_dispatch]
+
+permissions: {}
+
+env:
+  FORCE_COLOR: 1
 
 jobs:
   tox-jobs:
@@ -13,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: 3.x
@@ -45,6 +50,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Setup Python
         uses: actions/setup-python@v6
         if: ${{ matrix.build != 'free-threading' }}

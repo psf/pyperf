@@ -122,4 +122,3 @@ Usage::
 
     $ python3 plot.py telco.json telco.csv
     $ python3 plot.py result.json -b telco telco.csv
-
