@@ -27,7 +27,7 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
-        python -m pip install --user --upgrade build
+        python -m pip install --no-deps -r .github/workflows/publish.txt
     - name: Build
       run: |
         python -m build

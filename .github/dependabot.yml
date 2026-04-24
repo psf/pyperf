@@ -8,3 +8,14 @@ updates:
       actions:
         patterns:
           - "*"
+
+  - package-ecosystem: pip
+    directory: "/.github/workflows"
+    schedule:
+      interval: monthly
+    groups:
+      pip:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 7
