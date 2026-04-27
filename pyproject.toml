@@ -21,6 +21,13 @@
 #  - set version to n+1
 #  - git commit -a -m "post-release"
 #  - git push or send the PR to the repository
+#
+# Updating .github/workflows/publish.txt:
+#
+#  - this is usually updated by Dependabot once per month as needed
+#  - Dependabot creates security updates without waiting for the schedule
+#  - if you need to update publish.txt manually, install pip-tools and
+#    run the command at the top of the file.
 
 [build-system]
 requires = ["setuptools >= 61"]
