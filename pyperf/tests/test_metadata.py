@@ -163,7 +163,7 @@ class CpuFunctionsTests(unittest.TestCase):
             elif filename == '/sys/devices/system/cpu/cpuidle/current_driver':
                 data = 'IDLE_DRV\n'
             else:
-                raise ValueError("unexpect open: %r" % filename)
+                raise ValueError("unexpected open: %r" % filename)
             return io.StringIO(data)
 
         with mock.patch('pyperf._collect_metadata.get_isolated_cpus', return_value=[2]):
@@ -196,7 +196,7 @@ class CpuFunctionsTests(unittest.TestCase):
             elif filename.startswith('/sys/devices/system/cpu/cpu2'):
                 raise OSError
             else:
-                raise ValueError("unexpect open: %r" % filename)
+                raise ValueError("unexpected open: %r" % filename)
             return io.StringIO(data)
 
         with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):
@@ -214,7 +214,7 @@ class CpuFunctionsTests(unittest.TestCase):
             if filename == '/proc/cpuinfo':
                 data = self.POWER8_CPUINFO
             else:
-                raise ValueError("unexpect open: %r" % filename)
+                raise ValueError("unexpected open: %r" % filename)
             return io.StringIO(data)
 
         with mock.patch('pyperf._utils.open', create=True, side_effect=mock_open):

@@ -497,7 +497,7 @@ HookBase class
 
    .. method:: __enter__()
 
-      Called immediately before runnig benchmark code.
+      Called immediately before running benchmark code.
 
       May be called multiple times per instance.
 
