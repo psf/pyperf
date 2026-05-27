@@ -542,19 +542,24 @@ class TestRunner(unittest.TestCase):
                 runner.bench_time_func('bench', time_func)
             return phases
 
-        self.assertEqual(
-            hook_phases('-l1 -w1 -n1 --worker'.split()),
-            [('measurement', 'warmup'), ('measurement', 'value')])
-        self.assertEqual(
-            hook_phases('--calibrate-loops -w0 -n1 --min-time=1.0 '
-                        '--worker'.split()),
-            [('calibration', 'loops')])
+        cases = (
+            ('measurement',
+             '-l1 -w1 -n1 --worker',
+             [('measurement', 'warmup'), ('measurement', 'value')]),
+            ('calibrate loops',
+             '--calibrate-loops -w0 -n1 --min-time=1.0 --worker',
+             [('calibration', 'loops')]),
+        )
+        for name, args, expected in cases:
+            with self.subTest(name=name):
+                self.assertEqual(hook_phases(args.split()), expected)
 
-        with mock.patch('pyperf._worker.WorkerTask.test_calibrate_warmups',
-                        return_value=True):
-            self.assertEqual(
-                hook_phases('--calibrate-warmups -l1 -n1 --worker'.split()),
-                [('calibration', 'warmup')])
+        with self.subTest(name='calibrate warmups'):
+            with mock.patch('pyperf._worker.WorkerTask.test_calibrate_warmups',
+                            return_value=True):
+                self.assertEqual(
+                    hook_phases('--calibrate-warmups -l1 -n1 --worker'.split()),
+                    [('calibration', 'warmup')])
 
     def test_custom_hook(self):
         class State:
