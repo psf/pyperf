@@ -512,6 +512,7 @@ HookBase class
       Called when the hook is completed for a process.
 
       May add any information collected to the passed-in ``metadata`` dictionary.
+      The ``phase`` metadata identifies the run phase and sample type.
 
 
 Runner class
@@ -780,6 +781,9 @@ Other:
 
 * ``perf_version``: Version of the ``pyperf`` module
 * ``unit``: Unit of values: ``byte``, ``integer`` or ``second``
+* ``phase`` (tuple or list of two non-empty strings): run phase and sample
+  type, set to one of ``("calibration", "loops")``, ``("calibration",
+  "warmup")``, ``("measurement", "warmup")`` or ``("measurement", "value")``.
 * ``calibrate_loops`` (``int >= 1``): number of loops computed in a loops
   calibration run
 * ``recalibrate_loops`` (``int >= 1``): number of loops computed in a loops
