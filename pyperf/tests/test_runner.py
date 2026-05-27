@@ -80,8 +80,6 @@ class TestRunner(unittest.TestCase):
         result = self.exec_runner('--worker', '-l1', '-w1')
         self.assertRegex(result.stdout,
                          r'^bench: Mean \+- std dev: 1\.00 sec \+- 0\.00 sec\n$')
-        self.assertEqual(result.bench.get_metadata()['phase'],
-                         ('measurement', 'value'))
 
     def test_debug_single_value(self):
         result = self.exec_runner('--debug-single-value', '--worker')
@@ -288,8 +286,6 @@ class TestRunner(unittest.TestCase):
         run = runs[0]
 
         self.assertEqual(run.warmups, warmups)
-        self.assertEqual(run.get_metadata()['phase'],
-                         ('calibration', 'loops'))
 
     def test_calibrate_loops(self):
         args = ['--worker', '-w0', '-n2', '--min-time=1.0',
@@ -522,6 +518,43 @@ class TestRunner(unittest.TestCase):
                          ' '.join(map(shell_quote, args)))
         self.assertEqual(bench.get_metadata()["hooks"],
                          "_test_hook")
+
+    def test_hook_teardown_phase_metadata(self):
+        def time_func(loops):
+            return 1.0
+
+        def hook_phases(args):
+            phases = []
+
+            class PhaseHook(HookBase):
+                name = "phase_hook"
+
+                @staticmethod
+                def load():
+                    return PhaseHook
+
+                def teardown(self, metadata):
+                    phases.append(metadata["phase"])
+
+            args = args + ["--hook", PhaseHook.name]
+            runner = self.create_runner(args, hooks=[PhaseHook])
+            with tests.capture_stdout():
+                runner.bench_time_func('bench', time_func)
+            return phases
+
+        self.assertEqual(
+            hook_phases('-l1 -w1 -n1 --worker'.split()),
+            [('measurement', 'warmup'), ('measurement', 'value')])
+        self.assertEqual(
+            hook_phases('--calibrate-loops -w0 -n1 --min-time=1.0 '
+                        '--worker'.split()),
+            [('calibration', 'loops')])
+
+        with mock.patch('pyperf._worker.WorkerTask.test_calibrate_warmups',
+                        return_value=True):
+            self.assertEqual(
+                hook_phases('--calibrate-warmups -l1 -n1 --worker'.split()),
+                [('calibration', 'warmup')])
 
     def test_custom_hook(self):
         class State:
