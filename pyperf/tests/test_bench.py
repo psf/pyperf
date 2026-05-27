@@ -69,6 +69,25 @@ class RunTests(unittest.TestCase):
                          collect_metadata=False)
         self.assertEqual(run.get_metadata()['load_avg_1min'], 0.0)
 
+    def test_phase_metadata(self):
+        for value in (('measurement', 'value'), ['calibration', 'loops']):
+            with self.subTest(value=value):
+                run = pyperf.Run([1.0], metadata={'phase': value},
+                                 collect_metadata=False)
+                self.assertEqual(run.get_metadata()['phase'], value)
+
+        invalid_values = (
+            'measurement:value',
+            ('measurement',),
+            ('measurement', ''),
+            ('measurement', 1),
+        )
+        for value in invalid_values:
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    pyperf.Run([1.0], metadata={'phase': value},
+                               collect_metadata=False)
+
     def test_name(self):
         # name must be non-empty
         with self.assertRaises(ValueError):
