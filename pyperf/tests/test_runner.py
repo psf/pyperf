@@ -85,6 +85,21 @@ class TestRunner(unittest.TestCase):
         result = self.exec_runner('--debug-single-value', '--worker')
         self.assertEqual(result.bench.get_nvalue(), 1)
 
+    def test_default_warmups_without_jit(self):
+        with mock.patch('pyperf.python_has_jit', return_value=False):
+            runner = self.create_runner([])
+        self.assertEqual(runner.args.warmups, 1)
+
+    def test_default_warmups_with_jit(self):
+        with mock.patch('pyperf.python_has_jit', return_value=True):
+            runner = self.create_runner([])
+        self.assertIsNone(runner.args.warmups)
+
+    def test_runner_warmups_argument(self):
+        with mock.patch('pyperf.python_has_jit', return_value=True):
+            runner = self.create_runner([], warmups=5)
+        self.assertEqual(runner.args.warmups, 5)
+
     def test_profile_time_func(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
             name = tmp.name
