@@ -429,7 +429,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
                 required_nprocesses is not None and
                 required_nprocesses > len(bench._runs)
             ):
-                warn("Not enough samples to get a stable result (95% certainly of less than 1% variation)")
+                warn("Not enough samples to get a stable result (95% certainty of less than 1% variation)")
 
     # Minimum and maximum, detect obvious outliers
     for minimum, value in (
