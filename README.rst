@@ -128,14 +128,9 @@ Quick Links
 * `Download latest pyperf release at the Python Cheeseshop (PyPI)
   <https://pypi.org/project/pyperf/>`_
 
-Command to install pyperf on Python 3::
+Install pyperf::
 
     python3 -m pip install pyperf
-
-pyperf requires Python 3.9 or newer.
-
-Python 2.7 users can use pyperf 1.7.1 which is the last version compatible with
-Python 2.7.
 
 pyperf is distributed under the MIT license.
 
