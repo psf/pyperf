@@ -41,8 +41,7 @@ jobs:
           - os: ubuntu-latest
             python: '3.12'
           - os: ubuntu-latest
-            python: '3.13-dev'
-            build: 'free-threading'
+            python: '3.13t'
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -50,15 +49,8 @@ jobs:
           persist-credentials: false
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        if: ${{ matrix.build != 'free-threading' }}
         with:
           python-version: ${{ matrix.python }}
-      - name: Set up Python ${{ matrix.python }} using deadsnakes
-        uses: deadsnakes/action@e640ac8743173a67cca4d7d77cd837e514bf98e8 # v3.2.0
-        if: ${{ matrix.build == 'free-threading' }}
-        with:
-          python-version: ${{ matrix.python }}
-          nogil: true
       - name: Display Python version
         run: |
           python -VV
