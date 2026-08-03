@@ -75,6 +75,9 @@ packages = ["pyperf", "pyperf.tests"]
 [tool.setuptools.dynamic]
 version = {attr = "pyperf.__version__"}
 
+[tool.ruff]
+fix = true
+
 [tool.ruff.lint]
 extend-select = ["C90", "UP"]
 extend-ignore = ["UP015", "UP031"]
