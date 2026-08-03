@@ -33,7 +33,7 @@ jobs:
         build: ['']
         include:
           - os: ubuntu-latest
-            python: 'pypy3.10'
+            python: 'pypy3.11'
           - os: ubuntu-latest
             python: '3.10'
           - os: ubuntu-latest
