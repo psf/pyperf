@@ -8,21 +8,17 @@ env:
   FORCE_COLOR: 1
 
 jobs:
-  tox-jobs:
-    strategy:
-      fail-fast: false
-      matrix:
-        tox-job: [doc, pep8]
+  doc:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: 3.x
       - run: pip install tox
-      - run: tox -e ${{ matrix.tox-job }}
+      - run: tox -e doc
   build:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.python }} ${{ matrix.build }}
@@ -33,11 +29,7 @@ jobs:
         build: ['']
         include:
           - os: ubuntu-latest
-            python: 'pypy3.10'
-          - os: ubuntu-latest
-            python: 'pypy3.9'
-          - os: ubuntu-latest
-            python: '3.9'
+            python: 'pypy3.11'
           - os: ubuntu-latest
             python: '3.10'
           - os: ubuntu-latest
@@ -45,24 +37,25 @@ jobs:
           - os: ubuntu-latest
             python: '3.12'
           - os: ubuntu-latest
-            python: '3.13-dev'
-            build: 'free-threading'
+            python: '3.13'
+          - os: ubuntu-latest
+            python: '3.14'
+          - os: ubuntu-latest
+            python: '3.14t'
+          - os: ubuntu-latest
+            python: '3.15'
+          - os: ubuntu-latest
+            python: '3.15t'
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        if: ${{ matrix.build != 'free-threading' }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - name: Set up Python ${{ matrix.python }} using deadsnakes
-        uses: deadsnakes/action@e640ac8743173a67cca4d7d77cd837e514bf98e8 # v3.2.0
-        if: ${{ matrix.build == 'free-threading' }}
-        with:
-          python-version: ${{ matrix.python }}
-          nogil: true
+          allow-prereleases: true
       - name: Display Python version
         run: |
           python -VV
