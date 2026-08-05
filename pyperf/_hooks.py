@@ -18,10 +18,7 @@ import uuid
 def get_hooks():
     hook_prefix = "pyperf.hook"
     entry_points = importlib.metadata.entry_points()
-    if sys.version_info[:2] < (3, 10):
-        group = entry_points[hook_prefix]
-    else:
-        group = entry_points.select(group=hook_prefix)
+    group = entry_points.select(group=hook_prefix)
     return group
 
 

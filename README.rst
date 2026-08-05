@@ -4,11 +4,11 @@ pyperf
 
 .. image:: https://img.shields.io/pypi/v/pyperf.svg
    :alt: Latest release on the Python Cheeseshop (PyPI)
-   :target: https://pypi.python.org/pypi/pyperf
+   :target: https://pypi.org/project/pyperf/
 
 .. image:: https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fpsf%2Fpyperf%2Frefs%2Fheads%2Fmain%2Fpyproject.toml
    :alt: Supported Python versions
-   :target: https://pypi.python.org/pypi/pyperf
+   :target: https://pypi.org/project/pyperf/
 
 .. image:: https://github.com/psf/pyperf/actions/workflows/build.yml/badge.svg
    :alt: Build status of pyperf on GitHub Actions
@@ -126,16 +126,11 @@ Quick Links
 * `pyperf project homepage at GitHub
   <https://github.com/psf/pyperf>`_ (code, bugs)
 * `Download latest pyperf release at the Python Cheeseshop (PyPI)
-  <https://pypi.python.org/pypi/pyperf>`_
+  <https://pypi.org/project/pyperf/>`_
 
-Command to install pyperf on Python 3::
+Install pyperf::
 
     python3 -m pip install pyperf
-
-pyperf requires Python 3.9 or newer.
-
-Python 2.7 users can use pyperf 1.7.1 which is the last version compatible with
-Python 2.7.
 
 pyperf is distributed under the MIT license.
 
