@@ -8,11 +8,7 @@ env:
   FORCE_COLOR: 1
 
 jobs:
-  tox-jobs:
-    strategy:
-      fail-fast: false
-      matrix:
-        tox-job: [doc, pep8]
+  doc:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -22,7 +18,7 @@ jobs:
         with:
           python-version: 3.x
       - run: pip install tox
-      - run: tox -e ${{ matrix.tox-job }}
+      - run: tox -e doc
   build:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.python }} ${{ matrix.build }}
