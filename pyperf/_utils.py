@@ -25,13 +25,13 @@ if MS_WINDOWS:
 # approximate. While this may look less elegant than simply calculating the
 # critical value, those calculations suck. Look at
 # http://www.math.unb.ca/~knight/utility/t-table.htm if you need more values.
-_T_DIST_95_CONF_LEVELS = [0, 12.706, 4.303, 3.182, 2.776,
+_T_DIST_95_CONF_LEVELS = (0, 12.706, 4.303, 3.182, 2.776,
                           2.571, 2.447, 2.365, 2.306, 2.262,
                           2.228, 2.201, 2.179, 2.160, 2.145,
                           2.131, 2.120, 2.110, 2.101, 2.093,
                           2.086, 2.080, 2.074, 2.069, 2.064,
                           2.060, 2.056, 2.052, 2.048, 2.045,
-                          2.042]
+                          2.042)
 
 
 def tdist95conf_level(df):
