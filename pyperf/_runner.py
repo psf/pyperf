@@ -190,6 +190,13 @@ class Runner:
                             type=strictly_positive)
         parser.add_argument('--worker', action='store_true',
                             help='Worker process, run the benchmark.')
+        parser.add_argument('--in-process', action='store_true',
+                            dest='in_process',
+                            help='Run benchmark in the current process '
+                                 'without spawning worker subprocesses. '
+                                 'Only used for environments that '
+                                 'do not support subprocesses, '
+                                 'like WebAssembly.')
         parser.add_argument('--worker-task', type=positive_or_nul, metavar='TASK_ID',
                             help='Identifier of the worker task: '
                                  'only execute the benchmark function TASK_ID')
@@ -270,8 +277,9 @@ class Runner:
         return self.args.verbose or multiline_output(self.args)
 
     def _only_in_worker(self, option):
-        if not self.args.worker:
-            raise CLIError("option %s requires --worker" % option)
+        if not self.args.worker and not self.args.in_process:
+            raise CLIError("option %s requires --worker or --in-process"
+                           % option)
 
     def _process_args_impl(self):
         args = self.args
@@ -465,6 +473,8 @@ class Runner:
         try:
             if args.worker:
                 bench = self._worker(task)
+            elif args.in_process:
+                bench = self._in_process(task)
             elif args.compare_to:
                 self._compare_to()
                 bench = None
@@ -683,6 +693,17 @@ class Runner:
         if self.args.verbose and self._worker_task > 0:
             print()
         bench = Manager(self).create_bench()
+        if not self.args.quiet:
+            print()
+        self._display_result(bench)
+        return bench
+
+    def _in_process(self, task):
+        from pyperf._inprocess_manager import InProcessManager
+
+        if self.args.verbose and self._worker_task > 0:
+            print()
+        bench = InProcessManager(self, task).create_bench()
         if not self.args.quiet:
             print()
         self._display_result(bench)
