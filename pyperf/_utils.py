@@ -1,3 +1,8 @@
+from __future__ import annotations
+from cProfile import Profile
+from typing import SupportsFloat
+from collections.abc import Mapping
+from collections.abc import Iterable
 from typing import TypeVar
 import subprocess
 from io import TextIOWrapper
@@ -259,7 +264,7 @@ def abs_executable(python: str) -> str:
     return os.path.normpath(python)
 
 
-def create_environ(inherit_environ, locale, copy_all):
+def create_environ(inherit_environ: Iterable[str] | None, locale: bool, copy_all: bool) -> Mapping[str,str] :
     if copy_all:
         return os.environ
     env = {}
@@ -287,7 +292,7 @@ def create_environ(inherit_environ, locale, copy_all):
 class _Pipe:
     _OPEN_MODE = "r"
 
-    def __init__(self, fd):
+    def __init__(self, fd: int):
         self._fd = fd
         self._file = None
         if MS_WINDOWS:
@@ -316,19 +321,19 @@ class _Pipe:
 
 
 class ReadPipe(_Pipe):
-    def open_text(self):
+    def open_text(self) -> TextIOWrapper:
         file = open(self._fd, "r", encoding="utf8")
         self._file = file
         return file
 
-    def read_text(self, timeout=None):
+    def read_text(self, timeout: float | None=None) -> str:
         if timeout is not None:
             return self._read_text_timeout(timeout)
         else:
             with self.open_text() as rfile:
                 return rfile.read()
 
-    def _read_text_timeout(self, timeout):
+    def _read_text_timeout(self, timeout: float) -> str:
         fd = self.fd
         os.set_blocking(fd, False)
 
@@ -353,7 +358,7 @@ class ReadPipe(_Pipe):
 
 
 class WritePipe(_Pipe):
-    def to_subprocess(self):
+    def to_subprocess(self) -> str:
         if MS_WINDOWS:
             os.set_handle_inheritable(self._handle, True)
             arg = self._handle
@@ -363,7 +368,7 @@ class WritePipe(_Pipe):
         return str(arg)
 
     @classmethod
-    def from_subprocess(cls, arg):
+    def from_subprocess(cls, arg) -> WritePipe:
         arg = int(arg)
         if MS_WINDOWS:
             fd = msvcrt.open_osfhandle(arg, os.O_WRONLY)
@@ -377,20 +382,20 @@ class WritePipe(_Pipe):
         return file
 
 
-def create_pipe():
+def create_pipe() -> tuple[ReadPipe, WritePipe]:
     rfd, wfd = os.pipe()
     rpipe = ReadPipe(rfd)
     wpipe = WritePipe(wfd)
     return (rpipe, wpipe)
 
 
-def median_abs_dev(values):
+def median_abs_dev(values: Sequence[float | int]):
     # Median Absolute Deviation
-    median = float(statistics.median(values))
+    median = statistics.median(values)
     return statistics.median([abs(median - sample) for sample in values])
 
 
-def percentile(values, p):
+def percentile(values: Sequence[float | int], p: float) -> float | int:
     if not isinstance(p, float) or not (0.0 <= p <= 1.0):
         raise ValueError("p must be a float in the range [0.0; 1.0]")
 
@@ -412,7 +417,7 @@ def percentile(values, p):
 if hasattr(statistics, 'geometric_mean'):
     _geometric_mean = statistics.geometric_mean
 else:
-    def _geometric_mean(data):
+    def _geometric_mean(data: Sequence[SupportsFloat]) -> float:
         # Compute exp(fmean(map(log, data))) using floats
         data = list(map(math.log, data))
 
@@ -422,14 +427,14 @@ else:
         return math.exp(fmean)
 
 
-def geometric_mean(data):
+def geometric_mean(data: Sequence[SupportsFloat]) -> float:
     data = list(map(float, data))
     if not data:
         raise ValueError("empty data")
     return _geometric_mean(data)
 
 
-def merge_profile_stats(profiler, dst):
+def merge_profile_stats(profiler: Profile, dst: str):
     """
     Save pstats by merging into an existing file.
     """
