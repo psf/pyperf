@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, cast
 from collections.abc import Sequence
 import datetime
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
@@ -69,6 +69,7 @@ def format_seconds(seconds: float | None) -> str:
 
 def format_number(number: int, unit: str | None = None, units: str | None = None) -> str:
     plural = (not number or abs(number) > 1)
+    str_number = str(number)
     if number >= 10000:
         pow10 = 0
         x = number
@@ -78,9 +79,9 @@ def format_number(number: int, unit: str | None = None, units: str | None = None
             if r:
                 break
         if not r:
-            number = '10^%s' % pow10
+            str_number = '10^%s' % pow10
 
-    if isinstance(number, int) and number > 8192:
+    if str_number==str(number) and number > 8192:
         pow2 = 0
         x = number
         while x >= 2:
@@ -89,17 +90,17 @@ def format_number(number: int, unit: str | None = None, units: str | None = None
             if r:
                 break
         if not r:
-            number = '2^%s' % pow2
+            str_number = '2^%s' % pow2
 
     if not unit:
-        return str(number)
+        return str_number
 
     if plural:
         if not units:
             units = unit + 's'
-        return '%s %s' % (number, units)
+        return '%s %s' % (str_number, units)
     else:
-        return '%s %s' % (number, unit)
+        return '%s %s' % (str_number, unit)
 
 
 def format_integers(numbers: Sequence[int]) -> tuple[str, ...]:
@@ -114,11 +115,15 @@ UNIT_FORMATTERS = {
 }
 _UNIT_TYPE = Literal['second', 'byte', 'integer']
 
-def format_values(unit: _UNIT_TYPE, values: Sequence[float | int]) -> tuple[str, ...]:
+def format_values(unit: _UNIT_TYPE | None, values: Sequence[float | int]) -> tuple[str, ...]:
     if not unit:
         unit = DEFAULT_UNIT
-    formatter = UNIT_FORMATTERS[unit]
-    return formatter(values)
+    if unit == 'second':
+        return format_timedeltas(values)
+    elif unit == 'byte':
+        return format_filesizes(values)
+    elif unit == 'integer':
+        return format_integers(cast(Sequence[int],values))
 
 
 def format_value(unit: _UNIT_TYPE, value: float | int) -> str:
