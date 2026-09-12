@@ -1,7 +1,10 @@
+from typing import Literal, cast
+from collections.abc import Sequence
+import datetime
 _TIMEDELTA_UNITS = ('sec', 'ms', 'us', 'ns')
 
 
-def format_timedeltas(values):
+def format_timedeltas(values: Sequence[float]) -> tuple[str, ...]:
     ref_value = abs(values[0])
     for i in range(2, -9, -1):
         if ref_value >= 10.0 ** i:
@@ -18,11 +21,11 @@ def format_timedeltas(values):
     return tuple(fmt % (value * factor,) for value in values)
 
 
-def format_timedelta(value):
+def format_timedelta(value: float) -> str:
     return format_timedeltas((value,))[0]
 
 
-def format_filesize(size):
+def format_filesize(size: float) -> str:
     if size < 10 * 1024:
         if size != 1:
             return '%.0f bytes' % size
@@ -35,11 +38,11 @@ def format_filesize(size):
     return '%.1f KiB' % (size / 1024.0)
 
 
-def format_filesizes(sizes):
+def format_filesizes(sizes: Sequence[float]) -> tuple[str, ...]:
     return tuple(format_filesize(size) for size in sizes)
 
 
-def format_seconds(seconds):
+def format_seconds(seconds: float | None) -> str:
     # Coarse but human readable duration
     if not seconds:
         return '0 sec'
@@ -64,8 +67,9 @@ def format_seconds(seconds):
     return ' '.join(parts)
 
 
-def format_number(number, unit=None, units=None):
+def format_number(number: int, unit: str | None = None, units: str | None = None) -> str:
     plural = (not number or abs(number) > 1)
+    str_number = str(number)
     if number >= 10000:
         pow10 = 0
         x = number
@@ -75,9 +79,9 @@ def format_number(number, unit=None, units=None):
             if r:
                 break
         if not r:
-            number = '10^%s' % pow10
+            str_number = '10^%s' % pow10
 
-    if isinstance(number, int) and number > 8192:
+    if str_number==str(number) and number > 8192:
         pow2 = 0
         x = number
         while x >= 2:
@@ -86,20 +90,20 @@ def format_number(number, unit=None, units=None):
             if r:
                 break
         if not r:
-            number = '2^%s' % pow2
+            str_number = '2^%s' % pow2
 
     if not unit:
-        return str(number)
+        return str_number
 
     if plural:
         if not units:
             units = unit + 's'
-        return '%s %s' % (number, units)
+        return '%s %s' % (str_number, units)
     else:
-        return '%s %s' % (number, unit)
+        return '%s %s' % (str_number, unit)
 
 
-def format_integers(numbers):
+def format_integers(numbers: Sequence[int]) -> tuple[str, ...]:
     return tuple(format_number(number) for number in numbers)
 
 
@@ -109,20 +113,24 @@ UNIT_FORMATTERS = {
     'byte': format_filesizes,
     'integer': format_integers,
 }
+_UNIT_TYPE = Literal['second', 'byte', 'integer']
 
-
-def format_values(unit, values):
+def format_values(unit: _UNIT_TYPE | None, values: Sequence[float | int]) -> tuple[str, ...]:
     if not unit:
         unit = DEFAULT_UNIT
-    formatter = UNIT_FORMATTERS[unit]
-    return formatter(values)
+    if unit == 'second':
+        return format_timedeltas(values)
+    elif unit == 'byte':
+        return format_filesizes(values)
+    elif unit == 'integer':
+        return format_integers(cast(Sequence[int],values))
 
 
-def format_value(unit, value):
+def format_value(unit: _UNIT_TYPE, value: float | int) -> str:
     return format_values(unit, (value,))[0]
 
 
-def format_datetime(dt, microsecond=True):
+def format_datetime(dt: datetime.datetime, microsecond: bool = True) -> str:
     if not microsecond:
         dt = dt.replace(microsecond=0)
     return dt.isoformat(' ')
