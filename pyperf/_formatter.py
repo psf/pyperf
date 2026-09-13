@@ -78,15 +78,8 @@ def format_number(number, unit=None, units=None):
             number = '10^%s' % pow10
 
     if isinstance(number, int) and number > 8192:
-        pow2 = 0
-        x = number
-        while x >= 2:
-            x, r = divmod(x, 2)
-            pow2 += 1
-            if r:
-                break
-        if not r:
-            number = '2^%s' % pow2
+        if number & (number-1) == 0:
+            number = '2^%s' % (number.bit_length() - 1)
 
     if not unit:
         return str(number)

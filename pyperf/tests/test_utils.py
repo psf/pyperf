@@ -130,15 +130,15 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(format_number(33 * 10 ** 4, 'unit'),
                          '330000 units')
 
-        # powers of 10
+        # powers of 2
         self.assertEqual(format_number(2 ** 10, 'unit'),
                          '1024 units')
         self.assertEqual(format_number(2 ** 15, 'unit'),
                          '2^15 units')
         self.assertEqual(format_number(2 ** 15),
                          '2^15')
-        self.assertEqual(format_number(2 ** 10 + 1, 'unit'),
-                         '1025 units')
+        self.assertEqual(format_number(2 ** 15 - 1), '32767')
+        self.assertEqual(format_number(2 ** 15 + 1), '32769')
 
     def test_format_filesize(self):
         self.assertEqual(format_filesize(0),
