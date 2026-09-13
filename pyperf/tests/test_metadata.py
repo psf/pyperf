@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 
 from pyperf import _collect_metadata as perf_metadata
-from pyperf._metadata import METADATA_VALUE_TYPES
+from pyperf._metadata import METADATA_VALUE_TYPES, check_metadata
 
 
 MANDATORY_METADATA = [
@@ -34,6 +34,9 @@ class TestMetadata(unittest.TestCase):
             if isinstance(value, str):
                 self.assertEqual(value.strip(), value)
                 self.assertNotIn('\n', value)
+
+    def test_zero_memory_metadata(self):
+        check_metadata('mem_max_rss', 0)
 
     def test_collect_cpu_affinity(self):
         metadata = {}

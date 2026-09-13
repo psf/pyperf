@@ -63,7 +63,7 @@ def format_noop(value):
 # types: accepted types
 _MetadataInfo = collections.namedtuple('_MetadataInfo', 'formatter types check_value unit')
 
-BYTES = _MetadataInfo(format_filesize, (int,), is_strictly_positive, 'byte')
+BYTES = _MetadataInfo(format_filesize, (int,), is_positive, 'byte')
 DATETIME = _MetadataInfo(format_noop, (str,), None, None)
 LOOPS = _MetadataInfo(format_number, (int,), is_strictly_positive, 'integer')
 WARMUPS = _MetadataInfo(format_number, (int,), is_positive, 'integer')
