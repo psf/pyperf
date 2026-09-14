@@ -22,7 +22,7 @@ Default without JIT (ex: CPython): 20 processes, 3 values per process (total: 60
 values), and 1 warmup.
 
 Default with a JIT (ex: PyPy): 6 processes, 10 values per process (total: 60
-values), and 10 warmups.
+values), and automatic warmup calibration.
 
 * ``--rigorous``: Spend longer running tests to get more accurate results.
   Multiply the number of ``PROCESSES`` by 2. Default: 40 processes and 3
@@ -35,7 +35,7 @@ values), and 10 warmups.
 * ``VALUES``: number of values per process
   (default: ``3``, or ``10`` with a JIT)
 * ``WARMUPS``: the number of ignored values used to warmup to benchmark
-  (default: ``1``, or ``10`` with a JIT)
+  (default: ``1``, or automatically calibrated with a JIT)
 * ``LOOPS``: number of loops per value. ``x^y`` syntax is accepted, example:
   ``--loops=2^8`` uses ``256`` iterations. By default, the timer is calibrated
   to get raw values taking at least ``MIN_TIME`` seconds.
