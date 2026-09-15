@@ -100,14 +100,14 @@ def format_integers(numbers: Sequence[int]) -> tuple[str, ...]:
     return tuple(format_number(number) for number in numbers)
 
 
-DEFAULT_UNIT = 'second'
+
 UNIT_FORMATTERS = {
     'second': format_timedeltas,
     'byte': format_filesizes,
     'integer': format_integers,
 }
 _UNIT_TYPE = Literal['second', 'byte', 'integer']
-
+DEFAULT_UNIT: _UNIT_TYPE = 'second'
 def format_values(unit: _UNIT_TYPE | None, values: Sequence[float | int]) -> tuple[str, ...]:
     if not unit:
         unit = DEFAULT_UNIT
