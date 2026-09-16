@@ -1,6 +1,8 @@
 # Hooks are installable context managers defined as entry points so that
 # arbitrary code can by run right before and after the actual internal
 # benchmarking code is run.
+from __future__ import annotations
+from collections.abc import Callable
 
 
 import abc
@@ -13,20 +15,25 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from abc import abstractmethod
+from collections.abc import Generator, Sequence
+from importlib.metadata import EntryPoint, EntryPoints
+from types import TracebackType
+from typing import Any
 
 
-def get_hooks():
+def get_hooks() -> importlib.metadata.EntryPoints:
     hook_prefix = "pyperf.hook"
     entry_points = importlib.metadata.entry_points()
     group = entry_points.select(group=hook_prefix)
     return group
 
 
-def get_hook_names():
+def get_hook_names() -> Generator[str]:
     return (x.name for x in get_hooks())
 
 
-def get_selected_hooks(hook_names, hooks=None):
+def get_selected_hooks(hook_names: Sequence[str], hooks: EntryPoints | None = None) -> Generator[EntryPoint, None, None]:
     if hook_names is None:
         return
 
@@ -35,7 +42,7 @@ def get_selected_hooks(hook_names, hooks=None):
         yield hook_mapping[hook_name]
 
 
-def instantiate_selected_hooks(hook_names, hooks=None):
+def instantiate_selected_hooks(hook_names: Sequence[str], hooks: EntryPoints | None = None) -> dict[str, HookBase]:
     hook_managers = {}
     for hook in get_selected_hooks(hook_names, hooks):
         try:
@@ -53,65 +60,68 @@ class HookError(Exception):
 
 
 class HookBase(abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Create a new instance of the hook.
         """
-        pass
 
-    def teardown(self, _metadata):
+    @abstractmethod
+    def teardown(self, metadata: dict[str, Any]) -> None:
         """
         Called when the hook is completed for a process. May add any information
         collected to the passed-in `metadata` dictionary.
         """
-        pass
 
-    def __enter__(self):
+    @abstractmethod
+    def __enter__(self) -> None:
         """
         Called immediately before running benchmark code.
 
         May be called multiple times per instance.
         """
-        pass
 
-    def __exit__(self, _exc_type, _exc_value, _traceback):
+    @abstractmethod
+    def __exit__(self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None, _traceback: TracebackType | None) -> None:
         """
         Called immediately after running benchmark code.
         """
-        pass
 
 
 class _test_hook(HookBase):
-    def __init__(self):
+    def __init__(self) -> None:
         self._count = 0
 
-    def teardown(self, metadata):
+    def teardown(self, metadata: dict[str, Any]) -> None:
         metadata["_test_hook"] = self._count
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self._count += 1
 
-    def __exit__(self, _exc_type, _exc_value, _traceback):
+    def __exit__(self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None, _traceback: TracebackType | None) -> None:
         pass
 
 
 class pystats(HookBase):
-    def __init__(self):
+    def __init__(self) -> None:
         if not hasattr(sys, "_stats_on"):
             raise HookError(
                 "Can not collect pystats because python was not built with --enable-pystats"
             )
-        sys._stats_off()
-        sys._stats_clear()
 
-    def teardown(self, metadata):
+        self._stats_on: Callable[[], None] = getattr(sys, "_stats_on")
+        self._stats_off: Callable[[], None] = getattr(sys, "stats_off")
+        self._stats_clear: Callable[[], None] = getattr(sys, "stats_clear")
+        self._stats_off()
+        self._stats_clear()
+
+    def teardown(self, metadata: dict[str,Any]) -> None:
         metadata["pystats"] = "enabled"
 
-    def __enter__(self):
-        sys._stats_on()
+    def __enter__(self) -> None:
+        self._stats_on()
 
-    def __exit__(self, _exc_type, _exc_value, _traceback):
-        sys._stats_off()
+    def __exit__(self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None, _traceback: TracebackType | None) -> None:
+        self._stats_off()
 
 
 class perf_record(HookBase):
@@ -127,7 +137,7 @@ class perf_record(HookBase):
     appended to the command line of perf-record, if provided.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         self.ctl_fifo = self.mkfifo(self.tempdir.name, "ctl_fifo")
         self.ack_fifo = self.mkfifo(self.tempdir.name, "ack_fifo")
@@ -144,13 +154,13 @@ class perf_record(HookBase):
         self.ctl_fd = open(self.ctl_fifo, "w")
         self.ack_fd = open(self.ack_fifo, "r")
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.exec_perf_cmd("enable")
 
-    def __exit__(self, _exc_type, _exc_value, _traceback):
+    def __exit__(self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None, _traceback: TracebackType | None) -> None:
         self.exec_perf_cmd("disable")
 
-    def teardown(self, metadata):
+    def teardown(self, metadata: dict[str,Any]) -> None:
         try:
             self.exec_perf_cmd("stop")
             self.perf.wait(timeout=120)
@@ -158,12 +168,12 @@ class perf_record(HookBase):
             self.ctl_fd.close()
             self.ack_fd.close()
 
-    def mkfifo(self, tmpdir, basename):
+    def mkfifo(self, tmpdir: str | os.PathLike[str], basename: str | os.PathLike[str]) -> str:
         path = os.path.join(tmpdir, basename)
         os.mkfifo(path)
         return path
 
-    def exec_perf_cmd(self, cmd):
+    def exec_perf_cmd(self, cmd: str) -> None:
         self.ctl_fd.write(f"{cmd}\n")
         self.ctl_fd.flush()
         self.ack_fd.readline()
@@ -185,7 +195,7 @@ class tachyon(HookBase):
             `python -m profiling.sampling attach`.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         if sys.platform == "win32":
             raise HookError("tachyon hook is not supported on Windows")
 
@@ -197,15 +207,15 @@ class tachyon(HookBase):
             )
 
         try:
-            import profiling.sampling  # noqa: F401
+            import profiling.sampling  # type: ignore[import-not-found]  # noqa: F401
         except ImportError:
             raise HookError("profiling.sampling module not available")
 
-        self.extra_opts = os.environ.get("PYPERF_TACHYON_OPTS", "")
+        self.extra_opts: str = os.environ.get("PYPERF_TACHYON_OPTS", "")
 
-        self._proc = None
+        self._proc: subprocess.Popen[bytes] | None = None
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         if self._proc is not None:
             self._stop_profiler()
 
@@ -223,10 +233,10 @@ class tachyon(HookBase):
             stderr=subprocess.DEVNULL,
         )
 
-    def __exit__(self, _exc_type, _exc_value, _traceback):
+    def __exit__(self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None, _traceback: TracebackType | None) -> None:
         self._stop_profiler()
 
-    def _stop_profiler(self):
+    def _stop_profiler(self) -> None:
         if not self._proc:
             return
 
@@ -244,7 +254,7 @@ class tachyon(HookBase):
 
         self._proc = None
 
-    def teardown(self, metadata):
+    def teardown(self, metadata: dict[str, Any]) -> None:
         self._stop_profiler()
         if self.extra_opts:
             metadata["tachyon_extra_opts"] = self.extra_opts
