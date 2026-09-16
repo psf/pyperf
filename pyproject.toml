@@ -82,7 +82,7 @@ version = {attr = "pyperf.__version__"}
 fix = true
 
 [tool.ruff.lint]
-extend-select = ["C90", "UP", "ANN201", "ANN202"]
+extend-select = ["C90", "UP"]
 extend-ignore = ["UP015", "UP031", "B009"]
 
 [tool.ruff.lint.mccabe]
