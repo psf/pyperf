@@ -1,4 +1,5 @@
-from _winapi import GetCurrentProcess
+from typing import Literal
+from _winapi import GetCurrentProcess # type: ignore[import-not-found, unused-ignore, attr-defined]
 
 try:
     import ctypes
@@ -23,7 +24,19 @@ else:
             ('PrivateUsage', SIZE_T),
         ]
 
-    GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+        cb: int
+        PageFaultCount: int
+        PeakWorkingSetSize: int
+        WorkingSetSize: int
+        QuotaPeakPagedPoolUsage: int
+        QuotaPagedPoolUsage: int
+        QuotaPeakNonPagedPoolUsage: int
+        QuotaNonPagedPoolUsage: int
+        PagefileUsage: int
+        PeakPagefileUsage: int
+        PrivateUsage: int
+
+    GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo  # type: ignore[attr-defined, unused-ignore]
     GetProcessMemoryInfo.argtypes = [
         wintypes.HANDLE,
         ctypes.POINTER(PROCESS_MEMORY_COUNTERS_EX),
@@ -32,19 +45,19 @@ else:
     GetProcessMemoryInfo.restype = wintypes.BOOL
 
 
-def get_peak_pagefile_usage():
+def get_peak_pagefile_usage() -> int:
     process = GetCurrentProcess()
     counters = PROCESS_MEMORY_COUNTERS_EX()
-    ret = GetProcessMemoryInfo(process,
+    ret = GetProcessMemoryInfo(process, # type: ignore[misc, unused-ignore]
                                ctypes.byref(counters),
                                ctypes.sizeof(counters))
     if not ret:
-        raise ctypes.WinError()
+        raise ctypes.WinError() # type: ignore[attr-defined, unused-ignore]
 
     return counters.PeakPagefileUsage
 
 
-def check_tracking_memory():
+def check_tracking_memory() -> Literal['memory usage is zero', 'missing ctypes module, unable to get GetProcessMemoryInfo()'] | None:
     if GetProcessMemoryInfo is None:
         return ("missing ctypes module, "
                 "unable to get GetProcessMemoryInfo()")
