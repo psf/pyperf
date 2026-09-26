@@ -5,10 +5,12 @@ from pyperf._formatter import (format_number, format_seconds, format_filesize,
 
 
 METADATA_VALUE_TYPES = (int, str, float)
+MetadataValueType = int | str | float | list[str]
+MetadataType = dict[str, MetadataValueType]
 NUMBER_TYPES = (int, float)
 
 
-def _common_metadata(metadatas):
+def _common_metadata(metadatas: list[MetadataType]) -> MetadataType:
     if not metadatas:
         return {}
 
@@ -20,33 +22,33 @@ def _common_metadata(metadatas):
     return metadata
 
 
-def format_generic(value):
+def format_generic(value: MetadataValueType) -> str:
     if not isinstance(value, str):
         return str(value)
 
     return value
 
 
-def format_system_load(load):
+def format_system_load(load: float) -> str:
     # Format system load read from /proc/loadavg on Linux (ex: 0.12)
     return '%.2f' % load
 
 
-def is_strictly_positive(value):
+def is_strictly_positive(value: int) -> bool:
     return (value >= 1)
 
 
-def is_positive(value):
+def is_positive(value: int | float) -> bool:
     return (value >= 0)
 
 
-def is_tags(value):
+def is_tags(value: list[str]) -> bool:
     if not isinstance(value, list):
         return False
     return all(isinstance(x, str) and x not in ('all', '') for x in value)
 
 
-def parse_load_avg(value):
+def parse_load_avg(value: float | int | str) -> float | int:
     if isinstance(value, NUMBER_TYPES):
         return value
     else:
@@ -54,7 +56,7 @@ def parse_load_avg(value):
         return float(value)
 
 
-def format_noop(value):
+def format_noop(value: str) -> str:
     return value
 
 
@@ -95,11 +97,11 @@ METADATA = {
 DEFAULT_METADATA_INFO = _MetadataInfo(format_generic, METADATA_VALUE_TYPES, None, None)
 
 
-def get_metadata_info(name):
+def get_metadata_info(name: str) -> _MetadataInfo:
     return METADATA.get(name, DEFAULT_METADATA_INFO)
 
 
-def check_metadata(name, value):
+def check_metadata(name: str, value: MetadataValueType) -> None:
     info = get_metadata_info(name)
 
     if not isinstance(name, str):
@@ -115,7 +117,7 @@ def check_metadata(name, value):
                          % (name, value))
 
 
-def parse_metadata(metadata):
+def parse_metadata(metadata: MetadataType) -> MetadataType:
     result = {}
     for name, value in metadata.items():
         if isinstance(value, str):
@@ -130,13 +132,13 @@ def parse_metadata(metadata):
     return result
 
 
-def format_metadata(name, value):
+def format_metadata(name: str, value: MetadataValueType):
     info = get_metadata_info(name)
     return info.formatter(value)
 
 
 class Metadata:
-    def __init__(self, name, value):
+    def __init__(self, name: str, value: MetadataValueType):
         self._name = name
         self._value = value
 
@@ -152,7 +154,7 @@ class Metadata:
         info = get_metadata_info(self._name)
         return info.formatter(self._value)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object):
         if not isinstance(other, Metadata):
             return False
         return (self._name == other._name and self._value == other._value)
@@ -162,7 +164,7 @@ class Metadata:
                 % (self._name, self._value))
 
 
-def _exclude_common_metadata(metadata, common_metadata):
+def _exclude_common_metadata(metadata: MetadataType, common_metadata: MetadataType) -> MetadataType:
     if common_metadata:
         metadata = {key: value for key, value in metadata.items()
                     if key not in common_metadata}
