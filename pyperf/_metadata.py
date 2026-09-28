@@ -15,7 +15,7 @@ def _common_metadata(metadatas):
     metadata = dict(metadatas[0])
     for run_metadata in metadatas[1:]:
         for key in list(metadata):
-            if metadata[key]!=run_metadata.get(key,None):
+            if metadata[key] != run_metadata.get(key,None):
                 del metadata[key]
     return metadata
 
