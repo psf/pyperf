@@ -1,3 +1,4 @@
+from typing import override
 import threading
 import time
 
@@ -11,7 +12,7 @@ from pyperf._utils import proc_path
 # for a quick introduction to smaps.
 #
 # Need Linux 2.6.16 or newer.
-def read_smap_file():
+def read_smap_file() -> int:
     total = 0
     fp = open(proc_path("self/smaps"), "rb")
     with fp:
@@ -25,18 +26,19 @@ def read_smap_file():
 
 
 class PeakMemoryUsageThread(threading.Thread):
-    def __init__(self):
+    def __init__(self) -> None:
         threading.Thread.__init__(self)
         self.peak_usage = 0
         self._done = threading.Event()
         self.sleep = 0.010   # 10 ms
         self._quit = False
 
-    def get(self):
+    def get(self) -> None:
         usage = read_smap_file()
         self.peak_usage = max(self.peak_usage, usage)
 
-    def run(self):
+    @override
+    def run(self) -> None:
         try:
             while not self._quit:
                 self.get()
@@ -44,13 +46,13 @@ class PeakMemoryUsageThread(threading.Thread):
         finally:
             self._done.set()
 
-    def stop(self):
+    def stop(self) -> int:
         self._quit = True
         self._done.wait()
         return self.peak_usage
 
 
-def check_tracking_memory():
+def check_tracking_memory() -> str | None:
     mem_thread = PeakMemoryUsageThread()
     try:
         mem_thread.get()
