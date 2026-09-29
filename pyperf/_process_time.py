@@ -14,6 +14,11 @@ Measure wall-time, not CPU time.
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
+from _typeshed import SupportsWrite
+from pyperf._hooks import HookBase
+from typing import Any
+from typing import TypedDict
+from io import TextIOWrapper
 import contextlib
 import json
 import os
@@ -27,8 +32,12 @@ try:
 except ImportError:
     resource = None
 
+class PopenKwargs(TypedDict, total=False, closed=True):
+    stdin: int | TextIOWrapper
+    stdout: int | TextIOWrapper
+    stderr: int
 
-def get_max_rss(*, children):
+def get_max_rss(*, children: bool) -> int:
     if resource is not None:
         if children:
             resource_type = resource.RUSAGE_CHILDREN
@@ -42,7 +51,7 @@ def get_max_rss(*, children):
         return 0
 
 
-def merge_profile_stats_files(src, dst):
+def merge_profile_stats_files(src: str, dst: str) -> None:
     """
     Merging one existing pstats file into another.
     """
@@ -57,11 +66,11 @@ def merge_profile_stats_files(src, dst):
         os.rename(src, dst)
 
 
-def bench_process(loops, args, kw, profile_filename=None):
+def bench_process(loops: int, args: list[str], kw: PopenKwargs, profile_filename: str | None=None) -> tuple[float, int]:
     max_rss = 0
     range_it = range(loops)
     start_time = time.perf_counter()
-
+    temp_profile_filename = None
     if profile_filename:
         temp_profile_filename = tempfile.mktemp()
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
@@ -77,14 +86,14 @@ def bench_process(loops, args, kw, profile_filename=None):
         if exitcode != 0:
             print("Command failed with exit code %s" % exitcode,
                   file=sys.stderr)
-            if profile_filename:
+            if temp_profile_filename:
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
 
         rss = get_max_rss(children=True) - start_rss
         max_rss = max(max_rss, rss)
 
-        if profile_filename:
+        if temp_profile_filename and profile_filename:
             merge_profile_stats_files(
                 temp_profile_filename, profile_filename
             )
@@ -93,7 +102,7 @@ def bench_process(loops, args, kw, profile_filename=None):
     return (dt, max_rss)
 
 
-def load_hooks(metadata):
+def load_hooks(metadata: dict[str, Any]) -> dict[str, HookBase]:
     hook_names = []
     while "--hook" in sys.argv:
         hook_idx = sys.argv.index("--hook")
@@ -102,19 +111,19 @@ def load_hooks(metadata):
         del sys.argv[hook_idx]
         del sys.argv[hook_idx]
 
+    hook_managers: dict[str, HookBase] = {}
     if len(hook_names):
         # Only import pyperf if we know we have hooks
         import pyperf._hooks
 
         hook_managers = pyperf._hooks.instantiate_selected_hooks(hook_names)
         metadata["hooks"] = ", ".join(hook_managers.keys())
-    else:
-        hook_managers = {}
+
 
     return hook_managers
 
 
-def write_data(dt, max_rss, metadata, out=sys.stdout):
+def write_data(dt: float, max_rss: int, metadata: dict[str,Any], out: SupportsWrite[str]=sys.stdout) -> None:
     # Write the data that is communicated back to the main orchestration process.
     # It is three lines containing:
     #    - The runtime (in seconds)
@@ -126,7 +135,7 @@ def write_data(dt, max_rss, metadata, out=sys.stdout):
     print(file=out)
 
 
-def main():
+def main() -> None:
     # Make sure that the pyperf module wasn't imported
     if 'pyperf' in sys.modules:
         print("ERROR: don't run %s -m pyperf._process, run the .py script"
@@ -146,13 +155,13 @@ def main():
     else:
         profile_filename = None
 
-    metadata = {}
+    metadata: dict[str, Any] = {}
     hook_managers = load_hooks(metadata)
 
     loops = int(sys.argv[1])
     args = sys.argv[2:]
 
-    kw = {}
+    kw: PopenKwargs = {}
     if hasattr(subprocess, 'DEVNULL'):
         devnull = None
         kw['stdin'] = subprocess.DEVNULL
