@@ -1,6 +1,12 @@
 Changelog
 =========
 
+* Feature: pyperf now stores ``phase`` run metadata in JSON files to identify
+  calibration and measurement samples. Hooks can also inspect this metadata in
+  :meth:`HookBase.teardown` to distinguish calibration loops, calibration
+  warmups, measurement warmups, and measurement values.
+  Patch by Maurycy Pawłowski-Wieroński.
+
 Version 2.10.0 (2026-02-07)
 ---------------------------
 
