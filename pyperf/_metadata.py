@@ -1,10 +1,10 @@
+from dataclasses import dataclass
 from typing import cast
 from typing import overload
 from typing import Literal
 from typing import Generic
 from typing import TypeVar
 from collections.abc import Callable
-from typing import NamedTuple
 
 from pyperf._formatter import (format_number, format_seconds, format_filesize,
                                UNIT_FORMATTERS)
@@ -68,7 +68,9 @@ def format_noop(value: str) -> str:
 
 # types: accepted types
 T = TypeVar("T")
-class _MetadataInfo(NamedTuple, Generic[T]):
+
+@dataclass(frozen=True)
+class _MetadataInfo(Generic[T]):
     formatter: Callable[[T], str]
     types: tuple[type[T], ...]
     check_value: Callable[[T], bool] | None
