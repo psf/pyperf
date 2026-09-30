@@ -14,10 +14,14 @@ Measure wall-time, not CPU time.
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
 per process and writes it into stdout as a second line.
 """
-from _typeshed import SupportsWrite
-from pyperf._hooks import HookBase
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import SupportsWrite
+    from pyperf._hooks import HookBase
 from typing import Any
-from typing import TypedDict
+from typing_extensions import TypedDict
 from io import TextIOWrapper
 import contextlib
 import json
@@ -30,7 +34,7 @@ import time
 try:
     import resource
 except ImportError:
-    resource = None
+    resource = None # type: ignore[assignment]
 
 class PopenKwargs(TypedDict, total=False, closed=True):
     stdin: int | TextIOWrapper
