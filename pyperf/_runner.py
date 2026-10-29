@@ -1,11 +1,15 @@
+from __future__ import annotations
+import argparse
 import functools
 import os
 import sys
 import time
+from typing import TYPE_CHECKING, TypeVar, Generic
+from importlib.metadata import EntryPoints
 
 import pyperf
 from pyperf._cli import (format_benchmark, format_checks,
-                         multiline_output, display_title, format_result_value,
+                         display_title, format_result_value,
                          catch_broken_pipe_error)
 from pyperf._cpu_utils import (format_cpu_list, parse_cpu_list,
                                get_isolated_cpus, set_cpu_affinity,
@@ -16,49 +20,105 @@ from pyperf._utils import (MS_WINDOWS, abs_executable,
                            WritePipe, get_python_names,
                            merge_profile_stats)
 from pyperf._system import OS_LINUX
-from pyperf._worker import WorkerProcessTask
+from pyperf._worker import WorkerProcessTask, WorkerTask, ArgsT
+
+class RunnerArgs(argparse.Namespace):
+    rigorous: bool
+    fast: bool
+    debug_single_value: bool
+    processes: int
+    values: int
+    warmups: int | None
+    loops: int
+    verbose: bool
+    quiet: bool
+    pipe: int | None
+    output: str | None
+    append: str | None
+    min_time: float
+    timeout: int | None
+    worker: bool
+    worker_task: int | None
+    calibrate_loops: bool
+    recalibrate_loops: bool
+    calibrate_warmups: bool
+    recalibrate_warmups: bool
+    dump: bool
+    metadata: bool
+    hist: bool
+    stats: bool
+    affinity: str | None
+    inherit_environ: list[str] | None
+    copy_env: bool
+    locale: bool
+    python: str
+    compare_to: str | None
+    python_names: list[str] | None
+    profile: str | None
+    hook: list[str] | None
+    tracemalloc: bool
+    track_memory: bool
 
 
-def strictly_positive(value):
+if TYPE_CHECKING:
+    import cProfile
+    from pyperf._metadata import MetadataType
+    from pyperf._bench import Benchmark
+    from collections.abc import Callable, Sequence, Awaitable
+    from typing import TypeVar, Any, ClassVar, Unpack
+    from typing_extensions import TypedDict
+    from asyncio import AbstractEventLoop
+
+    class BenchtimeFuncKwargs(TypedDict, closed=True, total=False):
+        metadata: MetadataType
+        inner_loops: int
+
+    class BenchAsyncFuncKwargs(TypedDict, closed=True, total=False):
+        metadata: MetadataType
+        inner_loops: int
+        loop_factory: Callable[[], AbstractEventLoop]
+
+    T = TypeVar('T')
+
+
+def strictly_positive(value: str | int) -> int:
     value = int(value)
     if value <= 0:
         raise ValueError("value must be > 0")
     return value
 
 
-def positive_or_nul(value):
+def positive_or_nul(value: str) -> int:
     if '^' in value:
         x, _, y = value.partition('^')
-        x = int(x)
-        y = int(y)
-        value = x ** y
+        num_value: int = int(x) ** int(y)
     else:
-        value = int(value)
-    if value < 0:
+        num_value = int(value)
+    if num_value < 0:
         raise ValueError("value must be >= 0")
-    return value
+    return num_value
 
 
-def comma_separated(values):
-    values = [value.strip() for value in values.split(',')]
-    return list(filter(None, values))
+def comma_separated(values: str) -> list[str]:
+    value_list = [value.strip() for value in values.split(',')]
+    return list(filter(None, value_list))
 
 
-def parse_python_names(names):
+def parse_python_names(names: str) -> list[str]:
     parts = names.split(':')
     if len(parts) != 2:
         raise ValueError("syntax is REF_NAME:CHANGED_NAME")
     return parts
 
 
-def profiling_wrapper(func):
+def profiling_wrapper(func: Callable[..., T]) -> tuple[cProfile.Profile, Callable[...,T]]:
     """
     Wrap a function to collect profiling.
     """
     import cProfile
     profiler = cProfile.Profile()
 
-    def profiling_func(*args):
+    def profiling_func(*args: Any) -> T:
         return profiler.runcall(func, *args)
 
     return profiler, profiling_func
@@ -67,17 +127,21 @@ def profiling_wrapper(func):
 class CLIError(Exception):
     pass
 
-
-class Runner:
-    _created = set()
+class Runner(Generic[ArgsT]):
+    _created: ClassVar[set[int]] = set()
 
     # Default parameters are chosen to have approximately a run of 0.5 second
     # and so a total duration of 5 seconds by default
-    def __init__(self, values=None, processes=None,
-                 loops=0, min_time=0.1, metadata=None,
-                 show_name=True,
-                 program_args=None, add_cmdline_args=None,
-                 _argparser=None, warmups=1, hooks=None):
+    def __init__(self, values: int | None = None, processes: int | None = None,
+                 loops: int = 0, min_time: float = 0.1, metadata: MetadataType | None = None,
+                 show_name: bool = True,
+                 program_args: Sequence[str] | None = None,
+                 add_cmdline_args: Callable[[list[str], ArgsT], None] | None = None,
+                 namespace_type: type[ArgsT] = RunnerArgs, # type: ignore[assignment]
+                 _argparser: argparse.ArgumentParser | None = None, warmups: int = 1, hooks: EntryPoints | None = None) -> None:
+
+        # Only to use in ArgumentParser for strong type
+        self.namespace_type = namespace_type
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad surprises
@@ -109,7 +173,7 @@ class Runner:
                 processes = 20
 
         if metadata is not None:
-            self.metadata = metadata
+            self.metadata: MetadataType = metadata
         else:
             self.metadata = {}
 
@@ -118,10 +182,10 @@ class Runner:
         self._worker_task = 0
 
         # Set used to check that benchmark names are unique
-        self._bench_names = set()
+        self._bench_names: set[str] = set()
 
         # result of argparser.parse_args()
-        self.args = None
+        self.args: ArgsT = None # type: ignore[assignment]
 
         # callback used to prepare command line arguments to spawn a worker
         # child process. The callback is called with prepare(runner.args, cmd).
@@ -247,7 +311,7 @@ class Runner:
                             help='Collect profile data using cProfile '
                                  'and output to the given file.')
 
-        self._custom_hooks = hooks or ()
+        self._custom_hooks = hooks or EntryPoints()
         if not isinstance(self._custom_hooks, (list, tuple)):
             raise RuntimeError("hooks parameter should be list, tuple or None")
 
@@ -266,14 +330,14 @@ class Runner:
 
         self.argparser = parser
 
-    def _multiline_output(self):
-        return self.args.verbose or multiline_output(self.args)
+    def _multiline_output(self) -> bool:
+        return self.args.verbose or self.args.hist or self.args.stats or self.args.dump or self.args.metadata
 
-    def _only_in_worker(self, option):
+    def _only_in_worker(self, option: str) -> None:
         if not self.args.worker:
             raise CLIError("option %s requires --worker" % option)
 
-    def _process_args_impl(self):
+    def _process_args_impl(self) -> None:
         args = self.args
 
         if args.pipe:
@@ -370,31 +434,32 @@ class Runner:
                     raise CLIError("--%s option is incompatible "
                                    "with --compare-to option" % option)
 
-    def _process_args(self):
+    def _process_args(self) -> None:
         try:
             self._process_args_impl()
         except CLIError as exc:
             print("ERROR: %s" % str(exc))
             sys.exit(1)
 
-    def _set_args(self, args):
-        if self.args is not None:
+    def _set_args(self, args: ArgsT) -> None:
+        curr_args = self.args
+        if curr_args is not None:
             raise RuntimeError("arguments already parsed")
 
         self.args = args
         self._process_args()
 
-    def parse_args(self, args=None):
+    def parse_args(self, args: ArgsT | None = None) -> ArgsT:
         if self.args is not None and args is None:
             return self.args
 
-        args = self.argparser.parse_args(args)
+        args = self.argparser.parse_args(args, namespace=self.namespace_type())
         self._set_args(args)
         return args
 
-    def _cpu_affinity(self):
-        cpus = self.args.affinity
-        if not cpus:
+    def _cpu_affinity(self) -> None:
+        cpu_affinity = self.args.affinity
+        if not cpu_affinity:
             # --affinity option is not set: detect isolated CPUs
             isolated = True
             cpus = get_isolated_cpus()
@@ -403,7 +468,9 @@ class Runner:
                 return
         else:
             isolated = False
-            cpus = parse_cpu_list(cpus)
+            cpus = parse_cpu_list(cpu_affinity)
+            if not cpus:
+                return
 
         if set_cpu_affinity(cpus):
             if self.args.verbose:
@@ -429,13 +496,13 @@ class Runner:
                 print("Install psutil dependency and check "
                       "psutil.Process.cpu_affinity is available on your OS.")
 
-    def _process_priority(self):
+    def _process_priority(self) -> None:
         if not MS_WINDOWS:
             return
         if not set_highest_priority():
             print("WARNING: unable to increase process priority")
 
-    def _worker(self, task):
+    def _worker(self, task: WorkerTask[ArgsT]) -> Benchmark:
         self._cpu_affinity()
         self._process_priority()
         run = task.create_run()
@@ -443,7 +510,7 @@ class Runner:
         self._display_result(bench, checks=False)
         return bench
 
-    def _check_worker_task(self):
+    def _check_worker_task(self) -> bool:
         args = self.parse_args()
 
         if args.worker_task is None:
@@ -456,7 +523,7 @@ class Runner:
 
         return True
 
-    def _main(self, task):
+    def _main(self, task: WorkerTask[ArgsT]) -> Benchmark | None:
         if task.name in self._bench_names:
             raise ValueError("duplicated benchmark name: %r" % task.name)
         self._bench_names.add(task.name)
@@ -479,14 +546,14 @@ class Runner:
         return bench
 
     @staticmethod
-    def _no_keyword_argument(kwargs):
+    def _no_keyword_argument(kwargs: BenchtimeFuncKwargs | BenchAsyncFuncKwargs) -> None:
         if not kwargs:
             return
 
         args = ', '.join(map(repr, sorted(kwargs)))
         raise TypeError('unexpected keyword argument %s' % args)
 
-    def bench_time_func(self, name, time_func, *args, **kwargs):
+    def bench_time_func(self, name: str, time_func: Callable[..., float], *args: Any, **kwargs: Unpack[BenchtimeFuncKwargs]) -> Benchmark | None:
         inner_loops = kwargs.pop('inner_loops', None)
         metadata = kwargs.pop('metadata', None)
         self._no_keyword_argument(kwargs)
@@ -494,10 +561,13 @@ class Runner:
         if not self._check_worker_task():
             return None
 
+
         if self.args.profile:
             profiler, time_func = profiling_wrapper(time_func)
+        else:
+            profiler = None
 
-        def task_func(_, loops):
+        def task_func(_: WorkerTask[ArgsT], loops: int) -> float:
             return time_func(loops, *args)
 
         task = WorkerProcessTask(self, name, task_func, metadata)
@@ -505,12 +575,12 @@ class Runner:
         task.inner_loops = inner_loops
         result = self._main(task)
 
-        if self.args.profile:
+        if self.args.profile and profiler is not None:
             merge_profile_stats(profiler, self.args.profile)
 
         return result
 
-    def bench_func(self, name, func, *args, **kwargs):
+    def bench_func(self, name: str, func: Callable[..., object], *args: Any, **kwargs: Unpack[BenchtimeFuncKwargs]) -> Benchmark | None:
         """"Benchmark func(*args)."""
 
         inner_loops = kwargs.pop('inner_loops', None)
@@ -525,8 +595,10 @@ class Runner:
 
         if self.args.profile:
             profiler, func = profiling_wrapper(func)
+        else:
+            profiler = None
 
-        def task_func(_, loops):
+        def task_func(_: WorkerTask[ArgsT], loops: int) -> float:
             # use fast local variables
             local_timer = time.perf_counter
             local_func = func
@@ -534,7 +606,7 @@ class Runner:
                 range_it = range(loops)
 
                 t0 = local_timer()
-                for _ in range_it:
+                for i in range_it:
                     local_func()
                 dt = local_timer() - t0
             else:
@@ -548,12 +620,12 @@ class Runner:
         task.inner_loops = inner_loops
         result = self._main(task)
 
-        if self.args.profile:
+        if self.args.profile and profiler is not None:
             merge_profile_stats(profiler, self.args.profile)
 
         return result
 
-    def bench_async_func(self, name, func, *args, **kwargs):
+    def bench_async_func(self, name: str, func: Callable[..., Awaitable[object]], *args: Any, **kwargs: Unpack[BenchAsyncFuncKwargs]) -> Benchmark | None:
         """Benchmark await func(*args)"""
 
         inner_loops = kwargs.pop('inner_loops', None)
@@ -569,10 +641,12 @@ class Runner:
 
         if self.args.profile:
             profiler, func = profiling_wrapper(func)
+        else:
+            profiler = None
 
-        def task_func(_, loops):
+        def task_func(_: WorkerTask[ArgsT], loops: int) -> float:
             if loops != 1:
-                async def main():
+                async def main() -> float:
                     # use fast local variables
                     local_timer = time.perf_counter
                     local_func = func
@@ -584,7 +658,7 @@ class Runner:
                     dt = local_timer() - t0
                     return dt
             else:
-                async def main():
+                async def main() -> float:
                     # use fast local variables
                     local_timer = time.perf_counter
                     local_func = func
@@ -616,13 +690,13 @@ class Runner:
         task.inner_loops = inner_loops
         result = self._main(task)
 
-        if self.args.profile:
+        if self.args.profile and profiler is not None:
             merge_profile_stats(profiler, self.args.profile)
 
         return result
 
-    def timeit(self, name, stmt=None, setup="pass", teardown="pass",
-               inner_loops=None, duplicate=None, metadata=None, globals=None):
+    def timeit(self, name: str, stmt: str | None = None, setup: str = "pass", teardown: str = "pass",
+               inner_loops: int | None = None, duplicate: int | None = None, metadata: MetadataType | None = None, globals: dict[str, Any] | None = None) -> None:
 
         if not self._check_worker_task():
             return None
@@ -641,7 +715,7 @@ class Runner:
                             func_metadata=metadata,
                             globals=globals)
 
-    def _display_result(self, bench, checks=True):
+    def _display_result(self, bench: Benchmark, checks: bool = True) -> None:
         args = self.args
 
         # Display the average +- stdev
@@ -676,7 +750,7 @@ class Runner:
             else:
                 bench.dump(args.output)
 
-    def _manager(self):
+    def _manager(self) -> Benchmark | None:
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._manager import Manager
 
@@ -688,7 +762,7 @@ class Runner:
         self._display_result(bench)
         return bench
 
-    def _compare_to(self):
+    def _compare_to(self) -> None:
         # Use lazy import to limit imports on 'import pyperf'
         from pyperf._compare import timeit_compare_benchs
         from pyperf._manager import Manager
@@ -696,6 +770,9 @@ class Runner:
         args = self.args
         python_ref = args.compare_to
         python_changed = args.python
+
+        if python_ref is None:
+            raise ValueError("'compare_to' must be specified")
 
         multiline = self._multiline_output()
         if args.python_names:
@@ -737,7 +814,7 @@ class Runner:
             print()
         timeit_compare_benchs(name_ref, benchs[0], name_changed, benchs[1], args)
 
-    def bench_command(self, name, command):
+    def bench_command(self, name: str, command: list[str]) -> Benchmark | None:
         if not self._check_worker_task():
             return None
 

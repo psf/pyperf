@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 import subprocess
 
@@ -5,7 +6,22 @@ from pyperf._bench import _load_suite_from_pipe
 from pyperf._cli import format_run
 from pyperf._formatter import format_number
 from pyperf._utils import MS_WINDOWS, create_environ, create_pipe, popen_killer
+from pyperf._worker import ArgsT
 
+from typing import TYPE_CHECKING, Generic
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from typing_extensions import TypedDict
+    from pyperf._bench import Benchmark, BenchmarkSuite, Run
+    from pyperf._runner import Runner
+    from collections.abc import Sequence
+
+    class PopenKwargs(TypedDict, total=False, closed=True):
+        close_fds: bool
+        pass_fds: Sequence[int]
+
+    NextRun = Literal['loops', 'warmups', 'values']
 
 EXIT_TIMEOUT = 60
 
@@ -14,7 +30,8 @@ EXIT_TIMEOUT = 60
 MAX_CALIBRATION = 5
 
 
-class Manager:
+
+class Manager(Generic[ArgsT]):
     """
     Manager process which spawns worker processes to:
     - calibrate warmups
@@ -24,21 +41,21 @@ class Manager:
     It uses a state machine with next_run attribute and the choose_next_run()
     method.
     """
-    def __init__(self, runner, python=None):
+    def __init__(self, runner: Runner[ArgsT], python: str | None = None) -> None:
         self.runner = runner
         self.args = runner.args
         if python:
-            self.python = python
+            self.python: str = python
         else:
             self.python = self.args.python
-        self.bench = None
-        self.need_nprocess = self.args.processes
+        self.bench: Benchmark | None = None
+        self.need_nprocess: int = self.args.processes
         self.nprocess = 0
-        self.next_run = 'loops'
+        self.next_run: NextRun = 'loops'
         self.calibrate_loops = int(not self.args.loops)
         self.calibrate_warmups = int(self.args.warmups is None)
 
-    def worker_cmd(self, calibrate_loops, calibrate_warmups, wpipe):
+    def worker_cmd(self, calibrate_loops: int, calibrate_warmups: int, wpipe: str) -> list[str]:
         args = self.args
 
         cmd = [self.python]
@@ -83,7 +100,7 @@ class Manager:
 
         return cmd
 
-    def spawn_worker(self, calibrate_loops, calibrate_warmups):
+    def spawn_worker(self, calibrate_loops: int, calibrate_warmups: int) -> BenchmarkSuite[None] | None:
         env = create_environ(self.args.inherit_environ,
                              self.args.locale,
                              self.args.copy_env)
@@ -95,13 +112,15 @@ class Manager:
                 cmd = self.worker_cmd(calibrate_loops,
                                       calibrate_warmups, warg)
 
-                kw = {}
+                kw: PopenKwargs = {}
                 if MS_WINDOWS:
                     # Set close_fds to False to call CreateProcess() with
                     # bInheritHandles=True. For pass_handles, see
                     # http://bugs.python.org/issue19764
                     kw['close_fds'] = False
                 else:
+                    if wpipe.fd is None:
+                        raise ValueError("pipe is closed")
                     kw['pass_fds'] = [wpipe.fd]
 
                 proc = subprocess.Popen(cmd, env=env, **kw)
@@ -120,7 +139,7 @@ class Manager:
 
         return _load_suite_from_pipe(bench_json)
 
-    def create_suite(self):
+    def create_suite(self) -> BenchmarkSuite[None]:
         # decide which kind of run must be computed
         if self.next_run == 'loops' and not self.calibrate_loops:
             self.next_run = 'warmups'
@@ -138,7 +157,7 @@ class Manager:
             raise RuntimeError("pyperf worker process didn't produce JSON result")
         return suite
 
-    def create_worker_bench(self):
+    def create_worker_bench(self) -> tuple[Benchmark, Run]:
         suite = self.create_suite()
 
         # get the run
@@ -162,8 +181,8 @@ class Manager:
 
         return (worker_bench, run)
 
-    def display_run(self, bench, run):
-        if self.args.verbose:
+    def display_run(self, bench: Benchmark, run: Run) -> None:
+        if self.args.verbose and self.bench:
             for line in format_run(bench, len(self.bench._runs), run):
                 print(line)
             sys.stdout.flush()
@@ -171,15 +190,15 @@ class Manager:
             print(".", end='')
             sys.stdout.flush()
 
-    def calibration_done(self):
-        if self.args.verbose:
+    def calibration_done(self) -> None:
+        if self.args.verbose and self.args.warmups:
             print("Calibration: %s, %s"
                   % (format_number(self.args.warmups, 'warmup'),
                      format_number(self.args.loops, 'loop')))
         self.calibrate_loops = 0
         self.calibrate_warmups = 0
 
-    def handle_calibration(self, run):
+    def handle_calibration(self, run: Run) -> None:
         args = self.args
 
         if run._is_calibration_loops() or run._is_recalibration_loops():
@@ -226,14 +245,14 @@ class Manager:
                       % (self.calibrate_warmups - 1))
                 sys.exit(1)
 
-    def choose_next_run(self):
+    def choose_next_run(self) -> None:
         if self.next_run == 'loops':
             self.next_run = 'warmups'
         elif self.next_run == 'warmups':
             self.next_run = 'loops'
         # else: keep action 'values'
 
-    def create_bench(self):
+    def create_bench(self) -> Benchmark:
         old_warmups = self.args.warmups
         old_loops = self.args.loops
         if self.args.warmups is None:
@@ -249,4 +268,5 @@ class Manager:
         # the next benchmark function if needed
         self.args.warmups = old_warmups
         self.args.loops = old_loops
+        assert self.bench is not None
         return self.bench

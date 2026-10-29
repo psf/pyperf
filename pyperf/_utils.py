@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from cProfile import Profile
+import subprocess
 import contextlib
 import math
 import os
@@ -6,8 +10,16 @@ import statistics
 import sys
 import sysconfig
 import time
-from shlex import quote as shell_quote   # noqa
 from shutil import which
+from shlex import quote as shell_quote   # noqa
+
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from typing import SupportsFloat, IO, Self
+    from collections.abc import Generator
+    from collections.abc import Mapping, Iterable, Sequence
+    from io import TextIOWrapper
 
 # Currently there is a packaging issue for PEP-703,
 # Until then psutil is disabled as a workaround.
@@ -34,7 +46,7 @@ _T_DIST_95_CONF_LEVELS = (0, 12.706, 4.303, 3.182, 2.776,
                           2.042)
 
 
-def tdist95conf_level(df):
+def tdist95conf_level(df: int) -> float:
     """Approximate the 95% confidence interval for Student's T distribution.
 
     Given the degrees of freedom, returns an approximation to the 95%
@@ -46,7 +58,6 @@ def tdist95conf_level(df):
     Returns:
         A float.
     """
-    df = int(round(df))
     highest_table_df = len(_T_DIST_95_CONF_LEVELS)
     if df >= 200:
         return 1.960
@@ -65,7 +76,7 @@ def tdist95conf_level(df):
     return _T_DIST_95_CONF_LEVELS[df]
 
 
-def pooled_sample_variance(sample1, sample2):
+def pooled_sample_variance(sample1: Sequence[float], sample2: Sequence[float]) -> float:
     """Find the pooled sample variance for two samples.
 
     Args:
@@ -84,7 +95,7 @@ def pooled_sample_variance(sample1, sample2):
     return (math.fsum(squares1) + math.fsum(squares2)) / float(deg_freedom)
 
 
-def tscore(sample1, sample2):
+def tscore(sample1: Sequence[float], sample2: Sequence[float]) -> float:
     """Calculate a t-test score for the difference between two samples.
 
     Args:
@@ -101,7 +112,7 @@ def tscore(sample1, sample2):
     return diff / math.sqrt(error * 2)
 
 
-def is_significant(sample1, sample2):
+def is_significant(sample1: Sequence[float], sample2: Sequence[float]) -> tuple[bool,float]:
     """Determine whether two samples differ significantly.
 
     This uses a Student's two-sample, two-tailed t-test with alpha=0.95.
@@ -121,7 +132,7 @@ def is_significant(sample1, sample2):
     return (abs(t_score) >= critical_value, t_score)
 
 
-def parse_run_list(run_list):
+def parse_run_list(run_list: str) -> list[int]:
     run_list = run_list.strip()
 
     runs = []
@@ -148,12 +159,12 @@ def parse_run_list(run_list):
     return [run - 1 for run in runs]
 
 
-def open_text(path, write=False):
+def open_text(path: str | os.PathLike[str], write: bool=False) -> TextIOWrapper:
     mode = "w" if write else "r"
     return open(path, mode, encoding="utf-8")
 
 
-def read_first_line(path, error=False):
+def read_first_line(path: str | os.PathLike[str], error: bool=False) -> str:
     try:
         with open_text(path) as fp:
             line = fp.readline()
@@ -165,36 +176,37 @@ def read_first_line(path, error=False):
             return ''
 
 
-def proc_path(path):
+def proc_path(path: str | os.PathLike[str]) -> str:
     return os.path.join("/proc", path)
 
 
-def sysfs_path(path):
+def sysfs_path(path: str | os.PathLike[str]) -> str:
     return os.path.join("/sys", path)
 
 
-def python_implementation():
+def python_implementation() -> str:
     return sys.implementation.name.lower()
 
 
-def python_has_jit():
+def python_has_jit() -> bool:
     implementation_name = python_implementation()
     if implementation_name == 'pypy':
-        return sys.pypy_translation_info["translation.jit"]
+        return bool(getattr(sys, "pypy_translation_info", {}).get("translation.jit", False))
     elif implementation_name in ['graalpython', 'graalpy']:
         return True
     elif implementation_name == 'cpython':
         jit_module = getattr(sys, '_jit', None)
         if jit_module is not None:
-            return jit_module.is_enabled()
+            return bool(jit_module.is_enabled())
         return False
     elif hasattr(sys, "pyston_version_info") or "pyston_lite" in sys.modules:
         return True
     return False
 
+_PROC_TYPE = TypeVar("_PROC_TYPE", str, bytes)
 
 @contextlib.contextmanager
-def popen_killer(proc):
+def popen_killer(proc: subprocess.Popen[_PROC_TYPE]) -> Generator[None, None, None]:
     try:
         yield
     except:   # noqa: E722
@@ -214,12 +226,12 @@ def popen_killer(proc):
         raise
 
 
-def popen_communicate(proc):
+def popen_communicate(proc: subprocess.Popen[_PROC_TYPE]) -> tuple[_PROC_TYPE,_PROC_TYPE]:
     with popen_killer(proc):
         return proc.communicate()
 
 
-def get_python_names(python1, python2):
+def get_python_names(python1: str, python2: str) -> tuple[str, str]:
     # FIXME: merge with format_filename_func() of __main__.py
     name1 = os.path.basename(python1)
     name2 = os.path.basename(python2)
@@ -229,7 +241,7 @@ def get_python_names(python1, python2):
     return (python1, python2)
 
 
-def abs_executable(python):
+def abs_executable(python: str) -> str:
     orig_python = python
 
     # Replace "~" with the user home directory
@@ -245,17 +257,17 @@ def abs_executable(python):
         # doesn't.
         path, python = os.path.split(python)
         path = os.path.realpath(path)
-        python = os.path.join(path, python)
+        python_exe: str | None = os.path.join(path, python)
     else:
-        python = which(python)
-    if not python:
+        python_exe = which(python)
+    if not python_exe:
         print("ERROR: Unable to locate the Python executable: %r" % orig_python)
         sys.exit(1)
 
-    return os.path.normpath(python)
+    return os.path.normpath(python_exe)
 
 
-def create_environ(inherit_environ, locale, copy_all):
+def create_environ(inherit_environ: Iterable[str] | None, locale: bool, copy_all: bool) -> Mapping[str,str] :
     if copy_all:
         return os.environ
     env = {}
@@ -283,17 +295,17 @@ def create_environ(inherit_environ, locale, copy_all):
 class _Pipe:
     _OPEN_MODE = "r"
 
-    def __init__(self, fd):
-        self._fd = fd
-        self._file = None
+    def __init__(self, fd: int):
+        self._fd: int | None = fd
+        self._file: IO[str] | None = None
         if MS_WINDOWS:
-            self._handle = msvcrt.get_osfhandle(fd)
+            self._handle = msvcrt.get_osfhandle(fd) # type: ignore[attr-defined]
 
     @property
-    def fd(self):
+    def fd(self) -> int | None:
         return self._fd
 
-    def close(self):
+    def close(self) -> None:
         fd = self._fd
         self._fd = None
         file = self._file
@@ -304,27 +316,31 @@ class _Pipe:
         elif fd is not None:
             os.close(fd)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: object) -> None:
         self.close()
 
 
 class ReadPipe(_Pipe):
-    def open_text(self):
+    def open_text(self) -> TextIOWrapper:
+        if self._fd is None:
+            raise ValueError("pipe is closed")
         file = open(self._fd, "r", encoding="utf8")
         self._file = file
         return file
 
-    def read_text(self, timeout=None):
+    def read_text(self, timeout: float | None=None) -> str:
         if timeout is not None:
             return self._read_text_timeout(timeout)
         else:
             with self.open_text() as rfile:
                 return rfile.read()
 
-    def _read_text_timeout(self, timeout):
+    def _read_text_timeout(self, timeout: float) -> str:
+        if self.fd is None:
+            raise ValueError("pipe is closed")
         fd = self.fd
         os.set_blocking(fd, False)
 
@@ -333,7 +349,7 @@ class ReadPipe(_Pipe):
         while True:
             if time.monotonic() - start_time > timeout:
                 raise TimeoutError(f"Timed out after {timeout} seconds")
-            ready, _, _ = select.select([fd], [], [], timeout)
+            ready, _, _ = select.select([fd], (), (), timeout)
             if not ready:
                 continue
             try:
@@ -349,44 +365,48 @@ class ReadPipe(_Pipe):
 
 
 class WritePipe(_Pipe):
-    def to_subprocess(self):
+    def to_subprocess(self) -> str:
         if MS_WINDOWS:
-            os.set_handle_inheritable(self._handle, True)
+            os.set_handle_inheritable(self._handle, True) # type: ignore[attr-defined]
             arg = self._handle
         else:
+            if self._fd is None:
+                raise ValueError("pipe is closed")
             os.set_inheritable(self._fd, True)
             arg = self._fd
         return str(arg)
 
     @classmethod
-    def from_subprocess(cls, arg):
+    def from_subprocess(cls, arg: int | str) -> WritePipe:
         arg = int(arg)
         if MS_WINDOWS:
-            fd = msvcrt.open_osfhandle(arg, os.O_WRONLY)
+            fd = msvcrt.open_osfhandle(arg, os.O_WRONLY) # type: ignore[attr-defined]
         else:
             fd = arg
         return cls(fd)
 
-    def open_text(self):
+    def open_text(self) -> TextIOWrapper:
+        if self._fd is None:
+            raise ValueError("pipe is closed")
         file = open(self._fd, "w", encoding="utf8")
         self._file = file
         return file
 
 
-def create_pipe():
+def create_pipe() -> tuple[ReadPipe, WritePipe]:
     rfd, wfd = os.pipe()
     rpipe = ReadPipe(rfd)
     wpipe = WritePipe(wfd)
     return (rpipe, wpipe)
 
 
-def median_abs_dev(values):
+def median_abs_dev(values: Sequence[float | int]) -> float:
     # Median Absolute Deviation
-    median = float(statistics.median(values))
+    median = statistics.median(values)
     return statistics.median([abs(median - sample) for sample in values])
 
 
-def percentile(values, p):
+def percentile(values: Sequence[float | int], p: float) -> float | int:
     if not isinstance(p, float) or not (0.0 <= p <= 1.0):
         raise ValueError("p must be a float in the range [0.0; 1.0]")
 
@@ -408,7 +428,7 @@ def percentile(values, p):
 if hasattr(statistics, 'geometric_mean'):
     _geometric_mean = statistics.geometric_mean
 else:
-    def _geometric_mean(data):
+    def _geometric_mean(data: Iterable[SupportsFloat]) -> float:
         # Compute exp(fmean(map(log, data))) using floats
         data = list(map(math.log, data))
 
@@ -418,14 +438,14 @@ else:
         return math.exp(fmean)
 
 
-def geometric_mean(data):
+def geometric_mean(data: Sequence[SupportsFloat]) -> float:
     data = list(map(float, data))
     if not data:
         raise ValueError("empty data")
     return _geometric_mean(data)
 
 
-def merge_profile_stats(profiler, dst):
+def merge_profile_stats(profiler: Profile, dst: str) -> None:
     """
     Save pstats by merging into an existing file.
     """

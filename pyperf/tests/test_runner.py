@@ -440,7 +440,7 @@ class TestRunner(unittest.TestCase):
                          metadata={'name': 'name'},
                          collect_metadata=False)
         bench = pyperf.Benchmark([run])
-        suite = pyperf.BenchmarkSuite([bench])
+        suite = pyperf.BenchmarkSuite([bench], None)
 
         with ExitStack() as cm:
             def popen(*args, **kw):

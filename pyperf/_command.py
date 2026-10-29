@@ -1,14 +1,23 @@
-import functools
+from __future__ import annotations
 import json
 import os.path
 import subprocess
 import sys
+from typing import TYPE_CHECKING
+from shlex import quote as shell_quote
 
-from pyperf._utils import shell_quote, popen_communicate
-from pyperf._worker import WorkerTask
+from pyperf._utils import popen_communicate
+from pyperf._worker import WorkerTask, ArgsT
 
+if TYPE_CHECKING:
+    from pyperf._metadata import MetadataType
+    from pyperf._runner import Runner
+    from typing_extensions import override
+else:
+    def override(func):
+        return func
 
-def parse_subprocess_data(output):
+def parse_subprocess_data(output: str) -> tuple[float, int, MetadataType]:
     # Parse the data send from the subprocess.
     # It is three lines containing:
     #    - The runtime (in seconds)
@@ -16,7 +25,7 @@ def parse_subprocess_data(output):
     #    - The metadata to add to the benchmark entry, as a JSON dictionary
 
     rss = None
-    metadata = {}
+    metadata: MetadataType = {}
     try:
         lines = output.splitlines()
         timing = float(lines[0])
@@ -28,7 +37,7 @@ def parse_subprocess_data(output):
     return timing, rss, metadata
 
 
-def bench_command(command, task, loops):
+def bench_command(command: list[str], task: WorkerTask[ArgsT], loops: int) -> float:
     path = os.path.dirname(__file__)
     script = os.path.join(path, '_process_time.py')
     run_script = [sys.executable, script]
@@ -55,14 +64,17 @@ def bench_command(command, task, loops):
     return timing
 
 
-class BenchCommandTask(WorkerTask):
-    def __init__(self, runner, name, command):
+class BenchCommandTask(WorkerTask[ArgsT]):
+    def __init__(self, runner: Runner[ArgsT], name: str, command: list[str]) -> None:
         command_str = ' '.join(map(shell_quote, command))
-        metadata = {'command': command_str}
-        task_func = functools.partial(bench_command, command)
+        metadata: MetadataType = {'command': command_str}
+        def task_func(task: WorkerTask[ArgsT], loops: int) -> float:
+            return bench_command(command, task, loops)
+
         WorkerTask.__init__(self, runner, name, task_func, metadata)
 
-    def compute(self):
+    @override
+    def compute(self) -> None:
         WorkerTask.compute(self)
         if self.args.track_memory:
             value = self.metadata.pop('command_max_rss', None)

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 import contextlib
 import errno
 import os.path
@@ -6,14 +9,27 @@ import sys
 from pyperf._formatter import (format_seconds, format_number,
                                format_datetime)
 from pyperf._metadata import format_metadata as _format_metadata
+from pyperf._bench import Benchmark, Run
+
+if TYPE_CHECKING:
+    from pyperf._metadata import MetadataType
+    from pyperf._runner import RunnerArgs
+    from typing_extensions import TypedDict
+    from collections.abc import Sequence, Generator
+    from typing import TextIO
+
+    class DisplayRunArgDict(TypedDict, closed=True, total=False):
+        quiet: bool
+        verbose: bool
+        raw: bool
 
 
-def empty_line(lines):
+def empty_line(lines: list[str]) -> None:
     if lines:
         lines.append('')
 
 
-def format_title(title, level=1, lines=None):
+def format_title(title: str, level: int=1, lines: list[str] | None=None) -> list[str]:
     if lines is None:
         lines = []
 
@@ -28,22 +44,22 @@ def format_title(title, level=1, lines=None):
     return lines
 
 
-def display_title(title, level=1):
+def display_title(title: str, level: int=1) -> None:
     for line in format_title(title, level):
         print(line)
     print()
 
 
-def format_metadata(metadata, prefix='- ', lines=None):
+def format_metadata(metadata: MetadataType, prefix: str = '- ', lines: list[str] | None = None) -> list[str]:
     if lines is None:
         lines = []
     for name, value in sorted(metadata.items()):
-        value = _format_metadata(name, value)
+        value = _format_metadata(name, value) # type: ignore[arg-type]
         lines.append("%s%s: %s" % (prefix, name, value))
     return lines
 
 
-def _format_values_diff(bench, values, raw, total_loops):
+def _format_values_diff(bench: Benchmark, values: Sequence[float], raw: bool, total_loops: float) -> list[str]:
     values_str = [bench.format_value(value) for value in values]
     mean = bench.mean()
     max_delta = mean * 0.05
@@ -56,8 +72,8 @@ def _format_values_diff(bench, values, raw, total_loops):
     return values_str
 
 
-def format_run(bench, run_index, run, common_metadata=None, raw=False,
-               verbose=0, lines=None):
+def format_run(bench: Benchmark, run_index: int, run: Run, common_metadata: MetadataType | None=None, raw: bool = False,
+               verbose: int = 0, lines: list[str] | None = None) -> list[str]:
     if lines is None:
         lines = []
 
@@ -108,68 +124,71 @@ def format_run(bench, run_index, run, common_metadata=None, raw=False,
 
         total_loops = run.get_total_loops()
 
-        values = run.values
+        numbers: Sequence[float | int] = run.values
+        warmup_texts: list[str]
         if raw:
-            warmups = [bench.format_value(value * (loops * inner_loops))
+            warmup_texts = [bench.format_value(value * (loops * inner_loops))
                        for loops, value in run.warmups]
-            values = [value * total_loops for value in values]
+            numbers = [value * total_loops for value in numbers]
+        elif run.warmups:
+            warmup_numbers = [value for loops, value in run.warmups]
+            warmup_texts = _format_values_diff(bench, warmup_numbers, raw, total_loops)
         else:
-            warmups = run.warmups
-            if warmups:
-                warmups = [value for loops, value in warmups]
-                warmups = _format_values_diff(bench, warmups, raw, total_loops)
-        values = _format_values_diff(bench, values, raw, total_loops)
+            warmup_texts = []
+
+
+        value_texts = _format_values_diff(bench, numbers, raw, total_loops)
 
         if verbose >= 0:
             loops = run.get_loops()
             lines.append("Run %s: %s, %s, %s"
                          % (run_index,
-                            format_number(len(warmups), 'warmup'),
-                            format_number(len(values), 'value'),
+                            format_number(len(warmup_texts), 'warmup'),
+                            format_number(len(value_texts), 'value'),
                             format_number(loops, 'loop')))
         else:
             lines.append("Run %s:" % run_index)
 
-        if warmups and show_warmup:
+        if warmup_texts and show_warmup:
             if raw:
                 name = 'raw warmup'
             else:
                 name = 'warmup'
-            for index, warmup in enumerate(warmups, 1):
-                lines.append('- %s %s: %s' % (name, index, warmup))
+            for index, warmup_text in enumerate(warmup_texts, 1):
+                lines.append('- %s %s: %s' % (name, index, warmup_text))
 
         if raw:
             name = 'raw value'
         else:
             name = 'value'
-        for index, value in enumerate(values, 1):
-            lines.append('- %s %s: %s' % (name, index, value))
+        for index, value_text in enumerate(value_texts, 1):
+            lines.append('- %s %s: %s' % (name, index, value_text))
 
     if verbose > 0:
         metadata = run.get_metadata()
         if metadata:
             lines.append('- Metadata:')
-            for name, value in sorted(metadata.items()):
+            for name, metadata_value in sorted(metadata.items()):
                 if common_metadata and name in common_metadata:
                     continue
-                value = _format_metadata(name, value)
-                lines.append('  %s: %s' % (name, value))
+                metadata_value_str = _format_metadata(name, metadata_value) # type: ignore[arg-type]
+                lines.append('  %s: %s' % (name, metadata_value_str))
 
     return lines
 
 
-def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
+def _format_runs(bench: Benchmark, quiet: bool = False, verbose: bool = False, raw: bool = False, lines: list[str] | None = None) -> list[str]:
     runs = bench.get_runs()
     if quiet:
-        verbose = -1
+        verbose_level = -1
     elif verbose:
-        verbose = 1
+        verbose_level = 1
     else:
-        verbose = 0
+        verbose_level = 0
 
     if lines is None:
         lines = []
-    if verbose > 0:
+    if verbose_level > 0:
         empty_line(lines)
 
         # FIXME: display metadata in format_benchmark()
@@ -188,7 +207,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
             empty_line(lines)
         format_run(bench, run_index, run,
                    common_metadata=common_metadata,
-                   verbose=verbose, raw=raw, lines=lines)
+                   verbose=verbose_level, raw=raw, lines=lines)
 
     return lines
 
@@ -196,7 +215,7 @@ def _format_runs(bench, quiet=False, verbose=False, raw=False, lines=None):
 PERCENTILE_NAMES = {0: 'minimum', 25: 'Q1', 50: 'median', 75: 'Q3', 100: 'maximum'}
 
 
-def format_stats(bench, lines):
+def format_stats(bench: Benchmark, lines: list[str]) -> list[str]:
     fmt = bench.format_value
     values = bench.get_values()
 
@@ -256,16 +275,16 @@ def format_stats(bench, lines):
 
     if not (isinstance(inner_loops, int) and inner_loops == 1):
         if isinstance(loops, int):
-            loops = format_number(loops, 'outer-loop')
+            loops_str = format_number(loops, 'outer-loop')
         else:
-            loops = '%.1f outer-loops (average)'
+            loops_str = '%.1f outer-loops (average)'
 
         if isinstance(inner_loops, int):
-            inner_loops = format_number(inner_loops, 'inner-loop')
+            inner_loops_str = format_number(inner_loops, 'inner-loop')
         else:
-            inner_loops = "%.1f inner-loops (average)" % inner_loops
+            inner_loops_str = "%.1f inner-loops (average)" % inner_loops
 
-        text = '%s (%s x %s)' % (text, loops, inner_loops)
+        text = '%s (%s x %s)' % (text, loops_str, inner_loops_str)
 
     lines.append("Loop iterations per value: %s" % text)
     lines.append("Total number of values: %s" % format_number(nvalue))
@@ -302,7 +321,7 @@ def format_stats(bench, lines):
         lines.append("%s %s" % (key, value))
     lines.append('')
 
-    def format_limit(mean, value):
+    def format_limit(mean: float, value: float) -> str:
         return ("%s (%+.0f%% of the mean)"
                 % (fmt(value), (value - mean) * 100.0 / mean))
 
@@ -331,8 +350,8 @@ def format_stats(bench, lines):
     return lines
 
 
-def format_histogram(benchmarks, bins=20, extend=False, lines=None,
-                     checks=False):
+def format_histogram(benchmarks: Sequence[tuple[Benchmark, str | None]], bins: int = 20, extend: bool = False, lines: list[str] | None = None,
+                     checks: bool = False) -> list[str]:
     import collections
     import shutil
 
@@ -346,7 +365,7 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
         if not extend:
             bins = min(bins, 25)
 
-    all_values = []
+    all_values: list[float | int] = []
     for bench, title in benchmarks:
         all_values.extend(bench.get_values())
     all_min = min(all_values)
@@ -355,7 +374,7 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
     if not value_k:
         value_k = 1.0
 
-    def value_bucket(value):
+    def value_bucket(value: float) -> int:
         # round towards zero (ROUND_DOWN)
         return int(value / value_k)
 
@@ -388,7 +407,7 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
         line_k = float(width) / max(counter.values())
         for bucket in range(bucket_min, bucket_max + 1):
             count = counter.get(bucket, 0)
-            linelen = int(round(count * line_k))
+            linelen = round(count * line_k)
             text = bench.format_value(bucket * value_k)
             line = ('#' * linelen) or '|'
             lines.append("{:>{}}: {:>{}} {}".format(text, value_width,
@@ -400,7 +419,7 @@ def format_histogram(benchmarks, bins=20, extend=False, lines=None,
     return lines
 
 
-def format_checks(bench, lines=None, check_too_many_processes=False):
+def format_checks(bench: Benchmark, lines: list[str] | None = None, check_too_many_processes: bool = False) -> list[str]:
     if lines is None:
         lines = []
 
@@ -410,7 +429,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
 
     values = bench.get_values()
     mean = bench.mean()
-    warnings = []
+    warnings: list[str] = []
     warn = warnings.append
     required_nprocesses = None
 
@@ -481,7 +500,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
 
     # Warn if nohz_full+intel_pstate combo if found in cpu_config metadata
     for run in bench._runs:
-        cpu_config = run._metadata.get('cpu_config')
+        cpu_config = cast(str,run._metadata.get('cpu_config'))
         if not cpu_config:
             continue
         if 'nohz_full' in cpu_config and 'intel_pstate' in cpu_config:
@@ -496,7 +515,7 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
     return lines
 
 
-def _format_result_value(bench):
+def _format_result_value(bench: Benchmark) -> str:
     mean = bench.mean()
     if bench.get_nvalue() >= 2:
         args = bench.format_values((mean, bench.stdev()))
@@ -505,7 +524,7 @@ def _format_result_value(bench):
         return bench.format_value(mean)
 
 
-def format_result_value(bench):
+def format_result_value(bench: Benchmark) -> str:
     loops = None
     warmups = None
     for run in bench._runs:
@@ -535,7 +554,7 @@ def format_result_value(bench):
     return _format_result_value(bench)
 
 
-def format_result(bench):
+def format_result(bench: Benchmark) -> str:
     loops = None
     warmups = None
     for run in bench._runs:
@@ -569,9 +588,9 @@ def format_result(bench):
         return text
 
 
-def format_benchmark(bench, checks=True, metadata=False,
-                     dump=False, stats=False, hist=False, show_name=False,
-                     result=True, display_runs_args=None, only_checks=False):
+def format_benchmark(bench: Benchmark, checks: bool = True, metadata: bool = False,
+                     dump: bool = False, stats: bool = False, hist: bool = False, show_name: bool = False,
+                     result: bool = True, display_runs_args: DisplayRunArgDict | None = None, only_checks: bool = False) -> list[str]:
     lines = []
 
     if metadata:
@@ -603,14 +622,14 @@ def format_benchmark(bench, checks=True, metadata=False,
 
     return lines
 
-
 # FIXME: remove this function?
-def multiline_output(args):
+def multiline_output(args: RunnerArgs) -> bool:
     return (args.hist or args.stats or args.dump or args.metadata)
 
 
+
 @contextlib.contextmanager
-def catch_broken_pipe_error(file=None):
+def catch_broken_pipe_error(file: TextIO | None = None) -> Generator[None]:
     if file is None:
         files = [sys.stdout, sys.stderr]
     else:

@@ -1,10 +1,27 @@
+from __future__ import annotations
 import itertools
 import sys
 import time
 import traceback
 
 import pyperf
+from pyperf._runner import RunnerArgs
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from typing import Any
+    from collections.abc import Callable, Sequence
+    from pyperf._runner import Runner, BenchtimeFuncKwargs
+    from pyperf._metadata import MetadataType
+    from pyperf._worker import ArgsT
+
+class TimeitArgs(RunnerArgs):
+    name: str
+    setup: list[str]
+    teardown: list[str]
+    inner_loops: int | None
+    duplicate: int | None
+    stmt: list[str]
 
 PYPY = (pyperf.python_implementation() == 'pypy')
 DUMMY_SRC_NAME = "<timeit-src>"
@@ -36,15 +53,20 @@ def inner(_it, _timer{init}):
 """
 
 
-def reindent(src, indent):
+def reindent(src: str, indent: int) -> str:
     return src.replace("\n", "\n" + " " * indent)
 
 
 class Timer:
-    def __init__(self, stmt="pass", setup="pass", teardown="pass",
-                 globals=None):
-        self.local_ns = {}
-        self.global_ns = {} if globals is None else globals
+    def __init__(
+            self,
+            stmt: str | Callable[..., Any] = "pass",
+            setup: str | Callable[..., Any] = "pass",
+            teardown: str | Callable[..., Any]="pass",
+            globals: dict[str, Any] | None = None
+        ) -> None:
+        self.local_ns: dict[str, Any] = {}
+        self.global_ns: dict[str, Any] = {} if globals is None else globals
         self.filename = DUMMY_SRC_NAME
 
         init = ''
@@ -93,7 +115,7 @@ class Timer:
                               teardown=teardown)
         self.src = src  # Save for traceback display
 
-    def make_inner(self):
+    def make_inner(self) -> Callable[..., float]:
         # PyPy tweak: recompile the source code each time before
         # calling inner(). There are situations like Issue #1776
         # where PyPy tries to reuse the JIT code from before,
@@ -106,9 +128,9 @@ class Timer:
         global_ns = dict(self.global_ns)
         local_ns = dict(self.local_ns)
         exec(code, global_ns, local_ns)
-        return local_ns["inner"]
+        return local_ns["inner"] # type: ignore
 
-    def update_linecache(self):
+    def update_linecache(self) -> None:
         import linecache
 
         linecache.cache[self.filename] = (len(self.src),
@@ -116,7 +138,7 @@ class Timer:
                                           self.src.split("\n"),
                                           self.filename)
 
-    def time_func(self, loops):
+    def time_func(self, loops: int) -> float:
         inner = self.make_inner()
         timer = time.perf_counter
         if not PYPY:
@@ -127,7 +149,7 @@ class Timer:
             return inner(loops, timer)
 
 
-def strip_statements(statements):
+def strip_statements(statements: Sequence[str]) -> list[str]:
     result = []
     for stmt in statements:
         stmt = stmt.rstrip()
@@ -136,11 +158,11 @@ def strip_statements(statements):
     return result
 
 
-def format_statements(statements):
+def format_statements(statements: Sequence[str]) -> str:
     return ' '.join(repr(stmt) for stmt in statements)
 
 
-def create_timer(stmt, setup, teardown, globals):
+def create_timer(stmt: Sequence[str], setup: Sequence[str], teardown: Sequence[str], globals: dict[str, Any] | None) -> Timer:
     # Include the current directory, so that local imports work (sys.path
     # contains the directory of this script, rather than the current
     # directory)
@@ -154,7 +176,7 @@ def create_timer(stmt, setup, teardown, globals):
     return Timer(stmt, setup, teardown, globals=globals)
 
 
-def display_error(timer, stmt, setup, teardown):
+def display_error(timer: Timer, stmt: Sequence[str], setup: Sequence[str], teardown: Sequence[str]) -> None:
     print("Error when running timeit benchmark:")
     print()
 
@@ -181,9 +203,9 @@ def display_error(timer, stmt, setup, teardown):
     traceback.print_exc()
 
 
-def bench_timeit(runner, name, stmt, setup, teardown,
-                 inner_loops=None, duplicate=None,
-                 func_metadata=None, globals=None):
+def bench_timeit(runner: Runner[ArgsT], name: str, stmt: str | Sequence[str], setup: str | Sequence[str], teardown: str | Sequence[str],
+                 inner_loops: int | None = None, duplicate: int | None = None,
+                 func_metadata: MetadataType | None = None, globals: dict[str, Any] | None = None) -> None:
 
     if isinstance(stmt, str):
         stmt = (stmt,)
@@ -199,7 +221,7 @@ def bench_timeit(runner, name, stmt, setup, teardown,
     if not stmt:
         raise ValueError("need at least one statement")
 
-    metadata = {}
+    metadata: MetadataType = {}
     if func_metadata:
         metadata.update(func_metadata)
     if setup:
@@ -220,7 +242,7 @@ def bench_timeit(runner, name, stmt, setup, teardown,
             inner_loops = duplicate
         metadata['timeit_duplicate'] = duplicate
 
-    kwargs = {'metadata': metadata}
+    kwargs: BenchtimeFuncKwargs = {'metadata': metadata}
     if inner_loops:
         kwargs['inner_loops'] = inner_loops
 
@@ -230,6 +252,7 @@ def bench_timeit(runner, name, stmt, setup, teardown,
         runner.bench_time_func(name, timer.time_func, **kwargs)
     except SystemExit:
         raise
-    except:   # noqa: E722
-        display_error(timer, orig_stmt, setup, teardown)
+    except Exception:
+        if timer is not None:   # noqa: E722
+            display_error(timer, orig_stmt, setup, teardown)
         sys.exit(1)

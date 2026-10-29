@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import errno
 import os.path
 import platform
@@ -14,6 +16,16 @@ from pyperf._cpu_utils import (parse_cpu_list,
 from pyperf._utils import (read_first_line, sysfs_path, proc_path, open_text,
                            popen_communicate)
 
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from typing_extensions import override
+    from collections.abc import Sequence
+    from pyperf.__main__ import CliSystemArgs
+else:
+    def override(func):
+        return func
+
 
 MSR_IA32_MISC_ENABLE = 0x1a0
 MSR_IA32_MISC_ENABLE_TURBO_DISABLE_BIT = 38
@@ -22,21 +34,21 @@ OS_LINUX = sys.platform.startswith('linux')
 PLATFORM_X86 = platform.machine() in ('x86', 'x86_64', 'amd64')
 
 
-def is_root():
+def is_root() -> bool:
     return (os.getuid() == 0)
 
 
-def is_permission_error(exc):
+def is_permission_error(exc: OSError) -> bool:
     return exc.errno in (errno.EACCES, errno.EPERM)
 
 
-def write_text(filename, content):
+def write_text(filename: str, content: str) -> None:
     with open_text(filename, write=True) as fp:
         fp.write(content)
         fp.flush()
 
 
-def run_cmd(cmd):
+def run_cmd(cmd: Sequence[str]) -> int:
     try:
         # ignore stdout and stderr
         proc = subprocess.Popen(cmd,
@@ -53,7 +65,7 @@ def run_cmd(cmd):
     return proc.returncode
 
 
-def get_output(cmd):
+def get_output(cmd: Sequence[str]) -> tuple[int, str]:
     try:
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
@@ -69,7 +81,7 @@ def get_output(cmd):
     return (exitcode, stdout)
 
 
-def use_intel_pstate():
+def use_intel_pstate() -> bool:
     cpu = 0
     path = sysfs_path("devices/system/cpu/cpu%s/cpufreq/scaling_driver" % cpu)
     scaling_driver = read_first_line(path)
@@ -78,51 +90,52 @@ def use_intel_pstate():
 
 class Operation:
     @staticmethod
-    def available():
+    def available() -> bool:
         return True
 
-    def __init__(self, name, system):
+    def __init__(self, name: str, system: System) -> None:
         self.name = name
         self.system = system
         self.permission_error = False
-        self.tuned_for_benchmarks = None
+        self.tuned_for_benchmarks: bool | None = None
 
-    def advice(self, msg):
+    def advice(self, msg: str) -> None:
         self.system.advice('%s: %s' % (self.name, msg))
 
-    def log_state(self, msg):
+    def log_state(self, msg: str) -> None:
         self.system.log_state('%s: %s' % (self.name, msg))
 
-    def log_action(self, msg):
+    def log_action(self, msg: str) -> None:
         self.system.log_action('%s: %s' % (self.name, msg))
 
-    def warning(self, msg):
+    def warning(self, msg: str) -> None:
         self.system.warning('%s: %s' % (self.name, msg))
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         self.system.error('%s: %s' % (self.name, msg))
 
-    def check_permission_error(self, exc):
+    def check_permission_error(self, exc: OSError) -> None:
         if is_permission_error(exc):
             self.permission_error = True
 
-    def read_first_line(self, path):
+    def read_first_line(self, path: str) -> str:
         try:
             return read_first_line(path, error=True)
         except OSError as exc:
             self.check_permission_error(exc)
             return ''
 
-    def show(self):
+    def show(self) -> None:
         pass
 
-    def write(self, tune):
+    def write(self, tune: bool) -> None:
         pass
 
 
 class IntelPstateOperation(Operation):
     @staticmethod
-    def available():
+    @override
+    def available() -> bool:
         return use_intel_pstate()
 
 
@@ -132,15 +145,16 @@ class TurboBoostMSR(Operation):
     """
 
     @staticmethod
-    def available():
+    @override
+    def available() -> bool:
         return OS_LINUX and PLATFORM_X86 and not use_intel_pstate()
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('Turbo Boost (MSR)', system)
-        self.cpu_states = {}
+        self.cpu_states: dict[int, bool] = {}
         self.have_device = True
 
-    def read_msr(self, cpu, reg_num, use_warnings=False):
+    def read_msr(self, cpu: int, reg_num: int, use_warnings: bool = False) -> int | None:
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
         if size != 8:
@@ -171,9 +185,9 @@ class TurboBoostMSR(Operation):
                     self.error(msg)
             return None
 
-        return struct.unpack('Q', data)[0]
+        return cast(int,struct.unpack('Q', data)[0])
 
-    def read_cpu(self, cpu):
+    def read_cpu(self, cpu: int) -> bool:
         reg = self.read_msr(cpu, MSR_IA32_MISC_ENABLE, use_warnings=True)
         if reg is None:
             return False
@@ -182,8 +196,9 @@ class TurboBoostMSR(Operation):
         self.cpu_states[cpu] = (not msr)
         return True
 
-    def show(self):
-        if not self.have_device:
+    @override
+    def show(self) -> None:
+        if not self.have_device or not self.system.cpus:
             return
 
         for cpu in self.system.cpus:
@@ -211,7 +226,7 @@ class TurboBoostMSR(Operation):
             self.advice('Disable Turbo Boost on CPU %s to get more reliable '
                         'CPU frequency' % format_cpu_list(enabled))
 
-    def write_msr(self, cpu, reg_num, value):
+    def write_msr(self, cpu: int, reg_num: int, value: int) -> bool:
         path = '/dev/cpu/%s/msr' % cpu
         size = struct.calcsize('Q')
         if size != 8:
@@ -235,7 +250,7 @@ class TurboBoostMSR(Operation):
 
         return True
 
-    def write_cpu(self, cpu, enabled):
+    def write_cpu(self, cpu: int, enabled: bool) -> bool:
         value = self.read_msr(cpu, MSR_IA32_MISC_ENABLE)
         if value is None:
             return False
@@ -257,12 +272,19 @@ class TurboBoostMSR(Operation):
                         % (state, cpu, MSR_IA32_MISC_ENABLE, new_value))
         return True
 
-    def write(self, tune):
+    @override
+    def write(self, tune: bool) -> None:
+        if not self.system.logical_cpu_count:
+            return
+
         enabled = (not tune)
         if tune:
             cpus = self.system.cpus
         else:
             cpus = range(self.system.logical_cpu_count)
+
+        if not cpus:
+            return
 
         for cpu in cpus:
             if not self.write_cpu(cpu, enabled):
@@ -275,12 +297,12 @@ class TurboBoostIntelPstate(IntelPstateOperation):
     /sys/devices/system/cpu/intel_pstate/no_turbo of the intel_pstate driver.
     """
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('Turbo Boost (intel_pstate)', system)
         self.path = sysfs_path("devices/system/cpu/intel_pstate/no_turbo")
-        self.enabled = None
+        self.enabled: bool | None = None
 
-    def read_turbo_boost(self):
+    def read_turbo_boost(self) -> None:
         no_turbo = self.read_first_line(self.path)
         if no_turbo == '1':
             self.enabled = False
@@ -290,7 +312,8 @@ class TurboBoostIntelPstate(IntelPstateOperation):
             self.error("Invalid no_turbo value: %r" % no_turbo)
             self.enabled = None
 
-    def show(self):
+    @override
+    def show(self) -> None:
         self.read_turbo_boost()
         if self.enabled is not None:
             state = 'enabled' if self.enabled else 'disabled'
@@ -301,7 +324,8 @@ class TurboBoostIntelPstate(IntelPstateOperation):
                 self.advice('Disable Turbo Boost to get more reliable '
                             'CPU frequency')
 
-    def write(self, tune):
+    @override
+    def write(self, tune: bool) -> None:
         enable = (not tune)
 
         self.read_turbo_boost()
@@ -343,16 +367,17 @@ class CPUGovernor(Operation):
     BENCHMARK_GOVERNOR = 'performance'
 
     @staticmethod
-    def available():
+    @override
+    def available() -> bool:
         return os.path.exists(
             sysfs_path("devices/system/cpu/cpu0/cpufreq/scaling_governor")
         )
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('CPU scaling governor', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
 
-    def read_governor(self, cpu):
+    def read_governor(self, cpu: int) -> str | None:
         filename = os.path.join(self.device_syspath, 'cpu%s/cpufreq/scaling_governor' % cpu)
         try:
             with open(filename, "r") as fp:
@@ -362,7 +387,11 @@ class CPUGovernor(Operation):
             self.error("Unable to read CPU scaling governor from %s" % filename)
             return None
 
-    def show(self):
+    @override
+    def show(self) -> None:
+        if self.system.logical_cpu_count is None:
+            return
+
         cpus = {}
         for cpu in range(self.system.logical_cpu_count):
             governor = self.read_governor(cpu)
@@ -381,7 +410,7 @@ class CPUGovernor(Operation):
             self.advice('Use CPU scaling governor %r'
                         % self.BENCHMARK_GOVERNOR)
 
-    def write_governor(self, filename, new_governor):
+    def write_governor(self, filename: str, new_governor: str) -> bool:
         with open(filename, "r") as fp:
             governor = fp.readline().rstrip()
 
@@ -392,7 +421,7 @@ class CPUGovernor(Operation):
             fp.write(new_governor)
         return True
 
-    def write_cpu(self, cpu, tune):
+    def write_cpu(self, cpu: int, tune: bool) -> bool | None:
         governor = self.read_governor(cpu)
         if not governor:
             self.warning("Unable to read governor of CPU %s" % (cpu))
@@ -407,7 +436,13 @@ class CPUGovernor(Operation):
             self.error("Unable to write governor of CPU %s: %s"
                        % (cpu, exc))
 
-    def write(self, tune):
+            return None
+
+    @override
+    def write(self, tune: bool) -> None:
+        if self.system.cpus is None:
+            return
+
         modified = []
         for cpu in self.system.cpus:
             if self.write_cpu(cpu, tune):
@@ -431,15 +466,17 @@ class LinuxScheduler(Operation):
     """
 
     @staticmethod
-    def available():
+    @override
+    def available() -> bool:
         return OS_LINUX
 
-    def __init__(self, system):
+    def __init__(self, system: System):
         super().__init__('Linux scheduler', system)
-        self.ncpu = None
-        self.linux_version = None
+        self.ncpu: int | None = None
+        self.linux_version: tuple[int, ...] | None = None
 
-    def show(self):
+    @override
+    def show(self) -> None:
         self.ncpu = get_logical_cpu_count()
         if self.ncpu is None:
             self.error("Unable to get the number of CPUs")
@@ -461,18 +498,18 @@ class LinuxScheduler(Operation):
         if self.linux_version >= (3, 8):
             self.check_rcu_nocbs()
 
-    def check_isolcpus(self):
+    def check_isolcpus(self) -> None:
         isolated = get_isolated_cpus()
         if isolated:
             self.log_state('Isolated CPUs (%s/%s): %s'
                            % (len(isolated), self.ncpu,
                               format_cpu_list(isolated)))
-        elif self.ncpu > 1:
+        elif self.ncpu and self.ncpu > 1:
             self.log_state('No CPU is isolated')
             self.advice('Use isolcpus=<cpu list> kernel parameter '
                         'to isolate CPUs')
 
-    def read_rcu_nocbs(self):
+    def read_rcu_nocbs(self) -> list[int] | None:
         cmdline = self.read_first_line(proc_path('cmdline'))
         if not cmdline:
             return
@@ -484,13 +521,13 @@ class LinuxScheduler(Operation):
         cpus = match.group(1)
         return parse_cpu_list(cpus)
 
-    def check_rcu_nocbs(self):
+    def check_rcu_nocbs(self) -> None:
         rcu_nocbs = self.read_rcu_nocbs()
         if rcu_nocbs:
             self.log_state('RCU disabled on CPUs (%s/%s): %s'
                            % (len(rcu_nocbs), self.ncpu,
                               format_cpu_list(rcu_nocbs)))
-        elif self.ncpu > 1:
+        elif self.ncpu and self.ncpu > 1:
             self.advice('Use rcu_nocbs=<cpu list> kernel parameter '
                         '(with isolcpus) to not schedule RCU '
                         'on isolated CPUs')
@@ -506,13 +543,15 @@ class ASLR(Operation):
     path = proc_path("sys/kernel/randomize_va_space")
 
     @classmethod
-    def available(cls):
+    @override
+    def available(cls) -> bool:
         return os.path.exists(cls.path)
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('ASLR', system)
 
-    def show(self):
+    @override
+    def show(self) -> None:
         line = self.read_first_line(self.path)
         try:
             state = self.STATE[line]
@@ -526,7 +565,8 @@ class ASLR(Operation):
             self.advice("Enable full randomization: write 2 into %s"
                         % self.path)
 
-    def write(self, tune):
+    @override
+    def write(self, tune: bool) -> None:
         value = self.read_first_line(self.path)
         if not value:
             return
@@ -551,15 +591,16 @@ class CPUFrequency(Operation):
     """
 
     @staticmethod
-    def available():
+    @override
+    def available() -> bool:
         # On virtual machines, there is no cpufreq directory
         return os.path.exists(sysfs_path("devices/system/cpu/cpu0/cpufreq"))
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('CPU Frequency', system)
         self.device_syspath = sysfs_path("devices/system/cpu")
 
-    def read_cpu(self, cpu):
+    def read_cpu(self, cpu: int) -> str | None:
         path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
 
         scaling_min_freq = self.read_first_line(os.path.join(path, "scaling_min_freq"))
@@ -578,7 +619,11 @@ class CPUFrequency(Operation):
             freq = 'min=max=%s MHz' % max_mhz
         return freq
 
-    def show(self):
+    @override
+    def show(self) -> None:
+        if self.system.logical_cpu_count is None:
+            return
+
         cpus = {}
         for cpu in range(self.system.logical_cpu_count):
             freq = self.read_cpu(cpu)
@@ -590,7 +635,7 @@ class CPUFrequency(Operation):
             return
         self.log_state('; '.join(infos))
 
-    def read_freq(self, filename):
+    def read_freq(self, filename: str) -> bytes | None:
         try:
             with open(filename, "rb") as fp:
                 return fp.readline()
@@ -598,7 +643,7 @@ class CPUFrequency(Operation):
             self.check_permission_error(exc)
             return None
 
-    def write_freq(self, filename, new_freq):
+    def write_freq(self, filename: str, new_freq: bytes) -> bool:
         with open(filename, "rb") as fp:
             freq = fp.readline()
 
@@ -609,7 +654,7 @@ class CPUFrequency(Operation):
             fp.write(new_freq)
         return True
 
-    def write_cpu(self, cpu, tune):
+    def write_cpu(self, cpu: int, tune: bool) -> bool | None:
         cpu_path = os.path.join(self.device_syspath, 'cpu%s/cpufreq' % cpu)
 
         name = "cpuinfo_max_freq" if tune else "cpuinfo_min_freq"
@@ -625,8 +670,13 @@ class CPUFrequency(Operation):
             self.check_permission_error(exc)
             self.error("Unable to write scaling_max_freq of CPU %s: %s"
                        % (cpu, exc))
+            return
 
-    def write(self, tune):
+    @override
+    def write(self, tune: bool) -> None:
+        if self.system.cpus is None:
+            return
+
         modified = []
         for cpu in self.system.cpus:
             if self.write_cpu(cpu, tune):
@@ -650,18 +700,21 @@ class IRQAffinity(Operation):
     irq_path = proc_path('irq')
 
     @classmethod
-    def available(cls):
+    @override
+    def available(cls) -> bool:
         return os.path.exists(cls.irq_path)
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('IRQ affinity', system)
         self.irq_affinity_path = os.path.join(self.irq_path, "%s/smp_affinity")
         self.default_affinity_path = os.path.join(self.irq_path, 'default_smp_affinity')
 
         self.systemctl = True
-        self.irqs = None
+        self.irqs: list[int] | None = None
 
-    def read_irqbalance_systemctl(self):
+        return
+
+    def read_irqbalance_systemctl(self) -> bool | None:
         cmd = ('systemctl', 'status', 'irqbalance')
         exitcode, stdout = get_output(cmd)
         if not stdout:
@@ -692,8 +745,9 @@ class IRQAffinity(Operation):
             return False
         else:
             self.error("Unknown service state: %r" % active)
+            return
 
-    def read_irqbalance_service(self):
+    def read_irqbalance_service(self) -> bool | None:
         cmd = ('service', 'irqbalance', 'status')
         exitcode, stdout = get_output(cmd)
         if not stdout:
@@ -708,37 +762,41 @@ class IRQAffinity(Operation):
             return True
         else:
             self.error("Unknown service state: %r" % stdout)
+            return
 
-    def read_irqbalance_state(self):
+    def read_irqbalance_state(self) -> bool | None:
         active = self.read_irqbalance_systemctl()
         if self.systemctl is False:
             active = self.read_irqbalance_service()
         return active
 
-    def parse_affinity(self, mask):
-        mask = parse_cpu_mask(mask)
+    def parse_affinity(self, mask: str) -> list[int]:
+        if self.system.logical_cpu_count is None:
+            return []
+
+        mask_int = parse_cpu_mask(mask)
         cpus = []
         for cpu in range(self.system.logical_cpu_count):
             cpu_mask = 1 << cpu
-            if cpu_mask & mask:
+            if cpu_mask & mask_int:
                 cpus.append(cpu)
         return cpus
 
-    def read_default_affinity(self):
+    def read_default_affinity(self) -> list[int] | None:
         mask = self.read_first_line(self.default_affinity_path)
         if not mask:
             return
 
         return self.parse_affinity(mask)
 
-    def get_irqs(self):
+    def get_irqs(self) -> list[int]:
         if self.irqs is None:
             filenames = os.listdir(self.irq_path)
             self.irqs = [int(name) for name in filenames if name.isdigit()]
             self.irqs.sort()
         return self.irqs
 
-    def read_irq_affinity(self, irq):
+    def read_irq_affinity(self, irq: int) -> list[int] | None:
         path = self.irq_affinity_path % irq
         mask = self.read_first_line(path)
         if not mask:
@@ -747,7 +805,7 @@ class IRQAffinity(Operation):
 
         return self.parse_affinity(mask)
 
-    def read_irqs_affinity(self):
+    def read_irqs_affinity(self) -> dict[int, list[int]]:
         affinity = {}
         for irq in self.get_irqs():
             if self.permission_error:
@@ -757,7 +815,8 @@ class IRQAffinity(Operation):
                 affinity[irq] = cpus
         return affinity
 
-    def show(self):
+    @override
+    def show(self) -> None:
         irqbalance_active = self.read_irqbalance_state()
         if irqbalance_active is not None:
             state = 'active' if irqbalance_active else 'inactive'
@@ -772,11 +831,11 @@ class IRQAffinity(Operation):
         if irq_affinity:
             infos = {irq: 'CPU %s' % format_cpu_list(cpus)
                      for irq, cpus in irq_affinity.items()}
-            infos = format_cpu_infos(infos)
-            infos = ['IRQ %s' % info for info in infos]
-            self.log_state('IRQ affinity: %s' % '; '.join(infos))
+            info_list = format_cpu_infos(infos)
+            info_list = ['IRQ %s' % info for info in info_list]
+            self.log_state('IRQ affinity: %s' % '; '.join(info_list))
 
-    def write_irqbalance_service(self, enable):
+    def write_irqbalance_service(self, enable: bool) -> None:
         irqbalance_active = self.read_irqbalance_state()
         if irqbalance_active is None:
             # systemd service missing or failed to get its state:
@@ -802,7 +861,7 @@ class IRQAffinity(Operation):
         action = 'Start' if enable else 'Stop'
         self.log_action("%s irqbalance service" % action)
 
-    def write_default(self, new_affinity):
+    def write_default(self, new_affinity: list[int]) -> None:
         default_smp_affinity = self.read_default_affinity()
         if new_affinity == default_smp_affinity:
             return
@@ -818,7 +877,7 @@ class IRQAffinity(Operation):
             self.log_action("Set default affinity to CPU %s"
                             % format_cpu_list(new_affinity))
 
-    def write_irq(self, irq, cpus):
+    def write_irq(self, irq: int, cpus: list[int]) -> bool:
         path = self.irq_affinity_path % irq
         mask = format_cpus_as_mask(cpus)
         try:
@@ -833,7 +892,7 @@ class IRQAffinity(Operation):
                            % (mask, path, exc))
             return False
 
-    def write_irqs(self, new_cpus):
+    def write_irqs(self, new_cpus: list[int]) -> None:
         affinity = self.read_irqs_affinity()
         modified = []
         for irq in self.get_irqs():
@@ -851,14 +910,17 @@ class IRQAffinity(Operation):
             self.log_action("Set affinity of IRQ %s to CPU %s"
                             % (format_cpu_list(modified), format_cpu_list(new_cpus)))
 
-    def write(self, tune):
-        cpus = range(self.system.logical_cpu_count)
+    @override
+    def write(self, tune: bool) -> None:
+        if self.system.logical_cpu_count is None or self.system.cpus is None:
+            return
+
+        cpus = list(range(self.system.logical_cpu_count))
         if tune:
             excluded = set(self.system.cpus)
             # Only compute the subset if excluded is not the full list of cpus
-            if excluded != set(cpus):
-                cpus = (cpu for cpu in cpus if cpu not in excluded)
-        cpus = list(cpus)
+            if len(excluded) < self.system.logical_cpu_count:
+                cpus = [cpu for cpu in cpus if cpu not in excluded]
 
         self.write_irqbalance_service(not tune)
         self.write_default(cpus)
@@ -867,15 +929,19 @@ class IRQAffinity(Operation):
 
 class CheckNOHZFullIntelPstate(IntelPstateOperation):
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('Check nohz_full', system)
 
-    def show(self):
-        nohz_full = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
-        if not nohz_full:
+    @override
+    def show(self) -> None:
+        if self.system.cpus is None:
             return
 
-        nohz_full = parse_cpu_list(nohz_full)
+        nohz_full_str = self.read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+        if not nohz_full_str:
+            return
+
+        nohz_full = parse_cpu_list(nohz_full_str)
         if not nohz_full:
             return
 
@@ -895,13 +961,14 @@ class PowerSupply(Operation):
     path = sysfs_path('class/power_supply')
 
     @classmethod
-    def available(cls):
+    @override
+    def available(cls) -> bool:
         return os.path.exists(cls.path)
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('Power supply', system)
 
-    def read_power_supply(self):
+    def read_power_supply(self) -> bool | None:
         # Python implementation of the on_ac_power shell script
         for name in os.listdir(self.path):
             # Ignore "USB" and "Battery" types
@@ -924,7 +991,8 @@ class PowerSupply(Operation):
 
         return None
 
-    def show(self):
+    @override
+    def show(self) -> None:
         plugged = self.read_power_supply()
         if plugged is None:
             return
@@ -942,19 +1010,21 @@ class PerfEvent(Operation):
     path = proc_path("sys/kernel/perf_event_max_sample_rate")
 
     @classmethod
-    def available(cls):
+    @override
+    def available(cls) -> bool:
         return os.path.exists(cls.path)
 
-    def __init__(self, system):
+    def __init__(self, system: System) -> None:
         super().__init__('Perf event', system)
 
-    def read_max_sample_rate(self):
+    def read_max_sample_rate(self) -> int | None:
         line = self.read_first_line(self.path)
         if not line:
             return None
         return int(line)
 
-    def show(self):
+    @override
+    def show(self) -> None:
         max_sample_rate = self.read_max_sample_rate()
         if not max_sample_rate:
             return
@@ -964,7 +1034,8 @@ class PerfEvent(Operation):
         if not self.tuned_for_benchmarks:
             self.advice("Set max sample rate to %s" % self.BENCHMARK_RATE)
 
-    def write(self, tune):
+    @override
+    def write(self, tune: bool) -> None:
         if tune:
             new_rate = self.BENCHMARK_RATE
         else:
@@ -1004,45 +1075,43 @@ OPERATIONS = [
     TurboBoostMSR,
 ]
 
-
 class System:
-    def __init__(self):
-        self.operations = []
-        self.actions = []
-        self.states = []
-        self.advices = []
-        self.warnings = []
-        self.errors = []
+    def __init__(self) -> None:
+        self.actions: list[str] = []
+        self.states: list[str] = []
+        self.advices: list[str] = []
+        self.warnings: list[str] = []
+        self.errors: list[str] = []
 
         self.tuned = True
 
-        self.logical_cpu_count = None
+        self.logical_cpu_count: int | None = None
         # CPUs used for benchmarking: tuple of CPU identifiers
-        self.cpus = None
+        self.cpus: Sequence[int] | None = None
 
-        self.operations = []
+        self.operations: list[Operation] = []
         for operation_class in OPERATIONS:
             if not operation_class.available():
                 continue
             operation = operation_class(self)
             self.operations.append(operation)
 
-    def advice(self, msg):
+    def advice(self, msg: str) -> None:
         self.advices.append(msg)
 
-    def log_state(self, msg):
+    def log_state(self, msg: str) -> None:
         self.states.append(msg)
 
-    def log_action(self, msg):
+    def log_action(self, msg: str) -> None:
         self.actions.append(msg)
 
-    def warning(self, msg):
+    def warning(self, msg: str) -> None:
         self.warnings.append(msg)
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         self.errors.append(msg)
 
-    def write_messages(self, title, messages):
+    def write_messages(self, title: str, messages: Sequence[str]) -> None:
         if not messages:
             return
 
@@ -1051,7 +1120,7 @@ class System:
         for msg in messages:
             print(msg)
 
-    def run_operations(self, action):
+    def run_operations(self, action: str) -> None:
         if action == 'tune':
             print("Tune the system configuration to run benchmarks")
         elif action == 'reset':
@@ -1077,7 +1146,7 @@ class System:
             else:
                 self.error(msg)
 
-    def init(self, args):
+    def init(self, args: CliSystemArgs) -> None:
         if not self.operations:
             print("WARNING: no operation available for your platform")
             sys.exit()
@@ -1100,7 +1169,7 @@ class System:
         self.log_state("CPU: use %s logical CPUs: %s"
                        % (len(self.cpus), format_cpu_list(self.cpus)))
 
-    def render_messages(self, action):
+    def render_messages(self, action: str) -> None:
         self.write_messages("Actions", self.actions)
         self.write_messages("System state", self.states)
         # Advices are for tuning: hide them for reset
@@ -1120,7 +1189,7 @@ class System:
                       'configuration to run benchmarks'
                       % os.path.basename(sys.executable))
 
-    def main(self, action, args):
+    def main(self, action: str, args: CliSystemArgs) -> None:
         self.init(args)
         self.run_operations(action)
         self.render_messages(action)

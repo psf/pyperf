@@ -1,3 +1,4 @@
+from __future__ import annotations
 import datetime
 import os
 import platform
@@ -5,20 +6,6 @@ import re
 import socket
 import sys
 import time
-try:
-    import resource
-except ImportError:
-    resource = None
-
-try:
-    from pyperf._utils import USE_PSUTIL
-    if not USE_PSUTIL:
-        psutil = None
-    else:
-        import psutil
-except ImportError:
-    psutil = None
-
 import pyperf
 from pyperf._cli import format_metadata
 from pyperf._cpu_utils import (format_cpu_list,
@@ -32,14 +19,37 @@ from pyperf._utils import (MS_WINDOWS,
 if MS_WINDOWS:
     from pyperf._win_memory import check_tracking_memory, get_peak_pagefile_usage
 
+from typing import TYPE_CHECKING
 
-def normalize_text(text):
+if TYPE_CHECKING:
+    from pyperf._metadata import MetadataType
+    from pyperf.__main__ import CliCollectMetadataArgs
+    from collections.abc import Generator, Sequence
+    from types import ModuleType
+
+resource: ModuleType | None
+try:
+    import resource
+except ImportError:
+    resource = None
+
+psutil: ModuleType | None
+try:
+    from pyperf._utils import USE_PSUTIL
+    if not USE_PSUTIL:
+        psutil = None
+    else:
+        import psutil
+except ImportError:
+    psutil = None
+
+def normalize_text(text: object) -> str:
     text = str(text)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 
-def collect_python_metadata(metadata):
+def collect_python_metadata(metadata: MetadataType) -> None:
     # Implementation
     impl = pyperf.python_implementation()
     metadata['python_implementation'] = impl
@@ -86,7 +96,7 @@ def collect_python_metadata(metadata):
 
     # PYTHONHASHSEED
     if os.environ.get('PYTHONHASHSEED'):
-        hash_seed = os.environ['PYTHONHASHSEED']
+        hash_seed: str | int = os.environ['PYTHONHASHSEED']
         try:
             if hash_seed != "random":
                 hash_seed = int(hash_seed)
@@ -126,7 +136,7 @@ def collect_python_metadata(metadata):
             metadata['python_gc'] = 'disabled'
 
 
-def read_proc(path):
+def read_proc(path: str) -> Generator[str]:
     path = proc_path(path)
     try:
         with open_text(path) as fp:
@@ -136,7 +146,7 @@ def read_proc(path):
         return
 
 
-def collect_linux_metadata(metadata):
+def collect_linux_metadata(metadata: MetadataType) -> None:
     # ASLR
     for line in read_proc('sys/kernel/randomize_va_space'):
         if line == '0':
@@ -148,20 +158,22 @@ def collect_linux_metadata(metadata):
         break
 
 
-def get_cpu_affinity():
+def get_cpu_affinity() -> list[int] | None:
     if hasattr(os, 'sched_getaffinity'):
-        return os.sched_getaffinity(0)
+        os_affinity: list[int] = list(os.sched_getaffinity(0))
+        return os_affinity
 
     if psutil is not None:
         proc = psutil.Process()
         # cpu_affinity() is only available on Linux, Windows and FreeBSD
         if hasattr(proc, 'cpu_affinity'):
-            return proc.cpu_affinity()
+            affinity: list[int] = proc.cpu_affinity()
+            return affinity
 
     return None
 
 
-def collect_system_metadata(metadata):
+def collect_system_metadata(metadata: MetadataType) -> None:
     metadata['platform'] = platform.platform(True, False)
     if sys.platform.startswith('linux'):
         collect_linux_metadata(metadata)
@@ -173,8 +185,7 @@ def collect_system_metadata(metadata):
         metadata['load_avg_1min'] = float(loadavg)
 
         if len(fields) >= 4 and '/' in fields[3]:
-            runnable_threads = fields[3].split('/', 1)[0]
-            runnable_threads = int(runnable_threads)
+            runnable_threads = int(fields[3].split('/', 1)[0])
             metadata['runnable_threads'] = runnable_threads
 
     if 'load_avg_1min' not in metadata and hasattr(os, 'getloadavg'):
@@ -202,7 +213,7 @@ def collect_system_metadata(metadata):
         metadata['uptime'] = time.time() - boot_time
 
 
-def collect_memory_metadata(metadata):
+def collect_memory_metadata(metadata: MetadataType) -> None:
     if resource is not None:
         metadata["mem_max_rss"] = get_max_rss(children=False)
 
@@ -216,7 +227,7 @@ def collect_memory_metadata(metadata):
             metadata['mem_peak_pagefile_usage'] = usage
 
 
-def collect_cpu_freq(metadata, cpus):
+def collect_cpu_freq(metadata: MetadataType, cpus: Sequence[int]) -> None:
     # Parse /proc/cpuinfo: search for 'cpu MHz' (Intel) or 'clock' (Power8)
     cpu_set = set(cpus)
     cpu_freq = {}
@@ -245,16 +256,12 @@ def collect_cpu_freq(metadata, cpus):
 
         elif line.startswith('cpu MHz') and cpu is not None:
             # Intel: 'cpu MHz : 1261.613'
-            mhz = line.split(':', 1)[-1].strip()
-            mhz = float(mhz)
-            mhz = int(round(mhz))
+            mhz = round(float(line.split(':', 1)[-1].strip()))
             cpu_freq[cpu] = '%s MHz' % mhz
 
         elif line.startswith('clock') and line.endswith('MHz') and cpu is not None:
             # Power8: 'clock : 3425.000000MHz'
-            mhz = line[:-3].split(':', 1)[-1].strip()
-            mhz = float(mhz)
-            mhz = int(round(mhz))
+            mhz = round(float(line[:-3].split(':', 1)[-1].strip()))
             cpu_freq[cpu] = '%s MHz' % mhz
 
     if not cpu_freq:
@@ -263,7 +270,7 @@ def collect_cpu_freq(metadata, cpus):
     metadata['cpu_freq'] = '; '.join(format_cpu_infos(cpu_freq))
 
 
-def get_cpu_config(cpu):
+def get_cpu_config(cpu: int) -> list[str]:
     sys_cpu_path = sysfs_path("devices/system/cpu")
     info = []
 
@@ -288,14 +295,16 @@ def get_cpu_config(cpu):
     return info
 
 
-def collect_cpu_config(metadata, cpus):
-    nohz_full = read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
-    if nohz_full:
-        nohz_full = parse_cpu_list(nohz_full)
+def collect_cpu_config(metadata: MetadataType, cpus: Sequence[int]) -> None:
+    nohz_full_str = read_first_line(sysfs_path('devices/system/cpu/nohz_full'))
+    nohz_full: list[int] | None = None
+    if nohz_full_str:
+        nohz_full = parse_cpu_list(nohz_full_str)
 
-    isolated = get_isolated_cpus()
-    if isolated:
-        isolated = set(isolated)
+    isolated_list = get_isolated_cpus()
+    isolated: set[int] | None = None
+    if isolated_list:
+        isolated = set(isolated_list)
 
     configs = {}
     for cpu in cpus:
@@ -317,7 +326,7 @@ def collect_cpu_config(metadata, cpus):
     metadata['cpu_config'] = '; '.join(config)
 
 
-def get_cpu_temperature(path, cpu_temp):
+def get_cpu_temperature(path: str, cpu_temp: list[str]) -> None:
     hwmon_name = read_first_line(os.path.join(path, 'name'))
     if not hwmon_name.startswith('coretemp'):
         return
@@ -331,26 +340,26 @@ def get_cpu_temperature(path, cpu_temp):
         except OSError:
             break
 
-        temp_input = read_first_line(template % 'input', error=True)
-        temp_input = float(temp_input) / 1000
+        temp_input_str = read_first_line(template % 'input', error=True)
+        temp_input_num = float(temp_input_str) / 1000
         # On Python 2, u"%.0f\xb0C" introduces unicode errors if the
         # locale encoding is ASCII, so use a space.
-        temp_input = "%.0f C" % temp_input
+        temp_input_str = "%.0f C" % temp_input_num
 
-        item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input)
+        item = '%s:%s=%s' % (hwmon_name, temp_label, temp_input_str)
         cpu_temp.append(item)
 
         index += 1
 
 
-def collect_cpu_temperatures(metadata):
+def collect_cpu_temperatures(metadata: MetadataType) -> None:
     path = sysfs_path("class/hwmon")
     try:
         names = os.listdir(path)
     except OSError:
         return None
 
-    cpu_temp = []
+    cpu_temp: list[str] = []
     for name in names:
         hwmon = os.path.join(path, name)
         get_cpu_temperature(hwmon, cpu_temp)
@@ -360,7 +369,7 @@ def collect_cpu_temperatures(metadata):
     metadata['cpu_temp'] = ', '.join(cpu_temp)
 
 
-def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
+def collect_cpu_affinity(metadata: MetadataType, cpu_affinity: Sequence[int]  | None, cpu_count: int | None) -> None:
     if not cpu_affinity:
         return
     if not cpu_count:
@@ -373,7 +382,7 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     metadata['cpu_affinity'] = format_cpu_list(cpu_affinity)
 
 
-def collect_cpu_model(metadata):
+def collect_cpu_model(metadata: MetadataType) -> None:
     for line in read_proc("cpuinfo"):
         if line.startswith('model name'):
             model_name = line.split(':', 1)[1].strip()
@@ -388,7 +397,7 @@ def collect_cpu_model(metadata):
             break
 
 
-def collect_cpu_metadata(metadata):
+def collect_cpu_metadata(metadata: MetadataType) -> None:
     collect_cpu_model(metadata)
 
     # CPU count
@@ -399,7 +408,7 @@ def collect_cpu_metadata(metadata):
     cpu_affinity = get_cpu_affinity()
     collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
 
-    all_cpus = cpu_affinity
+    all_cpus: Sequence[int] | None = cpu_affinity
     if not all_cpus and cpu_count:
         all_cpus = tuple(range(cpu_count))
 
@@ -410,8 +419,8 @@ def collect_cpu_metadata(metadata):
     collect_cpu_temperatures(metadata)
 
 
-def collect_metadata(process=True):
-    metadata = {'perf_version': pyperf.__version__, 'date': format_datetime(datetime.datetime.now())}
+def collect_metadata(process: bool = True) -> MetadataType:
+    metadata: MetadataType = {'perf_version': pyperf.__version__, 'date': format_datetime(datetime.datetime.now())}
 
     collect_system_metadata(metadata)
     collect_cpu_metadata(metadata)
@@ -422,13 +431,13 @@ def collect_metadata(process=True):
     return metadata
 
 
-def cmd_collect_metadata(args):
+def cmd_collect_metadata(args: CliCollectMetadataArgs) -> None:
     filename = args.output
     if filename and os.path.exists(filename):
         print("ERROR: The JSON file %r already exists" % filename)
         sys.exit(1)
 
-    cpus = args.affinity
+    cpus: list[int] | None = args.affinity
     if cpus:
         if not set_cpu_affinity(cpus):
             print("ERROR: failed to set the CPU affinity")

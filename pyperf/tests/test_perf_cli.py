@@ -47,7 +47,7 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
                                    metadata={'hostname': 'toto',
                                              'python_version': '3.4',
                                              'name': 'py38'})
-        return pyperf.BenchmarkSuite([bench1, bench2])
+        return pyperf.BenchmarkSuite([bench1, bench2], None)
 
     def test_show_common_metadata(self):
         suite = self.create_suite()
@@ -782,7 +782,7 @@ class TestConvert(BaseTestCase, unittest.TestCase):
         for name in ("call_simple", "go", "telco"):
             bench = self.create_bench(values, metadata={'name': name})
             benchmarks.append(bench)
-        suite = pyperf.BenchmarkSuite(benchmarks)
+        suite = pyperf.BenchmarkSuite(benchmarks, None)
 
         with tests.temporary_directory() as tmpdir:
             filename = os.path.join(tmpdir, 'test.json')

@@ -411,7 +411,7 @@ class TestBenchmarkSuite(unittest.TestCase):
     def test_suite(self):
         telco = self.benchmark('telco')
         go = self.benchmark('go')
-        suite = pyperf.BenchmarkSuite([telco, go])
+        suite = pyperf.BenchmarkSuite([telco, go], None)
 
         self.assertIsNone(suite.filename)
         self.assertEqual(len(suite), 2)
@@ -423,7 +423,7 @@ class TestBenchmarkSuite(unittest.TestCase):
     def create_dummy_suite(self):
         telco = self.benchmark('telco')
         go = self.benchmark('go')
-        return pyperf.BenchmarkSuite([telco, go])
+        return pyperf.BenchmarkSuite([telco, go], None)
 
     def check_dummy_suite(self, suite):
         benchmarks = suite.get_benchmarks()
@@ -461,7 +461,7 @@ class TestBenchmarkSuite(unittest.TestCase):
         values = (1.0, 2.0, 3.0)
         run = pyperf.Run(values, metadata={'name': "bench"})
         bench = pyperf.Benchmark([run])
-        suite = pyperf.BenchmarkSuite([bench])
+        suite = pyperf.BenchmarkSuite([bench], None)
 
         # bench 2
         values2 = (4.0, 5.0, 6.0)
@@ -475,7 +475,7 @@ class TestBenchmarkSuite(unittest.TestCase):
     def test_get_total_duration(self):
         run = create_run([1.0])
         bench = pyperf.Benchmark([run])
-        suite = pyperf.BenchmarkSuite([bench])
+        suite = pyperf.BenchmarkSuite([bench], None)
 
         run = create_run([2.0])
         bench = pyperf.Benchmark([run])
@@ -488,7 +488,7 @@ class TestBenchmarkSuite(unittest.TestCase):
                                    'duration': 60.0,
                                    'name': 'bench1'})
         bench = pyperf.Benchmark([run])
-        suite = pyperf.BenchmarkSuite([bench])
+        suite = pyperf.BenchmarkSuite([bench], None)
         self.assertEqual(suite.get_dates(),
                          (datetime.datetime(2016, 7, 20, 14, 6, 0),
                           datetime.datetime(2016, 7, 20, 14, 7, 0)))
@@ -511,7 +511,7 @@ class TestBenchmarkSuite(unittest.TestCase):
             bench = pyperf.Benchmark([run])
             benchmarks.append(bench)
 
-        suite = pyperf.BenchmarkSuite(benchmarks)
+        suite = pyperf.BenchmarkSuite(benchmarks, None)
         self.assertEqual(suite.get_metadata(),
                          {'os': 'linux'})
 

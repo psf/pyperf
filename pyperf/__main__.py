@@ -1,5 +1,5 @@
+from __future__ import annotations
 import argparse
-import collections
 import functools
 import os.path
 import sys
@@ -14,23 +14,133 @@ from pyperf._formatter import format_timedelta, format_seconds, format_datetime
 from pyperf._cpu_utils import parse_cpu_list
 from pyperf._timeit_cli import TimeitRunner
 from pyperf._utils import parse_run_list
+from pyperf._runner import RunnerArgs
+
+from typing import TYPE_CHECKING, NamedTuple, cast
+
+class CliBaseArgs(argparse.Namespace):
+        action: ActionName
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence, Callable, Generator
+    from typing import Literal, Any
+    from pyperf._bench import BenchmarkSuite, Benchmark
+    from pyperf._timeit import TimeitArgs
+    from pyperf._metadata import MetadataType
+    from pyperf._cli import DisplayRunArgDict
+    from argparse import ArgumentParser
+
+    ActionName = Literal[
+        "show",
+        "stats",
+        "hist",
+        "dump",
+        "metadata",
+        "check",
+        "collect_metadata",
+        "compare_to",
+        "convert",
+        "system",
+        "timeit",
+        "command",
+        "log_to_data",
+    ]
+
+    class CliFileArgs(CliBaseArgs):
+        filenames: list[str]
+        benchmarks: list[str] | None
+
+    class CliFileNoBenchmarkArgs(CliBaseArgs):
+        filenames: list[str]
+
+    class CliDisplayArgs(CliFileArgs):
+        quiet: bool
+
+    class CliDisplayNoBenchmarkArgs(CliFileNoBenchmarkArgs):
+        quiet: bool
+
+    class CliShowArgs(CliDisplayArgs):
+        metadata: bool
+        hist: bool
+        stats: bool
+        dump: bool
+
+    class CliHistArgs(CliDisplayArgs):
+        extend: bool
+        bin: int | None
+
+    class CliCompareArgs(CliDisplayArgs):
+        verbose: bool
+        group_by_speed: bool
+        min_speed: float | None
+        table: bool
+        table_format: Literal["rest"] | Literal["md"]
+
+    class CliStatsArgs(CliDisplayArgs):
+        pass
+
+    class CliMetadataArgs(CliDisplayArgs):
+        pass
+
+    class CliCheckArgs(CliDisplayArgs):
+        pass
+
+    class CliCollectMetadataArgs(CliBaseArgs):
+        affinity: list[int]
+        output: str
+
+    class CliTimeitArgs(CliBaseArgs, TimeitArgs):
+        pass
+
+    class CliSystemArgs(CliBaseArgs):
+        system_action: Literal["show", "tune", "reset"]
+        affinity: list[int] | None
+
+    class CliConvertArgs(CliBaseArgs):
+        input_filename: str
+        output: str | None
+        stdout: bool
+        include_benchmark: list[str] | None
+        exclude_benchmark: list[str] | None
+        include_runs: str | None
+        exclude_runs: str | None
+        indent: bool
+        remove_warmups: bool
+        add: str | None
+        extract_metadata: str | None
+        remove_all_metadata: bool
+        update_metadata: str | None
+
+    class CliDumpArgs(CliDisplayArgs):
+        verbose: bool
+        raw: bool
+
+    class CliSlowestArgs(CliFileNoBenchmarkArgs):
+        n: int
+
+class CliBenchCommandArgs(CliBaseArgs, RunnerArgs):
+    name: str
+    program: str
+    program_args: list[str]
 
 
-def add_cmdline_args(cmd, args):
+def add_cmdline_args_default(cmd: list[str], args: CliBenchCommandArgs) -> None:
     cmd.extend(('--name', args.name))
     cmd.append(args.program)
     if args.program_args:
         cmd.extend(args.program_args)
 
 
-class CommandRunner(pyperf.Runner):
-    def __init__(self, cmd):
-        def parse_name(name):
+class CommandRunner(pyperf.Runner[CliBenchCommandArgs]):
+    def __init__(self, cmd: ArgumentParser) -> None:
+        def parse_name(name: str) -> str:
             return name.strip()
 
-        pyperf.Runner.__init__(self,
-                               _argparser=cmd,
-                               add_cmdline_args=add_cmdline_args)
+        super().__init__(
+            _argparser=cmd,
+            add_cmdline_args=add_cmdline_args_default,
+            namespace_type=CliBenchCommandArgs
+        )
         self._program_args = ('-m', 'pyperf', 'command')
 
         cmd.add_argument('--name', type=parse_name, default='command',
@@ -41,12 +151,12 @@ class CommandRunner(pyperf.Runner):
                          help='Program arguments')
 
 
-def create_parser():
+def create_parser() -> tuple[ArgumentParser, TimeitRunner, CommandRunner]:
     parser = argparse.ArgumentParser(description='Display benchmark results.',
                                      prog='-m pyperf')
     subparsers = parser.add_subparsers(dest='action')
 
-    def input_filenames(cmd, name=True):
+    def input_filenames(cmd: ArgumentParser, name: bool = True) -> None:
         if name:
             cmd.add_argument('-b', '--benchmark', metavar='NAME',
                              dest='benchmarks', action='append',
@@ -55,12 +165,12 @@ def create_parser():
                          type=str, nargs='+',
                          help='Benchmark file')
 
-    def display_options(cmd):
+    def display_options(cmd: ArgumentParser) -> None:
         cmd.add_argument('-q', '--quiet',
                          action="store_true", help='enable quiet mode')
         input_filenames(cmd)
 
-    def parse_affinity(value):
+    def parse_affinity(value: str) -> list[int]:
         try:
             cpus = parse_cpu_list(value)
         except ValueError:
@@ -69,7 +179,7 @@ def create_parser():
             raise argparse.ArgumentTypeError('invalid CPU list: %r' % value)
         return cpus
 
-    def cpu_affinity(cmd):
+    def cpu_affinity(cmd: ArgumentParser) -> None:
         cmd.add_argument("--affinity", metavar="CPU_LIST", default=None,
                          type=parse_affinity,
                          help='Specify CPU affinity. '
@@ -203,31 +313,49 @@ def create_parser():
     return parser, timeit_runner, command_runner
 
 
-DataItem = collections.namedtuple('DataItem',
-                                  'suite filename benchmark '
-                                  'name title is_last')
-GroupItem = collections.namedtuple('GroupItem', 'benchmark title filename')
-GroupItem2 = collections.namedtuple('GroupItem2', 'name benchmarks is_last')
-IterSuite = collections.namedtuple('IterSuite', 'filename suite')
+class DataItem(NamedTuple):
+    suite: BenchmarkSuite[str] | BenchmarkSuite[None]
+    filename: str
+    benchmark: Benchmark
+    name: str
+    title: str | None
+    is_last: bool
 
 
-def format_filename_noop(filename):
+class GroupItem(NamedTuple):
+    benchmark: Benchmark
+    title: str | None
+    filename: str
+
+
+class GroupItem2(NamedTuple):
+    name: str
+    benchmarks: list[GroupItem]
+    is_last: bool
+
+
+class IterSuite(NamedTuple):
+    filename: str | None
+    suite: BenchmarkSuite[str] | BenchmarkSuite[None]
+
+
+def format_filename_noop(filename: str) -> str:
     return filename
 
 
-def format_filename_func(suites):
-    filenames = [suite.filename for suite in suites]
+def format_filename_func(suites: Sequence[BenchmarkSuite[str]]) -> Callable[[str], str]:
+    filenames: list[str] = [suite.filename for suite in suites]
 
     # FIXME: reuse get_python_names()
-    base_filenames = set(map(os.path.basename, filenames))
+    base_filenames: set[str] = {os.path.basename(fn) for fn in filenames}
     if len(base_filenames) != len(filenames):
         # FIXME: try harder: try to get differente names by keeping only
         # the parent directory?
         return format_filename_noop
 
-    def strip_extension(filename):
+    def strip_extension(filename: str) -> str:
         name = os.path.splitext(filename)[0]
-        if name.endswith('.json'):
+        if name.endswith(".json"):
             # replace "bench.json.gz" with "bench"
             name = name[:-5]
         return name
@@ -236,7 +364,7 @@ def format_filename_func(suites):
     if len(next_filenames) != len(base_filenames):
         return os.path.basename
 
-    def format_filename(filename):
+    def format_filename(filename: str) -> str:
         filename = os.path.basename(filename)
         filename = strip_extension(filename)
         return filename
@@ -245,18 +373,18 @@ def format_filename_func(suites):
 
 
 class Benchmarks:
-    def __init__(self):
-        self.suites = []
+    def __init__(self) -> None:
+        self.suites: list[BenchmarkSuite[str]] = []
 
-    def load_benchmark_suite(self, filename):
+    def load_benchmark_suite(self, filename: str) -> None:
         suite = pyperf.BenchmarkSuite.load(filename)
         self.suites.append(suite)
 
-    def load_benchmark_suites(self, filenames):
+    def load_benchmark_suites(self, filenames: Sequence[str]) -> None:
         for filename in filenames:
             self.load_benchmark_suite(filename)
 
-    def has_same_unique_benchmark(self):
+    def has_same_unique_benchmark(self) -> bool:
         "True if all suites have one benchmark with the same name"
         if any(len(suite) > 1 for suite in self.suites):
             return False
@@ -264,26 +392,29 @@ class Benchmarks:
         return all(suite.get_benchmark_names() == names
                    for suite in self.suites[1:])
 
-    def include_benchmarks(self, names):
+    def include_benchmarks(self, names: list[str]) -> None:
         for suite in self.suites:
             try:
                 suite._convert_include_benchmark(names)
             except KeyError:
                 fatal_missing_benchmarks(suite, names)
 
-    def get_nsuite(self):
+    def get_nsuite(self) -> int:
         return len(self.suites)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(len(suite) for suite in self.suites)
 
-    def iter_suites(self):
+    def iter_suites(self) -> Generator[IterSuite, None, None]:
         format_filename = format_filename_func(self.suites)
         for suite in self.suites:
-            filename = format_filename(suite.filename)
+            if suite.filename is not None:
+                filename = format_filename(suite.filename)
+            else:
+                filename = suite.filename
             yield IterSuite(filename, suite)
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[DataItem, None, None]:
         format_filename = format_filename_func(self.suites)
 
         show_name = (len(self) > 1)
@@ -308,7 +439,7 @@ class Benchmarks:
 
                 yield DataItem(suite, filename, benchmark, name, title, is_last)
 
-    def _group_by_name_names(self):
+    def _group_by_name_names(self) -> list[str]:
         names = set(self.suites[0].get_benchmark_names())
         for suite in self.suites[1:]:
             names &= set(suite.get_benchmark_names())
@@ -316,7 +447,7 @@ class Benchmarks:
         return [name for name in self.suites[0].get_benchmark_names()
                 if name in names]
 
-    def group_by_name(self):
+    def group_by_name(self) -> list[GroupItem2]:
         format_filename = format_filename_func(self.suites)
 
         show_filename = (self.get_nsuite() > 1)
@@ -330,6 +461,7 @@ class Benchmarks:
             for suite in self.suites:
                 benchmark = suite.get_benchmark(name)
                 filename = format_filename(suite.filename)
+                title: str | None
                 if show_name:
                     if not show_filename:
                         title = name
@@ -346,7 +478,7 @@ class Benchmarks:
 
         return groups
 
-    def group_by_name_ignored(self):
+    def group_by_name_ignored(self) -> Generator[tuple[BenchmarkSuite[str], list[Benchmark]]]:
         names = set(self._group_by_name_names())
         for suite in self.suites:
             ignored = []
@@ -357,15 +489,16 @@ class Benchmarks:
                 yield (suite, ignored)
 
 
-def load_benchmarks(args):
+def load_benchmarks(args: CliFileArgs | CliFileNoBenchmarkArgs) -> Benchmarks:
     data = Benchmarks()
     data.load_benchmark_suites(args.filenames)
-    if getattr(args, 'benchmarks', None):
-        data.include_benchmarks(args.benchmarks)
+    benchmarks: list[str] | None = getattr(args, "benchmarks", None)
+    if benchmarks:
+        data.include_benchmarks(benchmarks)
     return data
 
 
-def _display_common_metadata(metadatas, lines):
+def _display_common_metadata(metadatas: list[MetadataType], lines: list[str]) -> None:
     if len(metadatas) < 2:
         return
 
@@ -382,10 +515,10 @@ def _display_common_metadata(metadatas, lines):
 
     for key in common_metadata:
         for metadata in metadatas:
-            metadata.pop(key, None)
+            metadata.pop(key, None) # type: ignore[misc]
 
 
-def cmd_compare_to(args):
+def cmd_compare_to(args: CliCompareArgs) -> None:
     from pyperf._compare import compare_suites, CompareError
 
     data = load_benchmarks(args)
@@ -405,21 +538,23 @@ def cmd_compare_to(args):
         sys.exit(1)
 
 
-def cmd_collect_metadata(args):
+def cmd_collect_metadata(args: CliCollectMetadataArgs) -> None:
     from pyperf._collect_metadata import cmd_collect_metadata as func
     func(args)
 
 
-def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
-                       dump=False, result=False, checks=False,
-                       display_runs_args=None, only_checks=False):
+def display_benchmarks(args: CliDisplayArgs | CliDisplayNoBenchmarkArgs, show_metadata: bool = False, hist: bool = False, stats: bool = False,
+                       dump: bool = False, result: bool = False, checks: bool = False,
+                       display_runs_args: DisplayRunArgDict | None = None, only_checks: bool = False) -> None:
     data = load_benchmarks(args)
 
-    output = []
+    output: list[str] = []
 
     if show_metadata:
         metadatas = [item.benchmark.get_metadata() for item in data]
         _display_common_metadata(metadatas, lines=output)
+    else:
+        metadatas = None
 
     if hist or stats or dump or show_metadata or (not result):
         use_title = True
@@ -440,9 +575,9 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
 
         suite = None
         for index, item in enumerate(data):
-            lines = []
+            lines: list[str] = []
 
-            if show_metadata:
+            if metadatas:
                 metadata = metadatas[index]
                 if metadata:
                     empty_line(lines)
@@ -524,7 +659,7 @@ def display_benchmarks(args, show_metadata=False, hist=False, stats=False,
             print(line)
 
 
-def cmd_show(args):
+def cmd_show(args: CliShowArgs) -> None:
     display_benchmarks(args,
                        show_metadata=args.metadata,
                        hist=args.hist,
@@ -534,16 +669,16 @@ def cmd_show(args):
                        result=True)
 
 
-def cmd_metadata(args):
+def cmd_metadata(args: CliMetadataArgs) -> None:
     display_benchmarks(args, show_metadata=True, checks=not args.quiet)
 
 
-def cmd_check(args):
+def cmd_check(args: CliCheckArgs) -> None:
     display_benchmarks(args, checks=True, only_checks=True)
 
 
-def cmd_dump(args):
-    display_runs_args = {'quiet': args.quiet,
+def cmd_dump(args: CliDumpArgs) -> None:
+    display_runs_args: DisplayRunArgDict = {'quiet': args.quiet,
                          'verbose': args.verbose,
                          'raw': args.raw}
     display_benchmarks(args,
@@ -552,17 +687,17 @@ def cmd_dump(args):
                        checks=not args.quiet)
 
 
-def cmd_timeit(args, timeit_runner):
+def cmd_timeit(args: CliTimeitArgs, timeit_runner: TimeitRunner) -> None:
     import pyperf._timeit_cli as timeit_cli
     timeit_runner._set_args(args)
     timeit_cli.main(timeit_runner)
 
 
-def cmd_stats(args):
+def cmd_stats(args: CliStatsArgs) -> None:
     display_benchmarks(args, stats=True, checks=not args.quiet)
 
 
-def cmd_hist(args):
+def cmd_hist(args: CliHistArgs) -> None:
     checks = not args.quiet
     data = load_benchmarks(args)
 
@@ -572,12 +707,12 @@ def cmd_hist(args):
     show_filename = (data.get_nsuite() > 1)
     show_group_name = (len(groups) > 1)
 
-    for name, benchmarks, is_last in groups:
+    for name, group_item, is_last in groups:
         if show_group_name:
             display_title(name)
 
         benchmarks = [(benchmark, filename if show_filename else None)
-                      for benchmark, title, filename in benchmarks]
+                      for benchmark, title, filename in group_item]
 
         for line in format_histogram(benchmarks, bins=args.bins,
                                      extend=args.extend,
@@ -587,17 +722,17 @@ def cmd_hist(args):
         if not (is_last or ignored):
             print()
 
-    for suite, ignored in ignored:
-        for bench in ignored:
+    for suite, suite_ignored in ignored:
+        for bench in suite_ignored:
             name = bench.get_name()
             print("[ %s ]" % name)
-            for line in format_histogram([name], bins=args.bins,
+            for line in format_histogram([(bench, name)], bins=args.bins,
                                          extend=args.extend,
                                          checks=checks):
                 print(line)
 
 
-def fatal_missing_benchmarks(suite, names):
+def fatal_missing_benchmarks(suite: BenchmarkSuite[str], names: list[str]) -> None:
     print("ERROR: The benchmark suite %s doesn't contain "
           "with benchmark name in %r"
           % (suite.filename, names),
@@ -605,7 +740,7 @@ def fatal_missing_benchmarks(suite, names):
     sys.exit(1)
 
 
-def fatal_no_more_benchmark(suite):
+def fatal_no_more_benchmark(suite: BenchmarkSuite[str]) -> None:
     print("ERROR: After modification, the benchmark suite %s has no "
           "more benchmark!"
           % suite.filename,
@@ -613,7 +748,7 @@ def fatal_no_more_benchmark(suite):
     sys.exit(1)
 
 
-def cmd_convert(args):
+def cmd_convert(args: CliConvertArgs) -> None:
     suite = pyperf.BenchmarkSuite.load(args.input_filename)
 
     if args.add:
@@ -635,18 +770,23 @@ def cmd_convert(args):
         except ValueError:
             fatal_no_more_benchmark(suite)
 
-    if args.include_runs or args.exclude_runs:
-        if args.include_runs:
-            runs = args.include_runs
-            include = True
-        else:
-            runs = args.exclude_runs
-            include = False
+    only_runs = None
+    include = None
+    if args.include_runs:
+        include = True
         try:
-            only_runs = parse_run_list(runs)
+            only_runs = parse_run_list(args.include_runs)
         except ValueError as exc:
-            print("ERROR: %s (runs: %r)" % (exc, runs), file=sys.stderr)
+            print("ERROR: %s (runs: %r)" % (exc, args.include_runs), file=sys.stderr)
             sys.exit(1)
+    elif args.exclude_runs:
+        include = False
+        try:
+            only_runs = parse_run_list(args.exclude_runs)
+        except ValueError as exc:
+            print("ERROR: %s (runs: %r)" % (exc, args.exclude_runs), file=sys.stderr)
+            sys.exit(1)
+    if only_runs and include is not None:
         for benchmark in suite:
             try:
                 benchmark._filter_runs(include, only_runs)
@@ -672,7 +812,7 @@ def cmd_convert(args):
             metadata[key] = value
 
         for benchmark in suite:
-            benchmark.update_metadata(metadata)
+            benchmark.update_metadata(cast("MetadataType",metadata))
 
     if args.extract_metadata:
         name = args.extract_metadata
@@ -701,13 +841,13 @@ def cmd_convert(args):
         suite.dump(sys.stdout, compact=compact)
 
 
-def cmd_slowest(args):
+def cmd_slowest(args: CliSlowestArgs) -> None:
     data = load_benchmarks(args)
     nslowest = args.n
 
     use_title = (data.get_nsuite() > 1)
     for item in data.iter_suites():
-        if use_title:
+        if use_title and item.filename:
             display_title(item.filename, 1)
 
         benchs = []
@@ -716,27 +856,26 @@ def cmd_slowest(args):
             benchs.append((duration, bench))
         benchs.sort(key=lambda item: item[0], reverse=True)
 
-        for index, item in enumerate(benchs[:nslowest], 1):
-            duration, bench = item
+        for index, (duration, bench) in enumerate(benchs[:nslowest], 1):
             print("#%s: %s (%s)"
                   % (index, bench.get_name(), format_timedelta(duration)))
 
 
-def cmd_system(args):
+def cmd_system(args: CliSystemArgs) -> None:
     from pyperf._system import System
     System().main(args.system_action, args)
 
 
-def cmd_bench_command(runner, args):
+def cmd_bench_command(runner: CommandRunner, args: CliBenchCommandArgs) -> None:
     runner._set_args(args)
     name = args.name
     command = [args.program] + args.program_args
     runner.bench_command(name, command)
 
 
-def main():
+def main() -> None:
     parser, timeit_runner, command_runner = create_parser()
-    args = parser.parse_args()
+    args: Any = parser.parse_args(namespace=CliBaseArgs())
     action = args.action
 
     dispatch = {

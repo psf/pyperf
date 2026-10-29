@@ -1,3 +1,4 @@
+from typing import override
 import os
 try:
     from pyperf._utils import USE_PSUTIL, BSD
@@ -12,7 +13,7 @@ import time
 
 
 class PeakMemoryUsageThread(threading.Thread):
-    def __init__(self):
+    def __init__(self) -> None:
         threading.Thread.__init__(self)
         self.process = psutil.Process(os.getpid())
         self.peak_usage = 0
@@ -20,7 +21,7 @@ class PeakMemoryUsageThread(threading.Thread):
         self.sleep = 0.010   # 10 ms
         self._quit = False
 
-    def get(self):
+    def get(self) -> None:
         if BSD:
             # USS (Unique Set Size) is not supported on BSD,
             # use RSS (Resident Set Size) instead.
@@ -29,7 +30,8 @@ class PeakMemoryUsageThread(threading.Thread):
             usage = self.process.memory_full_info().uss
         self.peak_usage = max(self.peak_usage, usage)
 
-    def run(self):
+    @override
+    def run(self) -> None:
         try:
             while not self._quit:
                 self.get()
@@ -37,13 +39,13 @@ class PeakMemoryUsageThread(threading.Thread):
         finally:
             self._done.set()
 
-    def stop(self):
+    def stop(self) -> int:
         self._quit = True
         self._done.wait()
         return self.peak_usage
 
 
-def check_tracking_memory():
+def check_tracking_memory() -> str | None:
     mem_thread = PeakMemoryUsageThread()
     mem_thread.get()
 
