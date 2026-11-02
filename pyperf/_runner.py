@@ -77,7 +77,8 @@ class Runner:
                  loops=0, min_time=0.1, metadata=None,
                  show_name=True,
                  program_args=None, add_cmdline_args=None,
-                 _argparser=None, warmups=1, hooks=None):
+                 _argparser=None, warmups=None, hooks=None,
+                 has_jit=None):
 
         # Watchdog: ensure that only once instance of Runner (or a Runner
         # subclass) is created per process to prevent bad surprises
@@ -92,7 +93,13 @@ class Runner:
         # Use lazy import to limit imports on 'import pyperf'
         import argparse
 
-        has_jit = pyperf.python_has_jit()
+        if has_jit is not None:
+            self._has_jit = bool(has_jit)
+            has_jit = self._has_jit
+        else:
+            self._has_jit = None
+            has_jit = pyperf.python_has_jit()
+
         if not values:
             if has_jit:
                 # Since PyPy JIT has less processes:
@@ -264,6 +271,13 @@ class Runner:
         memory.add_argument('--track-memory', action="store_true",
                             help='Track memory usage using a thread')
 
+        jit = parser.add_mutually_exclusive_group()
+        jit.add_argument('--jit', action="store_true", dest="jit",
+                         default=self._has_jit,
+                         help='Enable JIT mode (adjust default warmups/values/processes)')
+        jit.add_argument('--no-jit', action="store_false", dest="jit",
+                         help='Disable JIT mode')
+
         self.argparser = parser
 
     def _multiline_output(self):
@@ -283,11 +297,21 @@ class Runner:
             args.verbose = False
 
         has_jit = pyperf.python_has_jit()
+        if args.jit is not None:
+            has_jit = args.jit
         if args.warmups is None and not args.worker and not has_jit:
             args.warmups = 1
 
         nprocess = self.argparser.get_default('processes')
         nvalues = self.argparser.get_default('values')
+        initial_has_jit = self._has_jit if self._has_jit is not None else pyperf.python_has_jit()
+        if args.jit is not None and args.jit != initial_has_jit:
+            if args.processes == nprocess:
+                nprocess = 6 if args.jit else 20
+                args.processes = nprocess
+            if args.values == nvalues:
+                nvalues = 10 if args.jit else 3
+                args.values = nvalues
         if args.rigorous:
             args.processes = nprocess * 2
             # args.values = nvalues * 5 // 3

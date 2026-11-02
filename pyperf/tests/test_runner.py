@@ -564,6 +564,52 @@ class TestRunner(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             runner2 = pyperf.Runner()   # noqa
 
+    def test_jit_options(self):
+        runner = self.create_runner(['--jit'])
+        self.assertIs(runner.args.jit, True)
+        self.assertEqual(runner.args.processes, 6)
+        self.assertEqual(runner.args.values, 10)
+        self.assertIsNone(runner.args.warmups)
+
+        runner = self.create_runner(['--no-jit'])
+        self.assertIs(runner.args.jit, False)
+        self.assertEqual(runner.args.processes, 20)
+        self.assertEqual(runner.args.values, 3)
+        self.assertEqual(runner.args.warmups, 1)
+
+    def test_runner_has_jit_param(self):
+        runner = self.create_runner([], has_jit=True)
+        self.assertIs(runner.args.jit, True)
+        self.assertEqual(runner.args.processes, 6)
+        self.assertEqual(runner.args.values, 10)
+        self.assertIsNone(runner.args.warmups)
+
+        runner = self.create_runner([], has_jit=False)
+        self.assertIs(runner.args.jit, False)
+        self.assertEqual(runner.args.processes, 20)
+        self.assertEqual(runner.args.values, 3)
+        self.assertEqual(runner.args.warmups, 1)
+
+        runner = self.create_runner(['--no-jit'], has_jit=True)
+        self.assertIs(runner.args.jit, False)
+        self.assertEqual(runner.args.processes, 20)
+        self.assertEqual(runner.args.values, 3)
+
+    def test_manager_worker_cmd_jit(self):
+        from pyperf._manager import Manager
+
+        runner = self.create_runner(['--jit'])
+        manager = Manager(runner)
+        cmd = manager.worker_cmd(calibrate_loops=0, calibrate_warmups=0, wpipe='pipe')
+        self.assertIn('--jit', cmd)
+        self.assertNotIn('--no-jit', cmd)
+
+        runner = self.create_runner(['--no-jit'])
+        manager = Manager(runner)
+        cmd = manager.worker_cmd(calibrate_loops=0, calibrate_warmups=0, wpipe='pipe')
+        self.assertIn('--no-jit', cmd)
+        self.assertNotIn('--jit', cmd)
+
 
 class TestRunnerCPUAffinity(unittest.TestCase):
     def create_runner(self, args, **kwargs):

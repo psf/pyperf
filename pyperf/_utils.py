@@ -178,6 +178,14 @@ def python_implementation():
 
 
 def python_has_jit():
+    env_jit = os.environ.get('PYPERF_JIT')
+    if env_jit is not None:
+        env_jit = env_jit.strip().lower()
+        if env_jit in ('1', 'true', 'yes'):
+            return True
+        elif env_jit in ('0', 'false', 'no'):
+            return False
+
     implementation_name = python_implementation()
     if implementation_name == 'pypy':
         return sys.pypy_translation_info["translation.jit"]

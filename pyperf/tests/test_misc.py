@@ -1,6 +1,7 @@
 import os.path
 import sys
 import unittest
+from unittest import mock
 
 import pyperf
 from pyperf import _utils as utils
@@ -30,6 +31,15 @@ class MiscTests(unittest.TestCase):
     def test_python_has_jit(self):
         jit = pyperf.python_has_jit()
         self.assertIsInstance(jit, bool)
+
+        with mock.patch.dict(os.environ, {'PYPERF_JIT': '1'}):
+            self.assertTrue(pyperf.python_has_jit())
+        with mock.patch.dict(os.environ, {'PYPERF_JIT': 'true'}):
+            self.assertTrue(pyperf.python_has_jit())
+        with mock.patch.dict(os.environ, {'PYPERF_JIT': '0'}):
+            self.assertFalse(pyperf.python_has_jit())
+        with mock.patch.dict(os.environ, {'PYPERF_JIT': 'false'}):
+            self.assertFalse(pyperf.python_has_jit())
 
     @unittest.skipUnless(hasattr(os, 'symlink'), 'need os.symlink')
     def test_abs_executable(self):

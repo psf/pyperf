@@ -67,6 +67,10 @@ class Manager:
             cmd.append('--tracemalloc')
         if args.track_memory:
             cmd.append('--track-memory')
+        if args.jit is True:
+            cmd.append('--jit')
+        elif args.jit is False:
+            cmd.append('--no-jit')
 
         if args.profile:
             cmd.extend(['--profile', args.profile])

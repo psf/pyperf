@@ -101,6 +101,8 @@ Option::
     --timeout TIMEOUT
     --track-memory
     --tracemalloc
+    --jit
+    --no-jit
 
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``pyperf`` module
