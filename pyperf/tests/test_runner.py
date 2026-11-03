@@ -145,6 +145,17 @@ class TestRunner(unittest.TestCase):
                          tests.benchmark_as_json(result.bench))
 
     def test_pipe_with_timeout(self):
+        # No data is written and the write pipe is kept open: the read
+        # must time out.
+        rpipe, wpipe = create_pipe()
+        with rpipe:
+            with wpipe:
+                with self.assertRaises(TimeoutError) as cm:
+                    rpipe.read_text(timeout=0.1)
+                self.assertEqual(str(cm.exception),
+                                 'Timed out after 0.1 seconds')
+
+        # Read the benchmark output with a timeout which doesn't expire
         rpipe, wpipe = create_pipe()
         with rpipe:
             with wpipe:
@@ -156,20 +167,9 @@ class TestRunner(unittest.TestCase):
                 result = self.exec_runner('--pipe', str(arg),
                                           '--worker', '-l1', '-w1')
 
-            # Mock the select to make the read pipeline not ready
-            with mock.patch('pyperf._utils.select.select',
-                            return_value=(False, False, False)):
-                with self.assertRaises(TimeoutError) as cm:
-                    rpipe.read_text(timeout=0.1)
-                self.assertEqual(str(cm.exception),
-                         'Timed out after 0.1 seconds')
-
-            # Mock the select to make the read pipeline ready
-            with mock.patch('pyperf._utils.select.select',
-                            return_value=(True, False, False)):
-                bench_json = rpipe.read_text(timeout=0.1)
-                self.assertEqual(bench_json.rstrip(),
-                                 tests.benchmark_as_json(result.bench).rstrip())
+            bench_json = rpipe.read_text(timeout=10)
+            self.assertEqual(bench_json.rstrip(),
+                             tests.benchmark_as_json(result.bench).rstrip())
 
     def test_json_exists(self):
         with tempfile.NamedTemporaryFile('wb+') as tmp:
