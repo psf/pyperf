@@ -12,7 +12,9 @@ fork()+exec().
 Measure wall-time, not CPU time.
 
 If resource.getrusage() is available: compute the maximum RSS memory in bytes
-per process and writes it into stdout as a second line.
+per process and writes it into stdout as a second line. On Windows,
+resource.getrusage() is unavailable, so the peak RSS of the child process
+is sampled with psutil instead.
 """
 import contextlib
 import json
@@ -42,6 +44,52 @@ def get_max_rss(*, children):
         return 0
 
 
+def bench_process_windows(args, kw):
+    """Run the command once on Windows, return (exitcode, peak RSS).
+
+    resource.getrusage() is unavailable on Windows, so sample the RSS of
+    the live child process with psutil (a required pyperf dependency).
+    A reaped child can no longer be queried, hence the polling loop.
+    Return 0 as the peak RSS if psutil is not available.
+    """
+    try:
+        import psutil
+    except ImportError:
+        psutil = None
+
+    proc = subprocess.Popen(args, **kw)
+    with proc:
+        if psutil is None:
+            proc.wait()
+            return proc.returncode, 0
+
+        try:
+            child = psutil.Process(proc.pid)
+        except psutil.NoSuchProcess:
+            # Child already exited before we could attach to it
+            child = None
+
+        peak_rss = 0
+        if child is not None:
+            # Sample once immediately: a short-lived child may exit
+            # before the first sleep elapses.
+            try:
+                peak_rss = max(peak_rss, child.memory_info().rss)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                child = None
+        while child is not None and proc.poll() is None:
+            try:
+                peak_rss = max(peak_rss, child.memory_info().rss)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                break
+            # A pyperf value takes at least 100 ms: sampling every
+            # 50 ms gives at least two samples per value without
+            # spamming memory_info() syscalls.
+            time.sleep(0.05)
+
+    return proc.returncode, peak_rss
+
+
 def merge_profile_stats_files(src, dst):
     """
     Merging one existing pstats file into another.
@@ -67,13 +115,20 @@ def bench_process(loops, args, kw, profile_filename=None):
         args = [args[0], "-m", "cProfile", "-o", temp_profile_filename] + args[1:]
 
     for _ in range_it:
-        start_rss = get_max_rss(children=True)
+        if sys.platform == 'win32':
+            # resource.getrusage() is not available on Windows:
+            # sample the child process with psutil instead.
+            exitcode, rss = bench_process_windows(args, kw)
+        else:
+            start_rss = get_max_rss(children=True)
 
-        proc = subprocess.Popen(args, **kw)
-        with proc:
-            proc.wait()
+            proc = subprocess.Popen(args, **kw)
+            with proc:
+                proc.wait()
 
-        exitcode = proc.returncode
+            exitcode = proc.returncode
+            rss = get_max_rss(children=True) - start_rss
+
         if exitcode != 0:
             print("Command failed with exit code %s" % exitcode,
                   file=sys.stderr)
@@ -81,7 +136,6 @@ def bench_process(loops, args, kw, profile_filename=None):
                 os.unlink(temp_profile_filename)
             sys.exit(exitcode)
 
-        rss = get_max_rss(children=True) - start_rss
         max_rss = max(max_rss, rss)
 
         if profile_filename:
