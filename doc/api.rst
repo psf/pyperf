@@ -517,7 +517,7 @@ HookBase class
 Runner class
 ------------
 
-.. class:: Runner(values=3, warmups=1, processes=20, loops=0, min_time=0.1, metadata=None, show_name=True, program_args=None, add_cmdline_args=None, hooks=None)
+.. class:: Runner(values=3, warmups=None, processes=20, loops=0, min_time=0.1, metadata=None, show_name=True, program_args=None, add_cmdline_args=None, hooks=None)
 
    Tool to run a benchmark in text mode.
 
