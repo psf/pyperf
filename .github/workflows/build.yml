@@ -21,17 +21,14 @@ jobs:
       - run: tox -e doc
   build:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} - ${{ matrix.python }} ${{ matrix.build }}
+    name: ${{ matrix.os }} - ${{ matrix.python }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-24.04-arm]
+        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-26.04-arm]
         python: ['3.12']
-        build: ['']
         include:
           - os: ubuntu-latest
-            python: 'pypy3.11'
-          - os: ubuntu-latest
-            python: '3.10'
+            python: 'pypy3.12'
           - os: ubuntu-latest
             python: '3.11'
           - os: ubuntu-latest
