@@ -47,6 +47,61 @@ class TestMetadata(unittest.TestCase):
         perf_metadata.collect_cpu_affinity(metadata, {0, 1, 2, 3}, 4)
         self.assertNotIn('cpu_affinity', metadata)
 
+    def check_cpu_quota(self, files):
+        def mock_open(filename, *args, **kw):
+            filename = filename.replace('\\', '/')
+            if filename not in files:
+                raise FileNotFoundError(filename)
+            return io.StringIO(files[filename])
+
+        with mock.patch('pyperf._utils.open', create=True,
+                        side_effect=mock_open):
+            metadata = {}
+            perf_metadata.collect_cpu_quota(metadata)
+        return metadata.get('cpu_quota')
+
+    def test_cpu_quota_cgroup_v2(self):
+        # quota set on the process cgroup (systemd-run -p CPUQuota=200%)
+        files = {
+            '/proc/self/cgroup': '0::/user.slice/run-1.scope\n',
+            '/sys/fs/cgroup/user.slice/run-1.scope/cpu.max': '200000 100000\n',
+            '/sys/fs/cgroup/user.slice/cpu.max': 'max 100000\n',
+        }
+        self.assertEqual(self.check_cpu_quota(files), '2 CPUs')
+
+        # a smaller quota on a parent cgroup also applies
+        files['/sys/fs/cgroup/user.slice/cpu.max'] = '150000 100000\n'
+        self.assertEqual(self.check_cpu_quota(files), '1.5 CPUs')
+
+        # docker run --cpus=0.5 with a private cgroup namespace
+        files = {
+            '/proc/self/cgroup': '0::/\n',
+            '/sys/fs/cgroup/cpu.max': '50000 100000\n',
+        }
+        self.assertEqual(self.check_cpu_quota(files), '0.5 CPUs')
+
+    def test_cpu_quota_cgroup_v1(self):
+        # the cgroup path is not visible inside a container
+        files = {
+            '/proc/self/cgroup': ('5:cpu,cpuacct:/docker/abc\n'
+                                  '4:memory:/docker/abc\n'),
+            '/sys/fs/cgroup/cpu/cpu.cfs_quota_us': '400000\n',
+            '/sys/fs/cgroup/cpu/cpu.cfs_period_us': '100000\n',
+        }
+        self.assertEqual(self.check_cpu_quota(files), '4 CPUs')
+
+        files['/sys/fs/cgroup/cpu/cpu.cfs_quota_us'] = '-1\n'
+        self.assertIsNone(self.check_cpu_quota(files))
+
+    def test_cpu_quota_no_limit(self):
+        files = {
+            '/proc/self/cgroup': '0::/init.scope\n',
+            '/sys/fs/cgroup/init.scope/cpu.max': 'max 100000\n',
+        }
+        self.assertIsNone(self.check_cpu_quota(files))
+        # no cgroup information at all (ex: not Linux)
+        self.assertIsNone(self.check_cpu_quota({}))
+
 
 class CpuFunctionsTests(unittest.TestCase):
     INTEL_CPU_INFO = textwrap.dedent("""

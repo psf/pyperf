@@ -373,6 +373,55 @@ def collect_cpu_affinity(metadata, cpu_affinity, cpu_count):
     metadata['cpu_affinity'] = format_cpu_list(cpu_affinity)
 
 
+def get_cgroup_cpu_quota():
+    """Get the Linux cgroup CPU bandwidth limit of the current process.
+
+    Return the limit as a number of CPUs (quota / period), or None if there
+    is no limit or it cannot be read. With cgroup v2, a limit set on a parent
+    cgroup also applies, so the smallest limit of the hierarchy is used.
+    """
+    limits = []
+    for line in read_proc("self/cgroup"):
+        parts = line.split(":", 2)
+        if len(parts) != 3:
+            continue
+        hierarchy, controllers, path = parts
+        path = path.strip("/")
+        names = path.split("/") if path else []
+        try:
+            if hierarchy == "0" and not controllers:
+                # cgroup v2: check the cgroup and each of its parents
+                for index in range(len(names), -1, -1):
+                    cpu_max = os.path.join("/sys/fs/cgroup", *names[:index],
+                                           "cpu.max")
+                    fields = read_first_line(cpu_max).split()
+                    if len(fields) == 2 and fields[0] != "max":
+                        limits.append(int(fields[0]) / int(fields[1]))
+            elif "cpu" in controllers.split(","):
+                # cgroup v1: the cgroup path is not visible inside a container
+                for base in (os.path.join("/sys/fs/cgroup/cpu", *names),
+                             "/sys/fs/cgroup/cpu"):
+                    quota = read_first_line(os.path.join(base,
+                                                         "cpu.cfs_quota_us"))
+                    period = read_first_line(os.path.join(base,
+                                                          "cpu.cfs_period_us"))
+                    if quota and period:
+                        if int(quota) > 0:
+                            limits.append(int(quota) / int(period))
+                        break
+        except (ValueError, ZeroDivisionError):
+            continue
+    if not limits:
+        return None
+    return min(limits)
+
+
+def collect_cpu_quota(metadata):
+    quota = get_cgroup_cpu_quota()
+    if quota is not None:
+        metadata['cpu_quota'] = '%s CPUs' % format(quota, 'g')
+
+
 def collect_cpu_model(metadata):
     for line in read_proc("cpuinfo"):
         if line.startswith('model name'):
@@ -398,6 +447,9 @@ def collect_cpu_metadata(metadata):
 
     cpu_affinity = get_cpu_affinity()
     collect_cpu_affinity(metadata, cpu_affinity, cpu_count)
+
+    if sys.platform.startswith('linux'):
+        collect_cpu_quota(metadata)
 
     all_cpus = cpu_affinity
     if not all_cpus and cpu_count:

@@ -758,6 +758,10 @@ CPU metadata:
 * ``cpu_freq``: Frequency of CPUs
 * ``cpu_machine``: CPU machine
 * ``cpu_model_name``: CPU model name
+* ``cpu_quota``: if set, the Linux cgroup CPU bandwidth limit of the process,
+  as a number of CPUs (ex: ``2 CPUs`` for ``docker run --cpus=2``). The
+  process can use that much CPU time per period, even if ``cpu_count`` is
+  larger.
 * ``cpu_temp``: Temperature of CPUs
 
 System metadata:
