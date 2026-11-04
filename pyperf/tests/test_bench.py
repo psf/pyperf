@@ -1,6 +1,7 @@
 import datetime
 import errno
 import gzip
+import json
 import unittest
 
 import pyperf
@@ -68,6 +69,25 @@ class RunTests(unittest.TestCase):
         run = pyperf.Run([1.0], metadata={'load_avg_1min': 0.0},
                          collect_metadata=False)
         self.assertEqual(run.get_metadata()['load_avg_1min'], 0.0)
+
+    def test_phase_metadata(self):
+        for value in (('measurement', 'value'), ['calibration', 'loops']):
+            with self.subTest(value=value):
+                run = pyperf.Run([1.0], metadata={'phase': value},
+                                 collect_metadata=False)
+                self.assertEqual(run.get_metadata()['phase'], value)
+
+        invalid_values = (
+            'measurement:value',
+            ('measurement',),
+            ('measurement', ''),
+            ('measurement', 1),
+        )
+        for value in invalid_values:
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    pyperf.Run([1.0], metadata={'phase': value},
+                               collect_metadata=False)
 
     def test_name(self):
         # name must be non-empty
@@ -197,6 +217,40 @@ class BenchmarkTests(unittest.TestCase):
             bench2 = pyperf.Benchmark.load(tmp_name)
 
         self.check_benchmarks_equal(bench, bench2)
+
+    def test_dump_phase_metadata(self):
+        runs = [
+            pyperf.Run(
+                (),
+                warmups=[(1, 2.92e-7), (64, 2.65e-9)],
+                metadata={'name': 'bench',
+                          'loops': 64,
+                          'calibrate_loops': 64,
+                          'phase': ('calibration', 'loops')},
+                collect_metadata=False),
+            pyperf.Run(
+                [2.5949900301497353e-9, 2.633662268304582e-9],
+                warmups=[(64, 2.6324198845045776e-9)],
+                metadata={'name': 'bench',
+                          'loops': 64,
+                          'phase': ('measurement', 'value')},
+                collect_metadata=False),
+        ]
+        bench = pyperf.Benchmark(runs)
+
+        bench_json = tests.benchmark_as_json(bench)
+        data = json.loads(bench_json)
+        json_runs = data['benchmarks'][0]['runs']
+        self.assertEqual(json_runs[0]['metadata']['phase'],
+                         ['calibration', 'loops'])
+        self.assertEqual(json_runs[1]['metadata']['phase'],
+                         ['measurement', 'value'])
+
+        bench2 = pyperf.Benchmark.loads(bench_json)
+        phases = [run.get_metadata()['phase'] for run in bench2.get_runs()]
+        self.assertEqual(phases,
+                         [['calibration', 'loops'],
+                          ['measurement', 'value']])
 
     def test_dump_replace(self):
         bench = self.create_dummy_benchmark()

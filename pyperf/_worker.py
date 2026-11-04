@@ -114,6 +114,15 @@ class WorkerTask:
 
             index += 1
 
+        if calibrate_loops:
+            self.metadata["phase"] = ("calibration", "loops")
+        elif is_warmup and (args.calibrate_warmups or args.recalibrate_warmups):
+            self.metadata["phase"] = ("calibration", "warmup")
+        elif is_warmup:
+            self.metadata["phase"] = ("measurement", "warmup")
+        else:
+            self.metadata["phase"] = ("measurement", "value")
+
         for hook in hook_managers.values():
             hook.teardown(self.metadata)
 
