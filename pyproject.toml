@@ -51,8 +51,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-requires-python = ">=3.10"
-dependencies = ["psutil>=5.9.0"]
+requires-python = ">=3.11"
+dependencies = [
+    "psutil>=5.9.0; sys_platform != 'emscripten'",
+]
 
 [project.optional-dependencies]
 dev = [
