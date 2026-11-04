@@ -700,6 +700,9 @@ class Runner:
     def _in_process(self, task):
         from pyperf._inprocess_manager import InProcessManager
 
+        self._cpu_affinity()
+        self._process_priority()
+
         if self.args.verbose and self._worker_task > 0:
             print()
         bench = InProcessManager(self, task).create_bench()
