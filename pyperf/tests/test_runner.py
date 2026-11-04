@@ -484,6 +484,41 @@ class TestRunner(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             runner.parse_args(args)
 
+    def test_is_worker(self):
+        for args, expected in (([], False), (['--worker', '-l1', '-w0'], True)):
+            for parsed in (False, True):
+                with self.subTest(args=args, parsed=parsed):
+                    pyperf.Runner._created.clear()
+                    runner = pyperf.Runner()
+                    if parsed:
+                        runner.parse_args(args)
+                    with mock.patch.object(sys, 'argv', ['benchmark.py'] + args):
+                        self.assertIs(runner.is_worker(), expected)
+                        namespace = runner.args
+                        self.assertIs(runner.is_worker(), expected)
+                        self.assertIs(runner.args, namespace)
+
+    def test_is_worker_guards_benchmark_suite(self):
+        source = textwrap.dedent('''
+            import pyperf
+
+            def noop():
+                pass
+
+            runner = pyperf.Runner(values=1, processes=1, loops=1, warmups=0)
+            benchmarks = [runner.bench_func('first', noop),
+                          runner.bench_func('second', noop)]
+            if not runner.is_worker():
+                suite = pyperf.BenchmarkSuite(benchmarks)
+                print('suite: ' + ', '.join(suite.get_benchmark_names()))
+        ''')
+        with tests.temporary_file(suffix='.py') as filename:
+            with open(filename, 'w', encoding='utf-8') as script:
+                script.write(source)
+            result = tests.get_output([sys.executable, filename, '--quiet'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.count('suite: first, second'), 1)
+
     def test_duplicated_named(self):
         def time_func(loops):
             return 1.0

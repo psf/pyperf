@@ -399,6 +399,10 @@ class Runner:
         self._set_args(args)
         return args
 
+    def is_worker(self):
+        """Return whether this process is a benchmark worker."""
+        return self.parse_args().worker
+
     def _cpu_affinity(self):
         cpus = self.args.affinity
         if not cpus:

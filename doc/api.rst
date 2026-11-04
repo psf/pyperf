@@ -692,6 +692,23 @@ Runner class
 
       Return the :attr:`args` attribute.
 
+   .. method:: is_worker()
+
+      Return ``True`` in a benchmark worker process, or ``False`` in the
+      main process. Parse command line arguments if they have not been parsed
+      yet.
+
+      Worker processes re-execute the benchmark script and may skip benchmarks,
+      returning ``None``. Run all benchmarks in both the main process and
+      workers, and use this method to guard code that processes their results::
+
+         runner = pyperf.Runner()
+         benchmarks = [runner.bench_func("first", first_func),
+                       runner.bench_func("second", second_func)]
+         if not runner.is_worker():
+             suite = pyperf.BenchmarkSuite(benchmarks)
+             suite.dump("benchmarks.json")
+
    Attributes:
 
    .. attribute:: args
