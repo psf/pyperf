@@ -235,8 +235,9 @@ class Manager:
 
     def create_bench(self):
         args = self.args
-        old_warmups = args.warmups
         old_loops = args.loops
+        old_warmups = args.warmups
+        old_values = args.values
         old_processes = args.processes
         if args.warmups is None:
             args.warmups = 1
@@ -257,7 +258,8 @@ class Manager:
 
         # restore the old value of warmups and loops, to recalibrate
         # the next benchmark function if needed
-        args.warmups = old_warmups
         args.loops = old_loops
+        args.warmups = old_warmups
+        args.values = old_values
         args.processes = old_processes
         return self.bench
