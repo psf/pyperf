@@ -101,6 +101,7 @@ Option::
     --timeout TIMEOUT
     --track-memory
     --tracemalloc
+    --in-process
 
 * ``--python=PYTHON``: Python executable. By default, use the running Python
   (``sys.executable``). The Python executable must have the ``pyperf`` module
@@ -155,6 +156,9 @@ Option::
   ``/proc/self/smaps``. On Windows, get ``PeakPagefileUsage`` of
   ``GetProcessMemoryInfo()`` (of the current process): the peak value of the
   Commit Charge during the lifetime of this process.
+* ``--in-process``: run the benchmark in the current process instead of a child process.
+  This is useful when you cannot spawn child processes, such as on WASM environments.
+  Note that this makes each run affect the next run, as the benchmark is executed in the same process.
 
 
 Internal usage only
