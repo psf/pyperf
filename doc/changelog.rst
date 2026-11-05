@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 2.11.0 (2026-XX-XX)
+---------------------------
+
+* Feature: Add ``--in-process`` option to run benchmarks in the current process.
+  This is useful when you cannot spawn child processes, such as on WASM environments.
+  Patch by Gyeongjae Choi.
+
 Version 2.10.0 (2026-02-07)
 ---------------------------
 
