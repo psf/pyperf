@@ -7,9 +7,6 @@ Version 2.11.0 (2026-11-08)
 * Feature: Add ``--in-process`` option to run benchmarks in the current process.
   This is useful when you cannot spawn child processes, such as on WASM environments.
   Patch by Gyeongjae Choi.
-* Feature: ``--in-process`` now also sets the CPU affinity and the process
-  priority, like the regular worker processes.
-  Patch by Victor Stinner.
 * Feature: Add a new ``tachyon`` hook to profile benchmarks with the Tachyon
   sampling profiler of Python 3.15 (``--hook tachyon``).
   Patch by Maurycy Pietrzak.
