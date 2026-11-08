@@ -1,12 +1,32 @@
 Changelog
 =========
 
-Version 2.11.0 (2026-XX-XX)
+Version 2.11.0 (2026-11-08)
 ---------------------------
 
 * Feature: Add ``--in-process`` option to run benchmarks in the current process.
   This is useful when you cannot spawn child processes, such as on WASM environments.
   Patch by Gyeongjae Choi.
+* Feature: Add a new ``tachyon`` hook to profile benchmarks with the Tachyon
+  sampling profiler of Python 3.15 (``--hook tachyon``).
+  Patch by Maurycy Pietrzak.
+* Feature: Hooks can now be registered from code with the new ``hooks``
+  parameter of :class:`Runner`.
+  Patch by Sergey Miryanov.
+* Feature: Add :meth:`Runner.is_worker` to guard code which processes
+  benchmark results in the main process.
+  Patch by joo00der.
+* Feature: Add ``cpu_quota`` metadata: the Linux cgroup CPU bandwidth limit of
+  the process (ex: ``docker run --cpus=2``).
+  Patch by Manu Nicholas Jacob.
+* Bugfix: Allow a ``mem_max_rss`` metadata value of zero.
+  Patch by Samartha.
+* Bugfix: ``psutil`` is now optional on the Emscripten platform.
+  Patch by Gyeongjae Choi.
+* Optimization: ``format_number()`` and ``_common_metadata()`` are faster.
+  Patch by Deban Kumar Sahu.
+* Maintenance: ``pyperf`` now requires Python 3.11 or higher.
+  Patch by Hugo van Kemenade.
 
 Version 2.10.0 (2026-02-07)
 ---------------------------
