@@ -9,7 +9,7 @@ Version 2.11.0 (2026-11-08)
   Patch by Gyeongjae Choi.
 * Feature: Add a new ``tachyon`` hook to profile benchmarks with the Tachyon
   sampling profiler of Python 3.15 (``--hook tachyon``).
-  Patch by Maurycy Pietrzak.
+  Patch by Maurycy Pawłowski-Wieroński.
 * Feature: Hooks can now be registered from code with the new ``hooks``
   parameter of :class:`Runner`.
   Patch by Sergey Miryanov.
