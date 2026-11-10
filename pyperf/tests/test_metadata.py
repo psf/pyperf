@@ -102,6 +102,59 @@ class TestMetadata(unittest.TestCase):
         # no cgroup information at all (ex: not Linux)
         self.assertIsNone(self.check_cpu_quota({}))
 
+    def check_cpu_throttling(self, files):
+        def mock_open(filename, *args, **kw):
+            filename = filename.replace('\\', '/')
+            if filename not in files:
+                raise FileNotFoundError(filename)
+            return io.StringIO(files[filename])
+
+        with mock.patch('pyperf._utils.open', create=True,
+                        side_effect=mock_open):
+            return perf_metadata.get_cgroup_cpu_throttling()
+
+    def test_cpu_throttling_cgroup_v2(self):
+        # the quota binds on the process cgroup and throttling is recorded
+        # there, while the root counters stay at zero
+        files = {
+            '/proc/self/cgroup': '0::/user.slice/run-1.scope\n',
+            '/sys/fs/cgroup/user.slice/run-1.scope/cpu.stat':
+                ('usage_usec 999\nnr_periods 2470\n'
+                 'nr_throttled 3306\nthrottled_usec 247631465\n'),
+            '/sys/fs/cgroup/user.slice/cpu.stat':
+                'usage_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n',
+            '/sys/fs/cgroup/cpu.stat':
+                'usage_usec 0\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n',
+        }
+        self.assertEqual(self.check_cpu_throttling(files),
+                         {'nr_throttled': 3306, 'throttled_usec': 247631465})
+
+    def test_cpu_throttling_zero_is_not_none(self):
+        # checked and never throttled: zero, distinct from "could not check"
+        files = {
+            '/proc/self/cgroup': '0::/init.scope\n',
+            '/sys/fs/cgroup/init.scope/cpu.stat':
+                'usage_usec 5\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n',
+        }
+        self.assertEqual(self.check_cpu_throttling(files),
+                         {'nr_throttled': 0, 'throttled_usec': 0})
+
+    def test_cpu_throttling_cgroup_v1(self):
+        # cgroup v1 reports throttled_time in nanoseconds
+        files = {
+            '/proc/self/cgroup': '5:cpu,cpuacct:/docker/abc\n',
+            '/sys/fs/cgroup/cpu/docker/abc/cpu.stat':
+                'nr_periods 100\nnr_throttled 7\nthrottled_time 456789000\n',
+        }
+        self.assertEqual(self.check_cpu_throttling(files),
+                         {'nr_throttled': 7, 'throttled_usec': 456789})
+
+    def test_cpu_throttling_no_cgroup(self):
+        # no cpu.stat to read (ex: not Linux): could not be checked
+        self.assertIsNone(self.check_cpu_throttling({}))
+        files = {'/proc/self/cgroup': '0::/init.scope\n'}
+        self.assertIsNone(self.check_cpu_throttling(files))
+
 
 class CpuFunctionsTests(unittest.TestCase):
     INTEL_CPU_INFO = textwrap.dedent("""

@@ -422,6 +422,79 @@ def collect_cpu_quota(metadata):
         metadata['cpu_quota'] = '%s CPUs' % format(quota, 'g')
 
 
+def _read_cgroup_cpu_stat(path):
+    # Parse a cgroup "cpu.stat" file ("key value" lines) into a dict of ints.
+    # Return None if the file cannot be read.
+    stat = {}
+    found = False
+    try:
+        with open_text(path) as fp:
+            for line in fp:
+                fields = line.split()
+                if len(fields) == 2:
+                    try:
+                        stat[fields[0]] = int(fields[1])
+                        found = True
+                    except ValueError:
+                        continue
+    except OSError:
+        return None
+    return stat if found else None
+
+
+def get_cgroup_cpu_throttling():
+    """Get the Linux cgroup CPU throttling counters of the current process.
+
+    Return a dict with 'nr_throttled' (number of enforcement periods in which
+    the cgroup was throttled) and 'throttled_usec' (total time spent throttled,
+    in microseconds), or None if the counters cannot be read (ex: not Linux, no
+    cgroup, or no cpu controller). The counters are cumulative since the cgroup
+    was created, so None means "could not be checked", which is distinct from
+    zero ("checked, never throttled").
+
+    With cgroup v2 a limit set on a parent cgroup also throttles, and the
+    throttling is recorded in the cgroup where the limit binds while the root
+    counters stay at zero, so the largest counters in the hierarchy are used.
+    """
+    nr_throttled = None
+    throttled_usec = None
+    for line in read_proc("self/cgroup"):
+        parts = line.split(":", 2)
+        if len(parts) != 3:
+            continue
+        hierarchy, controllers, path = parts
+        path = path.strip("/")
+        names = path.split("/") if path else []
+        if hierarchy == "0" and not controllers:
+            # cgroup v2: check the cgroup and each of its parents
+            bases = [os.path.join("/sys/fs/cgroup", *names[:index])
+                     for index in range(len(names), -1, -1)]
+        elif "cpu" in controllers.split(","):
+            # cgroup v1: the cgroup path is not visible inside a container
+            bases = [os.path.join("/sys/fs/cgroup/cpu", *names),
+                     "/sys/fs/cgroup/cpu"]
+        else:
+            continue
+        for base in bases:
+            stat = _read_cgroup_cpu_stat(os.path.join(base, "cpu.stat"))
+            if stat is None:
+                continue
+            if "nr_throttled" in stat:
+                nr_throttled = max(nr_throttled or 0, stat["nr_throttled"])
+            if "throttled_usec" in stat:
+                # cgroup v2
+                throttled_usec = max(throttled_usec or 0,
+                                     stat["throttled_usec"])
+            elif "throttled_time" in stat:
+                # cgroup v1 reports nanoseconds
+                throttled_usec = max(throttled_usec or 0,
+                                     stat["throttled_time"] // 1000)
+    if nr_throttled is None and throttled_usec is None:
+        return None
+    return {"nr_throttled": nr_throttled or 0,
+            "throttled_usec": throttled_usec or 0}
+
+
 def collect_cpu_model(metadata):
     for line in read_proc("cpuinfo"):
         if line.startswith('model name'):
