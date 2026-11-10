@@ -191,6 +191,12 @@ The :ref:`pyperf system command <system_cmd>` implements the following operation
 * "Power supply": check that the power cable is plugged. If the power cable is
   unplugged (a laptop running only on a battery), the CPU speed can change
   when the battery level becomes too low.
+* "CPU quota": report a cgroup CPU bandwidth limit (``docker run --cpus``, a
+  Kubernetes CPU limit, systemd ``CPUQuota=``) and whether the benchmark cgroup
+  has been throttled. A CPU quota throttles the benchmark, which moves the mean
+  without widening the relative spread, so a capped run can look statistically
+  stable while being wrong. ``pyperf check`` emits the same warning from the
+  ``cpu_quota`` metadata of a saved result.
 * "Turbo Boost (MSR)": use ``/dev/cpu/N/msr`` to read/write
   the Turbo Boost mode of Intel CPUs
 * "Turbo Boost (intel_pstate driver)": read from/write into
