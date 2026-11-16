@@ -983,6 +983,44 @@ class PerfEvent(Operation):
             self.log_action("Max sample rate set to %s per second" % new_rate)
 
 
+class CPUQuota(Operation):
+    """
+    Detect a cgroup CPU bandwidth limit: docker run --cpus, a Kubernetes CPU
+    limit, systemd CPUQuota=. A quota throttles the benchmark, which moves the
+    mean without widening the relative spread, so a capped run can look
+    statistically stable while being wrong. Nothing pyperf can tune fixes it,
+    so this only reports the state, like the power supply check.
+    """
+
+    @staticmethod
+    def available():
+        return OS_LINUX and os.path.exists('/sys/fs/cgroup')
+
+    def __init__(self, system):
+        super().__init__('CPU quota', system)
+
+    def show(self):
+        from pyperf._collect_metadata import (get_cgroup_cpu_quota,
+                                               get_cgroup_cpu_throttling)
+
+        quota = get_cgroup_cpu_quota()
+        if quota is None:
+            return
+
+        self.log_state('a CPU quota of %s CPUs is set' % format(quota, 'g'))
+
+        throttling = get_cgroup_cpu_throttling()
+        if throttling and throttling['nr_throttled']:
+            self.log_state('the benchmark cgroup was CPU-throttled %s times '
+                           '(%.1f ms total)'
+                           % (throttling['nr_throttled'],
+                              throttling['throttled_usec'] / 1000.0))
+
+        self.advice('A CPU quota throttles the benchmark and can make a '
+                    'capped run look stable; run without a CPU quota to get '
+                    'reliable results')
+
+
 OPERATIONS = [
     # Generic operations
     PerfEvent,
@@ -991,6 +1029,7 @@ OPERATIONS = [
     CPUFrequency,
     IRQAffinity,
     PowerSupply,
+    CPUQuota,
 
     # Setting the CPU scaling governor resets no_turbo
     # and so must be set before Turbo Boost
