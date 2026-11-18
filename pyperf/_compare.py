@@ -54,7 +54,7 @@ def get_tags_for_result(result):
 
 
 class CompareResult:
-    def __init__(self, ref, changed, min_speed=None):
+    def __init__(self, ref, changed, min_speed=None, extra_metadata=None):
         # CompareData object
         self.ref = ref
         # CompareData object
@@ -63,6 +63,7 @@ class CompareResult:
         self._significant = None
         self._t_score = None
         self._norm_mean = None
+        self.extra_metadata = extra_metadata or []
 
     def __repr__(self):
         return '<CompareResult ref=%r changed=%r>' % (self.ref, self.changed)
@@ -110,21 +111,37 @@ class CompareResult:
 
         ref_text = format_result_value(self.ref.benchmark)
         chg_text = format_result_value(self.changed.benchmark)
+
         if verbose:
             if show_name:
                 ref_text = "[%s] %s" % (self.ref.name, ref_text)
                 chg_text = "[%s] %s" % (self.changed.name, chg_text)
-            if (self.ref.benchmark.get_nvalue() > 1
-               or self.changed.benchmark.get_nvalue() > 1):
+
+            if (self.ref.benchmark.get_nvalue() > 1 
+            or self.changed.benchmark.get_nvalue() > 1):
                 text = "Mean +- std dev: %s -> %s" % (ref_text, chg_text)
             else:
                 text = "%s -> %s" % (ref_text, chg_text)
         else:
             text = "%s -> %s" % (ref_text, chg_text)
 
+            # normalized mean
         text = "%s: %s" % (text, format_normalized_mean(self.norm_mean))
-        return text
 
+    # Extra metadata support
+        if self.extra_metadata:
+            ref_meta = self.ref.benchmark.get_metadata()
+            chg_meta = self.changed.benchmark.get_metadata()
+            meta_parts = []
+            for key in self.extra_metadata:
+                if key in ref_meta:
+                    meta_parts.append(f"{key}={ref_meta[key]}")
+                if key in chg_meta:
+                    meta_parts.append(f"{key}={chg_meta[key]}")           
+            if meta_parts:
+                text += " [" + ", ".join(meta_parts) + "]"
+        return text            
+        
     def format(self, verbose=True, show_name=True):
         text = self.oneliner(show_name=show_name, check_significant=False)
         lines = [text]
@@ -225,13 +242,26 @@ class CompareError(Exception):
 class CompareSuites:
     def __init__(self, benchmarks, args):
         self.benchmarks = benchmarks
-
+        self.extra_metadata = getattr(args, "extra_metadata", None)
+        if self.extra_metadata:
+            self.extra_metadata = [
+                key.strip() for key in self.extra_metadata.split(",")
+            ]
+        else:
+            self.extra_metadata = []
         self.table = args.table
         self.table_format = args.table_format
         self.min_speed = args.min_speed
         self.group_by_speed = args.group_by_speed
         self.verbose = args.verbose
         self.quiet = args.quiet
+
+        # Handle extra metadata argument
+        self.extra_metadata = getattr(args, "extra_metadata", None)
+        if self.extra_metadata:
+            self.extra_metadata = [key.strip() for key in self.extra_metadata.split(",")]
+        else:
+            self.extra_metadata = []
 
         grouped_by_name = self.benchmarks.group_by_name()
         if not grouped_by_name:
@@ -262,7 +292,8 @@ class CompareSuites:
 
         for item in benchmarks[1:]:
             changed = CompareData(item.filename, item.benchmark)
-            result = CompareResult(ref, changed, min_speed)
+            result = CompareResult(ref,changed,min_speed,
+                                   extra_metadata=self.extra_metadata)
             results.append(result)
 
         return results
@@ -280,46 +311,82 @@ class CompareSuites:
 
             self.all_results.sort(key=sort_key)
 
+        # Build Headers
+        # Structure: [Benchmark] [Ref Name] [Ref Meta...] [Changed Name] [Changed Meta...] ...
         headers = ['Benchmark', self.all_results[0][0].ref.name]
+        
+        # Add Reference Metadata Headers
+        for key in self.extra_metadata:
+            headers.append(key)
+        
+        # Add Changed Metadata Headers
         for item in self.all_results[0]:
             headers.append(item.changed.name)
+            for key in self.extra_metadata:
+                headers.append(key)
 
-        all_norm_means = [[] for _ in range(len(headers[2:]))]
+        # Initialize storage for geometric mean calculation
+        # We assume 1 normalized mean per changed benchmark
+        num_changed_benchmarks = len(self.all_results[0])
+        all_norm_means = [[] for _ in range(num_changed_benchmarks)]
 
         rows = []
         not_significant = []
         for results in all_results:
             row = [results.name]
 
+            # Reference Data
             ref_bench = results[0].ref.benchmark
             text = ref_bench.format_value(ref_bench.mean())
             row.append(text)
+            
+            # Reference Metadata Values
+            for key in self.extra_metadata:
+                value = ref_bench.get_metadata().get(key, "-")
+                row.append(str(value))
 
             significants = []
             for index, result in enumerate(results):
                 bench = result.changed.benchmark
                 significant = result.significant
+                
+                # Comparison Result
                 if significant:
                     text = format_normalized_mean(result.norm_mean)
                     if not self.quiet:
                         text = "%s: %s" % (bench.format_value(bench.mean()), text)
                 else:
                     text = "not significant"
+                
                 significants.append(significant)
                 all_norm_means[index].append(result.norm_mean)
                 row.append(text)
+
+                # Changed Metadata Values
+                for key in self.extra_metadata:
+                    value = bench.get_metadata().get(key, "-")
+                    row.append(str(value))
 
             if any(significants):
                 rows.append(row)
             else:
                 not_significant.append(results.name)
 
+        # Geometric Mean Row
         # only compute the geometric mean if there is at least two benchmarks
-        # and if at least one is signicant.
+        # and if at least one is significant (which means rows is not empty)
         if len(all_norm_means[0]) > 1 and rows:
             row = ['Geometric mean', '(ref)']
+            
+            # Empty slots for Reference Metadata (to align columns)
+            for _ in self.extra_metadata:
+                row.append('')
+            
             for norm_means in all_norm_means:
                 row.append(format_geometric_mean(norm_means))
+                # Empty slots for Changed Metadata (to align columns)
+                for _ in self.extra_metadata:
+                    row.append('')
             rows.append(row)
 
         if rows:
