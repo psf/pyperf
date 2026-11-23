@@ -424,6 +424,16 @@ class CPUGovernor(Operation):
             self.log_action("CPU scaling governor of CPUs %s %s" % (cpus, action))
 
 
+def parse_linux_version(release):
+    """Get the version from a Linux kernel release string, such as (6, 8, 0)
+    from '6.8.0-45-generic' or (7, 3, 4) from Debian's '7.3.4+deb14-amd64'.
+    Return None if the string does not start with a version."""
+    match = re.match(r'\d+(?:\.\d+)*', release)
+    if match is None:
+        return None
+    return tuple(map(int, match.group().split('.')))
+
+
 class LinuxScheduler(Operation):
     """
     Check isolcpus=cpus and rcu_nocbs=cpus parameters of the Linux kernel
@@ -446,10 +456,8 @@ class LinuxScheduler(Operation):
             return
 
         release = os.uname()[2]
-        try:
-            version_txt = release.split('-', 1)[0]
-            self.linux_version = tuple(map(int, version_txt.split('.')))
-        except ValueError:
+        self.linux_version = parse_linux_version(release)
+        if self.linux_version is None:
             self.error("Failed to get the Linux version: release=%r" % release)
             return
 
