@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 2.12.0 (unreleased)
+---------------------------
+
+* Bugfix: Remove the Linux version check, which was broken and no longer needed.
+  Patch by Michael Greenberg.
+
 Version 2.11.0 (2026-11-08)
 ---------------------------
 

@@ -438,7 +438,6 @@ class LinuxScheduler(Operation):
     def __init__(self, system):
         super().__init__('Linux scheduler', system)
         self.ncpu = None
-        self.linux_version = None
 
     def show(self):
         self.ncpu = get_logical_cpu_count()
@@ -446,21 +445,8 @@ class LinuxScheduler(Operation):
             self.error("Unable to get the number of CPUs")
             return
 
-        release = os.uname()[2]
-        try:
-            version_txt = release.split('-', 1)[0]
-            self.linux_version = tuple(map(int, version_txt.split('.')))
-        except ValueError:
-            self.error("Failed to get the Linux version: release=%r" % release)
-            return
-
-        # isolcpus= parameter existed prior to 2.6.12-rc2 (2005)
-        # which is first commit of the Linux git repository
         self.check_isolcpus()
-
-        # Commit 3fbfbf7a3b66ec424042d909f14ba2ddf4372ea8 added rcu_nocbs
-        if self.linux_version >= (3, 8):
-            self.check_rcu_nocbs()
+        self.check_rcu_nocbs()
 
     def check_isolcpus(self):
         isolated = get_isolated_cpus()
