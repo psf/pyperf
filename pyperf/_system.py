@@ -2,6 +2,7 @@ import errno
 import os.path
 import platform
 import re
+import stat
 import struct
 import subprocess
 import sys
@@ -822,6 +823,13 @@ class IRQAffinity(Operation):
         path = self.irq_affinity_path % irq
         mask = format_cpus_as_mask(cpus)
         try:
+            # The kernel makes smp_affinity read-only for an IRQ whose
+            # affinity can't be set, such as the cascade IRQ 2 or a
+            # kernel-managed IRQ. Since Linux 6.12, writing to it fails
+            # with EPERM rather than EIO, which looks like a permission
+            # error and would stop the loop over IRQs. Skip it instead.
+            if not os.stat(path).st_mode & stat.S_IWUSR:
+                return False
             write_text(path, mask)
             return True
         except OSError as exc:
