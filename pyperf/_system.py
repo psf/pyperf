@@ -58,16 +58,17 @@ def get_output(cmd):
     try:
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
                                 universal_newlines=True)
     except OSError as exc:
         if exc.errno == errno.ENOENT:
-            return (127, '')
+            return (127, '', '')
         else:
             raise
 
-    stdout = popen_communicate(proc)[0]
+    stdout, stderr = popen_communicate(proc)
     exitcode = proc.returncode
-    return (exitcode, stdout)
+    return (exitcode, stdout, stderr)
 
 
 def use_intel_pstate():
@@ -650,7 +651,13 @@ class IRQAffinity(Operation):
 
     def read_irqbalance_systemctl(self):
         cmd = ('systemctl', 'status', 'irqbalance')
-        exitcode, stdout = get_output(cmd)
+        exitcode, stdout, stderr = get_output(cmd)
+        if exitcode == 4 and not stdout:
+            # systemctl exits with status 4 and prints its error on stderr
+            # when there is no irqbalance unit. The service isn't
+            # installed, so there is nothing to show or change.
+            self.systemctl = True
+            return
         if not stdout:
             # systemctl is not installed? ignore errors
             self.systemctl = False
@@ -682,7 +689,7 @@ class IRQAffinity(Operation):
 
     def read_irqbalance_service(self):
         cmd = ('service', 'irqbalance', 'status')
-        exitcode, stdout = get_output(cmd)
+        exitcode, stdout, stderr = get_output(cmd)
         if not stdout:
             # failed to the the status: ignore
             return
