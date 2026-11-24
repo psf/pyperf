@@ -647,6 +647,21 @@ class TestPerfCLI(BaseTestCase, unittest.TestCase):
         self.assertRegex(stdout,
                          r'^\.\ncommand: [0-9.]+ (?:ms|sec)$')
 
+    def test_timeit_timeout(self):
+        # Regression test for the --timeout option on Windows: select()
+        # can only be used with sockets, not with pipe file descriptors.
+        stdout = self.run_command('timeit', '-q', '--timeout', '60',
+                                  '--debug-single-value', '[1,2]*1000')
+        self.assertRegex(stdout, r'^[0-9.]+ (?:ns|us|ms|sec)$')
+
+    def test_timeit_timeout_expired(self):
+        cmd = [sys.executable, '-m', 'pyperf', 'timeit', '-q',
+               '--timeout', '1', '-p1', '-w0', '-l1', '-n1',
+               '-s', 'import time', 'time.sleep(5)']
+        proc = tests.get_output(cmd)
+        self.assertEqual(proc.returncode, 124, msg=proc)
+        self.assertIn('Timed out after 1 seconds', proc.stdout)
+
     def test_check_unstable(self):
         suite = self.create_suite()
 

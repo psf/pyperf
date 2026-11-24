@@ -325,6 +325,9 @@ class ReadPipe(_Pipe):
                 return rfile.read()
 
     def _read_text_timeout(self, timeout):
+        if MS_WINDOWS:
+            return self._read_text_timeout_windows(timeout)
+
         fd = self.fd
         os.set_blocking(fd, False)
 
@@ -343,6 +346,36 @@ class ReadPipe(_Pipe):
             if not data:
                 break
             output.append(data)
+
+        data = b"".join(output)
+        return data.decode("utf8")
+
+    def _read_text_timeout_windows(self, timeout):
+        # select() only supports sockets on Windows, pipe file descriptors
+        # must be read from a thread to be able to timeout.
+        import threading
+
+        fd = self.fd
+        output = []
+        error = []
+
+        def read_pipe():
+            try:
+                while True:
+                    data = os.read(fd, 1024)
+                    if not data:
+                        break
+                    output.append(data)
+            except OSError as exc:
+                error.append(exc)
+
+        thread = threading.Thread(target=read_pipe, daemon=True)
+        thread.start()
+        thread.join(timeout)
+        if thread.is_alive():
+            raise TimeoutError(f"Timed out after {timeout} seconds")
+        if error:
+            raise error[0]
 
         data = b"".join(output)
         return data.decode("utf8")
