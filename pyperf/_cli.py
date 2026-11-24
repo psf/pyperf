@@ -493,6 +493,21 @@ def format_checks(bench, lines=None, check_too_many_processes=False):
             warn("See https://bugzilla.redhat.com/show_bug.cgi?id=1378529")
             break
 
+    # Warn if the benchmark ran under a cgroup CPU quota (cpu_quota metadata).
+    # A quota throttles the run, which moves the mean but leaves the relative
+    # spread alone, so the statistical checks above cannot see it: a capped run
+    # comes back looking stable.
+    for run in bench._runs:
+        cpu_quota = run._metadata.get('cpu_quota')
+        if cpu_quota:
+            empty_line(lines)
+            lines.append("WARNING: the benchmark ran under a CPU quota (%s)"
+                         % cpu_quota)
+            lines.append("A CPU quota throttles the benchmark: the result can "
+                         "look stable while being capped. Run without a CPU "
+                         "quota for reliable results.")
+            break
+
     return lines
 
 

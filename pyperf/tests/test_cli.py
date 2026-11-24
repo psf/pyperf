@@ -27,6 +27,26 @@ class CLITests(unittest.TestCase):
                          'Calibration: 100 loops')
         self.assertRaises(ValueError, bench.median)
 
+    def _quota_bench(self, metadata):
+        md = {'name': 'bench'}
+        md.update(metadata)
+        runs = [pyperf.Run([1.0, 1.0, 1.0], metadata=md,
+                           collect_metadata=False)
+                for _ in range(3)]
+        return pyperf.Benchmark(runs)
+
+    def test_checks_warns_on_cpu_quota(self):
+        # a run under a CPU quota must warn even though the values look stable
+        bench = self._quota_bench({'cpu_quota': '2 CPUs'})
+        text = '\n'.join(cli.format_checks(bench))
+        self.assertIn('CPU quota', text)
+        self.assertIn('2 CPUs', text)
+
+    def test_checks_no_cpu_quota(self):
+        bench = self._quota_bench({})
+        text = '\n'.join(cli.format_checks(bench))
+        self.assertNotIn('CPU quota', text)
+
 
 if __name__ == "__main__":
     unittest.main()
