@@ -297,7 +297,6 @@ class Runner:
         nvalues = self.argparser.get_default('values')
         if args.rigorous:
             args.processes = nprocess * 2
-            # args.values = nvalues * 5 // 3
         elif args.fast:
             # use at least 3 processes to benchmark 3 different (randomized)
             # hash functions

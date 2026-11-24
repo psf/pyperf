@@ -234,12 +234,23 @@ class Manager:
         # else: keep action 'values'
 
     def create_bench(self):
-        old_warmups = self.args.warmups
-        old_loops = self.args.loops
-        if self.args.warmups is None:
-            self.args.warmups = 1
+        args = self.args
+        old_loops = args.loops
+        old_warmups = args.warmups
+        old_values = args.values
+        old_processes = args.processes
+        if args.warmups is None:
+            args.warmups = 1
 
         while self.nprocess < self.need_nprocess:
+            if (args.in_process
+                and not self.calibrate_loops
+                and not self.calibrate_warmups):
+                # --in-process computes all values in a single process
+                args.values *= args.processes
+                args.processes = 1
+                self.need_nprocess = 1
+
             worker_bench, run = self.create_worker_bench()
             self.display_run(worker_bench, run)
             self.handle_calibration(run)
@@ -247,6 +258,8 @@ class Manager:
 
         # restore the old value of warmups and loops, to recalibrate
         # the next benchmark function if needed
-        self.args.warmups = old_warmups
-        self.args.loops = old_loops
+        args.loops = old_loops
+        args.warmups = old_warmups
+        args.values = old_values
+        args.processes = old_processes
         return self.bench
